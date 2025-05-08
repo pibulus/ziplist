@@ -53,13 +53,15 @@ Ziplist is a voice-based list creation app that allows users to create lists thr
     -   ~~Review existing `TranscriptionService` and `geminiService` to understand current capabilities and identify integration points for list-specific logic.~~ ✅ *Completed May 8, 2025*
     -   ~~Define strategies for identifying list items from transcribed text (e.g., "add item...", "put ... on my list", bullet-point-like phrasing, pauses between items).~~ ✅ *Completed May 8, 2025*
     -   Implement new parsing logic within or alongside `TranscriptionService` to extract structured list items from the raw transcribed text. This might involve a new `ListParser` utility. ✅ *ListParser created and integrated into TranscriptionService & stores. May 8, 2025*
-    -   Define a set of voice commands for list manipulation (e.g., "create new list", "add item", "remove last item", "clear list") and integrate command recognition. ⏳ *In Progress - Basic command keywords identified in ListParser.*
-    -   Update `ghostStore` or related UI stores (`uiActions`, `transcriptionActions`) to reflect list creation events (e.g., item added, list cleared) for visual feedback.
+    -   Define a set of voice commands for list manipulation (e.g., "create new list", "add item", "remove last item", "clear list") and integrate command recognition. ✅ *Basic command keywords identified in ListParser. May 8, 2025*
+    -   Update `ghostStore` or related UI stores (`uiActions`, `transcriptionActions`) to reflect list creation events (e.g., item added, list cleared) for visual feedback. ⏳ *In Progress - Ghost reacts to "add item" and "clear list" commands.*
     -   Connect transcription results to the ghost component for feedback during list item capture (e.g., ghost nods or blinks when an item is understood).
     -   Develop and execute test cases with diverse audio inputs, including various accents, speaking speeds, and background noise levels, to ensure robustness.
     -   Consider how transcription errors will be handled and if users can correct them via voice or UI.
 3. Implement basic list storage functionality
-4. Create card UI components and stacking mechanism
+4. Create card UI components and stacking mechanism ⏳ *In Progress*
+    -   Created initial `ListComponent.svelte` to display parsed list items. *May 8, 2025*
+    -   Updated `ListComponent.svelte` to display items with interactive checkboxes. *May 8, 2025*
 5. Complete remaining branding and visual elements
 6. Integrate ghost with new list-focused workflow
 7. Add animations and polish interactions

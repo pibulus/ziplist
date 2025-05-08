@@ -1,6 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { AudioStates } from '../audio/audioStates';
 import { ANIMATION } from '$lib/constants';
+import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js';
 
 // Core audio state store
 export const audioState = writable({
@@ -24,7 +25,9 @@ export const recordingState = writable({
 export const transcriptionState = writable({
   inProgress: false,
   progress: 0,
-  text: '',
+  text: '', // Stores the raw, full transcript
+  parsedItems: [], // Stores items extracted by ListParser
+  parsedCommands: [], // Stores commands extracted by ListParser
   error: null,
   timestamp: null
 });
@@ -63,6 +66,16 @@ export const transcriptionProgress = derived(
 export const transcriptionText = derived(
   transcriptionState,
   $state => $state.text
+);
+
+export const parsedListItems = derived(
+  transcriptionState,
+  $state => $state.parsedItems || []
+);
+
+export const parsedListCommands = derived(
+  transcriptionState,
+  $state => $state.parsedCommands || []
 );
 
 export const hasPermissionError = derived(
@@ -197,14 +210,27 @@ export const transcriptionActions = {
     }));
   },
   
-  completeTranscription(text) {
+  completeTranscription(data) {
+    // data is expected to be { rawText, items, commands }
     transcriptionState.update(current => ({
       ...current,
       inProgress: false,
       progress: 100,
-      text,
+      text: data.rawText,
+      parsedItems: data.items || [],
+      parsedCommands: data.commands || [],
+      error: null, // Clear any previous error on successful completion
       timestamp: Date.now()
     }));
+
+    // Trigger ghost feedback for relevant commands
+    const hasAddItemCommand = data.commands && data.commands.some(cmd => cmd.command === 'ADD_ITEM');
+    const hasClearListCommand = data.commands && data.commands.some(cmd => cmd.command === 'CLEAR_LIST');
+    const hasItems = data.items && data.items.length > 0;
+
+    if ((hasAddItemCommand && hasItems) || hasClearListCommand) {
+      ghostStateStore.triggerReaction();
+    }
   },
   
   setTranscriptionError(error) {
@@ -288,6 +314,8 @@ export function resetStores() {
     inProgress: false,
     progress: 0,
     text: '',
+    parsedItems: [],
+    parsedCommands: [],
     error: null,
     timestamp: null
   });

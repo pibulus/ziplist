@@ -1,4 +1,5 @@
 import { geminiService as defaultGeminiService } from '$lib/services/geminiService';
+import { listParser } from '../listParser.js'; // Import the listParser
 import { transcriptionState, transcriptionActions, uiActions } from '../infrastructure/stores';
 import { COPY_MESSAGES, ATTRIBUTION, getRandomFromArray } from '$lib/constants';
 import { get } from 'svelte/store';
@@ -38,10 +39,17 @@ export class TranscriptionService {
       // Complete progress animation with smooth transition
       this.completeProgressAnimation();
       
-      // Update transcription state with completed text
-      transcriptionActions.completeTranscription(transcriptText);
+      // Parse the transcript for list items and commands
+      const parsedResult = listParser.parse(transcriptText);
       
-      return transcriptText;
+      // Update transcription state with completed text and parsed data
+      transcriptionActions.completeTranscription({
+        rawText: transcriptText,
+        items: parsedResult.items,
+        commands: parsedResult.commands
+      });
+      
+      return { rawText: transcriptText, ...parsedResult }; // Return raw text and parsed data
       
     } catch (error) {
       console.error('Transcription error:', error);
@@ -201,7 +209,8 @@ export class TranscriptionService {
   }
   
   clearTranscript() {
-    transcriptionActions.completeTranscription('');
+    // Pass an empty structure to clear all relevant fields in the store
+    transcriptionActions.completeTranscription({ rawText: '', items: [], commands: [] });
   }
   
   getRandomCopyMessage() {

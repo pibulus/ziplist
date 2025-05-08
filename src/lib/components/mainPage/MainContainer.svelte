@@ -1,5 +1,6 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
+import { get } from 'svelte/store'; // get should be imported from svelte/store
 	import { browser } from '$app/environment';
 	import GhostContainer from './GhostContainer.svelte';
 	import ContentContainer from './ContentContainer.svelte';
@@ -7,10 +8,25 @@
 	import { geminiService } from '$lib/services/geminiService';
 	import { themeService } from '$lib/services/theme';
 	import { modalService } from '$lib/services/modals';
+	import { transcriptionService } from '$lib/services/transcription/transcriptionService.js'; // Added transcriptionService
 	import { firstVisitService, isFirstVisit } from '$lib/services/first-visit';
 	import { pwaService, deferredInstallPrompt, showPwaInstallPrompt } from '$lib/services/pwa';
-	import { isRecording as recordingStore } from '$lib/services';
+	import { 
+	  isRecording, 
+	  isTranscribing, 
+	  transcriptionProgress, 
+	  recordingDuration, 
+	  audioState, 
+	  audioActions, 
+	  uiState, 
+	  uiActions, 
+	  userPreferences 
+	} from '$lib/services/infrastructure/stores.js';
+	import { AudioStates } from '$lib/services/audio/audioStates.js'; // Import AudioStates directly
+	import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js'; // Ensure ghostStateStore is imported
 	import { PageLayout } from '$lib/components/layout';
+	import ListComponent from '../list/ListComponent.svelte'; // Import ListComponent using relative path for diagnostics
+	import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte'; // Import the button
 	import { fade } from 'svelte/transition';
 	import { StorageUtils } from '$lib/services/infrastructure/storageUtils';
 	import { STORAGE_KEYS } from '$lib/constants';
@@ -29,8 +45,10 @@
 	// Track speech model preloading state
 	let speechModelPreloaded = false;
 
-	// State variables to pass to children
-	let isProcessing = false;
+	// State variables for recording and processing
+	// let isProcessing = false; // This is now derived from $ghostStateStore.isProcessing
+	let mediaRecorder = null;
+	let audioChunks = [];
 
 	// Debug Helper
 	function debug(message) {
@@ -135,32 +153,117 @@
 	}
 
 	// Event handlers for recording state changes
-	function handleRecordingStart() {
-		isProcessing = false;
-	}
+	// Event handlers for recording state changes (no longer strictly needed from ContentContainer events)
+	// These states are now primarily driven by audioState and ghostStateStore directly.
+	// function handleRecordingStart() { isProcessing = false; }
+	// function handleRecordingStop() { /* NOP */ }
+	// function handleProcessingStart() { isProcessing = true; }
+	// function handleProcessingEnd() { isProcessing = false; }
 
-	function handleRecordingStop() {
-		// No need to set isRecording - it's handled by the store
-	}
-
-	function handleProcessingStart() {
-		isProcessing = true;
-	}
-
-	function handleProcessingEnd() {
-		isProcessing = false;
-	}
 
 	// Handle toggle recording from ghost
-	function handleToggleRecording() {
-		debug('Toggle recording triggered from ghost');
+	async function handleToggleRecording() {
+		debug(`Toggle recording triggered from ghost. Current recording state: ${$isRecording}`);
 
-		if ($recordingStore) {
-			// ghostContainer.stopWobbleAnimation(); // Removed - Wobble handled internally
-			contentContainer.stopRecording();
+		if ($isRecording) {
+			// Currently recording, so stop
+			ghostStateStore.setRecording(false); // Visually stop ghost recording animations
+			if (mediaRecorder && mediaRecorder.state === 'recording') {
+				mediaRecorder.stop(); // This will trigger onstop handler
+				// audioActions.updateState will be called in onstop
+			} else {
+				// Fallback if mediaRecorder state is inconsistent
+				audioActions.updateState(AudioStates.IDLE);
+			}
 		} else {
-			// ghostContainer.startWobbleAnimation(); // Removed - Wobble handled internally
-			contentContainer.startRecording();
+			// Not recording, so start
+			ghostStateStore.setRecording(true); // Visually start ghost recording animations
+			audioChunks = []; // Clear previous chunks
+
+			try {
+				if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+					console.error('getUserMedia not supported on this browser!');
+					ghostStateStore.setRecording(false);
+					audioActions.updateState(AudioStates.ERROR, 'getUserMedia is not supported.');
+					uiActions.setErrorMessage('Audio recording is not supported on this browser.');
+					return;
+				}
+				const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				mediaRecorder = new MediaRecorder(stream);
+
+				mediaRecorder.onstart = () => {
+					debug('MediaRecorder started');
+					audioActions.updateState(AudioStates.RECORDING);
+				};
+
+				mediaRecorder.ondataavailable = (event) => {
+					if (event.data.size > 0) {
+						audioChunks.push(event.data);
+					}
+				};
+
+				mediaRecorder.onstop = async () => {
+					debug('MediaRecorder stopped');
+					audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
+					
+					const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+					audioChunks = []; // Reset for next recording
+
+					if (audioBlob.size === 0) {
+						debug('Audio blob is empty, not transcribing.');
+						audioActions.updateState(AudioStates.IDLE);
+						// Potentially provide feedback to user about empty recording
+						return;
+					}
+
+					try {
+						await transcriptionService.transcribeAudio(audioBlob);
+						// transcriptionService handles success/error and updates transcriptionState
+						// which in turn might trigger ghost reactions or other UI updates.
+						// On successful transcription, it eventually sets transcriptionState.inProgress = false.
+						// We might want to explicitly set audio state to IDLE after transcription attempt.
+						// For now, let transcriptionService and its store updates handle subsequent states.
+					} catch (transcriptionError) {
+						console.error('Transcription failed in onstop:', transcriptionError);
+						// transcriptionService.setTranscriptionError should have been called
+					} finally {
+						// Ensure stream tracks are stopped to release camera/mic
+						stream.getTracks().forEach(track => track.stop());
+						// Regardless of transcription outcome, audio processing is done.
+						// If transcription was successful, it would have set its own states.
+						// If it failed, error state is set. We can transition to IDLE if not already handled.
+						if (get(audioState).state === AudioStates.PROCESSING) {
+							audioActions.updateState(AudioStates.IDLE);
+						}
+					}
+				};
+				
+				mediaRecorder.onerror = (event) => {
+					console.error('MediaRecorder error:', event.error);
+					ghostStateStore.setRecording(false);
+					audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
+					uiActions.setErrorMessage(`Recording error: ${event.error.name}`);
+					stream.getTracks().forEach(track => track.stop());
+				};
+
+				mediaRecorder.start();
+
+			} catch (err) {
+				console.error('Error starting recording (getUserMedia or MediaRecorder setup):', err);
+				ghostStateStore.setRecording(false); // Revert visual state
+				let errorMessage = 'Could not start recording.';
+				if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+					audioActions.updateState(AudioStates.PERMISSION_DENIED);
+					errorMessage = 'Audio permission denied. Please allow microphone access.';
+				} else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+					audioActions.updateState(AudioStates.NO_INPUT_DETECTED);
+					errorMessage = 'No microphone found. Please connect a microphone.';
+				} else {
+					audioActions.updateState(AudioStates.ERROR, err.message);
+					errorMessage = `Error: ${err.message}`;
+				}
+				uiActions.setErrorMessage(errorMessage);
+			}
 		}
 	}
 
@@ -169,32 +272,6 @@
 		debug('Triggering ghost click after intro modal close');
 		// Forward to the toggle recording handler
 		handleToggleRecording();
-	}
-
-	// Handle transcription completed event for PWA prompt
-	async function handleTranscriptionCompleted(event) {
-		if (!browser) return;
-
-		const newCount = event.detail.count;
-		debug(`🔔 Transcription completed event received. Count: ${newCount}`);
-
-		// The PWA service handles most of the logic, but we need to lazy-load the component
-		if ($showPwaInstallPrompt && !PwaInstallPrompt) {
-			loadingPwaPrompt = true;
-			debug('📱 Lazy loading PWA install prompt component...');
-
-			try {
-				// Import the component dynamically
-				const module = await import('./pwa/PwaInstallPrompt.svelte');
-				PwaInstallPrompt = module.default;
-				debug('📱 PWA install prompt component loaded successfully');
-			} catch (err) {
-				console.error('Error loading PWA install prompt:', err);
-				debug(`Error loading PWA install prompt: ${err.message}`);
-			} finally {
-				loadingPwaPrompt = false;
-			}
-		}
 	}
 
 	// Closes the PWA install prompt
@@ -210,6 +287,9 @@
 
 	// Lifecycle hooks
 	onMount(() => {
+		// Preload speech model on mount
+		preloadSpeechModel();
+
 		// Pre-load the SettingsModal component after a short delay
 		setTimeout(async () => {
 			if (!SettingsModal && !loadingSettingsModal) {
@@ -231,19 +311,13 @@
 		if (browser && StorageUtils.getBooleanItem(STORAGE_KEYS.AUTO_RECORD, false)) {
 			// Wait minimal time for component initialization
 			setTimeout(() => {
-				if (contentContainer && !$recordingStore) {
+				if (!$isRecording) { // Check store directly
 					debug('Auto-record enabled, attempting to start recording immediately');
-					try {
-						contentContainer.startRecording();
-						ghostContainer.startWobbleAnimation();
-						debug('Auto-record: Called startRecording()');
-					} catch (err) {
-						debug(`Auto-record: Error starting recording: ${err.message}`);
-					}
+					handleToggleRecording(); // Use the main toggle function
 				} else {
-					debug('Auto-record: Conditions not met (no component or already recording).');
+					debug('Auto-record: Conditions not met (already recording).');
 				}
-			}, 500); // Reduced delay - just enough for component initialization
+			}, 500);
 		} else {
 			debug('Auto-record not enabled or not in browser.');
 		}
@@ -268,26 +342,52 @@
 		// Check if first visit to show intro
 		firstVisitService.showIntroModal();
 	});
+
+	// Reactive statement for lazy loading PWA Install Prompt
+	$: if (browser && $showPwaInstallPrompt && !PwaInstallPrompt && !loadingPwaPrompt) {
+		(async () => {
+			loadingPwaPrompt = true;
+			debug('📱 Lazy loading PWA install prompt component due to $showPwaInstallPrompt change...');
+			try {
+				const module = await import('./pwa/PwaInstallPrompt.svelte');
+				PwaInstallPrompt = module.default;
+				debug('📱 PWA install prompt component loaded successfully');
+			} catch (err) {
+				console.error('Error loading PWA install prompt:', err);
+				debug(`Error loading PWA install prompt: ${err.message}`);
+			} finally {
+				loadingPwaPrompt = false;
+			}
+		})();
+	}
 </script>
 
 <PageLayout>
 	<GhostContainer
 		bind:this={ghostContainer}
-		isRecording={$recordingStore}
-		{isProcessing}
+		isRecording={$isRecording}
+		isProcessing={$ghostStateStore.isProcessing}
 		on:toggleRecording={handleToggleRecording}
 	/>
 	<ContentContainer
 		bind:this={contentContainer}
-		ghostComponent={ghostContainer}
-		{speechModelPreloaded}
-		onPreloadRequest={preloadSpeechModel}
-		on:recordingstart={handleRecordingStart}
-		on:recordingstop={handleRecordingStop}
-		on:processingstart={handleProcessingStart}
-		on:processingend={handleProcessingEnd}
-		on:transcriptionCompleted={handleTranscriptionCompleted}
 	/>
+	<ListComponent />
+
+	<!-- Add the RecordButtonWithTimer below the ListComponent -->
+	<div class="flex justify-center my-4">
+		<RecordButtonWithTimer
+			recording={$isRecording}
+			transcribing={$isTranscribing}
+			clipboardSuccess={$uiState.clipboardSuccess}
+			recordingDuration={$recordingDuration}
+			isPremiumUser={$userPreferences.isPremiumUser}
+			progress={$transcriptionProgress}
+			on:click={handleToggleRecording}
+			on:preload={preloadSpeechModel}
+		/>
+	</div>
+
 	<svelte:fragment slot="footer-buttons">
 		<FooterComponent
 			on:showAbout={showAboutModal}
@@ -313,7 +413,7 @@
 {/if}
 
 <!-- PWA Install Prompt -->
-{#if $showPwaInstallPrompt && PwaInstallPrompt}
+{#if $showPwaInstallPrompt && PwaInstallPrompt && !loadingPwaPrompt}
 	<div transition:fade={{ duration: 300 }}>
 		<svelte:component
 			this={PwaInstallPrompt}

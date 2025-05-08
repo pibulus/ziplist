@@ -185,12 +185,31 @@ function createGhostStateStore() {
 
 		// Set up cleanup timeout if needed (e.g., for REACTING or EASTER_EGG state)
 		if (behavior.cleanupDelay && behavior.cleanupDelay > 0) {
-			debugLog(`Setting cleanup timeout for ${newState} → IDLE in ${behavior.cleanupDelay}ms`);
+			// The state to return to will be determined inside the timeout,
+			// typically the state active before this timed state began (e.g., IDLE or RECORDING for REACTING).
+			debugLog(`Setting cleanup timeout for ${newState} in ${behavior.cleanupDelay}ms`);
 
 			const timeoutId = setTimeout(() => {
 				const _currentState = get(_state); // Use _state
 				if (_currentState.current === newState) {
-					setAnimationState(ANIMATION_STATES.IDLE);
+					let stateToReturnTo = ANIMATION_STATES.IDLE; // Default return state
+
+					// For REACTING state, return to the state active before REACTING began (e.g., IDLE or RECORDING)
+					if (newState === ANIMATION_STATES.REACTING) {
+						const stateBeforeReacting = _currentState.previous; // State when REACTING was initiated
+						if (
+							stateBeforeReacting === ANIMATION_STATES.IDLE ||
+							stateBeforeReacting === ANIMATION_STATES.RECORDING
+						) {
+							stateToReturnTo = stateBeforeReacting;
+						}
+						// If previous state was something else (e.g. ASLEEP, THINKING), default to IDLE.
+					}
+					// For other states with cleanupDelay (like EASTER_EGG), they might always go to IDLE.
+					// Add more specific conditions here if other states need different return logic.
+
+					debugLog(`Cleanup for ${newState}: Transitioning to ${stateToReturnTo}`);
+					setAnimationState(stateToReturnTo);
 				}
 			}, behavior.cleanupDelay);
 
@@ -562,8 +581,24 @@ function createGhostStateStore() {
 		reset,
 		// Expose new methods for inactivity and wake up
 		resetInactivityTimer,
-		wakeUp
+		wakeUp,
+		triggerReaction // Add new method to public API
 	};
+
+	/**
+	 * Triggers a generic reaction animation (e.g., for feedback).
+	 * The ghost will transition to REACTING state and then automatically return
+	 * to its previous state (IDLE or RECORDING).
+	 */
+	function triggerReaction() {
+		const currentStateVal = get(_state).current;
+		if (currentStateVal === ANIMATION_STATES.IDLE || currentStateVal === ANIMATION_STATES.RECORDING) {
+			debugLog('Triggering REACTING state for feedback.');
+			setAnimationState(ANIMATION_STATES.REACTING);
+		} else {
+			debugLog(`Skipping REACTING trigger, current state ${currentStateVal} is not IDLE or RECORDING.`);
+		}
+	}
 
 	// --- Define derived stores here, inside the factory function (using underscore prefix) ---
 	const _currentState = derived(_state, ($state) => $state.current); // Use _state
