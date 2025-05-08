@@ -44,9 +44,10 @@ export class ListParser {
       return { items, commands };
     }
 
-    // Split by newlines or sentence-ending punctuation (. ! ?) followed by optional space.
+    // Split by commas, newlines, or sentence-ending punctuation (. ! ?) followed by optional space.
+    // Also split on phrases like "I want" which often indicate a new list item in speech.
     // This helps break down a single block of transcribed text into multiple potential items.
-    const potentialLines = transcribedText.split(/\s*[.!?]\s*(?=\S)|\n+/);
+    const potentialLines = transcribedText.split(/\s*[,.!?]\s*(?=\S)|\n+|(?<=.)\s+I want\s+/i);
     
     const lines = potentialLines.map(line => line.trim()).filter(line => line.length > 0);
     this.log(`Potential lines after split: ${JSON.stringify(lines)}`);
@@ -86,15 +87,24 @@ export class ListParser {
    */
   _cleanItemText(text) {
     let cleanedText = text;
+    
     // Basic cleaning: if "add item" or similar keywords are still at the start of a line
     // that wasn't parsed as a command, remove them.
-    // This is a fallback and ideally command parsing should handle this.
     for (const keyword of this.config.addItemKeywords) {
       if (cleanedText.toLowerCase().startsWith(keyword + ' ')) {
         cleanedText = cleanedText.substring(keyword.length + 1).trim();
         break;
       }
     }
+    
+    // Remove "I want" or "I want a/an" at the beginning of items
+    cleanedText = cleanedText.replace(/^I want\s+(a|an)?\s*/i, '').trim();
+    
+    // Capitalize first letter
+    if (cleanedText.length > 0) {
+      cleanedText = cleanedText.charAt(0).toUpperCase() + cleanedText.slice(1);
+    }
+    
     return cleanedText;
   }
 

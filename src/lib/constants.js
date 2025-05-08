@@ -29,7 +29,12 @@ export const STORAGE_KEYS = {
 	PWA_PROMPT_SHOWN: 'ziplist-pwa-prompt-shown',
 	PWA_PROMPT_COUNT: 'ziplist-pwa-prompt-count',
 	PWA_LAST_PROMPT_DATE: 'ziplist-pwa-last-prompt-date',
-	PWA_INSTALLED: 'ziplist-pwa-installed'
+	PWA_INSTALLED: 'ziplist-pwa-installed',
+	
+	// Lists Related
+	LISTS: 'ziplist-lists',
+	ACTIVE_LIST_ID: 'ziplist-active-list-id',
+	LISTS_VERSION: 'ziplist-lists-version'
 };
 
 // Prompt Styles

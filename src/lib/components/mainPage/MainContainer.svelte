@@ -25,7 +25,7 @@ import { get } from 'svelte/store'; // get should be imported from svelte/store
 	import { AudioStates } from '$lib/services/audio/audioStates.js'; // Import AudioStates directly
 	import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js'; // Ensure ghostStateStore is imported
 	import { PageLayout } from '$lib/components/layout';
-	import ListComponent from '../list/ListComponent.svelte'; // Import ListComponent using relative path for diagnostics
+	import ListCarousel from '../list/ListCarousel.svelte';
 	import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte'; // Import the button
 	import { fade } from 'svelte/transition';
 	import { StorageUtils } from '$lib/services/infrastructure/storageUtils';
@@ -372,9 +372,9 @@ import { get } from 'svelte/store'; // get should be imported from svelte/store
 	<ContentContainer
 		bind:this={contentContainer}
 	/>
-	<ListComponent />
+	<ListCarousel />
 
-	<!-- Add the RecordButtonWithTimer below the ListComponent -->
+	<!-- Add the RecordButtonWithTimer below the ListCarousel -->
 	<div class="flex justify-center my-4">
 		<RecordButtonWithTimer
 			recording={$isRecording}

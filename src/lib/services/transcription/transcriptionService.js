@@ -1,5 +1,6 @@
 import { geminiService as defaultGeminiService } from '$lib/services/geminiService';
 import { listParser } from '../listParser.js'; // Import the listParser
+import { listsService } from '../lists/listsService'; // Import the listsService
 import { transcriptionState, transcriptionActions, uiActions } from '../infrastructure/stores';
 import { COPY_MESSAGES, ATTRIBUTION, getRandomFromArray } from '$lib/constants';
 import { get } from 'svelte/store';
@@ -48,6 +49,9 @@ export class TranscriptionService {
         items: parsedResult.items,
         commands: parsedResult.commands
       });
+      
+      // Send parsed result to listsService for processing
+      listsService.processTranscription(parsedResult);
       
       return { rawText: transcriptText, ...parsedResult }; // Return raw text and parsed data
       
