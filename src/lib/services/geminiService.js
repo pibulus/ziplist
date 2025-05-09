@@ -1,5 +1,6 @@
 import { geminiApiService } from './geminiApiService';
 import { promptManager } from './promptManager';
+import { parseModelResponse } from './responseParser';
 
 // Export the original preloadModel function for backward compatibility
 const preloadModel = geminiApiService.preloadModel;
@@ -39,7 +40,23 @@ export const geminiService = {
       // Generate content with both prompt and audio data
       const response = await geminiApiService.generateContent([prompt, audioPart]);
       console.log('✅ Audio transcription complete');
-      return response.text();
+      
+      // Get the raw response text
+      const responseText = response.text();
+      console.log('Raw response from Gemini:', responseText);
+      
+      // Use our robust parser to handle various response formats
+      const parsedResponse = parseModelResponse(responseText);
+      console.log('Parsed response:', parsedResponse);
+      
+      if (parsedResponse.success && parsedResponse.items.length > 0) {
+        // Return the items as a formatted string
+        return parsedResponse.items.join('\n');
+      } else {
+        // Fallback to raw text if parsing fails completely
+        console.warn('Unable to extract structured items from response');
+        return responseText;
+      }
     } catch (error) {
       console.error('❌ Error transcribing audio:', error);
       throw new Error('Failed to transcribe audio with Gemini');

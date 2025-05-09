@@ -91,7 +91,7 @@
       {/if}
     </div>
     
-    <div class="flex-grow overflow-y-auto mb-3">
+    <div class="flex-grow overflow-y-auto mb-3 max-h-[240px] h-full scrollbar-thin">
       {#if list.items.length > 0}
         <ul class="list">
           {#each list.items as item (item.id)}
@@ -144,6 +144,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    padding-right: 5px; /* Add some padding for the scrollbar */
   }
   
   .list-item {
@@ -152,6 +153,7 @@
     align-items: flex-start;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     flex-wrap: nowrap;
+    min-height: 36px;
   }
   
   .list-item:last-child {
@@ -167,5 +169,24 @@
     hyphens: auto;
     min-width: 0;
     padding-top: 1px;
+  }
+
+  /* Custom scrollbar styles */
+  :global(.scrollbar-thin::-webkit-scrollbar) {
+    width: 6px;
+  }
+  
+  :global(.scrollbar-thin::-webkit-scrollbar-track) {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+  }
+  
+  :global(.scrollbar-thin::-webkit-scrollbar-thumb) {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+  
+  :global(.scrollbar-thin::-webkit-scrollbar-thumb:hover) {
+    background: rgba(0, 0, 0, 0.2);
   }
 </style>
