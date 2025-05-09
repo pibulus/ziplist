@@ -21,6 +21,40 @@
     }, 100);
   });
   
+  // Swipe handling
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  function handleTouchStart(e) {
+    touchStartX = e.changedTouches[0].screenX;
+  }
+  
+  function handleTouchEnd(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  }
+  
+  function handleSwipe() {
+    const swipeThreshold = 50; // Minimum px distance for swipe
+    
+    // Calculate current active index
+    const activeIndex = lists.findIndex(list => list.id === activeListId);
+    
+    if (touchEndX < touchStartX - swipeThreshold) {
+      // Swipe left - go to next card
+      if (activeIndex < lists.length - 1) {
+        handleSelectList(lists[activeIndex + 1].id);
+      }
+    }
+    
+    if (touchEndX > touchStartX + swipeThreshold) {
+      // Swipe right - go to previous card
+      if (activeIndex > 0) {
+        handleSelectList(lists[activeIndex - 1].id);
+      }
+    }
+  }
+  
   onMount(() => {
     // Force explicit initialization of the store 
     console.log('ListCarousel component mounted, initializing lists');
@@ -63,34 +97,43 @@
     }
   }
   
-  // Scroll handling to show active list
+  // Update active card with visual swipe effect
   function scrollToActiveList() {
     if (!carouselElement || !activeListId) return;
     
-    const activeCard = carouselElement.querySelector(`[data-list-id="${activeListId}"]`);
-    if (activeCard) {
-      activeCard.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'nearest',
-        inline: 'center'
-      });
-    }
+    // Update data attributes to trigger transitions
+    const items = carouselElement.querySelectorAll('.carousel-item');
+    const activeIndex = lists.findIndex(list => list.id === activeListId);
+    
+    items.forEach((item, index) => {
+      item.setAttribute('data-active', (index === activeIndex).toString());
+      item.setAttribute('data-prev', (index === activeIndex - 1).toString());
+      item.setAttribute('data-next', (index === activeIndex + 1).toString());
+    });
   }
 </script>
 
 <div class="lists-container">
-  <div class="flex justify-between items-center mb-4">
-    <h2 class="text-xl font-bold">My Lists</h2>
-    <button class="btn btn-sm btn-{themeService.getCurrentTheme()}" on:click={handleCreateList}>
+  <div class="flex justify-between items-center mb-2">
+    <h2 class="text-lg font-bold">My Lists</h2>
+    <button class="btn btn-xs btn-{themeService.getCurrentTheme()}" on:click={handleCreateList}>
       New List
     </button>
   </div>
   
   {#if lists.length > 0}
-    <div class="carousel carousel-center max-w-full p-4 space-x-4 bg-gray-100 rounded-box border border-{themeService.getCurrentTheme()}/20"
-         bind:this={carouselElement}>
-      {#each lists as list (list.id)}
-        <div class="carousel-item" data-list-id={list.id}>
+    <div class="carousel w-full p-4 bg-transparent rounded-box flex justify-center"
+         bind:this={carouselElement}
+         on:touchstart={handleTouchStart}
+         on:touchend={handleTouchEnd}>
+      {#each lists as list, index (list.id)}
+        <div 
+          class="carousel-item" 
+          data-list-id={list.id}
+          data-active={list.id === activeListId}
+          data-prev={index === lists.findIndex(l => l.id === activeListId) - 1}
+          data-next={index === lists.findIndex(l => l.id === activeListId) + 1}
+        >
           <ListCard
             {list}
             isActive={list.id === activeListId}
@@ -104,32 +147,59 @@
       {/each}
     </div>
     
-    <!-- Optional navigation buttons -->
-    <div class="flex justify-center gap-4 mt-4">
+    <!-- Navigation buttons -->
+    <div class="flex justify-between items-center mt-4 px-1 relative z-20">
       <button 
-        class="btn btn-circle btn-sm btn-{themeService.getCurrentTheme()}/70"
+        class="btn btn-circle btn-xs btn-{themeService.getCurrentTheme()}/70"
         on:click={() => {
           if (carouselElement) {
-            carouselElement.scrollBy({ left: -300, behavior: 'smooth' });
+            // Find the current active list index
+            const activeIndex = lists.findIndex(list => list.id === activeListId);
+            if (activeIndex > 0) {
+              // Select the previous list
+              handleSelectList(lists[activeIndex - 1].id);
+              // scrollToActiveList is called by the reactive store subscription
+            }
           }
         }}
+        disabled={lists.findIndex(list => list.id === activeListId) === 0}
       >
         ❮
       </button>
+      
+      <div class="text-center mx-2 text-xs">
+        List {lists.findIndex(list => list.id === activeListId) + 1} of {lists.length}
+      </div>
+      
       <button 
-        class="btn btn-circle btn-sm btn-{themeService.getCurrentTheme()}/70"
+        class="btn btn-circle btn-xs btn-{themeService.getCurrentTheme()}/70"
         on:click={() => {
           if (carouselElement) {
-            carouselElement.scrollBy({ left: 300, behavior: 'smooth' });
+            // Find the current active list index
+            const activeIndex = lists.findIndex(list => list.id === activeListId);
+            if (activeIndex < lists.length - 1) {
+              // Select the next list
+              handleSelectList(lists[activeIndex + 1].id);
+              // scrollToActiveList is called by the reactive store subscription
+            }
           }
         }}
+        disabled={lists.findIndex(list => list.id === activeListId) === lists.length - 1}
       >
         ❯
       </button>
     </div>
   {:else}
-    <div class="flex items-center justify-center h-40 bg-gray-100 rounded-box">
-      <p class="text-gray-500">No lists found. Create a new list to get started.</p>
+    <div class="card w-[864px] min-h-[420px] shadow-lg bg-white border border-gray-200 mx-auto flex items-center justify-center">
+      <div class="text-center p-6">
+        <div class="text-gray-400 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <p class="text-gray-500 mb-4">No lists found</p>
+        <p class="text-sm text-gray-400">Create a new list to get started</p>
+      </div>
     </div>
   {/if}
 </div>
@@ -137,18 +207,64 @@
 <style>
   .lists-container {
     margin: 1rem auto;
-    max-width: 1200px;
+    max-width: 900px; /* Much wider to accommodate the 3x cards */
     padding: 0 1rem;
+    overflow-x: hidden; /* Ensure no horizontal scrollbar */
   }
   
   .carousel {
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+    position: relative;
+    height: auto;
+    min-height: 450px; /* Minimum height for cards */
+    perspective: 1200px; /* Enhanced 3D effect */
+    transform-style: preserve-3d;
+    padding: 20px 0;
   }
   
   .carousel-item {
-    scroll-snap-align: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 10px;
+    opacity: 0;
+    transform: translateX(0) translateY(20px) translateZ(-100px) scale(0.85);
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    pointer-events: none;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  }
+  
+  .carousel-item[data-active="true"] {
+    opacity: 1;
+    transform: translateX(0) translateY(0) translateZ(0) scale(1);
+    pointer-events: all;
+    z-index: 10;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+  }
+  
+  .carousel-item[data-prev="true"] {
+    opacity: 0.7;
+    transform: translateX(-30px) translateY(10px) translateZ(-40px) scale(0.95) rotateZ(-2deg);
+    z-index: 5;
+    pointer-events: none;
+  }
+  
+  .carousel-item[data-next="true"] {
+    opacity: 0.7;
+    transform: translateX(30px) translateY(10px) translateZ(-40px) scale(0.95) rotateZ(2deg);
+    z-index: 5;
+    pointer-events: none;
+  }
+  
+  /* Cards slightly visible in the stack */
+  .carousel-item:not([data-active="true"]):not([data-prev="true"]):not([data-next="true"]) {
+    opacity: 0.2;
+    transform: translateX(0) translateY(30px) translateZ(-80px) scale(0.85);
+    z-index: 1;
   }
 </style>

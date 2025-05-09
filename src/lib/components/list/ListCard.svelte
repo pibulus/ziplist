@@ -64,10 +64,11 @@
 </script>
 
 <div 
-  class="card w-72 shadow-md h-96 overflow-hidden flex flex-col bg-white {isActive ? `border-2 border-${themeService.getCurrentTheme()}` : ''}"
+  class="card w-[864px] min-h-[420px] h-auto overflow-hidden flex flex-col bg-white {isActive ? `border-2 border-${themeService.getCurrentTheme()}` : 'border border-gray-200'}"
+  style="transition: all 0.3s ease; backface-visibility: hidden; will-change: transform, box-shadow; -webkit-backface-visibility: hidden;"
   on:click={() => onSelect(list.id)}
 >
-  <div class="card-body p-4 flex flex-col">
+  <div class="card-body p-6 flex flex-col">
     <div class="card-title flex justify-between mb-3">
       {#if isEditingName}
         <input 
@@ -91,7 +92,7 @@
       {/if}
     </div>
     
-    <div class="flex-grow overflow-y-auto mb-3 max-h-[240px] h-full scrollbar-thin">
+    <div class="flex-grow overflow-y-auto mb-3 max-h-[350px] h-full scrollbar-thin">
       {#if list.items.length > 0}
         <ul class="list">
           {#each list.items as item (item.id)}
@@ -101,7 +102,7 @@
                 id="item-{list.id}-{item.id}"
                 checked={item.checked}
                 on:change={() => toggleItem(item.id)}
-                class="form-checkbox h-4 w-4 text-{themeService.getCurrentTheme()}-600 rounded mr-2"
+                class="form-checkbox h-5 w-5 text-{themeService.getCurrentTheme()}-600 rounded mr-3 mt-1"
               />
               <label 
                 for="item-{list.id}-{item.id}" 
@@ -144,31 +145,38 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    padding-right: 5px; /* Add some padding for the scrollbar */
+    padding-right: 12px; /* Add some padding for the scrollbar */
+    display: grid;
+    grid-template-columns: repeat(3, minmax(250px, 1fr)); /* Ensure each column can fit ~9 words (min 250px width) */
+    grid-gap: 12px;
   }
   
   .list-item {
-    padding: 0.5rem 0;
+    padding: 0.625rem 0.75rem;
     display: flex;
     align-items: flex-start;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
     flex-wrap: nowrap;
-    min-height: 36px;
+    min-height: 42px;
+    background-color: #fafafa;
   }
   
-  .list-item:last-child {
-    border-bottom: none;
-  }
+  /* Each list item has its own border now */
   
   .list-item label {
     cursor: pointer;
     flex-grow: 1;
-    font-size: 0.9rem;
+    font-size: 1rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
     min-width: 0;
     padding-top: 1px;
+    line-height: 1.3;
+    max-width: 100%;
+    /* Ensure we can fit at least 9 average words per line (avg word ~5.5 chars + space) */
+    min-width: calc(9 * 5.5ch + 9ch);
   }
 
   /* Custom scrollbar styles */
