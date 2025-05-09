@@ -12,6 +12,7 @@
   export let onClearList = () => {};
   export let onReorderItems = () => {};
   export let onAddItem = () => {};
+  export let onEditItem = () => {};
   
   const dispatch = createEventDispatcher();
   
@@ -23,6 +24,8 @@
   let dragOverItemId = null;
   let newItemText = '';
   let isAddingItem = false;
+  let editingItemId = null;
+  let editedItemText = '';
   
   // Filtered items
   $: filteredItems = showCompleted 
@@ -166,6 +169,41 @@
       toggleAddItemForm();
     }
   }
+
+  // Item editing functions
+  function startEditingItem(item) {
+    // Don't start editing checked items
+    if (item.checked) return;
+
+    editingItemId = item.id;
+    editedItemText = item.text;
+
+    // Focus the input field after the component renders
+    setTimeout(() => {
+      const editItemInput = document.getElementById(`edit-item-${list.id}-${item.id}`);
+      if (editItemInput) editItemInput.focus();
+    }, 50);
+  }
+
+  function saveItemEdit() {
+    if (editedItemText.trim() && editingItemId !== null) {
+      onEditItem(editingItemId, editedItemText.trim());
+      cancelItemEdit();
+    }
+  }
+
+  function cancelItemEdit() {
+    editingItemId = null;
+    editedItemText = '';
+  }
+
+  function handleEditItemKeyDown(event) {
+    if (event.key === 'Enter') {
+      saveItemEdit();
+    } else if (event.key === 'Escape') {
+      cancelItemEdit();
+    }
+  }
 </script>
 
 <div 
@@ -222,12 +260,25 @@
                 on:change={() => toggleItem(item.id)}
                 class="form-checkbox h-5 w-5 text-{themeService.getCurrentTheme()}-600 rounded mr-3 mt-1"
               />
-              <label
-                for="item-{list.id}-{item.id}"
-                class="{item.checked ? 'line-through text-gray-500' : 'text-gray-900'} break-words flex-grow"
-              >
-                {item.text}
-              </label>
+              {#if editingItemId === item.id}
+                <div class="flex-grow flex">
+                  <input
+                    id="edit-item-{list.id}-{item.id}"
+                    class="input input-bordered input-sm flex-grow bg-white text-gray-800"
+                    bind:value={editedItemText}
+                    on:blur={saveItemEdit}
+                    on:keydown={handleEditItemKeyDown}
+                  />
+                </div>
+              {:else}
+                <label
+                  for="item-{list.id}-{item.id}"
+                  class="{item.checked ? 'line-through text-gray-500' : 'text-gray-900 cursor-pointer'} break-words flex-grow"
+                  on:click|stopPropagation={item.checked ? null : () => startEditingItem(item)}
+                >
+                  {item.text}
+                </label>
+              {/if}
             </li>
           {/each}
 

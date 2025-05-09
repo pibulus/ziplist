@@ -132,6 +132,15 @@ export class ListsService {
   toggleItem(itemId) {
     listsStore.toggleItem(itemId);
   }
+
+  /**
+   * Edit an item's text
+   * @param {number|string} itemId - ID of the item to edit
+   * @param {string} newText - New text for the item
+   */
+  editItem(itemId, newText) {
+    listsStore.editItem(itemId, newText);
+  }
   
   /**
    * Remove an item from the active list

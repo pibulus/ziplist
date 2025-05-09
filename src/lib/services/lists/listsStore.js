@@ -258,8 +258,8 @@ function createListsStore() {
           if (list.id === targetListId) {
             return {
               ...list,
-              items: list.items.map(item => 
-                item.id === itemId 
+              items: list.items.map(item =>
+                item.id === itemId
                   ? { ...item, checked: !item.checked }
                   : item
               ),
@@ -270,7 +270,35 @@ function createListsStore() {
         })
       };
     });
-    
+
+    persistToStorage();
+  }
+
+  // Edit an item's text
+  function editItem(itemId, newText, listId = null) {
+    if (!newText || !newText.trim()) return;
+
+    update(state => {
+      const targetListId = listId || state.activeListId;
+      return {
+        ...state,
+        lists: state.lists.map(list => {
+          if (list.id === targetListId) {
+            return {
+              ...list,
+              items: list.items.map(item =>
+                item.id === itemId
+                  ? { ...item, text: newText.trim() }
+                  : item
+              ),
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return list;
+        })
+      };
+    });
+
     persistToStorage();
   }
 
@@ -382,6 +410,7 @@ function createListsStore() {
     addItem,
     addItems,
     toggleItem,
+    editItem,
     removeItem,
     clearList,
     renameList,
