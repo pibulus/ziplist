@@ -16,6 +16,15 @@
   // State variables
   let isEditingName = false;
   let editedName = '';
+  let showCompleted = false;
+  
+  // Filtered items
+  $: filteredItems = showCompleted 
+    ? list.items 
+    : list.items.filter(item => !item.checked);
+  
+  // Count of hidden completed items
+  $: hiddenCount = list.items.filter(item => item.checked).length;
   
   // Handle edit mode for list name
   function startEditingName() {
@@ -64,7 +73,7 @@
 </script>
 
 <div 
-  class="card w-full max-w-[640px] min-h-[420px] h-auto overflow-hidden flex flex-col bg-white {isActive ? `border-2 border-${themeService.getCurrentTheme()}` : 'border border-gray-200'}"
+  class="card w-full max-w-[640px] min-h-[420px] h-auto overflow-hidden flex flex-col bg-white {isActive ? `border-2 border-${themeService.getCurrentTheme()}` : 'border border-gray-200'} {showCompleted ? 'showing-completed' : ''}"
   style="transition: all 0.3s ease; backface-visibility: hidden; will-change: transform, box-shadow; -webkit-backface-visibility: hidden;"
   on:click={() => onSelect(list.id)}
 >
@@ -95,7 +104,7 @@
     <div class="flex-grow overflow-y-auto mb-3 max-h-[350px] h-full scrollbar-thin">
       {#if list.items.length > 0}
         <ul class="list">
-          {#each list.items as item (item.id)}
+          {#each filteredItems as item (item.id)}
             <li class="list-item {item.checked ? 'opacity-75' : ''} rounded hover:bg-gray-50">
               <input
                 type="checkbox"
@@ -112,6 +121,17 @@
               </label>
             </li>
           {/each}
+          
+          {#if hiddenCount > 0}
+            <li class="flex justify-center my-3">
+              <button 
+                class="btn btn-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full px-3"
+                on:click|stopPropagation={() => showCompleted = !showCompleted}
+              >
+                {showCompleted ? '↑ Hide Done' : `↓ Show Done (${hiddenCount})`}
+              </button>
+            </li>
+          {/if}
         </ul>
       {:else}
         <div class="flex items-center justify-center h-full text-gray-500 italic">
@@ -196,5 +216,10 @@
   
   :global(.scrollbar-thin::-webkit-scrollbar-thumb:hover) {
     background: rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Style for when showing completed items */
+  .showing-completed {
+    background-color: #fafafa;
   }
 </style>
