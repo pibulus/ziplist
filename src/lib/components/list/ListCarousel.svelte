@@ -100,6 +100,12 @@
   function handleReorderItems(reorderedItems) {
     listsService.reorderItems(reorderedItems);
   }
+
+  function handleAddItem(listId, text) {
+    if (listId === activeListId) {
+      listsService.addItem(text);
+    }
+  }
   
   // Update active card with visual swipe effect
   function scrollToActiveList() {
@@ -147,6 +153,7 @@
             onRenameList={(newName) => handleRenameList(list.id, newName)}
             onClearList={() => handleClearList(list.id)}
             onReorderItems={handleReorderItems}
+            onAddItem={(text) => handleAddItem(list.id, text)}
           />
         </div>
       {/each}

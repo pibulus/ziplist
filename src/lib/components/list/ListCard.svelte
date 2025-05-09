@@ -11,6 +11,7 @@
   export let onRenameList = () => {};
   export let onClearList = () => {};
   export let onReorderItems = () => {};
+  export let onAddItem = () => {};
   
   const dispatch = createEventDispatcher();
   
@@ -20,6 +21,8 @@
   let showCompleted = false;
   let draggedItemId = null;
   let dragOverItemId = null;
+  let newItemText = '';
+  let isAddingItem = false;
   
   // Filtered items
   $: filteredItems = showCompleted 
@@ -133,6 +136,36 @@
       onClearList();
     }
   }
+
+  // Add new item functions
+  function toggleAddItemForm() {
+    isAddingItem = !isAddingItem;
+    if (isAddingItem) {
+      // Focus the input field after the component renders
+      setTimeout(() => {
+        const addItemInput = document.getElementById(`add-item-${list.id}`);
+        if (addItemInput) addItemInput.focus();
+      }, 50);
+    } else {
+      newItemText = '';
+    }
+  }
+
+  function handleAddItem() {
+    if (newItemText.trim()) {
+      onAddItem(newItemText.trim());
+      newItemText = '';
+      // Keep the form open for adding multiple items
+    }
+  }
+
+  function handleAddItemKeyDown(event) {
+    if (event.key === 'Enter') {
+      handleAddItem();
+    } else if (event.key === 'Escape') {
+      toggleAddItemForm();
+    }
+  }
 </script>
 
 <div 
@@ -165,10 +198,10 @@
     </div>
     
     <div class="flex-grow overflow-y-auto mb-3 max-h-[350px] h-full scrollbar-thin">
-      {#if list.items.length > 0}
+      {#if list.items.length > 0 || isAddingItem}
         <ul class="list">
           {#each filteredItems as item (item.id)}
-            <li 
+            <li
               class="list-item {item.checked ? 'opacity-75' : ''} rounded hover:bg-gray-50 {draggedItemId === item.id ? 'dragging' : ''} {dragOverItemId === item.id ? 'drag-over' : ''}"
               draggable={!item.checked}
               on:dragstart={(e) => handleDragStart(e, item.id)}
@@ -181,7 +214,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                 </svg>
               </div>
-              
+
               <input
                 type="checkbox"
                 id="item-{list.id}-{item.id}"
@@ -189,18 +222,45 @@
                 on:change={() => toggleItem(item.id)}
                 class="form-checkbox h-5 w-5 text-{themeService.getCurrentTheme()}-600 rounded mr-3 mt-1"
               />
-              <label 
-                for="item-{list.id}-{item.id}" 
+              <label
+                for="item-{list.id}-{item.id}"
                 class="{item.checked ? 'line-through text-gray-500' : 'text-gray-900'} break-words flex-grow"
               >
                 {item.text}
               </label>
             </li>
           {/each}
-          
+
+          {#if isAddingItem}
+            <li class="list-item add-item-form rounded hover:bg-gray-50">
+              <div class="w-full flex gap-2">
+                <input
+                  id="add-item-{list.id}"
+                  class="input input-bordered input-sm flex-grow bg-white text-gray-800"
+                  placeholder="Enter new item..."
+                  bind:value={newItemText}
+                  on:keydown={handleAddItemKeyDown}
+                />
+                <button
+                  class="btn btn-sm btn-{themeService.getCurrentTheme()}"
+                  on:click|stopPropagation={handleAddItem}
+                  disabled={!newItemText.trim()}
+                >
+                  Add
+                </button>
+                <button
+                  class="btn btn-sm btn-ghost"
+                  on:click|stopPropagation={toggleAddItemForm}
+                >
+                  Cancel
+                </button>
+              </div>
+            </li>
+          {/if}
+
           {#if hiddenCount > 0}
             <li class="flex justify-center my-3">
-              <button 
+              <button
                 class="btn btn-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full px-3"
                 on:click|stopPropagation={() => showCompleted = !showCompleted}
               >
@@ -208,10 +268,27 @@
               </button>
             </li>
           {/if}
+
+          {#if !isAddingItem}
+            <li class="flex justify-center my-3">
+              <button
+                class="btn btn-xs bg-{themeService.getCurrentTheme()}/20 hover:bg-{themeService.getCurrentTheme()}/30 text-{themeService.getCurrentTheme()}-600 rounded-full px-3"
+                on:click|stopPropagation={toggleAddItemForm}
+              >
+                + Add Item
+              </button>
+            </li>
+          {/if}
         </ul>
       {:else}
-        <div class="flex items-center justify-center h-full text-gray-500 italic">
+        <div class="flex flex-col items-center justify-center h-full text-gray-500 italic gap-4">
           <p>This list is empty</p>
+          <button
+            class="btn btn-sm btn-{themeService.getCurrentTheme()}"
+            on:click|stopPropagation={toggleAddItemForm}
+          >
+            + Add Item
+          </button>
         </div>
       {/if}
     </div>
