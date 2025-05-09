@@ -190,7 +190,7 @@
       </button>
     </div>
   {:else}
-    <div class="card w-[864px] min-h-[420px] shadow-lg bg-white border border-gray-200 mx-auto flex items-center justify-center">
+    <div class="card w-full max-w-[640px] min-h-[420px] shadow-lg bg-white border border-gray-200 mx-auto flex items-center justify-center">
       <div class="text-center p-6">
         <div class="text-gray-400 mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -207,7 +207,8 @@
 <style>
   .lists-container {
     margin: 1rem auto;
-    max-width: 900px; /* Much wider to accommodate the 3x cards */
+    width: 95%;
+    max-width: 700px; /* Narrower container to match card width */
     padding: 0 1rem;
     overflow-x: hidden; /* Ensure no horizontal scrollbar */
   }

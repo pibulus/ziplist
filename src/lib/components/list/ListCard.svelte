@@ -64,7 +64,7 @@
 </script>
 
 <div 
-  class="card w-[864px] min-h-[420px] h-auto overflow-hidden flex flex-col bg-white {isActive ? `border-2 border-${themeService.getCurrentTheme()}` : 'border border-gray-200'}"
+  class="card w-full max-w-[640px] min-h-[420px] h-auto overflow-hidden flex flex-col bg-white {isActive ? `border-2 border-${themeService.getCurrentTheme()}` : 'border border-gray-200'}"
   style="transition: all 0.3s ease; backface-visibility: hidden; will-change: transform, box-shadow; -webkit-backface-visibility: hidden;"
   on:click={() => onSelect(list.id)}
 >
@@ -96,7 +96,7 @@
       {#if list.items.length > 0}
         <ul class="list">
           {#each list.items as item (item.id)}
-            <li class="list-item {item.checked ? 'opacity-75' : ''} px-2 py-1 rounded hover:bg-gray-50 mb-1">
+            <li class="list-item {item.checked ? 'opacity-75' : ''} rounded hover:bg-gray-50">
               <input
                 type="checkbox"
                 id="item-{list.id}-{item.id}"
@@ -146,13 +146,13 @@
     padding: 0;
     margin: 0;
     padding-right: 12px; /* Add some padding for the scrollbar */
-    display: grid;
-    grid-template-columns: repeat(3, minmax(250px, 1fr)); /* Ensure each column can fit ~9 words (min 250px width) */
-    grid-gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
   
   .list-item {
-    padding: 0.625rem 0.75rem;
+    padding: 0.75rem 1rem;
     display: flex;
     align-items: flex-start;
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -160,6 +160,7 @@
     flex-wrap: nowrap;
     min-height: 42px;
     background-color: #fafafa;
+    width: 100%;
   }
   
   /* Each list item has its own border now */
@@ -173,10 +174,9 @@
     hyphens: auto;
     min-width: 0;
     padding-top: 1px;
-    line-height: 1.3;
-    max-width: 100%;
-    /* Ensure we can fit at least 9 average words per line (avg word ~5.5 chars + space) */
-    min-width: calc(9 * 5.5ch + 9ch);
+    line-height: 1.4;
+    max-width: calc(100% - 30px); /* Account for checkbox width */
+    display: block;
   }
 
   /* Custom scrollbar styles */
