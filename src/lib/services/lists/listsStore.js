@@ -227,10 +227,11 @@ function createListsStore() {
         lists: state.lists.map(list => {
           if (list.id === targetListId) {
             // Map text strings to item objects
-            const newItems = items.map(text => ({
-              id: Date.now() + Math.floor(Math.random() * 1000),
+            const newItems = items.map((text, index) => ({
+              id: Date.now() + Math.floor(Math.random() * 1000) + index,
               text,
-              checked: false
+              checked: false,
+              order: list.items.length + index // Add order field to maintain sort order
             }));
             
             return {
@@ -340,6 +341,34 @@ function createListsStore() {
     
     persistToStorage();
   }
+  
+  // Reorder items in a list
+  function reorderItems(reorderedItems, listId = null) {
+    update(state => {
+      const targetListId = listId || state.activeListId;
+      return {
+        ...state,
+        lists: state.lists.map(list => {
+          if (list.id === targetListId) {
+            // Update order field for each item based on its new position
+            const updatedItems = reorderedItems.map((item, index) => ({
+              ...item,
+              order: index
+            }));
+            
+            return {
+              ...list,
+              items: updatedItems,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return list;
+        })
+      };
+    });
+    
+    persistToStorage();
+  }
 
   // Initialize when created
   initialize();
@@ -356,6 +385,7 @@ function createListsStore() {
     removeItem,
     clearList,
     renameList,
+    reorderItems,
     persistToStorage
   };
 }

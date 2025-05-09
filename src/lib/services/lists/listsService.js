@@ -174,6 +174,14 @@ export class ListsService {
   renameActiveList(newName) {
     listsStore.renameList(newName);
   }
+  
+  /**
+   * Reorder items in the active list
+   * @param {Array} reorderedItems - Array of items in their new order
+   */
+  reorderItems(reorderedItems) {
+    listsStore.reorderItems(reorderedItems);
+  }
 }
 
 // Export a singleton instance
