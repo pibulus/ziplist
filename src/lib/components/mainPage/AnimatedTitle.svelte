@@ -6,7 +6,7 @@
   const dispatch = createEventDispatcher();
   
   // Component props
-  export let title = 'Ziplist';
+  export let title = 'ZipList';
   export let subtitle = "Create stacked list cards with your voice. Quick, simple, spooky.";
   
   // AppSuffix configuration
@@ -35,10 +35,10 @@
   >
     <!-- Use aria-hidden for spans if H1 has aria-label -->
     <span class="ziplist-main-word">
-      <span class="stagger-letter mr-[-0.06em]" aria-hidden="true">Z</span><span class="stagger-letter ml-[-0.04em]" aria-hidden="true">i</span><span
-        class="stagger-letter" aria-hidden="true">p</span
-      ><span class="stagger-letter" aria-hidden="true">l</span><span class="stagger-letter mr-[-0.04em]" aria-hidden="true">i</span><span
-        class="stagger-letter ml-[-0.03em]" aria-hidden="true">s</span
+      <span class="stagger-letter mr-[-0.01em]" aria-hidden="true">Z</span><span class="stagger-letter ml-[0.01em]" aria-hidden="true">i</span><span
+        class="stagger-letter mr-[-0.02em]" aria-hidden="true">p</span
+      ><span class="stagger-letter mr-[-0.02em]" aria-hidden="true">L</span><span class="stagger-letter" aria-hidden="true">i</span><span
+        class="stagger-letter ml-[0.01em]" aria-hidden="true">s</span
       ><span class="stagger-letter" aria-hidden="true">t</span>
     </span>
     
