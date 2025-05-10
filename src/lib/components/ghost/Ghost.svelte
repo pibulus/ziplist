@@ -8,6 +8,8 @@
 
 	// SVG paths
 	import ghostPathsUrl from './ghost-paths.svg?url';
+	// Also import exportable paths for direct use if needed
+	import { GHOST_BODY_PATH, GHOST_EYE_LEFT_PATH, GHOST_EYE_RIGHT_PATH } from './exportable/paths.js';
 
 	// Configuration
 	import {

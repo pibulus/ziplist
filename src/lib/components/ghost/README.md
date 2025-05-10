@@ -457,6 +457,33 @@ When working with the Ghost component:
 11. Subscribe to the theme store for any components that need to react to theme changes
 12. Use the `cssVariables` derived store for dynamically generated CSS variables
 
+## Static Asset Generation
+
+The ghost component is also used to generate static assets for PWA functionality, favicons, and other static graphics. This is handled through a Vite plugin and exportable path definitions:
+
+### Path Definitions
+
+All SVG path definitions are available in `/src/lib/components/ghost/exportable/paths.js`:
+
+```javascript
+// Import in your components
+import { GHOST_BODY_PATH, GHOST_EYE_LEFT_PATH, GHOST_EYE_RIGHT_PATH } from './exportable/paths.js';
+```
+
+### Asset Generation
+
+To generate all static ghost assets:
+
+```bash
+npm run generate-ghost-assets
+```
+
+This will create all required static SVGs, icons, and PNG files for PWA functionality.
+
+### Integration
+
+For detailed documentation on the asset generation system, see `/README-ghost-asset-generator.md`.
+
 ## Troubleshooting
 
 Common issues and their solutions:

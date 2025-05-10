@@ -7,6 +7,7 @@
 - `npm run preview` - Preview production build
 - `npm run format` - Run Prettier formatter
 - `npm run lint` - Check code formatting and run ESLint
+- `npm run generate-ghost-assets` - Generate all ghost static assets from component definitions
 
 ## Code Style Guidelines
 
@@ -102,6 +103,7 @@ For detailed documentation of the Ghost component, including its architecture, a
    - Local animation states managed in component
 3. **Direct Element Targeting**: Animations target SVG elements directly via ID selectors
 4. **Theme System**: Centralized theme definitions with reactive updates
+5. **Exportable Path Definitions**: SVG paths defined in `exportable/paths.js` for use by both components and static assets
 
 ### Critical Implementation Guidelines
 
