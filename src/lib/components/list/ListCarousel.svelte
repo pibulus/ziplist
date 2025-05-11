@@ -132,30 +132,32 @@
 <div class="lists-container">
   
   {#if lists.length > 0}
-    <div class="carousel w-full p-4 bg-transparent rounded-box flex justify-center"
+    <div class="carousel carousel-center w-full p-4 bg-transparent rounded-box"
          bind:this={carouselElement}
          on:touchstart={handleTouchStart}
          on:touchend={handleTouchEnd}>
       {#each lists as list, index (list.id)}
-        <div 
-          class="carousel-item" 
+        <div
+          class="carousel-item w-full"
           data-list-id={list.id}
           data-active={list.id === activeListId}
           data-prev={index === lists.findIndex(l => l.id === activeListId) - 1}
           data-next={index === lists.findIndex(l => l.id === activeListId) + 1}
         >
-          <ListCard
-            {list}
-            isActive={list.id === activeListId}
-            onSelect={() => handleSelectList(list.id)}
-            onToggleItem={(itemId) => handleToggleItem(list.id, itemId)}
-            onDeleteList={() => handleDeleteList(list.id)}
-            onRenameList={(newName) => handleRenameList(list.id, newName)}
-            onClearList={() => handleClearList(list.id)}
-            onReorderItems={handleReorderItems}
-            onAddItem={(text) => handleAddItem(list.id, text)}
-            onEditItem={(itemId, newText) => handleEditItem(list.id, itemId, newText)}
-          />
+          <div class="w-full flex justify-center">
+            <ListCard
+              {list}
+              isActive={list.id === activeListId}
+              onSelect={() => handleSelectList(list.id)}
+              onToggleItem={(itemId) => handleToggleItem(list.id, itemId)}
+              onDeleteList={() => handleDeleteList(list.id)}
+              onRenameList={(newName) => handleRenameList(list.id, newName)}
+              onClearList={() => handleClearList(list.id)}
+              onReorderItems={handleReorderItems}
+              onAddItem={(text) => handleAddItem(list.id, text)}
+              onEditItem={(itemId, newText) => handleEditItem(list.id, itemId, newText)}
+            />
+          </div>
         </div>
       {/each}
     </div>
@@ -227,58 +229,31 @@
   }
   
   .carousel {
-    overflow: visible;
-    position: relative;
-    height: auto;
-    min-height: 450px; /* Minimum height for cards */
-    perspective: 1200px; /* Enhanced 3D effect */
-    transform-style: preserve-3d;
     padding: 20px 0;
+    min-height: 500px; /* Make sure there's room for the card content */
   }
-  
+
   .carousel-item {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    min-height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 10px;
+    /* For DaisyUI carousel items, we need to handle positioning differently */
     opacity: 0;
-    transform: translateX(0) translateY(20px) translateZ(-100px) scale(0.85);
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    pointer-events: none;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    display: none; /* Hide non-active items */
   }
-  
+
   .carousel-item[data-active="true"] {
     opacity: 1;
-    transform: translateX(0) translateY(0) translateZ(0) scale(1);
-    pointer-events: all;
+    display: block; /* Show only active item */
     z-index: 10;
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
   }
-  
-  .carousel-item[data-prev="true"] {
-    opacity: 0.7;
-    transform: translateX(-30px) translateY(10px) translateZ(-40px) scale(0.95) rotateZ(-2deg);
-    z-index: 5;
-    pointer-events: none;
-  }
-  
-  .carousel-item[data-next="true"] {
-    opacity: 0.7;
-    transform: translateX(30px) translateY(10px) translateZ(-40px) scale(0.95) rotateZ(2deg);
-    z-index: 5;
-    pointer-events: none;
-  }
-  
-  /* Cards slightly visible in the stack */
-  .carousel-item:not([data-active="true"]):not([data-prev="true"]):not([data-next="true"]) {
-    opacity: 0.2;
-    transform: translateX(0) translateY(30px) translateZ(-80px) scale(0.85);
-    z-index: 1;
+
+  /* Use the data attributes for special navigation styles */
+  .carousel::after {
+    content: "";
+    display: block;
+    height: 3px;
+    width: 80px;
+    margin: 20px auto 10px;
+    background-color: var(--p);
+    border-radius: 3px;
   }
 </style>

@@ -206,27 +206,28 @@
   }
 </script>
 
-<div 
-  class="card w-full max-w-[640px] min-h-[420px] h-auto overflow-hidden flex flex-col bg-white {isActive ? `border-2 border-${themeService.getCurrentTheme()}` : 'border border-gray-200'} {showCompleted ? 'showing-completed' : ''}"
+<div
+  class="card card-bordered w-full max-w-[640px] h-auto flex flex-col bg-white {showCompleted ? 'showing-completed' : ''} list-card"
   style="transition: all 0.3s ease; backface-visibility: hidden; will-change: transform, box-shadow; -webkit-backface-visibility: hidden;"
   on:click={() => onSelect(list.id)}
+  class:active={isActive}
 >
-  <div class="card-body p-6 flex flex-col">
-    <div class="card-title flex justify-between mb-3">
+  <div class="card-body p-8 flex flex-col">
+    <div class="card-title flex justify-between mb-4 items-center">
       {#if isEditingName}
-        <input 
+        <input
           id="edit-list-{list.id}"
-          class="input input-bordered input-sm flex-grow"
+          class="input input-bordered input-md flex-grow"
           bind:value={editedName}
           on:blur={saveListName}
           on:keydown={handleKeyDown}
         />
       {:else}
-        <h3 class="text-lg font-bold truncate flex-grow" on:dblclick={startEditingName}>
+        <h3 class="text-xl font-bold truncate flex-grow text-{themeService.getCurrentTheme()}-600" on:dblclick={startEditingName}>
           {list.name}
         </h3>
-        <button 
-          class="btn btn-square btn-ghost btn-xs" 
+        <button
+          class="btn btn-square btn-ghost btn-sm"
           on:click|stopPropagation={startEditingName}
           title="Rename list"
         >
@@ -235,7 +236,7 @@
       {/if}
     </div>
     
-    <div class="flex-grow overflow-y-auto mb-3 max-h-[350px] h-full scrollbar-thin">
+    <div class="flex-grow mb-3 h-full items-content">
       {#if list.items.length > 0 || isAddingItem}
         <ul class="list">
           {#each filteredItems as item (item.id)}
@@ -258,7 +259,7 @@
                 id="item-{list.id}-{item.id}"
                 checked={item.checked}
                 on:change={() => toggleItem(item.id)}
-                class="form-checkbox h-5 w-5 text-{themeService.getCurrentTheme()}-600 rounded mr-3 mt-1"
+                class="checkbox checkbox-{themeService.getCurrentTheme()} checkbox-lg mr-3 mt-1"
               />
               {#if editingItemId === item.id}
                 <div class="flex-grow flex">
@@ -273,7 +274,7 @@
               {:else}
                 <label
                   for="item-{list.id}-{item.id}"
-                  class="{item.checked ? 'line-through text-gray-500' : 'text-gray-900 cursor-pointer'} break-words flex-grow"
+                  class="{item.checked ? 'line-through text-gray-500' : 'text-gray-900 cursor-pointer'} break-words flex-grow item-label"
                   on:click|stopPropagation={item.checked ? null : () => startEditingItem(item)}
                 >
                   {item.text}
@@ -365,66 +366,82 @@
 </div>
 
 <style>
+  /* Card styles */
+  .list-card {
+    border-width: 3px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .list-card.active {
+    border-color: var(--p);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+  }
+
+  /* List styles */
   .list {
     list-style: none;
     padding: 0;
     margin: 0;
-    padding-right: 12px; /* Add some padding for the scrollbar */
+    padding-right: 14px; /* Add some padding for the scrollbar */
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
   }
   
   .list-item {
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
     display: flex;
     align-items: flex-start;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 6px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
     flex-wrap: nowrap;
-    min-height: 42px;
+    min-height: 52px;
     background-color: #fafafa;
     width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
-  
-  /* Each list item has its own border now */
+
+  /* CHONKY list items with their own borders */
   
   .list-item label {
     cursor: pointer;
     flex-grow: 1;
-    font-size: 1rem;
+    font-size: 1.1rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
     min-width: 0;
-    padding-top: 1px;
-    line-height: 1.4;
-    max-width: calc(100% - 30px); /* Account for checkbox width */
+    padding-top: 2px;
+    line-height: 1.5;
+    max-width: calc(100% - 40px); /* Account for larger checkbox width */
     display: block;
+    transition: all 0.2s ease;
   }
 
-  /* Custom scrollbar styles */
-  :global(.scrollbar-thin::-webkit-scrollbar) {
-    width: 6px;
+  .list-item:hover {
+    border-color: rgba(var(--p-rgb), 0.4);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
   }
-  
-  :global(.scrollbar-thin::-webkit-scrollbar-track) {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 3px;
-  }
-  
-  :global(.scrollbar-thin::-webkit-scrollbar-thumb) {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-  }
-  
-  :global(.scrollbar-thin::-webkit-scrollbar-thumb:hover) {
-    background: rgba(0, 0, 0, 0.2);
+
+  /* Card content styles */
+  .items-content {
+    display: flex;
+    flex-direction: column;
   }
   
   /* Style for when showing completed items */
   .showing-completed {
     background-color: #fafafa;
+  }
+
+  /* Checked item animation */
+  .list-item input[type="checkbox"]:checked + label {
+    transition: all 0.3s ease;
+    transform: translateX(4px);
   }
   
   /* Drag and drop styles */
