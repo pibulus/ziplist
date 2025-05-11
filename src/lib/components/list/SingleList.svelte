@@ -16,14 +16,14 @@
   let showCompletionMessage = false;
   let completionMessageTimeout;
 
-  // Playful completion messages
+  // Simple completion messages
   const completionMessages = [
-    "All zipped up!",
-    "Task master extraordinaire!",
-    "Productivity hero!",
-    "Everything's in its place!",
-    "List conquered!",
-    "Absolutely crushing it!"
+    "All done!",
+    "Finished!",
+    "Complete!",
+    "Done!",
+    "All set!",
+    "All good!"
   ];
   
   // Subscribe to the active list
@@ -261,17 +261,9 @@
 <div class="zl-card">
   <div class="card-content">
     <!-- Top action bar -->
-    <div class="zl-top-actions">
-      {#if !isAddingItem}
-        <button 
-          class="zl-add-button" 
-          on:click|stopPropagation={toggleAddItemForm}
-          aria-label="Add new item"
-        >
-          +
-        </button>
-      {/if}
-    </div>
+    <!-- No add button in top actions -->
+  <div class="zl-top-actions">
+  </div>
     
     <!-- Completion Message -->
     {#if showCompletionMessage}
@@ -336,13 +328,7 @@
             </li>
           {/each}
           
-          {#if completedItems.length > 0 && activeItems.length > 0}
-            <div class="my-2" in:fade={{ duration: 300 }}>
-              <div class="zl-divider">
-                <span class="divider-text">completed</span>
-              </div>
-            </div>
-          {/if}
+          <!-- No divider or completed text -->
 
           {#if isAddingItem}
             <li class="zl-add-form fade-in">
@@ -422,9 +408,11 @@
   }
   
   @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% { background-position: 0% 0%; }
+    25% { background-position: 50% 50%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 50% 50%; }
+    100% { background-position: 0% 0%; }
   }
   
   .fade-in {
@@ -439,13 +427,14 @@
     margin-bottom: 1rem;
   }
   
-  /* Card styling with soft pastel gradient */
+  /* Card styling with improved gradient */
   .zl-card {
     border-radius: 28px;
-    background: linear-gradient(145deg, #ffcdc1, #ffc6e5);
-    background-size: 200% 200%;
-    animation: gradient-shift 20s ease infinite;
-    box-shadow: 0 10px 20px rgba(201, 120, 255, 0.15);
+    background: linear-gradient(135deg, #fff6e5, #ffd4da, #ffc6e5);
+    background-size: 300% 300%;
+    animation: gradient-shift 30s ease infinite;
+    box-shadow: 0 10px 25px rgba(201, 120, 255, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.8);
     padding: 1.75rem;
     position: relative;
     overflow: hidden;
@@ -529,14 +518,17 @@
     box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
     position: relative;
     cursor: pointer;
-    border-left: 3px solid rgba(201, 120, 255, 0.3);
+    border-left: 4px solid rgba(201, 120, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    min-height: 60px;
   }
 
   .zl-item:hover {
     background: rgba(255, 255, 255, 0.7);
     transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(201, 120, 255, 0.15);
-    border-left: 3px solid rgba(201, 120, 255, 0.5);
+    box-shadow: 0 8px 20px rgba(201, 120, 255, 0.2);
+    border-left: 4px solid rgba(201, 120, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.9);
   }
   
   .zl-item::after {
@@ -560,23 +552,25 @@
   .zl-item.checked {
     opacity: 0.75;
     background: rgba(245, 240, 250, 0.4);
-    border-left: 3px solid rgba(201, 120, 255, 0.2);
+    border-left: 4px solid rgba(201, 120, 255, 0.2);
     transform: scale(0.98);
     box-shadow: 0 2px 6px rgba(201, 120, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.5);
   }
   
   /* Item text */
   .zl-item-text {
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.5;
-    color: #555555;
+    color: #444444;
     flex-grow: 1;
     transition: all 0.2s ease;
     font-family: 'Space Mono', monospace;
     text-transform: capitalize;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
     cursor: pointer;
+    min-height: 26px; /* Consistent height to prevent shifting */
   }
   
   .zl-item-text.checked {
@@ -707,15 +701,18 @@
   /* Input fields */
   .zl-input, .zl-edit-input {
     font-family: 'Space Mono', monospace;
-    font-weight: 700;
+    font-weight: 800;
     border: 2px solid rgba(201, 120, 255, 0.3);
     background-color: rgba(255, 255, 255, 0.8);
     border-radius: 12px;
     padding: 0.7rem 1rem;
     outline: none;
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    color: #555555;
+    color: #444444;
     width: 100%;
+    min-height: 26px;
+    font-size: 1.1rem;
+    letter-spacing: 0.8px;
   }
   
   .zl-input::placeholder, .zl-edit-input::placeholder {
