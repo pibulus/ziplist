@@ -56,6 +56,12 @@
   
   // Drag and drop functions
   function handleDragStart(event, itemId) {
+    // Prevent dragging if item is being edited
+    if (editingItemId === itemId) {
+      event.preventDefault();
+      return;
+    }
+
     // Set data and styling
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', itemId);
@@ -197,10 +203,10 @@
         <ul class="zl-list" role="list">
           {#each sortedItems as item, index (item.id)}
             <li
-              class="zl-item {item.checked ? 'checked' : ''}"
+              class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
-              draggable={!item.checked}
+              draggable={!item.checked && editingItemId !== item.id}
               on:dragstart={(e) => handleDragStart(e, item.id)}
               on:dragend={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
@@ -448,6 +454,12 @@
     border: 2px solid rgba(255, 212, 218, 0.6);
     min-height: 60px; /* Minimum height, but will grow with content */
     justify-content: space-between;
+  }
+
+  /* Change cursor for items being edited */
+  .zl-item:has(.zl-edit-input),
+  .zl-item.editing {
+    cursor: default;
   }
 
   .zl-item:hover {
