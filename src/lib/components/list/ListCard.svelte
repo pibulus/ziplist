@@ -34,6 +34,18 @@
   let editingItemId = null;
   let editedItemText = '';
   let flipDuration = 300; // Duration for the flip animation
+  let showCompletionMessage = false;
+  let completionMessageTimeout;
+
+  // Playful completion messages
+  const completionMessages = [
+    "All zipped up!",
+    "Task master extraordinaire!",
+    "Productivity hero!",
+    "Everything's in its place!",
+    "List conquered!",
+    "Absolutely crushing it!"
+  ];
   
   // Separated active and completed items
   $: activeItems = list.items.filter(item => !item.checked);
@@ -162,25 +174,72 @@
     }
   }
   
-  // Handle item toggle
+  // Handle item toggle with sparkle animation
   function toggleItem(itemId) {
     const itemToToggle = list.items.find(item => item.id === itemId);
+
+    // Apply haptic feedback
     if (itemToToggle && navigator.vibrate) {
       navigator.vibrate(itemToToggle.checked ? 20 : [20, 30, 20]);
     }
+
+    // Toggle the item state
     onToggleItem(itemId);
-  }
-  
-  // Delete list confirmation
-  function confirmDelete() {
-    if (confirm(`Are you sure you want to delete the list "${list.name}"?`)) {
-      onDeleteList();
+
+    // If checking the item (not unchecking), add sparkle animation
+    if (!itemToToggle?.checked) {
+      // Add confetti animation after a small delay
+      setTimeout(() => {
+        const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
+        if (checkbox) {
+          // Force reflow to restart animation
+          void checkbox.offsetWidth;
+
+          // Check if we've completed all items
+          const allCompleted = list.items.length > 1 &&
+            list.items.filter(i => i.id !== itemId).every(i => i.checked);
+
+          // If this completes the list, show a celebratory message
+          if (allCompleted) {
+            // Clear any existing timeout
+            if (completionMessageTimeout) {
+              clearTimeout(completionMessageTimeout);
+            }
+
+            // Show completion message with vibration pattern
+            showCompletionMessage = true;
+            if (navigator.vibrate) {
+              navigator.vibrate([30, 50, 30, 50, 30]);
+            }
+
+            // Hide the message after 4 seconds
+            completionMessageTimeout = setTimeout(() => {
+              showCompletionMessage = false;
+            }, 4000);
+          }
+        }
+      }, 50);
     }
   }
   
-  // Clear list confirmation
+  // Delete list confirmation with playful copy
+  function confirmDelete() {
+    const listName = list.name || 'Untitled List';
+    const message = `Delete "${listName}"?\n\nThis list will zip off into the void forever.`;
+
+    if (confirm(message)) {
+      onDeleteList();
+    }
+  }
+
+  // Clear list confirmation with playful copy
   function confirmClear() {
-    if (confirm(`Are you sure you want to clear all items from "${list.name}"?`)) {
+    const listName = list.name || 'Untitled List';
+    const itemCount = list.items.length;
+    const itemText = itemCount === 1 ? 'item' : 'items';
+    const message = `Clear ${itemCount} ${itemText} from "${listName}"?\n\nA fresh start can be nice sometimes.`;
+
+    if (confirm(message)) {
       onClearList();
     }
   }
@@ -272,6 +331,21 @@
       </h3>
     {/if}
     
+    <!-- Completion Message -->
+    {#if showCompletionMessage}
+      <div
+        class="completion-message"
+        in:fly={{ y: -20, duration: 400 }}
+        out:fade={{ duration: 300 }}
+      >
+        <div class="message-content">
+          <span class="sparkle-icon">✨</span>
+          {completionMessages[Math.floor(Math.random() * completionMessages.length)]}
+          <span class="sparkle-icon">✨</span>
+        </div>
+      </div>
+    {/if}
+
     <!-- List Items -->
     <div class="flex-grow mb-3">
       {#if list.items.length > 0 || isAddingItem}
@@ -319,7 +393,9 @@
           
           {#if completedItems.length > 0 && activeItems.length > 0}
             <div class="my-2" in:fade={{ duration: 300 }}>
-              <div class="mono-divider"></div>
+              <div class="mono-divider">
+                <span class="divider-text">completed</span>
+              </div>
             </div>
           {/if}
 
@@ -328,51 +404,55 @@
               <input
                 id="add-item-{list.id}"
                 class="mono-input flex-grow"
-                placeholder="Enter new item..."
+                placeholder="What are we zipping up today?"
                 bind:value={newItemText}
                 on:keydown={handleAddItemKeyDown}
               />
-              <button
-                class="add-btn"
-                on:click|stopPropagation={handleAddItem}
-                disabled={!newItemText.trim()}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Add
-              </button>
-              <button
-                class="add-btn cancel"
-                on:click|stopPropagation={toggleAddItemForm}
-              >
-                Cancel
-              </button>
+              <div class="add-item-buttons">
+                <button
+                  class="add-btn"
+                  on:click|stopPropagation={handleAddItem}
+                  disabled={!newItemText.trim()}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Add
+                </button>
+                <button
+                  class="add-btn cancel"
+                  on:click|stopPropagation={toggleAddItemForm}
+                >
+                  Cancel
+                </button>
+              </div>
             </li>
           {/if}
         </ul>
         
         {#if !isAddingItem}
           <button
-            class="add-btn w-full my-3 flex justify-center"
+            class="add-btn w-full my-3 flex items-center justify-center"
             on:click|stopPropagation={toggleAddItemForm}
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            Add Item
+            {completedCount === list.items.length && list.items.length > 0
+              ? "All Zipped Up ✨"
+              : "Add More Goodness"}
           </button>
         {/if}
       {:else}
-        <!-- Empty state -->
+        <!-- Empty state with playful microcopy -->
         <div class="empty-state">
           <div class="empty-icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <p class="empty-title">This list is empty</p>
-          <p class="empty-description">Add items to get started</p>
+          <p class="empty-title">No thoughts, just vibes</p>
+          <p class="empty-description">Your list is a blank canvas waiting for inspiration</p>
           <button
             class="add-btn"
             on:click|stopPropagation={toggleAddItemForm}
@@ -380,7 +460,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            Add First Item
+            Add Some Magic
           </button>
         </div>
       {/if}
