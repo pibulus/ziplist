@@ -382,15 +382,15 @@
     animation: fade-in 0.3s ease-out forwards;
   }
   
-  /* Card styling with improved gradient */
+  /* Card styling with improved gradient - enhanced for "chonky" feel */
   .zl-card {
-    border-radius: 28px;
+    border-radius: 32px; /* Increased from 28px for more pillowy feel */
     background: linear-gradient(135deg, #fff6e5, #ffd4da, #ffc6e5);
     background-size: 300% 300%;
     animation: gradient-shift 30s ease infinite;
-    box-shadow: 0 10px 25px rgba(201, 120, 255, 0.2);
-    border: 3px solid rgba(255, 212, 218, 0.8);
-    padding: 1.8rem;
+    box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25); /* Enhanced shadow */
+    border: 4px solid rgba(255, 212, 218, 0.8); /* Increased from 3px for more "chonky" feel */
+    padding: 2rem; /* Increased from 1.8rem for more spacious feel */
     position: relative;
     overflow: hidden;
     font-family: 'Space Mono', monospace;
@@ -398,8 +398,8 @@
     width: 100%;
     max-width: 640px;
     margin: 0 auto;
-    margin-top: 1.5rem;
-    margin-bottom: 2rem;
+    margin-top: 1.75rem; /* Increased from 1.5rem */
+    margin-bottom: 2.25rem; /* Increased from 2rem */
   }
   
   /* Subtle inner border effect */
@@ -459,25 +459,25 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 20px; /* Increased from 14px to 20px for more "chonky" separation */
     margin-bottom: 1.5rem;
   }
   
   /* Individual list items */
   .zl-item {
-    border-radius: 16px;
+    border-radius: 18px; /* Increased from 16px for a softer look */
     background: rgba(255, 255, 255, 0.5);
-    padding: 14px 16px;
+    padding: 16px 20px; /* Increased from 14px 16px for more substantial feel */
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem; /* Increased from 1rem for better element separation */
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
     position: relative;
     cursor: grab;
     border-left: 4px solid rgba(201, 120, 255, 0.3);
     border: 2px solid rgba(255, 212, 218, 0.6);
-    min-height: 54px;
+    min-height: 60px; /* Increased from 54px for more "chonky" feel */
     justify-content: space-between;
   }
 
@@ -576,17 +576,18 @@
   .zl-item-text-button:hover:not(:disabled)::after {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(201, 120, 255, 0.4)' stroke='rgba(201, 120, 255, 0.9)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E");
+    width: 26px; /* Increased from 20px for more visibility */
+    height: 26px; /* Increased from 20px for more visibility */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(201, 120, 255, 0.5)' stroke='rgba(201, 120, 255, 1)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E");
     background-size: contain;
     background-repeat: no-repeat;
-    right: -26px;
+    right: -28px; /* Adjusted from -26px to accommodate larger icon */
     top: 50%;
     transform: translateY(-50%);
     opacity: 0;
     animation: fadeIn 0.3s forwards ease-out;
-    filter: drop-shadow(0 0 5px rgba(201, 120, 255, 0.5));
+    filter: drop-shadow(0 0 8px rgba(201, 120, 255, 0.6)); /* Enhanced shadow */
+    z-index: 2; /* Ensure it displays above other elements */
   }
 
   /* Enhanced sparkle effect on hover */
@@ -632,8 +633,9 @@
     position: relative;
     display: inline-block;
     cursor: pointer;
+    padding: 4px; /* Added padding to increase touch target */
   }
-  
+
   .zl-checkbox {
     position: absolute;
     opacity: 0;
@@ -641,17 +643,17 @@
     height: 0;
     width: 0;
   }
-  
+
   .zl-checkbox-custom {
     position: relative;
     display: inline-block;
-    width: 24px;
-    height: 24px;
+    width: 28px; /* Increased from 24px for more "chonky" feel */
+    height: 28px; /* Increased from 24px for more "chonky" feel */
     border: 2px solid rgba(201, 120, 255, 0.5);
-    border-radius: 8px;
+    border-radius: 10px; /* Increased from 8px for softer corners */
     background-color: rgba(255, 255, 255, 0.8);
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 2px 5px rgba(201, 120, 255, 0.1);
+    box-shadow: 0 3px 7px rgba(201, 120, 255, 0.15); /* Enhanced shadow */
   }
   
   .zl-checkbox-wrapper:hover .zl-checkbox-custom {
@@ -727,18 +729,19 @@
     margin-bottom: 2rem;
   }
   
-  /* Add item form */
+  /* Add item form - enhanced for "chonky" feel */
   .zl-add-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.2rem;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 18px;
-    box-shadow: 0 5px 15px rgba(201, 120, 255, 0.1);
+    gap: 1.25rem; /* Increased from 1rem for more spacing */
+    padding: 1.5rem; /* Increased from 1.2rem for more spacious feel */
+    background: rgba(255, 255, 255, 0.65); /* Slightly increased opacity */
+    border-radius: 20px; /* Increased from 18px for softer corners */
+    box-shadow: 0 6px 18px rgba(201, 120, 255, 0.15); /* Enhanced shadow */
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.9); /* Increased from 1px for more defined border */
+    margin-top: 8px; /* Added for better spacing */
   }
   
   .zl-form-buttons {
@@ -799,59 +802,64 @@
     background-color: rgba(255, 255, 255, 0.95);
   }
   
-  /* Buttons */
+  /* Buttons - enhanced for "chonky" feel */
   .zl-button {
     border: none;
-    border-radius: 12px;
-    padding: 0.6rem 1.1rem;
-    font-weight: 500;
-    font-size: 0.95rem;
+    border-radius: 14px; /* Increased from 12px for softer corners */
+    padding: 0.7rem 1.3rem; /* Increased from 0.6rem 1.1rem for larger touch target */
+    font-weight: 600; /* Increased from 500 for more visibility */
+    font-size: 1rem; /* Increased from 0.95rem for better readability */
     font-family: 'Space Mono', monospace;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     position: relative;
     overflow: hidden;
+    min-height: 48px; /* Added to ensure consistent height and good touch target */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  
+
   .zl-button.primary {
     background: linear-gradient(135deg, #e9a8ff 0%, #c978ff 100%);
     color: white;
-    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(201, 120, 255, 0.25); /* Enhanced shadow */
+    border: 2px solid rgba(201, 120, 255, 0.1); /* Added subtle border */
   }
-  
+
   .zl-button.primary:hover:not(:disabled) {
-    box-shadow: 0 5px 12px rgba(201, 120, 255, 0.3);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(201, 120, 255, 0.35); /* Enhanced shadow on hover */
+    transform: translateY(-3px) scale(1.03); /* Added subtle scale effect */
   }
-  
+
   .zl-button.primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   .zl-button.secondary {
     background: rgba(255, 255, 255, 0.8);
     color: #c978ff;
-    border: 1px solid rgba(201, 120, 255, 0.3);
+    border: 2px solid rgba(201, 120, 255, 0.3); /* Increased from 1px for more "chonky" feel */
   }
-  
+
   .zl-button.secondary:hover {
     background: rgba(255, 255, 255, 0.95);
     border-color: rgba(201, 120, 255, 0.5);
-    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(201, 120, 255, 0.15); /* Enhanced shadow */
+    transform: translateY(-3px) scale(1.02); /* Added subtle scale effect */
   }
   
-  /* Add button in top right corner */
+  /* Add button in top right corner - enhanced for "chonky" feel */
   .zl-add-button {
-    width: 50px;
-    height: 50px;
+    width: 60px; /* Increased from 50px for more "chonky" feel */
+    height: 60px; /* Increased from 50px for more "chonky" feel */
     background: linear-gradient(135deg, #e9a8ff 0%, #c978ff 100%);
     border: none;
     color: white;
     border-radius: 50%;
     font-weight: 400;
-    font-size: 2rem;
+    font-size: 2.25rem; /* Increased from 2rem for better visibility */
     line-height: 1;
     font-family: 'Space Mono', monospace;
     cursor: pointer;
@@ -859,13 +867,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(201, 120, 255, 0.2);
+    box-shadow: 0 6px 15px rgba(201, 120, 255, 0.3); /* Enhanced shadow */
     position: relative;
+    border: 3px solid rgba(255, 255, 255, 0.7); /* Added border for definition */
   }
-  
+
   .zl-add-button:hover {
-    box-shadow: 0 8px 20px rgba(201, 120, 255, 0.3);
-    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(201, 120, 255, 0.4); /* Enhanced shadow on hover */
+    transform: translateY(-4px) scale(1.08); /* Increased from scale(1.05) */
   }
   
   /* ELEGANT DRAG AND DROP STYLING */
@@ -902,25 +911,32 @@
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy transition */
   }
 
-  /* Subtle grab indicator */
+  /* Enhanced grab indicator - made more substantial */
   .grab-indicator {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    margin-right: 10px;
-    opacity: 0.5;
-    transition: opacity 0.2s ease;
+    gap: 4px; /* Increased from 3px */
+    margin-right: 12px; /* Increased from 10px */
+    opacity: 0.6; /* Increased from 0.5 for better visibility */
+    transition: all 0.25s ease;
+    padding: 4px 6px; /* Added padding to increase touch target */
   }
 
   .grab-indicator span {
-    width: 10px;
-    height: 2px;
+    width: 16px; /* Increased from 10px for more "chonky" feel */
+    height: 3px; /* Increased from 2px for more visibility */
     background-color: rgba(201, 120, 255, 0.8);
-    border-radius: 1px;
+    border-radius: 2px; /* Increased from 1px */
+    transition: transform 0.2s ease, width 0.2s ease;
   }
 
   .zl-item:hover .grab-indicator {
-    opacity: 0.8;
+    opacity: 1; /* Increased from 0.8 */
+    transform: scale(1.1); /* Added subtle scale effect on hover */
+  }
+
+  .zl-item:hover .grab-indicator span {
+    background-color: rgba(201, 120, 255, 1); /* Fully opaque on hover */
   }
   
   /* Tailwind margin utilities */
