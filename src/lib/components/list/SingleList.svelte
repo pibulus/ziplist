@@ -537,7 +537,8 @@
   /* Edit state indication for unchecked items */
   .zl-item:not(.checked) .zl-item-text-button:hover .zl-item-text {
     color: #c978ff;
-    text-shadow: 0 0 8px rgba(201, 120, 255, 0.15);
+    text-shadow: 0 0 8px rgba(201, 120, 255, 0.3);
+    transform: translateY(-1px) scale(1.01);
   }
 
   .zl-item-text.checked {
@@ -565,48 +566,51 @@
 
   .zl-item-text-button:hover:not(:disabled),
   .zl-item-text-button:focus-visible:not(:disabled) {
-    background: linear-gradient(135deg, rgba(252, 235, 246, 0.6), rgba(255, 242, 253, 0.8));
+    background: linear-gradient(135deg, rgba(252, 235, 246, 0.7), rgba(255, 242, 253, 0.9));
     outline: none;
     border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(201, 120, 255, 0.15);
+    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
     transform: translateY(-1px);
   }
 
   .zl-item-text-button:hover:not(:disabled)::after {
     content: '';
     position: absolute;
-    width: 18px;
-    height: 18px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(201, 120, 255, 0.2)' stroke='rgba(201, 120, 255, 0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E");
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(201, 120, 255, 0.4)' stroke='rgba(201, 120, 255, 0.9)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E");
     background-size: contain;
     background-repeat: no-repeat;
-    right: -24px;
+    right: -26px;
     top: 50%;
     transform: translateY(-50%);
     opacity: 0;
     animation: fadeIn 0.3s forwards ease-out;
-    filter: drop-shadow(0 0 3px rgba(201, 120, 255, 0.3));
+    filter: drop-shadow(0 0 5px rgba(201, 120, 255, 0.5));
   }
 
-  /* Sparkle effect on hover */
+  /* Enhanced sparkle effect on hover */
   .zl-item-text-button:hover:not(:disabled)::before {
     content: '';
     position: absolute;
     width: 100%;
     height: 100%;
     background-image:
-      radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 5%),
-      radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 6%);
+      radial-gradient(circle at 20% 30%, rgba(255, 186, 255, 0.9) 0%, rgba(255, 186, 255, 0) 15%),
+      radial-gradient(circle at 80% 20%, rgba(255, 186, 255, 0.9) 0%, rgba(255, 186, 255, 0) 15%),
+      radial-gradient(circle at 40% 70%, rgba(255, 186, 255, 0.7) 0%, rgba(255, 186, 255, 0) 10%);
     background-size: 100% 100%;
     opacity: 0;
     z-index: 1;
+    border-radius: 8px;
     animation: sparkleIn 0.5s forwards ease-out;
     pointer-events: none;
+    mix-blend-mode: screen;
   }
 
   @keyframes sparkleIn {
     0% { opacity: 0; }
-    30% { opacity: 0.4; }
+    30% { opacity: 0.5; }
     100% { opacity: 0.8; }
   }
 
