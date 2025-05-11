@@ -226,6 +226,7 @@
               class="zl-item {item.checked ? 'checked' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
+              class:editing={editingItemId === item.id}
               draggable={!item.checked}
               on:dragstart={(e) => handleDragStart(e, item.id)}
               on:dragend={handleDragEnd}
@@ -253,7 +254,7 @@
               
               <div class="edit-wrapper">
                 {#if editingItemId === item.id}
-                  <input
+                  <textarea
                     id="edit-item-{list.id}-{item.id}"
                     class="zl-edit-input"
                     placeholder="Enter item text..."
@@ -262,7 +263,8 @@
                     on:keydown={handleEditItemKeyDown}
                     transition:fade={{ duration: 150 }}
                     use:autoFocus
-                  />
+                    rows="1"
+                  ></textarea>
                 {:else}
                   <button
                     type="button"
@@ -390,13 +392,13 @@
     animation: gradient-shift 30s ease infinite;
     box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25); /* Enhanced shadow */
     border: 4px solid rgba(255, 212, 218, 0.8); /* Increased from 3px for more "chonky" feel */
-    padding: 2.5rem; /* Increased to 2.5rem as per feedback */
+    padding: 2.5rem 2rem; /* Adjusted horizontal padding to 2rem for better text wrapping */
     position: relative;
     overflow: hidden;
     font-family: 'Space Mono', monospace;
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     width: 100%;
-    max-width: 540px; /* Increased from 480px to improve text wrapping */
+    max-width: 560px; /* Increased to 560px for better text wrapping */
     margin: 0 auto;
     margin-top: 2rem; /* Increased from 1.75rem */
     margin-bottom: 2.5rem; /* Increased from 2.25rem */
@@ -424,11 +426,16 @@
     }
 
     .edit-wrapper {
-      width: calc(100% - 32px - 32px - 1.75rem); /* Adjusted calculation for mobile padding */
+      padding-right: 24px; /* Slightly less padding on mobile */
     }
 
     .zl-input, .zl-edit-input {
       padding: 0.75rem 1rem; /* Slightly reduced padding on mobile */
+    }
+
+    .zl-item.editing .zl-edit-input {
+      width: calc(100% - 32px - 24px - 0.75rem); /* Adjusted for mobile with smaller handle space */
+      margin: 0 0.375rem; /* Smaller margin on mobile */
     }
   }
   
@@ -497,10 +504,10 @@
   .zl-item {
     border-radius: 20px; /* Increased to 20px as per feedback for desktop */
     background: rgba(255, 255, 255, 0.5);
-    padding: 16px 16px; /* Adjusted to 16px horizontal padding to avoid excessive text wrapping */
+    padding: 16px 14px; /* Reduced horizontal padding to 14px for more text space */
     display: flex;
     align-items: flex-start; /* Changed from center to allow items to expand vertically */
-    gap: 1.25rem; /* Increased from 1rem for better element separation */
+    gap: 1rem; /* Adjusted to 1rem for better horizontal space efficiency */
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
     position: relative;
@@ -508,6 +515,7 @@
     border-left: 4px solid rgba(201, 120, 255, 0.3);
     border: 2px solid rgba(255, 212, 218, 0.6);
     min-height: 60px; /* Minimum height, but will grow with content */
+    height: auto; /* Allow growth based on content */
     justify-content: space-between;
   }
 
@@ -795,7 +803,8 @@
     display: flex;
     align-items: center;
     align-self: center; /* Center vertically in list item */
-    width: calc(100% - 32px - 32px - 2rem); /* Full width minus checkbox, handle, and padding */
+    width: 100%; /* Full width to prevent text from disappearing */
+    padding-right: 32px; /* Space for drag handle */
   }
 
   /* Input fields - enhanced for "chonky" feel to match list items */
@@ -816,20 +825,36 @@
     line-height: 1.5;
     margin: 0;
     min-height: 60px; /* Increased from 44px to match list item height */
-    height: 60px; /* Set same as min-height for consistency */
     text-align: left;
-    display: flex;
-    align-items: center;
+    vertical-align: middle;
   }
-  
+
   /* Specific edit input styling */
   .zl-edit-input {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    width: calc(100% - 16px); /* Full width within container minus small margin */
-    max-width: none; /* Ensure it doesn't collapse to text width */
+    display: block;
+    width: 100%; /* Full width by default */
+    min-height: 60px; /* Match list item height for single line */
+    height: auto; /* Allow auto growth with content */
+    max-height: 160px; /* Cap the maximum height */
+    resize: none; /* Prevent manual resize */
+    overflow-y: auto; /* Show scrollbar only when needed */
+    padding: 0.75rem 0.75rem; /* Same padding all around */
+    margin: 0;
+  }
+
+  /* Editing state styles */
+  .zl-item.editing .edit-wrapper {
+    padding: 0; /* Remove padding when editing */
+  }
+
+  .zl-item.editing .zl-edit-input {
+    box-sizing: border-box;
+    /* Calculate width correctly leaving space for checkbox and handle */
+    width: calc(100% - 32px - 32px - 1rem); /* checkbox + handle + padding */
+    margin: 0 0.5rem; /* Horizontally centered */
+    position: relative; /* Not absolute */
+    top: auto;
+    left: auto;
   }
 
   .zl-input::placeholder, .zl-edit-input::placeholder {
@@ -910,6 +935,7 @@
     box-shadow: 0 6px 15px rgba(201, 120, 255, 0.3); /* Enhanced shadow */
     position: relative;
     border: 3px solid rgba(255, 255, 255, 0.7); /* Added border for definition */
+    margin: 1.5rem auto 1rem; /* Center horizontally with vertical spacing */
   }
 
   .zl-add-button:hover {
