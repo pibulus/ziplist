@@ -396,7 +396,7 @@
     font-family: 'Space Mono', monospace;
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     width: 100%;
-    max-width: 480px; /* Reduced from 640px to make it more focused and composed */
+    max-width: 540px; /* Increased from 480px to improve text wrapping */
     margin: 0 auto;
     margin-top: 2rem; /* Increased from 1.75rem */
     margin-bottom: 2.5rem; /* Increased from 2.25rem */
@@ -412,7 +412,7 @@
 
     .zl-item {
       border-radius: 16px; /* Slightly smaller radius on mobile */
-      padding: 16px 16px; /* Adjusted padding for mobile */
+      padding: 16px 14px; /* Slightly reduced padding for mobile to optimize space */
     }
 
     .zl-list {
@@ -421,6 +421,14 @@
 
     .zl-item-text {
       font-size: 1.1rem; /* Slightly larger text on mobile for readability */
+    }
+
+    .edit-wrapper {
+      width: calc(100% - 32px - 32px - 1.75rem); /* Adjusted calculation for mobile padding */
+    }
+
+    .zl-input, .zl-edit-input {
+      padding: 0.75rem 1rem; /* Slightly reduced padding on mobile */
     }
   }
   
@@ -489,9 +497,9 @@
   .zl-item {
     border-radius: 20px; /* Increased to 20px as per feedback for desktop */
     background: rgba(255, 255, 255, 0.5);
-    padding: 16px 20px; /* Increased from 14px 16px for more substantial feel */
+    padding: 16px 16px; /* Adjusted to 16px horizontal padding to avoid excessive text wrapping */
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Changed from center to allow items to expand vertically */
     gap: 1.25rem; /* Increased from 1rem for better element separation */
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
@@ -499,7 +507,7 @@
     cursor: grab;
     border-left: 4px solid rgba(201, 120, 255, 0.3);
     border: 2px solid rgba(255, 212, 218, 0.6);
-    min-height: 60px; /* Increased from 54px for more "chonky" feel */
+    min-height: 60px; /* Minimum height, but will grow with content */
     justify-content: space-between;
   }
 
@@ -553,7 +561,8 @@
     text-align: left;
     position: relative;
     vertical-align: middle;
-    padding: 2px 0;
+    padding: 4px 0; /* Increased from 2px for better vertical spacing */
+    min-height: 32px; /* Match checkbox height for vertical alignment */
   }
 
   /* Edit state indication for unchecked items */
@@ -572,18 +581,20 @@
   .zl-item-text-button {
     background: transparent;
     border: none;
-    padding: 3px 5px;
+    padding: 5px 8px; /* Increased padding for better touch target */
     text-align: left;
     cursor: pointer;
     font-family: inherit;
     display: inline-flex;
     align-items: center;
     width: auto;
-    border-radius: 6px;
+    border-radius: 8px; /* Increased from 6px for softer corners */
     transition: all 0.2s ease;
     margin-right: auto;
     position: relative;
-    min-height: 30px;
+    min-height: 36px; /* Increased to account for wrapped text */
+    align-self: center; /* Center vertically if text wraps */
+    flex-wrap: wrap; /* Allow wrapping of text content */
   }
 
   .zl-item-text-button:hover:not(:disabled),
@@ -653,9 +664,12 @@
   /* Custom checkbox styling */
   .zl-checkbox-wrapper {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     padding: 4px; /* Added padding to increase touch target */
+    align-self: center; /* Center vertically in the list item */
   }
 
   .zl-checkbox {
@@ -715,7 +729,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 3rem 1.5rem; /* Increased from 2.5rem 1rem for more spaciousness */
+    padding: 3.5rem 1.5rem; /* Increased padding for more spaciousness */
     min-height: 240px; /* Increased from 200px as per feedback */
     position: relative;
   }
@@ -780,6 +794,8 @@
     margin-right: auto;
     display: flex;
     align-items: center;
+    align-self: center; /* Center vertically in list item */
+    width: calc(100% - 32px - 32px - 2rem); /* Full width minus checkbox, handle, and padding */
   }
 
   /* Input fields - enhanced for "chonky" feel to match list items */
@@ -812,6 +828,8 @@
     top: 50%;
     left: 0;
     transform: translateY(-50%);
+    width: calc(100% - 16px); /* Full width within container minus small margin */
+    max-width: none; /* Ensure it doesn't collapse to text width */
   }
 
   .zl-input::placeholder, .zl-edit-input::placeholder {
@@ -945,6 +963,7 @@
     min-width: 32px; /* Ensures minimum width for touch target */
     min-height: 32px; /* Ensures minimum height for touch target */
     justify-content: center; /* Center lines vertically */
+    align-self: center; /* Center vertically in list item regardless of text wrap */
   }
 
   .grab-indicator span {
