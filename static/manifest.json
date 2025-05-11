@@ -70,14 +70,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "TalkType in action"
+      "label": "ZipList in action"
     },
     {
       "src": "/screenshots/screenshot-mobile.png",
       "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "TalkType on mobile"
+      "label": "ZipList on mobile"
     }
   ],
   "theme_icons": [

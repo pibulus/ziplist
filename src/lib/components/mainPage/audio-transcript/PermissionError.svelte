@@ -42,7 +42,7 @@
 
     <!-- Permission error message -->
     <p id="permission_error_description">
-      TalkType needs microphone access to transcribe your speech. Please update your browser
+      ZipList needs microphone access to transcribe your speech. Please update your browser
       settings to allow microphone access.
     </p>
 

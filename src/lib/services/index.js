@@ -68,7 +68,7 @@ export function initializeServices(options = {}) {
     hapticServiceInstance.disable();
   }
   
-  console.log('🚀 TalkType services initialized with Svelte stores');
+  console.log('🚀 ZipList services initialized with Svelte stores');
   
   return {
     eventBus: eventBusInstance,
