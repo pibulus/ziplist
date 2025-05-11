@@ -38,9 +38,22 @@
   // Sort items - active items first, completed items last
   $: sortedItems = [...activeItems, ...completedItems];
 
+  // Format item text with first-letter capitalization of each word
+  function formatItemText(text) {
+    return text.split(' ').map(word =>
+      word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word
+    ).join(' ');
+  }
+
   // Helper function to calculate staggered delay for animations
   function getStaggerDelay(index) {
     return index * 50; // 50ms between each item
+  }
+
+  // Action to auto-focus an input element when it's created
+  function autoFocus(node) {
+    node.focus();
+    return {};
   }
   
   // Drag and drop functions
@@ -148,11 +161,7 @@
   function toggleAddItemForm() {
     isAddingItem = !isAddingItem;
     if (isAddingItem) {
-      // Focus the input field after the component renders
-      setTimeout(() => {
-        const addItemInput = document.getElementById(`add-item-${list.id}`);
-        if (addItemInput) addItemInput.focus();
-      }, 50);
+      // Input will be focused automatically with the autoFocus action
     } else {
       newItemText = '';
     }
@@ -181,11 +190,7 @@
     editingItemId = item.id;
     editedItemText = item.text;
 
-    // Focus the input field after the component renders
-    setTimeout(() => {
-      const editItemInput = document.getElementById(`edit-item-${list.id}-${item.id}`);
-      if (editItemInput) editItemInput.focus();
-    }, 50);
+    // No need for manual focus with the autoFocus action
   }
 
   function saveItemEdit() {
@@ -215,7 +220,7 @@
     <!-- List Items -->
     <div class="zl-list-container">
       {#if list.items.length > 0 || isAddingItem}
-        <ul class="zl-list">
+        <ul class="zl-list" role="list">
           {#each sortedItems as item, index (item.id)}
             <li
               class="zl-item {item.checked ? 'checked' : ''}"
@@ -228,10 +233,17 @@
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: 300 }}
               in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
+              aria-grabbed={draggedItemId === item.id ? 'true' : 'false'}
+              aria-dropeffect="move"
+              role="listitem"
             >
               <!-- Drop indicator visible only when item is drop target -->
               {#if dragOverItemId === item.id && draggedItemId !== null && draggedItemId !== item.id}
-                <div class="drop-indicator" transition:fade={{ duration: 100 }}>
+                <div
+                  class="drop-indicator"
+                  transition:fade={{ duration: 100 }}
+                  aria-hidden="true"
+                >
                   <!-- Triangle drop marker -->
                   <div class="drop-arrow"></div>
                 </div>
@@ -249,7 +261,7 @@
               </label>
               
               {#if editingItemId === item.id}
-                <input 
+                <input
                   id="edit-item-{list.id}-{item.id}"
                   class="zl-edit-input"
                   placeholder="Enter item text..."
@@ -257,16 +269,23 @@
                   on:blur={saveItemEdit}
                   on:keydown={handleEditItemKeyDown}
                   transition:slide={{ duration: 120 }}
+                  use:autoFocus
                 />
               {:else}
-                <span
-                  class="zl-item-text {item.checked ? 'checked' : ''}"
+                <button
+                  type="button"
+                  class="zl-item-text-button {item.checked ? 'checked' : ''}"
                   on:click|stopPropagation={() => {
                     if (!item.checked) startEditingItem(item);
                   }}
+                  on:keydown={(e) => e.key === 'Enter' && !item.checked && startEditingItem(item)}
+                  disabled={item.checked}
+                  aria-label="Edit item: {item.text}"
                 >
-                  {item.text.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                </span>
+                  <span class="zl-item-text {item.checked ? 'checked' : ''}">
+                    {formatItemText(item.text)}
+                  </span>
+                </button>
               {/if}
             </li>
           {/each}
@@ -280,6 +299,7 @@
                 bind:value={newItemText}
                 on:keydown={handleAddItemKeyDown}
                 transition:fade={{ duration: 150 }}
+                use:autoFocus
               />
               <div class="zl-form-buttons">
                 <button
@@ -500,21 +520,47 @@
     font-weight: 800;
     line-height: 1.5;
     color: #444444;
-    flex-grow: 1;
     transition: all 0.2s ease;
     font-family: 'Space Mono', monospace;
     letter-spacing: 0.8px;
-    cursor: pointer;
     min-height: 30px;
     box-sizing: border-box;
     display: inline-block;
     width: 100%;
-    padding: 3px 5px;
   }
-  
+
   .zl-item-text.checked {
     text-decoration: line-through rgba(201, 120, 255, 0.5) 1.5px;
     color: #9d9d9d;
+  }
+
+  /* Text button styling */
+  .zl-item-text-button {
+    background: transparent;
+    border: none;
+    padding: 3px 5px;
+    text-align: left;
+    cursor: pointer;
+    flex-grow: 1;
+    font-family: inherit;
+    display: block;
+    width: 100%;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+  }
+
+  .zl-item-text-button:hover:not(:disabled),
+  .zl-item-text-button:focus-visible:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.5);
+    outline: none;
+  }
+
+  .zl-item-text-button:focus-visible:not(:disabled) {
+    box-shadow: 0 0 0 2px rgba(201, 120, 255, 0.3);
+  }
+
+  .zl-item-text-button:disabled {
+    cursor: default;
   }
   
   /* Custom checkbox styling */
