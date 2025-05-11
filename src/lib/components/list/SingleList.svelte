@@ -9,14 +9,10 @@
   let list = { name: '', items: [] };
   let draggedItemId = null;
   let dragOverItemId = null;
-  let dropTargetIndex = null;
   let newItemText = '';
   let isAddingItem = false;
   let editingItemId = null;
   let editedItemText = '';
-  // Removed completionMessage-related variables
-
-  // No completion messages needed anymore
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
@@ -33,20 +29,15 @@
 
   onDestroy(() => {
     if (unsubscribe) unsubscribe();
-    // Removed completionMessageTimeout cleanup
   });
   
   // Separated active and completed items
   $: activeItems = list.items.filter(item => !item.checked);
   $: completedItems = list.items.filter(item => item.checked);
 
-  // Sort items - active items first, completed items last (always visible)
+  // Sort items - active items first, completed items last
   $: sortedItems = [...activeItems, ...completedItems];
 
-  // Count of completed items and total items
-  $: completedCount = completedItems.length;
-  $: totalCount = list.items.length;
-  
   // Helper function to calculate staggered delay for animations
   function getStaggerDelay(index) {
     return index * 50; // 50ms between each item
@@ -59,32 +50,21 @@
     event.dataTransfer.setData('text/plain', itemId);
     draggedItemId = itemId;
 
-    // Find the index of dragged item for visual indicator
-    dropTargetIndex = list.items.findIndex(item => item.id === itemId);
-
-    // Add styling to the dragged element
-    setTimeout(() => {
-      event.target.classList.add('dragging');
-
-      // Add haptic feedback on mobile devices if supported
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-    }, 0);
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
   }
 
   function handleDragEnd(event) {
     // Remove styling
     draggedItemId = null;
     dragOverItemId = null;
-    dropTargetIndex = null;
 
-    // Add haptic feedback on mobile devices if supported
+    // Haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate([20, 30, 20]);
     }
-
-    event.target.classList.remove('dragging');
   }
 
   function handleDragOver(event, itemId) {
@@ -95,35 +75,20 @@
     // Only update if we're moving to a new item
     if (dragOverItemId === itemId) return;
 
+    // Update dragover state
     dragOverItemId = itemId;
-
-    // Update the drop target index for visual indicator
-    dropTargetIndex = list.items.findIndex(item => item.id === itemId);
-
-    // Add visual cue for drop target
-    const items = document.querySelectorAll('.zl-item');
-    items.forEach(item => {
-      item.classList.remove('drag-over');
-    });
-
-    // Apply the drag-over class
-    setTimeout(() => {
-      event.currentTarget.classList.add('drag-over');
-    }, 0);
   }
 
   function handleDrop(event, targetItemId) {
     // Prevent default action
     event.preventDefault();
 
-    // Clear styling
-    event.currentTarget.classList.remove('drag-over');
-    dropTargetIndex = null;
+    dragOverItemId = null;
 
     // If dropped on itself, do nothing
     if (draggedItemId === targetItemId) return;
 
-    // Add haptic feedback on mobile devices if supported
+    // Haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate(80);
     }
@@ -173,7 +138,6 @@
           // If this completes the list, trigger haptic feedback but no message
           if (allCompleted && navigator.vibrate) {
             navigator.vibrate([30, 50, 30, 50, 30]);
-            // Could add confetti here if there's a library
           }
         }
       }, 50);
@@ -248,13 +212,6 @@
 
 <div class="zl-card">
   <div class="card-content">
-    <!-- Top action bar -->
-    <!-- No add button in top actions -->
-  <div class="zl-top-actions">
-  </div>
-    
-    <!-- No completion message, we'll use confetti animation instead -->
-
     <!-- List Items -->
     <div class="zl-list-container">
       {#if list.items.length > 0 || isAddingItem}
@@ -262,6 +219,8 @@
           {#each sortedItems as item, index (item.id)}
             <li
               class="zl-item {item.checked ? 'checked' : ''}"
+              class:dragging={draggedItemId === item.id}
+              class:drag-over={dragOverItemId === item.id}
               draggable={!item.checked}
               on:dragstart={(e) => handleDragStart(e, item.id)}
               on:dragend={handleDragEnd}
@@ -270,6 +229,14 @@
               animate:flip={{ duration: 300 }}
               in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
             >
+              <!-- Drop indicator visible only when item is drop target -->
+              {#if dragOverItemId === item.id && draggedItemId !== null && draggedItemId !== item.id}
+                <div class="drop-indicator" transition:fade={{ duration: 100 }}>
+                  <!-- Triangle drop marker -->
+                  <div class="drop-arrow"></div>
+                </div>
+              {/if}
+            
               <label class="zl-checkbox-wrapper">
                 <input
                   type="checkbox"
@@ -282,7 +249,7 @@
               </label>
               
               {#if editingItemId === item.id}
-                <input
+                <input 
                   id="edit-item-{list.id}-{item.id}"
                   class="zl-edit-input"
                   placeholder="Enter item text..."
@@ -303,8 +270,6 @@
               {/if}
             </li>
           {/each}
-          
-          <!-- No divider or completed text -->
 
           {#if isAddingItem}
             <li class="zl-add-form" transition:slide={{ duration: 200 }}>
@@ -363,11 +328,6 @@
     50% { opacity: 1; }
   }
   
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  
   @keyframes pulse {
     0%, 100% { 
       transform: scale(1); 
@@ -392,16 +352,13 @@
     100% { background-position: 0% 0%; }
   }
   
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
   .fade-in {
     animation: fade-in 0.3s ease-out forwards;
-  }
-
-  /* Top action bar */
-  .zl-top-actions {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-bottom: 1rem;
   }
   
   /* Card styling with improved gradient */
@@ -411,8 +368,8 @@
     background-size: 300% 300%;
     animation: gradient-shift 30s ease infinite;
     box-shadow: 0 10px 25px rgba(201, 120, 255, 0.2);
-    border: 3px solid rgba(255, 212, 218, 0.8); /* Theme-specific border color */
-    padding: 1.8rem; /* Increased padding */
+    border: 3px solid rgba(255, 212, 218, 0.8);
+    padding: 1.8rem;
     position: relative;
     overflow: hidden;
     font-family: 'Space Mono', monospace;
@@ -465,7 +422,7 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    min-height: 320px; /* Reduced height */
+    min-height: 320px;
   }
   
   /* List container */
@@ -474,49 +431,32 @@
     display: flex;
     flex-direction: column;
   }
-
+  
   .zl-list {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 14px; /* Increased gap between items */
-    margin-bottom: 1.5rem; /* Increased bottom margin */
+    gap: 14px;
+    margin-bottom: 1.5rem;
   }
   
   /* Individual list items */
   .zl-item {
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.5);
-    padding: 14px 16px; /* Slightly increased padding */
+    padding: 14px 16px;
     display: flex;
     align-items: center;
-    gap: 1rem; /* Slightly increased gap between checkbox and text */
+    gap: 1rem;
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
     position: relative;
     cursor: pointer;
     border-left: 4px solid rgba(201, 120, 255, 0.3);
-    border: 2px solid rgba(255, 212, 218, 0.6); /* Theme-specific border color */
-    min-height: 54px; /* Slightly increased height */
-    transform-origin: center;
-  }
-
-  /* Drop target indicator - line above the item where content will be dropped */
-  .zl-item:not(.dragging)::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, rgba(201, 120, 255, 0.7), rgba(236, 158, 255, 0.5));
-    border-radius: 2px;
-    opacity: 0;
-    transform: scaleX(0.96);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 5;
+    border: 2px solid rgba(255, 212, 218, 0.6);
+    min-height: 54px;
   }
 
   .zl-item:hover {
@@ -524,7 +464,7 @@
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(201, 120, 255, 0.2);
     border-left: 4px solid rgba(201, 120, 255, 0.7);
-    border-color: rgba(255, 212, 218, 0.9); /* Theme-specific border color */
+    border-color: rgba(255, 212, 218, 0.9);
   }
   
   .zl-item::after {
@@ -551,7 +491,7 @@
     border-left: 4px solid rgba(201, 120, 255, 0.2);
     transform: scale(0.98);
     box-shadow: 0 2px 6px rgba(201, 120, 255, 0.05);
-    border-color: rgba(255, 212, 218, 0.4); /* Theme-specific border color */
+    border-color: rgba(255, 212, 218, 0.4);
   }
   
   /* Item text */
@@ -565,11 +505,11 @@
     font-family: 'Space Mono', monospace;
     letter-spacing: 0.8px;
     cursor: pointer;
-    min-height: 30px; /* Increased consistent height to prevent shifting */
-    box-sizing: border-box; /* Ensure padding is included in height */
-    display: inline-block; /* Helps maintain consistent size */
-    width: 100%; /* Take full width */
-    padding: 3px 5px; /* Add padding for better clickable area */
+    min-height: 30px;
+    box-sizing: border-box;
+    display: inline-block;
+    width: 100%;
+    padding: 3px 5px;
   }
   
   .zl-item-text.checked {
@@ -711,11 +651,11 @@
     width: 100%;
     font-size: 1.1rem;
     letter-spacing: 0.8px;
-    box-sizing: border-box; /* Ensure padding is included in height */
+    box-sizing: border-box;
     line-height: 1.5;
-    margin: 0; /* Remove any margin */
-    min-height: 30px; /* Match text height to prevent shifting */
-    height: 44px; /* Consistent height */
+    margin: 0;
+    min-height: 30px;
+    height: 44px;
   }
   
   .zl-input::placeholder, .zl-edit-input::placeholder {
@@ -726,36 +666,6 @@
     border-color: rgba(201, 120, 255, 0.6);
     box-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
     background-color: rgba(255, 255, 255, 0.95);
-  }
-  
-  /* Divider between active and completed items */
-  .zl-divider {
-    position: relative;
-    text-align: center;
-    border: none;
-    height: 1px;
-    background: linear-gradient(90deg,
-      rgba(201, 120, 255, 0),
-      rgba(201, 120, 255, 0.3) 50%,
-      rgba(201, 120, 255, 0)
-    );
-    margin: 1rem 0;
-  }
-  
-  .divider-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #ffc6e5;
-    padding: 0 12px;
-    font-size: 0.75rem;
-    font-family: 'Space Mono', monospace;
-    color: #c978ff;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    opacity: 0.8;
-    border-radius: 10px;
   }
   
   /* Buttons */
@@ -827,29 +737,43 @@
     transform: translateY(-3px) scale(1.05);
   }
   
-  /* Removed completion message styles */
-  
-  /* Drag and drop styling */
+  /* DRAMATIC DRAG AND DROP STYLING */
   .zl-item.dragging {
     opacity: 0.8;
-    border: 2px dashed #c978ff;
+    border: 3px dashed #c978ff; 
     background-color: rgba(250, 245, 255, 0.7);
-    transform: rotate(1deg) scale(1.02);
-    box-shadow: 0 8px 20px rgba(201, 120, 255, 0.3);
+    transform: rotate(2deg) scale(1.02);
+    box-shadow: 0 10px 20px rgba(201, 120, 255, 0.3);
     z-index: 10;
   }
-
+  
   .zl-item.drag-over {
+    margin-top: 30px;
     background-color: rgba(252, 242, 255, 0.8);
-    box-shadow: 0 6px 15px rgba(201, 120, 255, 0.25);
-    border-color: rgba(201, 120, 255, 0.7);
-    transform: translateY(2px);
+    box-shadow: 0 8px 20px rgba(201, 120, 255, 0.3);
+    border-color: #c978ff;
   }
-
-  /* Show drop indicator on hover */
-  .zl-item.drag-over::before {
-    opacity: 1;
-    transform: scaleX(1);
+  
+  /* Super visible drop indicator */
+  .drop-indicator {
+    position: absolute;
+    top: -26px;
+    left: 0;
+    right: 0;
+    height: 26px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+  }
+  
+  .drop-arrow {
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 16px solid #c978ff;
+    animation: bounce 0.7s infinite alternate ease-in-out;
   }
   
   /* Tailwind margin utilities */
