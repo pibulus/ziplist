@@ -105,11 +105,23 @@
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
 
+    // Don't allow drag over on checked items or the dragged item itself
+    if (draggedItemId === itemId) return;
+
+    // Get the target item to check if it's checked
+    const targetItem = list.items.find(item => item.id === itemId);
+    if (targetItem?.checked) return;
+
     // Only update if we're moving to a new item
     if (dragOverItemId === itemId) return;
 
-    // Update dragover state
+    // Update dragover state with haptic feedback
     dragOverItemId = itemId;
+
+    // Add subtle haptic feedback when moving over a valid drop target
+    if (navigator.vibrate) {
+      navigator.vibrate(15); // Very subtle pulse
+    }
   }
 
   function handleDrop(event, targetItemId) {
@@ -121,7 +133,11 @@
     // If dropped on itself, do nothing
     if (draggedItemId === targetItemId) return;
 
-    // Haptic feedback
+    // Check if target is a completed item (don't allow dropping on completed items)
+    const targetItem = list.items.find(item => item.id === targetItemId);
+    if (targetItem?.checked) return;
+
+    // Haptic feedback - stronger for successful drop
     if (navigator.vibrate) {
       navigator.vibrate(80);
     }
@@ -233,8 +249,12 @@
               aria-dropeffect="move"
               role="listitem"
             >
-              <!-- Drop indicator visible only when item is drop target -->
-              <!-- No indicator for drag over, just space -->
+              <!-- Drop indicator visible when item is a drop target -->
+              {#if dragOverItemId === item.id}
+                <div class="drop-indicator">
+                  <div class="drop-arrow"></div>
+                </div>
+              {/if}
 
               <label class="zl-checkbox-wrapper">
                 <input
@@ -277,9 +297,10 @@
                 {/if}
               </div>
 
-                <!-- Subtle drag handle indicator -->
-                {#if !item.checked}
-                  <div class="grab-indicator" aria-hidden="true">
+                <!-- Enhanced drag handle indicator -->
+                {#if !item.checked && editingItemId !== item.id}
+                  <div class="grab-indicator" aria-hidden="true" title="Drag to reorder">
+                    <span></span>
                     <span></span>
                     <span></span>
                   </div>
@@ -855,15 +876,13 @@
   }
 
   .zl-item.dragging {
-    opacity: 0.95;
-    background-color: rgba(252, 245, 255, 0.95);
+    opacity: 1; /* Fully opaque instead of slightly transparent */
+    background-color: rgba(255, 255, 255, 1); /* Solid white background */
     transform: scale(1.03);
-    box-shadow: 0 15px 30px rgba(201, 120, 255, 0.3);
+    box-shadow: 0 15px 30px rgba(201, 120, 255, 0.4); /* Enhanced shadow */
     z-index: 10;
-    border: 3px dashed rgba(201, 120, 255, 0.7);
-    animation:
-      float 2s infinite ease-in-out,
-      pulse-border 1.5s infinite ease-in-out;
+    border: 3px solid rgba(201, 120, 255, 0.85); /* Solid border instead of dashed */
+    animation: float 2s infinite ease-in-out;
     cursor: grabbing;
     will-change: transform, opacity, border;
   }
@@ -878,12 +897,62 @@
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy transition */
   }
 
-  /* Enhanced grab indicator - made more substantial */
+  /* Enhanced drop indicator for clearer visual feedback */
+  .drop-indicator {
+    position: absolute;
+    top: -12px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(201, 120, 255, 0.7), transparent);
+    border-radius: 2px;
+    animation: pulse-opacity 1.5s infinite ease-in-out;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  /* Dropdown arrow to show insertion position */
+  .drop-arrow {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    background-color: rgba(201, 120, 255, 0.9);
+    border-radius: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 8px rgba(201, 120, 255, 0.4);
+    animation: pulse-glow 1.5s infinite ease-in-out;
+  }
+
+  .drop-arrow::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 3px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg);
+  }
+
+  @keyframes pulse-opacity {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(201, 120, 255, 0.4); }
+    50% { box-shadow: 0 0 12px rgba(201, 120, 255, 0.7); }
+  }
+
+  /* Enhanced grab indicator - more obvious that items can be dragged */
   .grab-indicator {
     display: flex;
     flex-direction: column;
-    gap: 5px; /* Increased from 4px */
-    margin-right: 12px; /* Increased from 10px */
+    gap: 4px; /* Optimized for 3 dots */
+    margin-right: 12px; /* Maintain side margin */
     opacity: 0.6; /* Increased from 0.5 for better visibility */
     transition: all 0.25s ease;
     padding: 8px 8px; /* Increased padding to ensure 32px touch target */
@@ -891,23 +960,33 @@
     min-height: 32px; /* Ensures minimum height for touch target */
     justify-content: center; /* Center lines vertically */
     align-self: center; /* Center vertically in list item regardless of text wrap */
+    cursor: grab; /* Explicit grab cursor on the handle */
+    position: relative;
   }
 
+
   .grab-indicator span {
-    width: 18px; /* Increased from 16px for more "chonky" feel */
-    height: 3px; /* Increased from 2px for more visibility */
+    width: 18px; /* Maintain width */
+    height: 3px; /* Maintain height */
     background-color: rgba(201, 120, 255, 0.8);
-    border-radius: 2px; /* Increased from 1px */
+    border-radius: 2px;
     transition: transform 0.2s ease, width 0.2s ease;
   }
 
   .zl-item:hover .grab-indicator {
-    opacity: 1; /* Increased from 0.8 */
-    transform: scale(1.1); /* Added subtle scale effect on hover */
+    opacity: 1;
+    transform: scale(1.1); /* Maintain subtle scale effect on hover */
   }
+
 
   .zl-item:hover .grab-indicator span {
     background-color: rgba(201, 120, 255, 1); /* Fully opaque on hover */
+  }
+
+  /* Subtle hover effect for drag handle */
+  .zl-item:hover .grab-indicator span {
+    background-color: rgba(201, 120, 255, 1); /* Fully opaque on hover */
+    box-shadow: 0 1px 3px rgba(201, 120, 255, 0.3); /* Subtle glow */
   }
   
   /* Tailwind margin utilities */
