@@ -7,7 +7,7 @@
   
   // Component props
   export let title = 'ZipList';
-  export let subtitle = "Talk up a list lickety split.\nEasy and fun, say it and tick.";
+  export let subtitle = "Talk up a list lickety-split.\nEasy and quick, say it and tick.";
   
   // AppSuffix configuration
   export let showAppSuffix = true;
