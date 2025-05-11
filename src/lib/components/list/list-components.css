@@ -1,24 +1,25 @@
-/* Monospace fonts */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Import Space Mono font with heavier weights */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
 /* Base styles for list components */
 .list-mono {
-  font-family: 'JetBrains Mono', 'Roboto Mono', 'SF Mono', monospace;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: -0.01em;
 }
 
-/* Card styles */
+/* Card styles with warm gradient background */
 .card-mono {
   border-radius: 20px;
-  border: 4px solid rgba(200, 180, 255, 0.6);
-  background: linear-gradient(145deg, #ffffff, #f8f5ff);
+  border: 4px solid rgba(197, 168, 242, 0.6);
+  background: linear-gradient(145deg, #FFFAF5, #FFF1E6);
   box-shadow: 0 8px 22px rgba(160, 140, 220, 0.15);
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .card-mono.active {
-  border-color: rgba(180, 150, 255, 0.8);
+  border-color: rgba(181, 152, 255, 0.8);
   transform: scale(1.02) translateY(-5px);
-  box-shadow: 0 12px 28px rgba(160, 140, 220, 0.25);
+  box-shadow: 0 14px 30px rgba(160, 140, 220, 0.25);
 }
 
 /* Card content container */
@@ -32,24 +33,28 @@
 
 /* List title */
 .list-title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.4rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: #9d86e6;
   transition: all 0.2s ease;
   cursor: pointer;
   margin-bottom: 1.25rem;
+  text-align: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(181, 152, 255, 0.2);
 }
 
 .list-title:hover {
   text-shadow: 0 0 12px rgba(157, 134, 230, 0.3);
+  color: #8066d0;
 }
 
 /* List items */
 .list-item-mono {
   border-radius: 16px;
-  border: 2px solid rgba(200, 180, 255, 0.4);
-  background-color: white;
+  border: 2px solid rgba(197, 168, 242, 0.4);
+  background-color: #FFFCF9;
   padding: 16px;
   margin-bottom: 12px;
   box-shadow: 0 3px 10px rgba(186, 165, 240, 0.07);
@@ -60,13 +65,15 @@
 }
 
 .list-item-mono:hover {
-  background: linear-gradient(145deg, #ffffff, #f5f1ff);
+  background: linear-gradient(145deg, #FFFCF9, #FFF5EC);
   transform: translateY(-2px);
-  border-color: rgba(200, 180, 255, 0.5);
+  border-color: rgba(197, 168, 242, 0.7);
+  box-shadow: 0 5px 15px rgba(186, 165, 240, 0.12);
 }
 
 .list-item-mono.checked {
   opacity: 0.6;
+  background-color: #FFFCF9;
 }
 
 .list-item-mono.dragging {
@@ -85,9 +92,9 @@
 .checkbox-mono {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #c4a9ff;
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid #c4a9ff;
   border-radius: 6px;
   margin: 0;
   display: grid;
@@ -96,22 +103,25 @@
   background-color: white;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(186, 165, 240, 0.2);
 }
 
 .checkbox-mono:hover {
   border-color: #b598ff;
   background-color: #f5f1ff;
+  transform: scale(1.05);
 }
 
 .checkbox-mono:checked {
   background-color: #b598ff;
   border-color: #b598ff;
+  box-shadow: 0 1px 3px rgba(181, 152, 255, 0.4);
 }
 
 .checkbox-mono:checked::before {
   content: '';
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   transform: scale(0);
   transition: 120ms transform ease-in-out;
   box-shadow: inset 1em 1em white;
@@ -131,10 +141,11 @@
 
 /* Item text */
 .item-text {
-  font-family: 'JetBrains Mono', 'Roboto Mono', 'SF Mono', monospace;
+  font-family: 'Space Mono', monospace;
   font-size: 1rem;
+  font-weight: 700;
   line-height: 1.4;
-  color: #333;
+  color: #444444;
   flex-grow: 1;
   word-break: break-word;
   transition: all 0.15s ease;
@@ -156,6 +167,10 @@
   padding-top: 1rem;
   border-top: 2px solid rgba(200, 180, 255, 0.2);
   height: 60px;
+  background: linear-gradient(180deg, 
+    rgba(255, 250, 245, 0), 
+    rgba(255, 241, 230, 0.9)
+  );
 }
 
 /* Action buttons */
@@ -168,12 +183,13 @@
   align-items: center;
   gap: 0.25rem;
   font-size: 0.7rem;
-  font-family: 'JetBrains Mono', 'Roboto Mono', 'SF Mono', monospace;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
   padding: 0.5rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .action-btn:hover {
@@ -217,14 +233,16 @@
 
 /* Input field styling */
 .mono-input {
-  font-family: 'JetBrains Mono', monospace;
-  border: 2px solid rgba(200, 180, 255, 0.5);
-  background-color: white;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  border: 2.5px solid rgba(200, 180, 255, 0.5);
+  background-color: #FFFCF9;
   border-radius: 10px;
   padding: 0.5rem 0.75rem;
   width: 100%;
   outline: none;
   transition: all 0.2s ease;
+  color: #444444;
 }
 
 .mono-input:focus {
@@ -234,8 +252,9 @@
 
 .mono-input.title {
   font-size: 1.15rem;
-  font-weight: 500;
+  font-weight: 700;
   color: #9d86e6;
+  text-align: center;
 }
 
 /* Add item form */
@@ -244,8 +263,8 @@
   gap: 0.5rem;
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background: white;
-  border: 2px solid rgba(200, 180, 255, 0.4);
+  background: linear-gradient(145deg, #FFFCF9, #FFF5EC);
+  border: 2.5px solid rgba(200, 180, 255, 0.4);
   border-radius: 16px;
 }
 
@@ -253,28 +272,30 @@
   background: linear-gradient(135deg, #b598ff 0%, #9d86e6 100%);
   border: none;
   color: white;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 0.5rem 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 500;
+  font-weight: 700;
   font-size: 0.9rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: -0.01em;
   transition: all 0.2s ease;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(157, 134, 230, 0.2);
 }
 
 .add-btn:hover {
-  box-shadow: 0 3px 10px rgba(157, 134, 230, 0.3);
+  box-shadow: 0 5px 12px rgba(157, 134, 230, 0.4);
   transform: translateY(-2px);
 }
 
 .add-btn.cancel {
-  background: white;
+  background: #FFFCF9;
   color: #9d86e6;
-  border: 1px solid rgba(181, 152, 255, 0.3);
+  border: 2px solid rgba(181, 152, 255, 0.3);
 }
 
 .add-btn:disabled {
@@ -294,7 +315,7 @@
   padding: 2rem 1rem;
   height: 100%;
   min-height: 300px;
-  font-family: 'JetBrains Mono', 'Roboto Mono', 'SF Mono', monospace;
+  font-family: 'Space Mono', monospace;
 }
 
 .empty-icon {
@@ -304,7 +325,7 @@
 }
 
 .empty-title {
-  font-weight: 500;
+  font-weight: 700;
   color: #9d86e6;
   margin-bottom: 0.5rem;
 }
@@ -337,6 +358,18 @@
   opacity: 1;
   display: block;
   z-index: 10;
+  animation: fadeScale 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@keyframes fadeScale {
+  from {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Navigation */
@@ -346,15 +379,15 @@
   align-items: center;
   margin-top: 1.5rem;
   gap: 1rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Space Mono', monospace;
 }
 
 .nav-btn-mono {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: white;
-  border: 2px solid rgba(200, 180, 255, 0.3);
+  background: linear-gradient(145deg, #FFFCF9, #FFF5EC);
+  border: 2.5px solid rgba(200, 180, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -378,11 +411,11 @@
 
 .nav-counter-mono {
   font-size: 0.85rem;
+  font-weight: 700;
   color: #9d86e6;
   background: rgba(181, 152, 255, 0.1);
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-weight: 500;
 }
 
 /* List container */
@@ -422,4 +455,17 @@
 
 .fade-in {
   animation: fadeIn 0.3s ease forwards;
+}
+
+/* Focus states for accessibility */
+.checkbox-mono:focus-visible {
+  outline: 2px solid #9d86e6;
+  outline-offset: 2px;
+}
+
+.add-btn:focus-visible,
+.action-btn:focus-visible,
+.nav-btn-mono:focus-visible {
+  outline: 2px solid #9d86e6;
+  outline-offset: 2px;
 }

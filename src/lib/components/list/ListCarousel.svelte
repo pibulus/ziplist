@@ -18,7 +18,7 @@
     
     // Ensure active list is in view when it changes
     setTimeout(() => {
-      scrollToActiveList();
+      updateCarouselState();
     }, 100);
   });
   
@@ -57,7 +57,7 @@
   }
   
   onMount(() => {
-    // Force explicit initialization of the store 
+    // Initialize the lists store
     console.log('ListCarousel component mounted, initializing lists');
     listsStore.initialize();
     listsService.getAllLists();
@@ -114,18 +114,32 @@
     }
   }
   
-  // Update active card with visual swipe effect
-  function scrollToActiveList() {
+  // Update active card with visual effects
+  function updateCarouselState() {
     if (!carouselElement || !activeListId) return;
     
     // Update data attributes for better transitions
-    const items = carouselElement.querySelectorAll('.carousel-item-mono');
+    const slides = carouselElement.querySelectorAll('.carousel-item-mono');
     const activeIndex = lists.findIndex(list => list.id === activeListId);
     
-    items.forEach((item, index) => {
-      item.setAttribute('data-active', (index === activeIndex).toString());
-      item.setAttribute('data-prev', (index === activeIndex - 1).toString());
-      item.setAttribute('data-next', (index === activeIndex + 1).toString());
+    slides.forEach((slide, index) => {
+      if (index === activeIndex) {
+        slide.setAttribute('data-active', 'true');
+        slide.removeAttribute('data-prev');
+        slide.removeAttribute('data-next');
+      } else if (index === activeIndex - 1) {
+        slide.setAttribute('data-prev', 'true');
+        slide.removeAttribute('data-active');
+        slide.removeAttribute('data-next');
+      } else if (index === activeIndex + 1) {
+        slide.setAttribute('data-next', 'true');
+        slide.removeAttribute('data-active');
+        slide.removeAttribute('data-prev');
+      } else {
+        slide.removeAttribute('data-active');
+        slide.removeAttribute('data-prev');
+        slide.removeAttribute('data-next');
+      }
     });
   }
 </script>
@@ -133,7 +147,7 @@
 <div class="carousel-container list-mono">
   {#if lists.length > 0}
     <div 
-      class="w-full"
+      class="card-carousel"
       bind:this={carouselElement}
       on:touchstart={handleTouchStart}
       on:touchend={handleTouchEnd}

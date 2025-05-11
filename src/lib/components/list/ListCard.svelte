@@ -46,6 +46,11 @@
   $: completedCount = completedItems.length;
   $: totalCount = list.items.length;
   
+  // Helper function to calculate staggered delay for animations
+  function getStaggerDelay(index) {
+    return index * 50; // 50ms between each item
+  }
+  
   // Drag and drop functions
   function handleDragStart(event, itemId) {
     // Set data and styling
@@ -259,9 +264,10 @@
         bind:value={editedName}
         on:blur={saveListName}
         on:keydown={handleKeyDown}
+        placeholder="List name..."
       />
     {:else}
-      <h3 class="list-title" on:dblclick={startEditingName}>
+      <h3 class="list-title" on:click|stopPropagation={startEditingName}>
         {list.name || 'Untitled List'}
       </h3>
     {/if}
@@ -270,7 +276,7 @@
     <div class="flex-grow mb-3">
       {#if list.items.length > 0 || isAddingItem}
         <ul class="list-mono-container">
-          {#each sortedItems as item (item.id)}
+          {#each sortedItems as item, index (item.id)}
             <li
               class="list-item-mono {item.checked ? 'checked' : ''}"
               draggable={!item.checked}
@@ -279,7 +285,7 @@
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: flipDuration }}
-              in:fly={{ y: 20, duration: 300 }}
+              in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
             >
               <input
                 type="checkbox"
@@ -312,7 +318,7 @@
           {/each}
           
           {#if completedItems.length > 0 && activeItems.length > 0}
-            <div class="my-2" in:fade={{ duration: 200 }}>
+            <div class="my-2" in:fade={{ duration: 300 }}>
               <div class="mono-divider"></div>
             </div>
           {/if}
@@ -345,6 +351,18 @@
             </li>
           {/if}
         </ul>
+        
+        {#if !isAddingItem}
+          <button
+            class="add-btn w-full my-3 flex justify-center"
+            on:click|stopPropagation={toggleAddItemForm}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Item
+          </button>
+        {/if}
       {:else}
         <!-- Empty state -->
         <div class="empty-state">
@@ -368,7 +386,7 @@
       {/if}
     </div>
     
-    <!-- Action Toolbar - Improved footer from latest version -->
+    <!-- Action Toolbar - Improved footer -->
     <div class="actions-toolbar">
       <button 
         class="action-btn" 
@@ -387,17 +405,15 @@
       </button>
       
       <button 
-        class="action-btn add primary" 
-        on:click|stopPropagation={() => {
-          toggleAddItemForm();
-        }}
-        title="Add Item"
+        class="action-btn" 
+        on:click|stopPropagation={startEditingName}
+        title="Rename List"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
         </svg>
-        Add Item
+        <span>Rename</span>
       </button>
       
       <button 
