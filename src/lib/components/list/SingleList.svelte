@@ -522,7 +522,7 @@
     font-weight: 800;
     line-height: 1.5;
     color: #444444;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     font-family: 'Space Mono', monospace;
     letter-spacing: 0.8px;
     box-sizing: border-box;
@@ -531,6 +531,13 @@
     text-align: left;
     position: relative;
     vertical-align: middle;
+    padding: 2px 0;
+  }
+
+  /* Edit state indication for unchecked items */
+  .zl-item:not(.checked) .zl-item-text-button:hover .zl-item-text {
+    color: #c978ff;
+    text-shadow: 0 0 8px rgba(201, 120, 255, 0.15);
   }
 
   .zl-item-text.checked {
@@ -558,8 +565,54 @@
 
   .zl-item-text-button:hover:not(:disabled),
   .zl-item-text-button:focus-visible:not(:disabled) {
-    background-color: rgba(255, 255, 255, 0.5);
+    background: linear-gradient(135deg, rgba(252, 235, 246, 0.6), rgba(255, 242, 253, 0.8));
     outline: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(201, 120, 255, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .zl-item-text-button:hover:not(:disabled)::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(201, 120, 255, 0.2)' stroke='rgba(201, 120, 255, 0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    right: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    animation: fadeIn 0.3s forwards ease-out;
+    filter: drop-shadow(0 0 3px rgba(201, 120, 255, 0.3));
+  }
+
+  /* Sparkle effect on hover */
+  .zl-item-text-button:hover:not(:disabled)::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 5%),
+      radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 6%);
+    background-size: 100% 100%;
+    opacity: 0;
+    z-index: 1;
+    animation: sparkleIn 0.5s forwards ease-out;
+    pointer-events: none;
+  }
+
+  @keyframes sparkleIn {
+    0% { opacity: 0; }
+    30% { opacity: 0.4; }
+    100% { opacity: 0.8; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-50%) translateX(-5px); }
+    to { opacity: 1; transform: translateY(-50%) translateX(0); }
   }
 
   .zl-item-text-button:focus-visible:not(:disabled) {
