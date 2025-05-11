@@ -365,7 +365,7 @@
   />
 
   <!-- RecordButtonWithTimer above the List -->
-  <div class="flex justify-center my-4">
+  <div class="flex justify-center my-8">
     <RecordButtonWithTimer
       recording={$isRecording}
       transcribing={$isTranscribing}
