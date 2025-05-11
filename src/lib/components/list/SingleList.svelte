@@ -13,18 +13,9 @@
   let isAddingItem = false;
   let editingItemId = null;
   let editedItemText = '';
-  let showCompletionMessage = false;
-  let completionMessageTimeout;
+  // Removed completionMessage-related variables
 
-  // Simple completion messages
-  const completionMessages = [
-    "All done!",
-    "Finished!",
-    "Complete!",
-    "Done!",
-    "All set!",
-    "All good!"
-  ];
+  // No completion messages needed anymore
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
@@ -41,7 +32,7 @@
 
   onDestroy(() => {
     if (unsubscribe) unsubscribe();
-    if (completionMessageTimeout) clearTimeout(completionMessageTimeout);
+    // Removed completionMessageTimeout cleanup
   });
   
   // Separated active and completed items
@@ -159,7 +150,7 @@
 
     // If checking the item (not unchecking), add sparkle animation
     if (!itemToToggle?.checked) {
-      // Add confetti animation after a small delay
+      // Add sparkle animation after a small delay
       setTimeout(() => {
         const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
         if (checkbox) {
@@ -170,23 +161,10 @@
           const allCompleted = list.items.length > 1 &&
             list.items.filter(i => i.id !== itemId).every(i => i.checked);
 
-          // If this completes the list, show a celebratory message
-          if (allCompleted) {
-            // Clear any existing timeout
-            if (completionMessageTimeout) {
-              clearTimeout(completionMessageTimeout);
-            }
-
-            // Show completion message with vibration pattern
-            showCompletionMessage = true;
-            if (navigator.vibrate) {
-              navigator.vibrate([30, 50, 30, 50, 30]);
-            }
-
-            // Hide the message after 4 seconds
-            completionMessageTimeout = setTimeout(() => {
-              showCompletionMessage = false;
-            }, 4000);
+          // If this completes the list, trigger haptic feedback but no message
+          if (allCompleted && navigator.vibrate) {
+            navigator.vibrate([30, 50, 30, 50, 30]);
+            // Could add confetti here if there's a library
           }
         }
       }, 50);
@@ -239,6 +217,7 @@
 
   function saveItemEdit() {
     if (editedItemText.trim() && editingItemId !== null) {
+      // Process text for capitalization but store original
       listsService.editItem(editingItemId, editedItemText.trim());
       cancelItemEdit();
     }
@@ -265,20 +244,7 @@
   <div class="zl-top-actions">
   </div>
     
-    <!-- Completion Message -->
-    {#if showCompletionMessage}
-      <div
-        class="zl-completion-message"
-        in:fly={{ y: -20, duration: 400 }}
-        out:fade={{ duration: 300 }}
-      >
-        <div class="zl-message-content">
-          <span class="zl-sparkle">✨</span>
-          {completionMessages[Math.floor(Math.random() * completionMessages.length)]}
-          <span class="zl-sparkle">✨</span>
-        </div>
-      </div>
-    {/if}
+    <!-- No completion message, we'll use confetti animation instead -->
 
     <!-- List Items -->
     <div class="zl-list-container">
@@ -316,13 +282,13 @@
                   on:keydown={handleEditItemKeyDown}
                 />
               {:else}
-                <span 
+                <span
                   class="zl-item-text {item.checked ? 'checked' : ''}"
                   on:click|stopPropagation={() => {
                     if (!item.checked) startEditingItem(item);
                   }}
                 >
-                  {item.text}
+                  {item.text.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                 </span>
               {/if}
             </li>
@@ -434,8 +400,8 @@
     background-size: 300% 300%;
     animation: gradient-shift 30s ease infinite;
     box-shadow: 0 10px 25px rgba(201, 120, 255, 0.2);
-    border: 3px solid rgba(255, 255, 255, 0.8);
-    padding: 1.75rem;
+    border: 3px solid rgba(255, 212, 218, 0.8); /* Theme-specific border color */
+    padding: 1.5rem; /* Reduced padding */
     position: relative;
     overflow: hidden;
     font-family: 'Space Mono', monospace;
@@ -486,7 +452,7 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    min-height: 400px;
+    min-height: 320px; /* Reduced height */
   }
   
   /* List container */
@@ -502,33 +468,33 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-bottom: 1.5rem;
+    gap: 8px; /* Reduced gap */
+    margin-bottom: 1rem; /* Reduced margin */
   }
   
   /* Individual list items */
   .zl-item {
-    border-radius: 18px;
+    border-radius: 16px;
     background: rgba(255, 255, 255, 0.5);
-    padding: 16px 20px;
+    padding: 12px 14px; /* Further reduced padding */
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.9rem; /* Slightly reduced gap */
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
     position: relative;
     cursor: pointer;
     border-left: 4px solid rgba(201, 120, 255, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.7);
-    min-height: 60px;
+    border: 2px solid rgba(255, 212, 218, 0.6); /* Theme-specific border color */
+    min-height: 52px; /* Further reduced height */
   }
 
   .zl-item:hover {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.8);
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(201, 120, 255, 0.2);
     border-left: 4px solid rgba(201, 120, 255, 0.7);
-    border-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 212, 218, 0.9); /* Theme-specific border color */
   }
   
   .zl-item::after {
@@ -555,7 +521,7 @@
     border-left: 4px solid rgba(201, 120, 255, 0.2);
     transform: scale(0.98);
     box-shadow: 0 2px 6px rgba(201, 120, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 212, 218, 0.4); /* Theme-specific border color */
   }
   
   /* Item text */
@@ -567,10 +533,12 @@
     flex-grow: 1;
     transition: all 0.2s ease;
     font-family: 'Space Mono', monospace;
-    text-transform: capitalize;
     letter-spacing: 0.8px;
     cursor: pointer;
     min-height: 26px; /* Consistent height to prevent shifting */
+    box-sizing: border-box; /* Ensure padding is included in height */
+    display: inline-block; /* Helps maintain consistent size */
+    width: 100%; /* Take full width */
   }
   
   .zl-item-text.checked {
@@ -705,14 +673,16 @@
     border: 2px solid rgba(201, 120, 255, 0.3);
     background-color: rgba(255, 255, 255, 0.8);
     border-radius: 12px;
-    padding: 0.7rem 1rem;
+    padding: 0.5rem 0.8rem;
     outline: none;
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     color: #444444;
     width: 100%;
-    min-height: 26px;
     font-size: 1.1rem;
     letter-spacing: 0.8px;
+    box-sizing: border-box; /* Ensure padding is included in height */
+    line-height: 1.5;
+    margin: 0; /* Remove any margin */
   }
   
   .zl-input::placeholder, .zl-edit-input::placeholder {
@@ -824,40 +794,7 @@
     transform: translateY(-3px) scale(1.05);
   }
   
-  /* Completion message */
-  .zl-completion-message {
-    background: linear-gradient(135deg, #ffcdc1, #e9a8ff);
-    padding: 0.8rem 1.2rem;
-    border-radius: 18px;
-    box-shadow: 0 8px 15px rgba(201, 120, 255, 0.15); 
-    margin: 0 auto 1.75rem;
-    text-align: center;
-    max-width: 90%;
-    position: relative;
-    overflow: hidden;
-    animation: pulse 3s infinite ease-in-out;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-  }
-  
-  .zl-message-content {
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-    color: #555555;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-    position: relative;
-    text-transform: capitalize;
-  }
-  
-  .zl-sparkle {
-    font-size: 1.2rem;
-    animation: spin 4s linear infinite;
-    display: inline-block;
-    color: #c978ff;
-  }
+  /* Removed completion message styles */
   
   /* Drag and drop styling */
   .zl-item.dragging {
