@@ -372,9 +372,8 @@ import { get } from 'svelte/store'; // get should be imported from svelte/store
 	<ContentContainer
 		bind:this={contentContainer}
 	/>
-	<ListCarousel />
 
-	<!-- Add the RecordButtonWithTimer below the ListCarousel -->
+	<!-- RecordButtonWithTimer above the ListCarousel -->
 	<div class="flex justify-center my-4">
 		<RecordButtonWithTimer
 			recording={$isRecording}
@@ -387,6 +386,8 @@ import { get } from 'svelte/store'; // get should be imported from svelte/store
 			on:preload={preloadSpeechModel}
 		/>
 	</div>
+
+	<ListCarousel />
 
 	<svelte:fragment slot="footer-buttons">
 		<FooterComponent

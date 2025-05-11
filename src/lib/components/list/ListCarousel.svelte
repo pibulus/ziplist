@@ -130,12 +130,6 @@
 </script>
 
 <div class="lists-container">
-  <div class="flex justify-between items-center mb-2">
-    <h2 class="text-lg font-bold">My Lists</h2>
-    <button class="btn btn-xs btn-{themeService.getCurrentTheme()}" on:click={handleCreateList}>
-      New List
-    </button>
-  </div>
   
   {#if lists.length > 0}
     <div class="carousel w-full p-4 bg-transparent rounded-box flex justify-center"
