@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
-  import { slide, fade, fly } from 'svelte/transition';
+  import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   
   // State variables
@@ -36,11 +36,27 @@
   // Sort items - active items first, completed items last
   $: sortedItems = [...activeItems, ...completedItems];
 
-  // Format item text with first-letter capitalization of each word
+  // Format item text with first-letter capitalization of each word - with memoization
+  const textCache = new Map();
   function formatItemText(text) {
-    return text.split(' ').map(word =>
+    // Return cached result if available
+    if (textCache.has(text)) {
+      return textCache.get(text);
+    }
+
+    // Otherwise compute, cache and return
+    const formattedText = text.split(' ').map(word =>
       word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word
     ).join(' ');
+
+    // Cache the result (limit cache size to prevent memory issues)
+    if (textCache.size > 100) {
+      const firstKey = textCache.keys().next().value;
+      textCache.delete(firstKey);
+    }
+    textCache.set(text, formattedText);
+
+    return formattedText;
   }
 
   // Helper function to calculate staggered delay for animations
@@ -207,8 +223,8 @@
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
               draggable={!item.checked && editingItemId !== item.id}
-              on:dragstart={(e) => handleDragStart(e, item.id)}
-              on:dragend={handleDragEnd}
+              on:dragstart|passive={(e) => handleDragStart(e, item.id)}
+              on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: 300 }}
@@ -454,6 +470,11 @@
     border: 2px solid rgba(255, 212, 218, 0.6);
     min-height: 60px; /* Minimum height, but will grow with content */
     justify-content: space-between;
+  }
+
+  /* Only add will-change to unchecked items that can be dragged - don't use it on all items to avoid performance issues */
+  .zl-item:not(.checked):not(.editing) {
+    will-change: transform;
   }
 
   /* Change cursor for items being edited */
@@ -716,26 +737,6 @@
     margin-bottom: 2rem;
   }
   
-  /* Add item form - enhanced for "chonky" feel */
-  .zl-add-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem; /* Increased from 1rem for more spacing */
-    padding: 1.5rem; /* Increased from 1.2rem for more spacious feel */
-    background: rgba(255, 255, 255, 0.65); /* Slightly increased opacity */
-    border-radius: 20px; /* Increased from 18px for softer corners */
-    box-shadow: 0 6px 18px rgba(201, 120, 255, 0.15); /* Enhanced shadow */
-    position: relative;
-    overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.9); /* Increased from 1px for more defined border */
-    margin-top: 8px; /* Added for better spacing */
-  }
-  
-  .zl-form-buttons {
-    display: flex;
-    gap: 0.8rem;
-    justify-content: flex-end;
-  }
   
   /* Edit wrapper container */
   .edit-wrapper {
@@ -841,32 +842,6 @@
     transform: translateY(-3px) scale(1.02); /* Added subtle scale effect */
   }
   
-  /* Add button in top right corner - enhanced for "chonky" feel */
-  .zl-add-button {
-    width: 60px; /* Increased from 50px for more "chonky" feel */
-    height: 60px; /* Increased from 50px for more "chonky" feel */
-    background: linear-gradient(135deg, #e9a8ff 0%, #c978ff 100%);
-    border: none;
-    color: white;
-    border-radius: 50%;
-    font-weight: 400;
-    font-size: 2.25rem; /* Increased from 2rem for better visibility */
-    line-height: 1;
-    font-family: 'Space Mono', monospace;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 15px rgba(201, 120, 255, 0.3); /* Enhanced shadow */
-    position: relative;
-    border: 3px solid rgba(255, 255, 255, 0.7); /* Added border for definition */
-  }
-
-  .zl-add-button:hover {
-    box-shadow: 0 10px 25px rgba(201, 120, 255, 0.4); /* Enhanced shadow on hover */
-    transform: translateY(-4px) scale(1.08); /* Increased from scale(1.05) */
-  }
   
   /* ELEGANT DRAG AND DROP STYLING */
   @keyframes float {
@@ -890,6 +865,7 @@
       float 2s infinite ease-in-out,
       pulse-border 1.5s infinite ease-in-out;
     cursor: grabbing;
+    will-change: transform, opacity, border;
   }
 
   .zl-item.drag-over {
