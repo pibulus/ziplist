@@ -525,12 +525,12 @@
     transition: all 0.2s ease;
     font-family: 'Space Mono', monospace;
     letter-spacing: 0.8px;
-    min-height: 30px;
     box-sizing: border-box;
     display: inline-block;
     width: 100%;
     text-align: left;
     position: relative;
+    vertical-align: middle;
   }
 
   .zl-item-text.checked {
@@ -546,12 +546,14 @@
     text-align: left;
     cursor: pointer;
     font-family: inherit;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     width: auto;
     border-radius: 6px;
     transition: all 0.2s ease;
     margin-right: auto;
     position: relative;
+    min-height: 30px;
   }
 
   .zl-item-text-button:hover:not(:disabled),
@@ -694,6 +696,8 @@
     position: relative;
     min-height: 44px;
     margin-right: auto;
+    display: flex;
+    align-items: center;
   }
 
   /* Input fields */
@@ -713,16 +717,19 @@
     box-sizing: border-box;
     line-height: 1.5;
     margin: 0;
-    min-height: 30px;
+    min-height: 36px;
     height: 44px;
     text-align: left;
+    display: flex;
+    align-items: center;
   }
   
   /* Specific edit input styling */
   .zl-edit-input {
     position: absolute;
-    top: -7px;
+    top: 50%;
     left: 0;
+    transform: translateY(-50%);
   }
 
   .zl-input::placeholder, .zl-edit-input::placeholder {
