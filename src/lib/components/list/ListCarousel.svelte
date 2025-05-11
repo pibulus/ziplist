@@ -206,15 +206,27 @@
       </button>
     </div>
   {:else}
-    <div class="card w-full max-w-[640px] min-h-[420px] shadow-lg bg-white border border-gray-200 mx-auto flex items-center justify-center">
+    <div class="card w-full max-w-[640px] min-h-[420px] shadow-lg bg-white border-[3px] border-[#e2d5f8] rounded-xl mx-auto flex items-center justify-center"
+      style="box-shadow: 0 8px 20px rgba(186, 165, 240, 0.1);">
       <div class="text-center p-6">
-        <div class="text-gray-400 mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="#c4a9ff">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
-        <p class="text-gray-500 mb-4">No lists found</p>
-        <p class="text-sm text-gray-400">Create a new list to get started</p>
+        <p class="text-gray-700 font-medium mb-4">No lists found</p>
+        <p class="text-sm text-gray-500 mb-4">Create a new list to get started</p>
+        <button
+          class="btn btn-md mt-4"
+          style="background-color: #b598ff; border: none; color: white; box-shadow: 0 2px 4px rgba(181, 152, 255, 0.3);"
+          on:click|stopPropagation={() => {
+            listsService.createList();
+          }}>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create New List
+        </button>
       </div>
     </div>
   {/if}
