@@ -1,6 +1,8 @@
 <script>
   import { createEventDispatcher, tick } from 'svelte';
   import { themeService } from '$lib/services/theme';
+  import { slide, fade, fly } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
   
   // List data and event handlers
   export let list = { name: '', items: [] };
@@ -13,27 +15,36 @@
   export let onReorderItems = () => {};
   export let onAddItem = () => {};
   export let onEditItem = () => {};
+
+  // Create new list function
+  function handleCreateList() {
+    // Note: We're assuming this should call a parent component function
+    // Later we'll connect this to listsService
+    dispatch('createList');
+  }
   
   const dispatch = createEventDispatcher();
   
   // State variables
   let isEditingName = false;
   let editedName = '';
-  let showCompleted = false;
   let draggedItemId = null;
   let dragOverItemId = null;
   let newItemText = '';
   let isAddingItem = false;
   let editingItemId = null;
   let editedItemText = '';
+  let flipDuration = 300; // Duration for the flip animation
   
-  // Filtered items
-  $: filteredItems = showCompleted 
-    ? list.items 
-    : list.items.filter(item => !item.checked);
-  
-  // Count of hidden completed items
-  $: hiddenCount = list.items.filter(item => item.checked).length;
+  // Separated active and completed items
+  $: activeItems = list.items.filter(item => !item.checked);
+  $: completedItems = list.items.filter(item => item.checked);
+
+  // Sort items - active items first, completed items last (always visible)
+  $: sortedItems = [...activeItems, ...completedItems];
+
+  // Count of completed items
+  $: completedCount = completedItems.length;
   
   // Drag and drop functions
   function handleDragStart(event, itemId) {
@@ -41,55 +52,88 @@
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', itemId);
     draggedItemId = itemId;
-    
-    // Add styling to the dragged element
+
+    // Add styling to the dragged element - small delay for better visual effect
     setTimeout(() => {
       event.target.classList.add('dragging');
+
+      // Add haptic feedback on mobile devices if supported
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+
+      // Create a subtle "lift" animation by adding a transform
+      event.target.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
     }, 0);
   }
-  
+
   function handleDragEnd(event) {
-    // Remove styling
+    // Remove styling with transition
     draggedItemId = null;
     dragOverItemId = null;
+
+    // Add a "settle" animation when dropping
+    event.target.style.transition = 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
     event.target.classList.remove('dragging');
+
+    // Add haptic feedback on mobile devices if supported
+    if (navigator.vibrate) {
+      navigator.vibrate([20, 30, 20]);
+    }
   }
-  
+
   function handleDragOver(event, itemId) {
     // Prevent default to allow drop
     event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+
+    // Only update if we're moving to a new item
+    if (dragOverItemId === itemId) return;
+
     dragOverItemId = itemId;
-    
-    // Add visual cue for drop target
+
+    // Add visual cue for drop target with subtle animation
     const items = document.querySelectorAll('.list-item');
     items.forEach(item => {
       item.classList.remove('drag-over');
+      item.style.transition = 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
     });
-    event.currentTarget.classList.add('drag-over');
+
+    // Apply the drag-over class with a slight delay for a smoother effect
+    setTimeout(() => {
+      event.currentTarget.classList.add('drag-over');
+    }, 0);
   }
-  
+
   function handleDrop(event, targetItemId) {
     // Prevent default action
     event.preventDefault();
-    
-    // Clear styling
-    event.currentTarget.classList.remove('drag-over');
-    
+
+    // Clear styling with a nice transition
+    const currentItem = event.currentTarget;
+    currentItem.style.transition = 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    currentItem.classList.remove('drag-over');
+
     // If dropped on itself, do nothing
     if (draggedItemId === targetItemId) return;
-    
+
+    // Add haptic feedback on mobile devices if supported
+    if (navigator.vibrate) {
+      navigator.vibrate(80);
+    }
+
     // Reorder items
     const reorderedItems = [...list.items];
     const sourceIndex = reorderedItems.findIndex(item => item.id === draggedItemId);
     const targetIndex = reorderedItems.findIndex(item => item.id === targetItemId);
-    
+
     if (sourceIndex !== -1 && targetIndex !== -1) {
       // Remove the item from the source position
       const [movedItem] = reorderedItems.splice(sourceIndex, 1);
-      
+
       // Insert the item at the target position
       reorderedItems.splice(targetIndex, 0, movedItem);
-      
+
       // Update the list with the new order
       onReorderItems(reorderedItems);
     }
@@ -121,8 +165,18 @@
     }
   }
   
-  // Handle item toggle
+  // Handle item toggle with transition effect
   function toggleItem(itemId) {
+    // Find the item to determine current state
+    const itemToToggle = list.items.find(item => item.id === itemId);
+    if (itemToToggle) {
+      // Add haptic feedback on toggle
+      if (navigator.vibrate) {
+        navigator.vibrate(itemToToggle.checked ? 20 : [20, 30, 20]);
+      }
+    }
+
+    // Call the handler function
     onToggleItem(itemId);
   }
   
@@ -207,7 +261,7 @@
 </script>
 
 <div
-  class="card card-bordered w-full max-w-[640px] h-auto flex flex-col bg-white {showCompleted ? 'showing-completed' : ''} list-card"
+  class="card card-bordered w-full max-w-[640px] h-auto flex flex-col bg-white list-card"
   style="transition: all 0.3s ease; backface-visibility: hidden; will-change: transform, box-shadow; -webkit-backface-visibility: hidden;"
   on:click={() => onSelect(list.id)}
   class:active={isActive}
@@ -239,21 +293,17 @@
     <div class="flex-grow mb-3 h-full items-content">
       {#if list.items.length > 0 || isAddingItem}
         <ul class="list">
-          {#each filteredItems as item (item.id)}
+          {#each sortedItems as item (item.id)}
             <li
-              class="list-item {item.checked ? 'opacity-75' : ''} rounded hover:bg-gray-50 {draggedItemId === item.id ? 'dragging' : ''} {dragOverItemId === item.id ? 'drag-over' : ''}"
+              class="list-item rounded hover:bg-gray-50 {item.checked ? 'completed-item' : ''} {draggedItemId === item.id ? 'dragging' : ''} {dragOverItemId === item.id ? 'drag-over' : ''}"
               draggable={!item.checked}
               on:dragstart={(e) => handleDragStart(e, item.id)}
               on:dragend={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
+              animate:flip={{ duration: flipDuration }}
+              in:fly={{ y: 20, duration: 300 }}
             >
-              <div class="drag-handle mr-1" on:mousedown|stopPropagation>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                </svg>
-              </div>
-
               <input
                 type="checkbox"
                 id="item-{list.id}-{item.id}"
@@ -272,16 +322,32 @@
                   />
                 </div>
               {:else}
-                <label
-                  for="item-{list.id}-{item.id}"
-                  class="{item.checked ? 'line-through text-gray-500' : 'text-gray-900 cursor-pointer'} break-words flex-grow item-label"
-                  on:click|stopPropagation={item.checked ? null : () => startEditingItem(item)}
-                >
-                  {item.text}
-                </label>
+                <div class="flex flex-grow items-start">
+                  <label
+                    for="item-{list.id}-{item.id}"
+                    class="{item.checked ? 'line-through text-gray-500' : 'text-gray-900 cursor-pointer'} break-words flex-grow item-label"
+                    on:click|stopPropagation={item.checked ? null : () => startEditingItem(item)}
+                  >
+                    {item.text}
+                  </label>
+
+                  {#if !item.checked}
+                    <div class="drag-handle ml-2" on:mousedown|stopPropagation>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-{themeService.getCurrentTheme()}-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h10M7 16h10" />
+                      </svg>
+                    </div>
+                  {/if}
+                </div>
               {/if}
             </li>
           {/each}
+
+          {#if completedItems.length > 0}
+            <div class="completed-items-divider my-3" in:fade={{ duration: 200 }}>
+              <div class="border-t border-dashed border-{themeService.getCurrentTheme()}-200 w-full"></div>
+            </div>
+          {/if}
 
           {#if isAddingItem}
             <li class="list-item add-item-form rounded hover:bg-gray-50">
@@ -295,72 +361,135 @@
                 />
                 <button
                   class="btn btn-sm btn-{themeService.getCurrentTheme()}"
-                  on:click|stopPropagation={handleAddItem}
+                  on:click|stopPropagation={() => {
+                    if (navigator.vibrate) navigator.vibrate(30);
+                    handleAddItem();
+                  }}
                   disabled={!newItemText.trim()}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   Add
                 </button>
                 <button
                   class="btn btn-sm btn-ghost"
-                  on:click|stopPropagation={toggleAddItemForm}
+                  on:click|stopPropagation={() => {
+                    toggleAddItemForm();
+                  }}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Cancel
                 </button>
               </div>
             </li>
           {/if}
 
-          {#if hiddenCount > 0}
-            <li class="flex justify-center my-3">
-              <button
-                class="btn btn-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full px-3"
-                on:click|stopPropagation={() => showCompleted = !showCompleted}
-              >
-                {showCompleted ? '↑ Hide Done' : `↓ Show Done (${hiddenCount})`}
-              </button>
-            </li>
-          {/if}
 
           {#if !isAddingItem}
             <li class="flex justify-center my-3">
               <button
-                class="btn btn-xs bg-{themeService.getCurrentTheme()}/20 hover:bg-{themeService.getCurrentTheme()}/30 text-{themeService.getCurrentTheme()}-600 rounded-full px-3"
-                on:click|stopPropagation={toggleAddItemForm}
+                class="btn btn-sm btn-{themeService.getCurrentTheme()} gap-1"
+                on:click|stopPropagation={() => {
+                  if (navigator.vibrate) navigator.vibrate(20);
+                  toggleAddItemForm();
+                }}
               >
-                + Add Item
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Item
               </button>
             </li>
           {/if}
         </ul>
       {:else}
-        <div class="flex flex-col items-center justify-center h-full text-gray-500 italic gap-4">
-          <p>This list is empty</p>
+        <div class="flex flex-col items-center justify-center h-full text-gray-500 gap-6">
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p class="mb-2">This list is empty</p>
+            <p class="text-sm text-gray-400 mb-4">Add items to get started</p>
+          </div>
           <button
-            class="btn btn-sm btn-{themeService.getCurrentTheme()}"
-            on:click|stopPropagation={toggleAddItemForm}
+            class="btn btn-md btn-{themeService.getCurrentTheme()} gap-1"
+            on:click|stopPropagation={() => {
+              if (navigator.vibrate) navigator.vibrate(20);
+              toggleAddItemForm();
+            }}
           >
-            + Add Item
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add First Item
           </button>
         </div>
       {/if}
     </div>
     
-    <div class="card-actions justify-end mt-auto">
-      <button 
-        class="btn btn-sm btn-ghost" 
-        on:click|stopPropagation={confirmClear}
-        disabled={list.items.length === 0}
-        title="Clear all items"
-      >
-        Clear
-      </button>
-      <button 
-        class="btn btn-sm btn-outline btn-error" 
-        on:click|stopPropagation={confirmDelete}
-        title="Delete list"
-      >
-        Delete
-      </button>
+    <div class="card-actions justify-between items-center mt-auto border-t pt-3 border-gray-100">
+      <div class="dropdown dropdown-top">
+        <div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+          </svg>
+          Options
+        </div>
+        <ul tabindex="0" class="dropdown-content z-30 menu p-2 shadow bg-base-100 rounded-box w-52">
+          <li>
+            <button
+              on:click|stopPropagation={() => {
+                if (navigator.vibrate) navigator.vibrate(30);
+                handleCreateList();
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              New List
+            </button>
+          </li>
+          <li>
+            <button
+              on:click|stopPropagation={() => {
+                if (navigator.vibrate) navigator.vibrate(30);
+                confirmClear();
+              }}
+              disabled={list.items.length === 0}
+              class={list.items.length === 0 ? 'opacity-50' : ''}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m4-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Clear List
+            </button>
+          </li>
+          <li>
+            <button
+              on:click|stopPropagation={() => {
+                if (navigator.vibrate) navigator.vibrate(30);
+                confirmDelete();
+              }}
+              class="text-error"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Delete List
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="stats bg-transparent border-none shadow-none">
+        <div class="stat p-0">
+          <div class="stat-value text-lg text-{themeService.getCurrentTheme()}-600">{list.items.length}</div>
+          <div class="stat-desc">{list.items.length === 1 ? 'item' : 'items'}</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -433,13 +562,25 @@
     flex-direction: column;
   }
   
-  /* Style for when showing completed items */
-  .showing-completed {
+  /* Style for background */
+  .list-card {
+    background-color: #ffffff;
+  }
+
+  /* Completed items styling */
+  .completed-items-divider {
+    position: relative;
+    margin: 1rem 0;
+  }
+
+  .completed-item {
     background-color: #fafafa;
+    border-color: rgba(0, 0, 0, 0.05);
+    opacity: 0.75;
   }
 
   /* Checked item animation */
-  .list-item input[type="checkbox"]:checked + label {
+  .list-item input[type="checkbox"]:checked + div label {
     transition: all 0.3s ease;
     transform: translateX(4px);
   }
@@ -449,22 +590,33 @@
     cursor: grab;
     display: flex;
     align-items: center;
-    opacity: 0.5;
-    transition: opacity 0.2s ease;
+    opacity: 0.2;
+    transition: all 0.2s ease;
+    padding: 4px;
+    border-radius: 4px;
   }
-  
+
   .list-item:hover .drag-handle {
     opacity: 0.8;
+    background-color: rgba(var(--p-rgb), 0.1);
+    transform: scale(1.1);
   }
-  
+
   .dragging {
-    opacity: 0.6;
-    background-color: #f0f9ff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    opacity: 0.85;
+    background-color: rgba(var(--p-rgb), 0.15);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: rotate(1deg) scale(1.02);
+    border-width: 2px;
+    border-color: rgba(var(--p-rgb), 0.5);
+    border-style: dashed;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  
+
   .drag-over {
-    border-color: #60a5fa;
-    background-color: #e0f2fe;
+    border-color: var(--p);
+    background-color: rgba(var(--p-rgb), 0.15);
+    transform: translateY(5px);
+    box-shadow: 0 -2px 10px rgba(var(--p-rgb), 0.2);
   }
 </style>

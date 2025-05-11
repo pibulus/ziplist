@@ -156,6 +156,7 @@
               onReorderItems={handleReorderItems}
               onAddItem={(text) => handleAddItem(list.id, text)}
               onEditItem={(itemId, newText) => handleEditItem(list.id, itemId, newText)}
+              on:createList={handleCreateList}
             />
           </div>
         </div>
