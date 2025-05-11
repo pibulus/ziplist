@@ -9,8 +9,6 @@
   let list = { name: '', items: [] };
   let draggedItemId = null;
   let dragOverItemId = null;
-  let newItemText = '';
-  let isAddingItem = false;
   let editingItemId = null;
   let editedItemText = '';
   
@@ -157,30 +155,6 @@
     }
   }
 
-  // Add new item functions
-  function toggleAddItemForm() {
-    isAddingItem = !isAddingItem;
-    if (isAddingItem) {
-      // Input will be focused automatically with the autoFocus action
-    } else {
-      newItemText = '';
-    }
-  }
-
-  function handleAddItem() {
-    if (newItemText.trim()) {
-      listsService.addItem(newItemText.trim());
-      newItemText = '';
-    }
-  }
-
-  function handleAddItemKeyDown(event) {
-    if (event.key === 'Enter') {
-      handleAddItem();
-    } else if (event.key === 'Escape') {
-      toggleAddItemForm();
-    }
-  }
 
   // Item editing functions
   function startEditingItem(item) {
@@ -219,7 +193,7 @@
   <div class="card-content">
     <!-- List Items -->
     <div class="zl-list-container">
-      {#if list.items.length > 0 || isAddingItem}
+      {#if list.items.length > 0}
         <ul class="zl-list" role="list">
           {#each sortedItems as item, index (item.id)}
             <li
@@ -239,7 +213,7 @@
             >
               <!-- Drop indicator visible only when item is drop target -->
               <!-- No indicator for drag over, just space -->
-            
+
               <label class="zl-checkbox-wrapper">
                 <input
                   type="checkbox"
@@ -250,7 +224,7 @@
                 />
                 <span class="zl-checkbox-custom"></span>
               </label>
-              
+
               <div class="edit-wrapper">
                 {#if editingItemId === item.id}
                   <input
@@ -290,47 +264,12 @@
                 {/if}
             </li>
           {/each}
-
-          {#if isAddingItem}
-            <li class="zl-add-form" transition:slide={{ duration: 200 }}>
-              <input
-                id="add-item-{list.id}"
-                class="zl-input"
-                placeholder="What are we zipping up today?"
-                bind:value={newItemText}
-                on:keydown={handleAddItemKeyDown}
-                transition:fade={{ duration: 150 }}
-                use:autoFocus
-              />
-              <div class="zl-form-buttons">
-                <button
-                  class="zl-button primary"
-                  on:click|stopPropagation={handleAddItem}
-                  disabled={!newItemText.trim()}
-                >
-                  Add
-                </button>
-                <button
-                  class="zl-button secondary"
-                  on:click|stopPropagation={toggleAddItemForm}
-                >
-                  Cancel
-                </button>
-              </div>
-            </li>
-          {/if}
         </ul>
       {:else}
         <!-- Empty state -->
         <div class="zl-empty-state" transition:fade={{ duration: 200 }}>
           <p class="zl-empty-title">No thoughts, just vibes</p>
           <p class="zl-empty-description">Your list is a blank canvas waiting for inspiration</p>
-          <button
-            class="zl-add-button"
-            on:click|stopPropagation={toggleAddItemForm}
-          >
-            +
-          </button>
         </div>
       {/if}
     </div>
