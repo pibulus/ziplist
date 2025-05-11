@@ -251,32 +251,35 @@
                 <span class="zl-checkbox-custom"></span>
               </label>
               
-              {#if editingItemId === item.id}
-                <input
-                  id="edit-item-{list.id}-{item.id}"
-                  class="zl-edit-input"
-                  placeholder="Enter item text..."
-                  bind:value={editedItemText}
-                  on:blur={saveItemEdit}
-                  on:keydown={handleEditItemKeyDown}
-                  transition:slide={{ duration: 120 }}
-                  use:autoFocus
-                />
-              {:else}
-                <button
-                  type="button"
-                  class="zl-item-text-button {item.checked ? 'checked' : ''}"
-                  on:click|stopPropagation={() => {
-                    if (!item.checked) startEditingItem(item);
-                  }}
-                  on:keydown={(e) => e.key === 'Enter' && !item.checked && startEditingItem(item)}
-                  disabled={item.checked}
-                  aria-label="Edit item: {item.text}"
-                >
-                  <span class="zl-item-text {item.checked ? 'checked' : ''}">
-                    {formatItemText(item.text)}
-                  </span>
-                </button>
+              <div class="edit-wrapper">
+                {#if editingItemId === item.id}
+                  <input
+                    id="edit-item-{list.id}-{item.id}"
+                    class="zl-edit-input"
+                    placeholder="Enter item text..."
+                    bind:value={editedItemText}
+                    on:blur={saveItemEdit}
+                    on:keydown={handleEditItemKeyDown}
+                    transition:fade={{ duration: 150 }}
+                    use:autoFocus
+                  />
+                {:else}
+                  <button
+                    type="button"
+                    class="zl-item-text-button {item.checked ? 'checked' : ''}"
+                    on:click|stopPropagation={() => {
+                      if (!item.checked) startEditingItem(item);
+                    }}
+                    on:keydown={(e) => e.key === 'Enter' && !item.checked && startEditingItem(item)}
+                    disabled={item.checked}
+                    aria-label="Edit item: {item.text}"
+                  >
+                    <span class="zl-item-text {item.checked ? 'checked' : ''}">
+                      {formatItemText(item.text)}
+                    </span>
+                  </button>
+                {/if}
+              </div>
 
                 <!-- Subtle drag handle indicator -->
                 {#if !item.checked}
@@ -285,7 +288,6 @@
                     <span></span>
                   </div>
                 {/if}
-              {/if}
             </li>
           {/each}
 
@@ -527,6 +529,8 @@
     box-sizing: border-box;
     display: inline-block;
     width: 100%;
+    text-align: left;
+    position: relative;
   }
 
   .zl-item-text.checked {
@@ -545,8 +549,9 @@
     display: inline-block;
     width: auto;
     border-radius: 6px;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     margin-right: auto;
+    position: relative;
   }
 
   .zl-item-text-button:hover:not(:disabled),
@@ -683,6 +688,14 @@
     justify-content: flex-end;
   }
   
+  /* Edit wrapper container */
+  .edit-wrapper {
+    flex: 1;
+    position: relative;
+    min-height: 44px;
+    margin-right: auto;
+  }
+
   /* Input fields */
   .zl-input, .zl-edit-input {
     font-family: 'Space Mono', monospace;
@@ -702,12 +715,20 @@
     margin: 0;
     min-height: 30px;
     height: 44px;
+    text-align: left;
   }
   
+  /* Specific edit input styling */
+  .zl-edit-input {
+    position: absolute;
+    top: -7px;
+    left: 0;
+  }
+
   .zl-input::placeholder, .zl-edit-input::placeholder {
     color: #aaaaaa;
   }
-  
+
   .zl-input:focus, .zl-edit-input:focus {
     border-color: rgba(201, 120, 255, 0.6);
     box-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
