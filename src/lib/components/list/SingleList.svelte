@@ -238,16 +238,7 @@
               role="listitem"
             >
               <!-- Drop indicator visible only when item is drop target -->
-              {#if dragOverItemId === item.id && draggedItemId !== null && draggedItemId !== item.id}
-                <div
-                  class="drop-indicator"
-                  transition:fade={{ duration: 100 }}
-                  aria-hidden="true"
-                >
-                  <!-- Triangle drop marker -->
-                  <div class="drop-arrow"></div>
-                </div>
-              {/if}
+              <!-- No indicator for drag over, just space -->
             
               <label class="zl-checkbox-wrapper">
                 <input
@@ -286,6 +277,14 @@
                     {formatItemText(item.text)}
                   </span>
                 </button>
+
+                <!-- Subtle drag handle indicator -->
+                {#if !item.checked}
+                  <div class="grab-indicator" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                  </div>
+                {/if}
               {/if}
             </li>
           {/each}
@@ -473,10 +472,11 @@
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
     position: relative;
-    cursor: pointer;
+    cursor: grab;
     border-left: 4px solid rgba(201, 120, 255, 0.3);
     border: 2px solid rgba(255, 212, 218, 0.6);
     min-height: 54px;
+    justify-content: space-between;
   }
 
   .zl-item:hover {
@@ -541,12 +541,12 @@
     padding: 3px 5px;
     text-align: left;
     cursor: pointer;
-    flex-grow: 1;
     font-family: inherit;
-    display: block;
-    width: 100%;
+    display: inline-block;
+    width: auto;
     border-radius: 6px;
     transition: background-color 0.2s ease;
+    margin-right: auto;
   }
 
   .zl-item-text-button:hover:not(:disabled),
@@ -783,43 +783,59 @@
     transform: translateY(-3px) scale(1.05);
   }
   
-  /* DRAMATIC DRAG AND DROP STYLING */
+  /* ELEGANT DRAG AND DROP STYLING */
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-0.5deg); }
+    50% { transform: translateY(-3px) rotate(0.5deg); }
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { border-color: rgba(201, 120, 255, 0.6); }
+    50% { border-color: rgba(201, 120, 255, 1); }
+  }
+
   .zl-item.dragging {
-    opacity: 0.8;
-    border: 3px dashed #c978ff; 
-    background-color: rgba(250, 245, 255, 0.7);
-    transform: rotate(2deg) scale(1.02);
-    box-shadow: 0 10px 20px rgba(201, 120, 255, 0.3);
+    opacity: 0.95;
+    background-color: rgba(252, 245, 255, 0.95);
+    transform: scale(1.03);
+    box-shadow: 0 15px 30px rgba(201, 120, 255, 0.3);
     z-index: 10;
+    border: 3px dashed rgba(201, 120, 255, 0.7);
+    animation:
+      float 2s infinite ease-in-out,
+      pulse-border 1.5s infinite ease-in-out;
+    cursor: grabbing;
   }
-  
+
   .zl-item.drag-over {
-    margin-top: 30px;
-    background-color: rgba(252, 242, 255, 0.8);
+    position: relative;
+    margin-top: 20px; /* Creates space for the item to fit */
+    background-color: rgba(252, 242, 255, 0.9);
+    border: 2px solid rgba(201, 120, 255, 0.8);
     box-shadow: 0 8px 20px rgba(201, 120, 255, 0.3);
-    border-color: #c978ff;
+    transform: translateY(2px); /* Subtle shift to indicate item movement */
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy transition */
   }
-  
-  /* Super visible drop indicator */
-  .drop-indicator {
-    position: absolute;
-    top: -26px;
-    left: 0;
-    right: 0;
-    height: 26px;
+
+  /* Subtle grab indicator */
+  .grab-indicator {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 5;
+    flex-direction: column;
+    gap: 3px;
+    margin-right: 10px;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
   }
-  
-  .drop-arrow {
-    width: 0;
-    height: 0;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-top: 16px solid #c978ff;
-    animation: bounce 0.7s infinite alternate ease-in-out;
+
+  .grab-indicator span {
+    width: 10px;
+    height: 2px;
+    background-color: rgba(201, 120, 255, 0.8);
+    border-radius: 1px;
+  }
+
+  .zl-item:hover .grab-indicator {
+    opacity: 0.8;
   }
   
   /* Tailwind margin utilities */
