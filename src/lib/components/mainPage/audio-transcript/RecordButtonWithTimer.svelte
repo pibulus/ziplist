@@ -1,18 +1,62 @@
 <script>
-  import { ANIMATION, CTA_PHRASES, COPY_MESSAGES, getRandomFromArray } from '$lib/constants';
-  
+  import { ANIMATION, CTA_PHRASES, COPY_MESSAGES, ZIPLIST_START_PHRASES, ZIPLIST_ADD_PHRASES, getRandomFromArray } from '$lib/constants';
+  import { listsService } from '$lib/services/lists/listsService';
+  import { activeListItems } from '$lib/services/lists/listsStore';
+  import { onMount } from 'svelte';
+
   // Props
   export let recording = false;
   export let transcribing = false;
   export let clipboardSuccess = false;
   export let recordingDuration = 0;
   export let isPremiumUser = false;
-  export let buttonLabel = CTA_PHRASES[0];
+  export let buttonLabel = ZIPLIST_START_PHRASES[0];
   export let progress = 0; // For transcription progress
 
   // Element refs
   let recordButtonElement;
-  
+
+  // Local state
+  let hasActiveList = false;
+  let currentStartPhrase = ZIPLIST_START_PHRASES[0];
+  let currentAddPhrase = ZIPLIST_ADD_PHRASES[0];
+
+  // Initialize random phrases on mount
+  onMount(() => {
+    updateRandomPhrases();
+  });
+
+  // Subscribe to active list items to detect if we have a list
+  const unsubscribe = activeListItems.subscribe(items => {
+    hasActiveList = items && items.length > 0;
+    // Update button label based on list state if not recording
+    if (!recording) {
+      buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
+    }
+  });
+
+  // Get random phrases for both states
+  function updateRandomPhrases() {
+    // Get a new phrase different from the current one
+    let newStartPhrase;
+    do {
+      newStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
+    } while (newStartPhrase === currentStartPhrase && ZIPLIST_START_PHRASES.length > 1);
+
+    let newAddPhrase;
+    do {
+      newAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
+    } while (newAddPhrase === currentAddPhrase && ZIPLIST_ADD_PHRASES.length > 1);
+
+    currentStartPhrase = newStartPhrase;
+    currentAddPhrase = newAddPhrase;
+
+    // Update button label if not recording
+    if (!recording) {
+      buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
+    }
+  }
+
   // Handlers
   export function animateButtonPress() {
     if (recordButtonElement) {
@@ -26,7 +70,7 @@
       }, ANIMATION.BUTTON.PRESS_DURATION);
     }
   }
-  
+
   function handleKeyDown(event) {
     // Space or Enter key to toggle recording when focused
     if ((event.key === 'Enter' || event.key === ' ') && !transcribing) {
@@ -34,32 +78,30 @@
       dispatch('click');
     }
   }
-  
-  // Generate a random success message for the clipboard
-  function getRandomCopyMessage() {
-    return getRandomFromArray(COPY_MESSAGES);
-  }
-  
+
   // Calculate time remaining
   function getTimeRemaining() {
-    const timeLimit = isPremiumUser 
-      ? ANIMATION.RECORDING.PREMIUM_LIMIT 
+    const timeLimit = isPremiumUser
+      ? ANIMATION.RECORDING.PREMIUM_LIMIT
       : ANIMATION.RECORDING.FREE_LIMIT;
     return timeLimit - recordingDuration;
   }
-  
+
   // Reactive variables for timer states
   $: timeRemaining = getTimeRemaining();
   $: isWarning = timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
   $: isDanger = timeRemaining <= ANIMATION.RECORDING.DANGER_THRESHOLD;
-  
+
   // Format timer display (MM:SS)
   function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
-  
+
+  // Update button label based on recording state and active list
+  $: buttonLabel = recording ? 'Stop Recording' : (hasActiveList ? currentAddPhrase : currentStartPhrase);
+
   // Event handling
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
@@ -84,17 +126,24 @@
     bind:this={recordButtonElement}
     class="record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] {clipboardSuccess
       ? 'border border-purple-200 bg-purple-50 text-black notification-pulse'
+      : hasActiveList && !recording
+      ? 'text-black has-list-button'
       : 'text-black'} mx-auto max-w-[420px] px-6 py-5 text-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl {!recording &&
-    buttonLabel === 'Start Recording' &&
+    !hasActiveList &&
     !clipboardSuccess
       ? 'pulse-subtle'
       : ''} {recording ? 'recording-active' : ''} {isWarning && recording ? 'recording-warning' : ''} {isDanger && recording ? 'recording-danger' : ''}"
     style="min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; {recording ? `--progress: ${Math.min(recordingDuration / (isPremiumUser ? ANIMATION.RECORDING.PREMIUM_LIMIT : ANIMATION.RECORDING.FREE_LIMIT) * 100, 100)}%` : ''}"
     on:click={() => dispatch('click')}
-    on:mouseenter={() => dispatch('preload')}
+    on:mouseenter={() => {
+      dispatch('preload');
+      if (!recording && Math.random() < 0.3) {
+        updateRandomPhrases();
+      }
+    }}
     on:keydown={handleKeyDown}
     disabled={transcribing}
-    aria-label={recording ? 'Stop Recording' : 'Start Recording'}
+    aria-label={recording ? 'Stop Recording' : (hasActiveList ? 'Add to your list' : 'Create a new list')}
     aria-pressed={recording}
     aria-busy={transcribing}
   >
@@ -104,36 +153,11 @@
       style="letter-spacing: 0.02em;"
     >
       <!-- Clipboard success message -->
-      <span
-        class="absolute inset-0 flex transform items-center justify-center transition-all duration-300 ease-out {clipboardSuccess
-          ? 'scale-100 opacity-100'
-          : 'scale-95 opacity-0'}"
-        style="visibility: {clipboardSuccess ? 'visible' : 'hidden'};"
-      >
-        <span class="flex items-center justify-center gap-1">
-          <svg
-            class="w-4 h-4 mr-1 text-purple-500"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12,2 C7.6,2 4,5.6 4,10 L4,17 C4,18.1 4.9,19 6,19 L8,19 L8,21 C8,21.6 8.4,22 9,22 C9.3,22 9.5,21.9 9.7,21.7 L12.4,19 L18,19 C19.1,19 20,18.1 20,17 L20,10 C20,5.6 16.4,2 12,2 Z"
-              fill="currentColor"
-              opacity="0.8"
-            />
-            <circle cx="9" cy="10" r="1.2" fill="white" />
-            <circle cx="15" cy="10" r="1.2" fill="white" />
-          </svg>
-          {getRandomCopyMessage()}
-        </span>
-      </span>
+      <!-- Clipboard success message removed as it's no longer needed -->
       
       <!-- Button label with integrated timer -->
       <span
-        class="transform transition-all duration-300 ease-out {clipboardSuccess
-          ? 'scale-90 opacity-0'
-          : 'scale-100 opacity-100'}"
-        style="visibility: {clipboardSuccess ? 'hidden' : 'visible'};"
+        class="transform transition-all duration-300 ease-out scale-100 opacity-100"
       >
         <span class="button-content relative z-10">
           <!-- Main label - the button text is on top of the progress bar -->
@@ -233,6 +257,23 @@
       to right,
       rgba(252, 211, 77, 1),
       rgba(251, 191, 36, 1)
+    );
+  }
+
+  /* Styles for when we have an active list */
+  .has-list-button {
+    background-image: linear-gradient(
+      to right,
+      rgba(251, 191, 36, 0.95),
+      rgba(251, 113, 133, 0.6)
+    );
+  }
+
+  .has-list-button:hover:not(:disabled) {
+    background-image: linear-gradient(
+      to right,
+      rgba(251, 146, 60, 0.95),
+      rgba(244, 114, 182, 0.7)
     );
   }
   
