@@ -2,7 +2,8 @@
   import { ANIMATION, CTA_PHRASES, COPY_MESSAGES, ZIPLIST_START_PHRASES, ZIPLIST_ADD_PHRASES, getRandomFromArray } from '$lib/constants';
   import { listsService } from '$lib/services/lists/listsService';
   import { activeListItems } from '$lib/services/lists/listsStore';
-  import { onMount } from 'svelte';
+  import { waveformData } from '$lib/services';
+  import { onMount, onDestroy } from 'svelte';
 
   // Props
   export let recording = false;
@@ -15,6 +16,40 @@
 
   // Element refs
   let recordButtonElement;
+  let audioVisualizerElement;
+
+  // Audio visualization state
+  let audioLevel = 0;
+  let lastAudioLevel = 0;
+  let animationFrameId;
+  let pulseIntensity = 0;
+
+  // Subscribe to waveform data for visualization
+  const unsubscribeWaveform = waveformData.subscribe(level => {
+    if (level !== undefined) {
+      audioLevel = level;
+    }
+  });
+
+  // Audio visualization animation
+  function updateVisualization() {
+    if (!recording) {
+      // Fade out when not recording
+      pulseIntensity = Math.max(0, pulseIntensity - 0.05);
+    } else {
+      // Smooth the audio level changes for more natural animation
+      const targetIntensity = Math.min(1, audioLevel / 100);
+      pulseIntensity = pulseIntensity * 0.85 + targetIntensity * 0.15;
+    }
+
+    // Apply the visualization effect when element exists
+    if (recordButtonElement) {
+      recordButtonElement.style.setProperty('--pulse-intensity', pulseIntensity.toString());
+    }
+
+    // Continue animation
+    animationFrameId = requestAnimationFrame(updateVisualization);
+  }
 
   // Local state
   let hasActiveList = false;
@@ -24,6 +59,14 @@
   // Initialize random phrases on mount
   onMount(() => {
     updateRandomPhrases();
+    // Start visualization animation
+    updateVisualization();
+  });
+
+  // Clean up on component destroy
+  onDestroy(() => {
+    if (unsubscribeWaveform) unsubscribeWaveform();
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
   });
 
   // Subscribe to active list items to detect if we have a list
@@ -132,7 +175,7 @@
     !hasActiveList &&
     !clipboardSuccess
       ? 'pulse-subtle'
-      : ''} {recording ? 'recording-active' : ''} {isWarning && recording ? 'recording-warning' : ''} {isDanger && recording ? 'recording-danger' : ''}"
+      : ''} {recording ? 'recording-active audio-reactive' : ''} {isWarning && recording ? 'recording-warning' : ''} {isDanger && recording ? 'recording-danger' : ''}"
     style="min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; {recording ? `--progress: ${Math.min(recordingDuration / (isPremiumUser ? ANIMATION.RECORDING.PREMIUM_LIMIT : ANIMATION.RECORDING.FREE_LIMIT) * 100, 100)}%` : ''}"
     on:click={() => dispatch('click')}
     on:mouseenter={() => {
@@ -276,6 +319,39 @@
       rgba(244, 114, 182, 0.7)
     );
   }
+
+  /* Audio visualization pulse effect */
+  .record-button {
+    position: relative;
+    --pulse-intensity: 0;
+  }
+
+  .record-button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      circle at center,
+      rgba(251, 146, 60, calc(0.4 * var(--pulse-intensity))),
+      rgba(249, 168, 212, calc(0.6 * var(--pulse-intensity))),
+      rgba(251, 191, 36, 0)
+    );
+    opacity: calc(0.8 * var(--pulse-intensity));
+    z-index: 0;
+    transition: opacity 0.1s ease-out;
+    pointer-events: none;
+  }
+
+  /* Additional glow effect during recording */
+  .recording-active::before {
+    box-shadow:
+      0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity)) rgba(249, 168, 212, calc(0.3 * var(--pulse-intensity))),
+      0 0 calc(10px * var(--pulse-intensity)) calc(2px * var(--pulse-intensity)) rgba(251, 191, 36, calc(0.4 * var(--pulse-intensity)));
+  }
   
   /* Active/pressed state */
   .record-button:active:not(:disabled) {
@@ -398,30 +474,40 @@
   .recording-active {
     position: relative;
     overflow: hidden;
-    
+
     /* Bright golden glow for normal recording state */
-    background-image: 
-      linear-gradient(to right, 
-        rgba(251, 191, 36, 1), 
-        rgba(251, 191, 36, 1) var(--progress, 0%), 
-        rgba(251, 191, 36, 0.5) calc(var(--progress, 0%) + 0.5%), 
+    background-image:
+      linear-gradient(to right,
+        rgba(251, 191, 36, 1),
+        rgba(251, 191, 36, 1) var(--progress, 0%),
+        rgba(251, 191, 36, 0.5) calc(var(--progress, 0%) + 0.5%),
         rgba(245, 158, 11, 0.4) 100%
       ),
       /* Subtle noise texture overlay */
       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
-    
+
     background-size: 100% 100%;
-    box-shadow: 
-      0 4px 15px -1px rgba(251, 191, 36, 0.35), 
+    box-shadow:
+      0 4px 15px -1px rgba(251, 191, 36, 0.35),
       inset 0 0 10px rgba(251, 191, 36, 0.2),
       0 0 20px rgba(251, 191, 36, 0.2);
     border: 1px solid rgba(251, 191, 36, 0.3);
     /* Smoother & faster transitions for clearer state changes */
-    transition: 
-      background-image 0.3s ease-out, 
-      box-shadow 0.3s ease-out, 
+    transition:
+      background-image 0.3s ease-out,
+      box-shadow 0.3s ease-out,
       border 0.3s ease-out,
       transform 0.2s ease;
+  }
+
+  /* Audio reactive styling */
+  .audio-reactive {
+    z-index: 1;
+  }
+
+  .audio-reactive .cta-text, .audio-reactive .cta__label {
+    position: relative;
+    z-index: 2;
   }
   
   /* Animated edge for progress indicator - commented out as not displaying correctly
