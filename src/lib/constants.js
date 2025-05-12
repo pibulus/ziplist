@@ -154,18 +154,18 @@ export const CTA_PHRASES = [
 // ZipList specific phrases for different button contexts
 export const ZIPLIST_START_PHRASES = [
 	'Talk It, List It',
-	'Click & Speak',
-	'Drop Your List',
-	'Say It, Stack It',
+	'Click, Speak, List',
+	'Speak Your List',
+	'Say It, List It',
 	'Talk That List'
 ];
 
 export const ZIPLIST_ADD_PHRASES = [
 	'Keep Zippin',
 	'What\'s Next?',
-	'One More Thing',
-	'Keep Talkin',
-	'Stack That List'
+	'Add A Thing',
+	'Keep Em Comin',
+	'Add A Zip'
 ];
 
 // Clipboard Success Messages

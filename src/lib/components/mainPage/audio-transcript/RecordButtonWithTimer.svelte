@@ -23,11 +23,22 @@
   let lastAudioLevel = 0;
   let animationFrameId;
   let pulseIntensity = 0;
+  let waveformLevels = Array(12).fill(0); // For wave bars visualization
 
   // Subscribe to waveform data for visualization
-  const unsubscribeWaveform = waveformData.subscribe(level => {
-    if (level !== undefined) {
-      audioLevel = level;
+  const unsubscribeWaveform = waveformData.subscribe(data => {
+    if (data && data.length) {
+      // Calculate average level for pulse effect
+      const sum = data.reduce((acc, val) => acc + val, 0);
+      audioLevel = sum / data.length;
+
+      // Update waveform levels for wave bars
+      // Sample a subset of the frequency data for our visualization bars
+      const step = Math.floor(data.length / waveformLevels.length);
+      waveformLevels = waveformLevels.map((_, i) => {
+        const dataIndex = i * step;
+        return Math.min(100, data[dataIndex] || 0); // Scale to max 100%
+      });
     }
   });
 
@@ -36,6 +47,7 @@
     if (!recording) {
       // Fade out when not recording
       pulseIntensity = Math.max(0, pulseIntensity - 0.05);
+      waveformLevels = waveformLevels.map(level => level * 0.9); // Fade out bars
     } else {
       // Smooth the audio level changes for more natural animation
       const targetIntensity = Math.min(1, audioLevel / 100);
@@ -45,6 +57,11 @@
     // Apply the visualization effect when element exists
     if (recordButtonElement) {
       recordButtonElement.style.setProperty('--pulse-intensity', pulseIntensity.toString());
+
+      // Update wave bars CSS custom properties
+      waveformLevels.forEach((level, i) => {
+        recordButtonElement.style.setProperty(`--wave-level-${i}`, `${level}%`);
+      });
     }
 
     // Continue animation
@@ -190,14 +207,20 @@
     aria-pressed={recording}
     aria-busy={transcribing}
   >
+    <!-- Wave bars visualization - only shown when recording -->
+    {#if recording}
+      <div class="wave-visualization">
+        {#each Array(12) as _, i}
+          <div class="wave-bar" style="--index: {i}; --height: var(--wave-level-{i}, 0%);"></div>
+        {/each}
+      </div>
+    {/if}
+
     <!-- Main button text -->
     <span
       class="cta-text relative inline-block whitespace-nowrap transition-all duration-300 ease-out"
       style="letter-spacing: 0.02em;"
     >
-      <!-- Clipboard success message -->
-      <!-- Clipboard success message removed as it's no longer needed -->
-      
       <!-- Button label with integrated timer -->
       <span
         class="transform transition-all duration-300 ease-out scale-100 opacity-100"
@@ -601,9 +624,48 @@
     .button-content {
       font-size: 0.95em;
     }
-    
+
     .timer-display {
       font-size: 0.9em;
+    }
+  }
+
+  /* Wave visualization styles */
+  .wave-visualization {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70%;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    padding: 0 20px;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .wave-bar {
+    width: 4px;
+    height: var(--height, 0%);
+    max-height: 80%;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.3));
+    border-radius: 2px 2px 0 0;
+    transition: height 0.05s ease-out;
+    animation: wave-animation 0.5s infinite alternate ease-in-out;
+    animation-delay: calc(var(--index) * 0.1s);
+    opacity: 0.8;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    transform-origin: bottom;
+  }
+
+  @keyframes wave-animation {
+    0% {
+      transform: scaleY(0.95);
+    }
+    100% {
+      transform: scaleY(1.05);
     }
   }
 </style>
