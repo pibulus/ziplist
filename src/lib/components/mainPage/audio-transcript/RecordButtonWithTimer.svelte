@@ -20,7 +20,6 @@
 
   // Audio visualization state
   let audioLevel = 0;
-  let lastAudioLevel = 0;
   let animationFrameId;
   let pulseIntensity = 0;
   let waveformLevels = Array(12).fill(0); // For wave bars visualization
@@ -50,8 +49,9 @@
       waveformLevels = waveformLevels.map(level => level * 0.9); // Fade out bars
     } else {
       // Smooth the audio level changes for more natural animation
-      const targetIntensity = Math.min(1, audioLevel / 100);
-      pulseIntensity = pulseIntensity * 0.85 + targetIntensity * 0.15;
+      // Using a more responsive scaling factor (35 instead of 100) for better visibility
+      const targetIntensity = Math.min(1, audioLevel / 35);
+      pulseIntensity = pulseIntensity * 0.8 + targetIntensity * 0.2; // More responsive blending
     }
 
     // Apply the visualization effect when element exists
@@ -97,19 +97,23 @@
 
   // Get random phrases for both states
   function updateRandomPhrases() {
-    // Get a new phrase different from the current one
-    let newStartPhrase;
-    do {
-      newStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
-    } while (newStartPhrase === currentStartPhrase && ZIPLIST_START_PHRASES.length > 1);
+    // Safely get a new start phrase different from the current one
+    if (ZIPLIST_START_PHRASES.length > 1) {
+      let newStartPhrase;
+      do {
+        newStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
+      } while (newStartPhrase === currentStartPhrase);
+      currentStartPhrase = newStartPhrase;
+    }
 
-    let newAddPhrase;
-    do {
-      newAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
-    } while (newAddPhrase === currentAddPhrase && ZIPLIST_ADD_PHRASES.length > 1);
-
-    currentStartPhrase = newStartPhrase;
-    currentAddPhrase = newAddPhrase;
+    // Safely get a new add phrase different from the current one
+    if (ZIPLIST_ADD_PHRASES.length > 1) {
+      let newAddPhrase;
+      do {
+        newAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
+      } while (newAddPhrase === currentAddPhrase);
+      currentAddPhrase = newAddPhrase;
+    }
 
     // Update button label if not recording
     if (!recording) {
@@ -162,6 +166,17 @@
   // Update button label based on recording state and active list
   $: buttonLabel = recording ? 'Stop Recording' : (hasActiveList ? currentAddPhrase : currentStartPhrase);
 
+  // Compute CSS classes reactively for better organization
+  $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 text-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl";
+  
+  // Progress tracking style for recording state
+  $: progressStyle = recording 
+    ? `--progress: ${Math.min(recordingDuration / (isPremiumUser ? ANIMATION.RECORDING.PREMIUM_LIMIT : ANIMATION.RECORDING.FREE_LIMIT) * 100, 100)}%` 
+    : '';
+  
+  // Base button style with fixed dimensions and positioning
+  $: baseStyle = `min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; ${progressStyle}`;
+
   // Event handling
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
@@ -184,16 +199,19 @@
 {:else}
   <button
     bind:this={recordButtonElement}
-    class="record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] {clipboardSuccess
-      ? 'border border-purple-200 bg-purple-50 text-black notification-pulse'
-      : hasActiveList && !recording
-      ? 'text-black has-list-button'
-      : 'text-black'} mx-auto max-w-[420px] px-6 py-5 text-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl {!recording &&
-    !hasActiveList &&
-    !clipboardSuccess
-      ? 'pulse-subtle'
-      : ''} {recording ? 'recording-active audio-reactive' : ''} {isWarning && recording ? 'recording-warning' : ''} {isDanger && recording ? 'recording-danger' : ''}"
-    style="min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; {recording ? `--progress: ${Math.min(recordingDuration / (isPremiumUser ? ANIMATION.RECORDING.PREMIUM_LIMIT : ANIMATION.RECORDING.FREE_LIMIT) * 100, 100)}%` : ''}"
+    class={baseButtonClasses}
+    class:text-black={true}
+    class:notification-pulse={clipboardSuccess}
+    class:border={clipboardSuccess}
+    class:border-purple-200={clipboardSuccess}
+    class:bg-purple-50={clipboardSuccess}
+    class:has-list-button={hasActiveList && !recording}
+    class:pulse-subtle={!recording && !hasActiveList && !clipboardSuccess}
+    class:recording-active={recording}
+    class:audio-reactive={recording}
+    class:recording-warning={isWarning && recording}
+    class:recording-danger={isDanger && recording}
+    style={baseStyle}
     on:click={() => dispatch('click')}
     on:mouseenter={() => {
       dispatch('preload');
@@ -228,7 +246,7 @@
         <span class="button-content relative z-10">
           <!-- Main label - the button text is on top of the progress bar -->
           <span class="flex items-center justify-center relative">
-            <span class="cta__label relative z-10 px-1 py-0.5 rounded-lg {recording ? 'text-shadow-recording' : ''}" style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em;">
+            <span class="cta__label relative z-10 px-1 py-0.5 rounded-lg" class:text-shadow-recording={recording} style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em;">
               {buttonLabel}
             </span>
             <span class="sr-only">
@@ -244,7 +262,7 @@
 {/if}
 
 <style>
-  /* Base button styling - mostly from original component */
+  /* Base button styling */
   .record-button {
     position: relative;
     overflow: hidden;
@@ -267,34 +285,6 @@
       0 2px 4px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
-  
-  /* Shimmer effect for the button - commented out as not displaying correctly
-  .record-button::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -50%;
-    width: 25%;
-    height: 100%;
-    background: linear-gradient(
-      to right, 
-      rgba(255, 255, 255, 0) 0%, 
-      rgba(255, 255, 255, 0.1) 50%, 
-      rgba(255, 255, 255, 0) 100%
-    );
-    transform: skewX(-25deg);
-    animation: shimmer 3s infinite;
-    filter: blur(5px);
-    opacity: 0.7;
-    pointer-events: none;
-  }
-  
-  @keyframes shimmer {
-    0% { transform: translateX(-100%) skewX(-25deg); }
-    100% { transform: translateX(500%) skewX(-25deg); }
-  }
-  */
-  
   
   /* Focus state */
   .record-button:focus {
@@ -343,7 +333,7 @@
     );
   }
 
-  /* Audio visualization pulse effect */
+  /* Audio visualization pulse effect - Enhanced */
   .record-button {
     position: relative;
     --pulse-intensity: 0;
@@ -359,21 +349,21 @@
     border-radius: inherit;
     background: radial-gradient(
       circle at center,
-      rgba(251, 146, 60, calc(0.4 * var(--pulse-intensity))),
-      rgba(249, 168, 212, calc(0.6 * var(--pulse-intensity))),
+      rgba(251, 146, 60, calc(0.5 * var(--pulse-intensity))),
+      rgba(249, 168, 212, calc(0.7 * var(--pulse-intensity))),
       rgba(251, 191, 36, 0)
     );
-    opacity: calc(0.8 * var(--pulse-intensity));
-    z-index: 0;
+    opacity: calc(0.9 * var(--pulse-intensity));
+    z-index: 1; /* Increased z-index to make it more visible */
     transition: opacity 0.1s ease-out;
     pointer-events: none;
   }
 
-  /* Additional glow effect during recording */
+  /* Enhanced glow effect during recording */
   .recording-active::before {
     box-shadow:
-      0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity)) rgba(249, 168, 212, calc(0.3 * var(--pulse-intensity))),
-      0 0 calc(10px * var(--pulse-intensity)) calc(2px * var(--pulse-intensity)) rgba(251, 191, 36, calc(0.4 * var(--pulse-intensity)));
+      0 0 calc(20px * var(--pulse-intensity)) calc(8px * var(--pulse-intensity)) rgba(249, 168, 212, calc(0.5 * var(--pulse-intensity))),
+      0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity)) rgba(251, 191, 36, calc(0.6 * var(--pulse-intensity)));
   }
   
   /* Active/pressed state */
@@ -493,7 +483,7 @@
     }
   }
   
-  /* Whole-button progress indicator */
+  /* Whole-button progress indicator - Enhanced */
   .recording-active {
     position: relative;
     overflow: hidden;
@@ -530,49 +520,48 @@
 
   .audio-reactive .cta-text, .audio-reactive .cta__label {
     position: relative;
-    z-index: 2;
+    z-index: 5; /* Increased z-index for text to appear above effects */
   }
   
-  /* Animated edge for progress indicator - commented out as not displaying correctly
-  .recording-active::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: calc(var(--progress, 0%) - 1%);
-    width: 2%;
-    background: linear-gradient(to right, 
-      rgba(255, 255, 255, 0), 
-      rgba(255, 255, 255, 0.4), 
-      rgba(255, 255, 255, 0)
-    );
-    opacity: 0.8;
-    filter: blur(3px);
-    animation: pulse-edge 1.5s infinite alternate ease-in-out;
-    pointer-events: none;
-  }
-  
-  @keyframes pulse-edge {
-    0% { opacity: 0.3; }
-    100% { opacity: 0.8; }
-  }
-  */
-  
-  /* Simple warning/danger gradients - keeping these simpler since the advanced effects aren't visible */
+  /* Simple warning/danger gradients - Enhanced with better visibility */
   .recording-warning {
     background-image: linear-gradient(to right, 
       rgb(251, 146, 60) var(--progress, 0%), 
-      rgba(251, 146, 60, 0.5) var(--progress, 0%), 
-      rgba(234, 88, 12, 0.3) 100%
+      rgba(251, 146, 60, 0.6) var(--progress, 0%), 
+      rgba(234, 88, 12, 0.4) 100%
     );
+    box-shadow:
+      0 4px 15px -1px rgba(251, 146, 60, 0.4),
+      inset 0 0 10px rgba(251, 146, 60, 0.25),
+      0 0 20px rgba(251, 146, 60, 0.25);
   }
   
   .recording-danger {
     background-image: linear-gradient(to right, 
       rgb(239, 68, 68) var(--progress, 0%), 
-      rgba(239, 68, 68, 0.5) var(--progress, 0%), 
-      rgba(220, 38, 38, 0.3) 100%
+      rgba(239, 68, 68, 0.6) var(--progress, 0%), 
+      rgba(220, 38, 38, 0.4) 100%
     );
+    box-shadow:
+      0 4px 15px -1px rgba(239, 68, 68, 0.4),
+      inset 0 0 10px rgba(239, 68, 68, 0.25),
+      0 0 20px rgba(239, 68, 68, 0.25);
+    animation: danger-pulse 1s infinite alternate ease-in-out;
+  }
+  
+  @keyframes danger-pulse {
+    0% {
+      box-shadow:
+        0 4px 15px -1px rgba(239, 68, 68, 0.4),
+        inset 0 0 10px rgba(239, 68, 68, 0.25),
+        0 0 20px rgba(239, 68, 68, 0.25);
+    }
+    100% {
+      box-shadow:
+        0 4px 15px -1px rgba(239, 68, 68, 0.5),
+        inset 0 0 15px rgba(239, 68, 68, 0.3),
+        0 0 25px rgba(239, 68, 68, 0.3);
+    }
   }
   
   .button-content {
@@ -589,7 +578,6 @@
     letter-spacing: 0.01em;
   }
   
-  
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -603,22 +591,6 @@
     animation: fadeIn 0.3s ease-in-out;
   }
   
-  /* Subtle pulse animation for danger state */
-  @keyframes pulse-subtle {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.02);
-    }
-  }
-  
-  .animate-pulse-subtle {
-    animation: pulse-subtle 1.2s ease-in-out infinite;
-  }
-  
   /* Responsive adjustments for mobile */
   @media (max-width: 640px) {
     .button-content {
@@ -630,7 +602,7 @@
     }
   }
 
-  /* Wave visualization styles */
+  /* Wave visualization styles - Enhanced for better visibility */
   .wave-visualization {
     position: absolute;
     bottom: 0;
@@ -642,21 +614,24 @@
     align-items: flex-end;
     padding: 0 20px;
     pointer-events: none;
-    z-index: 1;
+    z-index: 3; /* Increased z-index to appear above the pulse glow */
     overflow: hidden;
   }
 
   .wave-bar {
-    width: 4px;
+    width: 5px; /* Slightly wider for better visibility */
     height: var(--height, 0%);
     max-height: 80%;
-    background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.3));
+    background: linear-gradient(to top, 
+      rgba(255, 255, 255, 0.95), 
+      rgba(255, 255, 255, 0.4)
+    );
     border-radius: 2px 2px 0 0;
     transition: height 0.05s ease-out;
     animation: wave-animation 0.5s infinite alternate ease-in-out;
     animation-delay: calc(var(--index) * 0.1s);
-    opacity: 0.8;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    opacity: 0.9; /* Higher opacity for better visibility */
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6); /* Enhanced glow around bars */
     transform-origin: bottom;
   }
 
