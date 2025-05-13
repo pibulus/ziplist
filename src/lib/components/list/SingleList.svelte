@@ -253,7 +253,7 @@
 <div class="zl-card">
   <div class="card-content">
     <!-- List Items -->
-    <div class="zl-list-container">
+    <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? list.items.length * 80 : 320}px;">
       {#if list.items.length > 0}
         <ul class="zl-list" role="list">
           {#each sortedItems as item, index (item.id)}
@@ -268,6 +268,7 @@
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: 300 }}
               in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
+              out:fly={{ y: -20, duration: 300 }}
               aria-grabbed={draggedItemId === item.id ? 'true' : 'false'}
               aria-dropeffect="move"
               role="listitem"
@@ -458,6 +459,7 @@
     margin: 0 auto;
     margin-top: 2rem; /* Increased from 1.75rem */
     margin-bottom: 2.5rem; /* Increased from 2.25rem */
+    height: auto;
   }
 
   /* Media query for mobile responsiveness */
@@ -532,6 +534,7 @@
     display: flex;
     flex-direction: column;
     min-height: 320px;
+    overflow: hidden;
   }
   
   /* List container */
@@ -539,6 +542,7 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
   
   .zl-list {
@@ -549,6 +553,7 @@
     flex-direction: column;
     gap: 20px; /* Increased from 14px to 20px for more "chonky" separation */
     margin-bottom: 1.5rem;
+    position: relative;
   }
   
   /* Individual list items */
@@ -567,6 +572,7 @@
     border: 2px solid rgba(255, 212, 218, 0.6);
     min-height: 60px; /* Minimum height, but will grow with content */
     justify-content: space-between;
+    height: 80px; /* Fixed height for consistent sizing */
   }
 
   /* Only add will-change to unchecked items that can be dragged - don't use it on all items to avoid performance issues */
