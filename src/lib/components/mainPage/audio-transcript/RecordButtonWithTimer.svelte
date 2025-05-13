@@ -181,11 +181,32 @@ import { fade } from 'svelte/transition';
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 
+  // Listening phrases for when recording is active
+  const LISTENING_PHRASES = [
+    'Listening...',
+    'Taking notes...',
+    'Capturing that...',
+    'All ears...',
+    'Catching your list...'
+  ];
+  
+  let currentListeningPhrase = 'Listening...';
+  let previousRecordingState = false;
+  
+  // Update listening phrase when recording state changes
+  $: {
+    if (recording && !previousRecordingState) {
+      // Only update when transitioning from not recording to recording
+      currentListeningPhrase = getRandomFromArray(LISTENING_PHRASES);
+    }
+    previousRecordingState = recording;
+  }
+  
   // Update button label based on recording state and active list
-  $: if (recording) buttonLabel = 'Zip Your List';
+  $: buttonLabel = recording ? currentListeningPhrase : (hasActiveList ? currentAddPhrase : currentStartPhrase);
 
   // Compute CSS classes reactively for better organization
-  $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 text-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
+  $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
   
   // CSS classes for clipboard success state
   $: clipboardSuccessClasses = clipboardSuccess ? "notification-pulse border border-purple-200 bg-purple-50" : "";
@@ -260,7 +281,7 @@ import { fade } from 'svelte/transition';
 
     <!-- Main button text -->
     <span
-      class="cta-text relative inline-block whitespace-nowrap transition-all duration-300 ease-out"
+      class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
       style="letter-spacing: 0.02em;"
     >
       <!-- Button label with integrated timer -->
@@ -269,8 +290,8 @@ import { fade } from 'svelte/transition';
       >
         <span class="button-content relative z-10">
           <!-- Main label - the button text is on top of the progress bar -->
-          <span class="flex items-center justify-center relative">
-            <span class="cta__label relative z-10 px-1 py-0.5 rounded-lg" class:text-shadow-recording={recording} style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em;">
+          <span class="flex items-center justify-center relative w-full">
+            <span class="cta__label relative z-10 px-1 py-0.5 rounded-lg" class:text-shadow-recording={recording} style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em; text-align: center; width: 100%;">
               {buttonLabel}
             </span>
             <!-- No timer display - keeping it minimal -->
@@ -303,7 +324,7 @@ import { fade } from 'svelte/transition';
     transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
     transition-property: transform, box-shadow, background-image, background-position;
     
-    /* Softer, less tangerine gradient */
+    /* Soft tangerine to pink gradient */
     background-image: linear-gradient(
       to right,
       rgba(251, 191, 36, 0.95),
@@ -338,18 +359,18 @@ import { fade } from 'svelte/transition';
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
-  /* Non-recording hover effect - softer, less orange hover */
+  /* Non-recording hover effect - softer gradient with subtle pink */
   .record-button:not(.recording-active):hover:not(:disabled) {
     background-image: linear-gradient(
       to right,
       rgba(252, 211, 77, 0.9),
-      rgba(249, 168, 212, 0.9)
+      rgba(244, 114, 182, 0.8)
     );
     transform: translateY(-2px);
     box-shadow: 0 8px 15px rgba(251, 191, 36, 0.3);
   }
 
-  /* Styles for when we have an active list - softer, pinker gradient */
+  /* Styles for when we have an active list - tangerine to pink gradient */
   .has-list-button {
     background-image: linear-gradient(
       to right,
@@ -521,7 +542,7 @@ import { fade } from 'svelte/transition';
     position: relative;
     overflow: hidden;
 
-    /* Softer gradient with pink/rose tones */
+    /* Soft tangerine to pink gradient for recording state */
     background-image:
       linear-gradient(to right,
         rgba(251, 191, 36, 0.9),
@@ -556,44 +577,44 @@ import { fade } from 'svelte/transition';
     z-index: 5; /* Increased z-index for text to appear above effects */
   }
   
-  /* Simple warning/danger gradients - Enhanced with better visibility */
+  /* Warning/danger gradients - tangerine with pink accents */
   .recording-warning {
     background-image: linear-gradient(to right, 
-      rgb(251, 146, 60) var(--progress, 0%), 
-      rgba(251, 146, 60, 0.6) var(--progress, 0%), 
-      rgba(234, 88, 12, 0.4) 100%
+      rgb(251, 191, 36) var(--progress, 0%), 
+      rgba(251, 191, 36, 0.7) var(--progress, 0%), 
+      rgba(249, 168, 212, 0.6) 100%
     );
     box-shadow:
-      0 4px 15px -1px rgba(251, 146, 60, 0.4),
-      inset 0 0 10px rgba(251, 146, 60, 0.25),
-      0 0 20px rgba(251, 146, 60, 0.25);
+      0 4px 15px -1px rgba(251, 191, 36, 0.3),
+      inset 0 0 10px rgba(251, 191, 36, 0.2),
+      0 0 20px rgba(251, 191, 36, 0.2);
   }
   
   .recording-danger {
     background-image: linear-gradient(to right, 
-      rgb(239, 68, 68) var(--progress, 0%), 
-      rgba(239, 68, 68, 0.6) var(--progress, 0%), 
-      rgba(220, 38, 38, 0.4) 100%
+      rgb(251, 191, 36) var(--progress, 0%), 
+      rgba(251, 191, 36, 0.7) var(--progress, 0%), 
+      rgba(244, 114, 182, 0.7) 100%
     );
     box-shadow:
-      0 4px 15px -1px rgba(239, 68, 68, 0.4),
-      inset 0 0 10px rgba(239, 68, 68, 0.25),
-      0 0 20px rgba(239, 68, 68, 0.25);
+      0 4px 15px -1px rgba(244, 114, 182, 0.3),
+      inset 0 0 10px rgba(244, 114, 182, 0.2),
+      0 0 20px rgba(244, 114, 182, 0.2);
     animation: danger-pulse 1s infinite alternate ease-in-out;
   }
   
   @keyframes danger-pulse {
     0% {
       box-shadow:
-        0 4px 15px -1px rgba(239, 68, 68, 0.4),
-        inset 0 0 10px rgba(239, 68, 68, 0.25),
-        0 0 20px rgba(239, 68, 68, 0.25);
+        0 4px 15px -1px rgba(244, 114, 182, 0.3),
+        inset 0 0 10px rgba(244, 114, 182, 0.2),
+        0 0 20px rgba(244, 114, 182, 0.2);
     }
     100% {
       box-shadow:
-        0 4px 15px -1px rgba(239, 68, 68, 0.5),
-        inset 0 0 15px rgba(239, 68, 68, 0.3),
-        0 0 25px rgba(239, 68, 68, 0.3);
+        0 4px 15px -1px rgba(244, 114, 182, 0.4),
+        inset 0 0 15px rgba(244, 114, 182, 0.25),
+        0 0 25px rgba(244, 114, 182, 0.25);
     }
   }
   
