@@ -253,7 +253,7 @@
 <div class="zl-card">
   <div class="card-content">
     <!-- List Items -->
-    <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? list.items.length * 80 : 320}px;">
+    <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? 100 + (list.items.length * 90) : 320}px;">
       {#if list.items.length > 0}
         <ul class="zl-list" role="list">
           {#each sortedItems as item, index (item.id)}
@@ -570,9 +570,10 @@
     cursor: grab;
     border-left: 4px solid rgba(201, 120, 255, 0.3);
     border: 2px solid rgba(255, 212, 218, 0.6);
-    min-height: 60px; /* Minimum height, but will grow with content */
+    min-height: 80px; /* Minimum height for consistent sizing */
+    height: auto; /* Allow height to grow with content */
+    max-height: none; /* Remove any max height constraints */
     justify-content: space-between;
-    height: 80px; /* Fixed height for consistent sizing */
   }
 
   /* Only add will-change to unchecked items that can be dragged - don't use it on all items to avoid performance issues */
@@ -636,8 +637,11 @@
     text-align: left;
     position: relative;
     vertical-align: middle;
-    padding: 4px 0; /* Increased from 2px for better vertical spacing */
+    padding: 6px 0; /* Increased from 4px for better vertical spacing */
     min-height: 32px; /* Match checkbox height for vertical alignment */
+    word-wrap: break-word; /* Ensure text wraps properly */
+    overflow-wrap: break-word; /* Modern property for text wrapping */
+    hyphens: auto; /* Enable hyphenation for better text breaks */
   }
 
   /* Edit state indication for unchecked items */
@@ -661,14 +665,15 @@
     cursor: pointer;
     font-family: inherit;
     display: inline-flex;
-    align-items: center;
-    width: auto;
+    align-items: flex-start; /* Align at the top for long content */
+    width: 100%; /* Ensure button takes up full width of container */
     border-radius: 8px; /* Increased from 6px for softer corners */
     transition: all 0.2s ease;
     margin-right: auto;
     position: relative;
-    min-height: 36px; /* Increased to account for wrapped text */
-    align-self: center; /* Center vertically if text wraps */
+    min-height: 36px; /* Minimum height for the button */
+    height: auto; /* Allow height to expand with content */
+    align-self: stretch; /* Stretch to match container height */
     flex-wrap: wrap; /* Allow wrapping of text content */
   }
 
@@ -896,8 +901,9 @@
     min-height: 44px;
     margin-right: auto;
     display: flex;
-    align-items: center;
-    align-self: center; /* Center vertically in list item */
+    align-items: flex-start; /* Align at the top for multi-line content */
+    padding-top: 4px; /* Add a little padding at the top for vertical alignment */
+    align-self: stretch; /* Stretch to fill the height of the parent */
     width: calc(100% - 32px - 32px - 2rem); /* Full width minus checkbox, handle, and padding */
   }
 

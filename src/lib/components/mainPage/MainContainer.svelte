@@ -364,8 +364,8 @@
     bind:this={contentContainer}
   />
 
-  <!-- RecordButtonWithTimer above the List -->
-  <div class="flex justify-center my-8">
+  <!-- RecordButtonWithTimer above the List with reduced spacing -->
+  <div class="flex justify-center my-4">
     <RecordButtonWithTimer
       recording={$isRecording}
       transcribing={$isTranscribing}
@@ -378,8 +378,10 @@
     />
   </div>
 
-  <!-- Single list instead of carousel -->
-  <SingleList />
+  <!-- Single list instead of carousel with minimal top margin -->
+  <div class="mt-2">
+    <SingleList />
+  </div>
 
   <svelte:fragment slot="footer-buttons">
     <FooterComponent
