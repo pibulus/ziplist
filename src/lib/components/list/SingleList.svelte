@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
   import { fade, fly } from 'svelte/transition';
@@ -11,6 +11,8 @@
   let dragOverItemId = null;
   let editingItemId = null;
   let editedItemText = '';
+  let isCreatingNewItem = false;
+  let newItemText = '';
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
@@ -68,6 +70,27 @@
   function autoFocus(node) {
     node.focus();
     return {};
+  }
+
+  // Action for detecting clicks outside an element
+  function clickOutside(node, { enabled, callback }) {
+    const handleClick = (event) => {
+      if (enabled && !node.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+    
+    return {
+      update(params) {
+        enabled = params.enabled;
+        callback = params.callback;
+      },
+      destroy() {
+        document.removeEventListener('click', handleClick, true);
+      }
+    };
   }
   
   // Drag and drop functions
@@ -320,10 +343,52 @@
           {/each}
         </ul>
       {:else}
-        <!-- Empty state -->
-        <div class="zl-empty-state" transition:fade={{ duration: 200 }}>
-          <p class="zl-empty-title">No thoughts, just vibes</p>
-          <p class="zl-empty-description">Your list is a blank canvas waiting for inspiration</p>
+        <!-- Friendly minimalist empty state -->
+        <div class="zl-empty-state" 
+          transition:fade={{ duration: 400, delay: 100 }}
+          on:click={() => { isCreatingNewItem = true; }}
+          class:clickable={!isCreatingNewItem}
+          class:isCreatingNewItem={isCreatingNewItem}
+        >
+          <div class="zl-empty-content">
+            <p class="zl-empty-title">Your list awaits</p>
+            <p class="zl-empty-description">Hit that yellow button</p>
+            <p class="zl-empty-hint">or click here to type</p>
+          </div>
+          
+          {#if isCreatingNewItem}
+            <div 
+              class="zl-new-item-container" 
+              transition:fade={{ duration: 150 }}
+              use:clickOutside={{ 
+                enabled: isCreatingNewItem, 
+                callback: () => {
+                  newItemText = '';
+                  isCreatingNewItem = false;
+                }
+              }}
+            >
+              <input 
+                type="text" 
+                class="zl-new-item-input" 
+                placeholder="Type your item here..." 
+                bind:value={newItemText}
+                on:keydown={(e) => {
+                  if (e.key === 'Enter' && newItemText.trim()) {
+                    listsService.addItem(newItemText.trim());
+                    newItemText = '';
+                    isCreatingNewItem = false;
+                  } else if (e.key === 'Escape') {
+                    newItemText = '';
+                    isCreatingNewItem = false;
+                  }
+                }}
+                use:autoFocus
+                on:click|stopPropagation={() => {}}
+              />
+              <div class="zl-new-item-hint">Press Enter to add, Escape to cancel, or click outside</div>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -711,47 +776,110 @@
     z-index: 5;
   }
   
-  /* Empty state - enhanced for "chonky" feel */
+  /* Friendly minimalist empty state */  
   .zl-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 3.5rem 1.5rem; /* Increased padding for more spaciousness */
-    min-height: 240px; /* Increased from 200px as per feedback */
-    position: relative;
+    padding: 5rem 1.5rem;
+    height: 320px; /* Fixed height instead of min-height */
+    width: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, rgba(255, 245, 250, 0.4), rgba(255, 235, 245, 0.4));
+    border: 3px dashed rgba(201, 120, 255, 0.3);
+    border-radius: 24px;
+    margin: 1.5rem 0;
+    transition: background 0.2s ease, border-color 0.2s ease; /* Transition only non-layout properties */
+  }
+
+  .zl-empty-state.clickable {
+    cursor: pointer;
+  }
+
+  .zl-empty-state.clickable:hover {
+    background: linear-gradient(135deg, rgba(255, 245, 250, 0.6), rgba(255, 235, 245, 0.6));
+    border-color: rgba(201, 120, 255, 0.5);
   }
   
-  .zl-empty-state::before {
-    content: '';
+  .zl-empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+  }
+  
+  .isCreatingNewItem .zl-empty-content {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .zl-new-item-container {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: absolute;
-    width: 150px;
-    height: 150px;
-    background: radial-gradient(circle, rgba(236, 158, 255, 0.15) 0%, rgba(236, 158, 255, 0) 70%);
-    border-radius: 50%;
-    z-index: 0;
-    animation: pulse 5s infinite ease-in-out;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .zl-new-item-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border-radius: 18px;
+    border: 2px solid rgba(201, 120, 255, 0.4);
+    background: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    color: #333;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .zl-new-item-input:focus {
+    border-color: rgba(201, 120, 255, 0.7);
+    box-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
+  }
+
+  .zl-new-item-hint {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.8rem;
+    font-family: 'Space Mono', monospace;
   }
   
   .zl-empty-title {
-    font-weight: 600;
+    font-weight: 800;
     color: #c978ff;
-    margin-bottom: 0.8rem;
-    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
     font-family: 'Space Mono', monospace;
-    position: relative;
-    z-index: 1;
+    letter-spacing: 0.8px;
   }
   
   .zl-empty-description {
-    color: #9d9d9d;
-    font-size: 0.95rem;
-    max-width: 270px;
+    color: #555;
+    font-size: 1.3rem;
     font-family: 'Space Mono', monospace;
-    position: relative;
-    z-index: 1;
-    margin-bottom: 2rem;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  
+  .zl-empty-hint {
+    color: #666;
+    font-size: 1.1rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 400;
+    letter-spacing: 0.4px;
   }
   
   
