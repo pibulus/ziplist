@@ -305,6 +305,17 @@
                     <span></span>
                   </div>
                 {/if}
+                
+                <!-- Delete button - visible on hover -->
+                <button 
+                  type="button" 
+                  class="delete-button" 
+                  on:click|stopPropagation={() => listsService.removeItem(item.id)}
+                  title="Delete item"
+                  aria-label="Delete item: {item.text}"
+                >
+                  <span class="delete-icon">×</span>
+                </button>
             </li>
           {/each}
         </ul>
@@ -947,11 +958,11 @@
     50% { box-shadow: 0 0 12px rgba(201, 120, 255, 0.7); }
   }
 
-  /* Enhanced grab indicator - more obvious that items can be dragged */
+  /* Enhanced grab indicator with lines - slightly smaller than original */
   .grab-indicator {
     display: flex;
     flex-direction: column;
-    gap: 4px; /* Optimized for 3 dots */
+    gap: 4px; /* Spacing between lines */
     margin-right: 12px; /* Maintain side margin */
     opacity: 0.6; /* Increased from 0.5 for better visibility */
     transition: all 0.25s ease;
@@ -966,11 +977,11 @@
 
 
   .grab-indicator span {
-    width: 18px; /* Maintain width */
-    height: 3px; /* Maintain height */
+    width: 16px; /* Slightly smaller than original 18px */
+    height: 2.5px; /* Slightly smaller than original 3px */
     background-color: rgba(201, 120, 255, 0.8);
     border-radius: 2px;
-    transition: transform 0.2s ease, width 0.2s ease;
+    transition: transform 0.2s ease, width 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .zl-item:hover .grab-indicator {
@@ -987,6 +998,51 @@
   .zl-item:hover .grab-indicator span {
     background-color: rgba(201, 120, 255, 1); /* Fully opaque on hover */
     box-shadow: 0 1px 3px rgba(201, 120, 255, 0.3); /* Subtle glow */
+  }
+  
+  /* Delete button styling */
+  .delete-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(201, 120, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(201, 120, 255, 0.15);
+  }
+  
+  .delete-icon {
+    font-size: 18px;
+    line-height: 1;
+    color: rgba(201, 120, 255, 0.9);
+    font-weight: bold;
+  }
+  
+  .zl-item:hover .delete-button {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .delete-button:hover {
+    background: rgba(255, 225, 240, 0.95);
+    border-color: rgba(201, 120, 255, 0.8);
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.3);
+  }
+  
+  .delete-button:active {
+    transform: scale(0.9);
+    background: rgba(255, 200, 230, 1);
   }
   
   /* Tailwind margin utilities */
