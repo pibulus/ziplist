@@ -11,7 +11,7 @@
   export let clipboardSuccess = false;
   export let recordingDuration = 0;
   export let isPremiumUser = false;
-  export let buttonLabel = ZIPLIST_START_PHRASES[0];
+  export let buttonLabel = ''; // Will be set reactively
   export let progress = 0; // For transcription progress
 
   // Element refs
@@ -78,12 +78,18 @@
 
   // Local state
   let hasActiveList = false;
-  let currentStartPhrase = ZIPLIST_START_PHRASES[0];
-  let currentAddPhrase = ZIPLIST_ADD_PHRASES[0];
+  let currentStartPhrase = '';
+  let currentAddPhrase = '';
 
-  // Initialize random phrases on mount
+  // Initialize on mount
   onMount(() => {
-    updateRandomPhrases();
+    // Set phrases once on initial load to prevent flicker
+    currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
+    currentAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
+    
+    // Set initial button label based on list state
+    buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
+    
     // Start visualization animation
     updateVisualization();
   });
@@ -96,15 +102,20 @@
 
   // Subscribe to active list items to detect if we have a list
   const unsubscribe = activeListItems.subscribe(items => {
+    const wasActiveList = hasActiveList;
     hasActiveList = items && items.length > 0;
-    // Update button label based on list state if not recording
-    if (!recording) {
+    
+    // Only update the button label if the list state changed and we're not recording
+    if (!recording && wasActiveList !== hasActiveList && currentStartPhrase && currentAddPhrase) {
       buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
     }
   });
 
-  // Get random phrases for both states
+  // Get random phrases for hover effect only - should not change visible text until click
   function updateRandomPhrases() {
+    // Only used after a click happens, to prepare for next view
+    // We don't update the button text itself until after a state change
+    
     // Safely get a new start phrase different from the current one
     if (ZIPLIST_START_PHRASES.length > 1) {
       let newStartPhrase;
@@ -122,11 +133,9 @@
       } while (newAddPhrase === currentAddPhrase);
       currentAddPhrase = newAddPhrase;
     }
-
-    // Update button label if not recording
-    if (!recording) {
-      buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
-    }
+    
+    // We no longer update the button label here to prevent flicker
+    // This function just prepares the next phrase for when it's needed
   }
 
   // Handlers
@@ -172,7 +181,7 @@
   }
 
   // Update button label based on recording state and active list
-  $: buttonLabel = recording ? 'Stop Recording' : (hasActiveList ? currentAddPhrase : currentStartPhrase);
+  $: if (recording) buttonLabel = 'Zip Your List';
 
   // Compute CSS classes reactively for better organization
   $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 text-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
@@ -218,16 +227,20 @@
     class:recording-warning={isWarning && recording}
     class:recording-danger={isDanger && recording}
     style={baseStyle}
-    on:click={() => dispatch('click')}
-    on:mouseenter={() => {
-      dispatch('preload');
-      if (!recording && Math.random() < RANDOM_PHRASE_HOVER_UPDATE_CHANCE) {
+    on:click={() => {
+      dispatch('click');
+      // Only update phrases for next time after a click
+      if (!recording) {
         updateRandomPhrases();
       }
     }}
+    on:mouseenter={() => {
+      dispatch('preload');
+      // Don't update phrases on hover to prevent flicker
+    }}
     on:keydown={handleKeyDown}
     disabled={transcribing}
-    aria-label={recording ? 'Stop Recording' : (hasActiveList ? 'Add to your list' : 'Create a new list')}
+    aria-label={recording ? 'Zip Your List' : (hasActiveList ? 'Add to your list' : 'Create a new list')}
     aria-pressed={recording}
     aria-busy={transcribing}
   >
@@ -313,29 +326,31 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
-  /* Non-recording hover effect */
+  /* Non-recording hover effect - consistent gradient */
   .record-button:not(.recording-active):hover:not(:disabled) {
     background-image: linear-gradient(
       to right,
       rgba(252, 211, 77, 1),
       rgba(251, 191, 36, 1)
     );
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(251, 191, 36, 0.3);
   }
 
-  /* Styles for when we have an active list */
+  /* Styles for when we have an active list - more consistent with recording state */
   .has-list-button {
     background-image: linear-gradient(
       to right,
-      rgba(251, 191, 36, 0.95),
-      rgba(251, 113, 133, 0.6)
+      rgba(251, 191, 36, 1),
+      rgba(251, 146, 60, 0.9)
     );
   }
 
   .has-list-button:hover:not(:disabled) {
     background-image: linear-gradient(
       to right,
-      rgba(251, 146, 60, 0.95),
-      rgba(244, 114, 182, 0.7)
+      rgba(251, 146, 60, 1),
+      rgba(251, 113, 133, 0.9)
     );
   }
 
