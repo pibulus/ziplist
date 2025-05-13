@@ -203,17 +203,16 @@ import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
 </script>
 
-<!-- Always show a button-like container for consistent spacing -->
-<div class="button-container" transition:fade={{ duration: 50 }}>
+<!-- Fixed container with absolute positioning for both states -->
+<div class="fixed-button-container">
   {#if transcribing}
     <div
-      class="progress-container relative h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full bg-amber-200 shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
+      class="progress-container h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full bg-amber-200 shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
       role="progressbar"
       aria-label="Transcription progress"
       aria-valuenow={progress}
       aria-valuemin="0"
       aria-valuemax="100"
-      transition:fade={{ duration: 200 }}
     >
       <div
         class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-rose-300"
@@ -233,7 +232,6 @@ import { fade } from 'svelte/transition';
     class:recording-warning={isWarning && recording}
     class:recording-danger={isDanger && recording}
     style={baseStyle}
-    transition:fade={{ duration: 200 }}
     on:click={() => {
       dispatch('click');
       // Only update phrases for next time after a click
@@ -305,11 +303,11 @@ import { fade } from 'svelte/transition';
     transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
     transition-property: transform, box-shadow, background-image, background-position;
     
-    /* Enhanced default gradient */
+    /* Softer, less tangerine gradient */
     background-image: linear-gradient(
       to right,
-      rgba(251, 191, 36, 1),
-      rgba(245, 158, 11, 0.96)
+      rgba(251, 191, 36, 0.95),
+      rgba(249, 168, 212, 0.8)
     );
     
     /* Better default shadow */
@@ -340,31 +338,31 @@ import { fade } from 'svelte/transition';
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
-  /* Non-recording hover effect - consistent gradient */
+  /* Non-recording hover effect - softer, less orange hover */
   .record-button:not(.recording-active):hover:not(:disabled) {
     background-image: linear-gradient(
       to right,
-      rgba(252, 211, 77, 1),
-      rgba(251, 191, 36, 1)
+      rgba(252, 211, 77, 0.9),
+      rgba(249, 168, 212, 0.9)
     );
     transform: translateY(-2px);
     box-shadow: 0 8px 15px rgba(251, 191, 36, 0.3);
   }
 
-  /* Styles for when we have an active list - more consistent with recording state */
+  /* Styles for when we have an active list - softer, pinker gradient */
   .has-list-button {
     background-image: linear-gradient(
       to right,
-      rgba(251, 191, 36, 1),
-      rgba(251, 146, 60, 0.9)
+      rgba(251, 191, 36, 0.95),
+      rgba(244, 114, 182, 0.7)
     );
   }
 
   .has-list-button:hover:not(:disabled) {
     background-image: linear-gradient(
       to right,
-      rgba(251, 146, 60, 1),
-      rgba(251, 113, 133, 0.9)
+      rgba(251, 191, 36, 1),
+      rgba(236, 72, 153, 0.8)
     );
   }
 
@@ -518,18 +516,18 @@ import { fade } from 'svelte/transition';
     }
   }
   
-  /* Whole-button progress indicator - Enhanced */
+  /* Whole-button progress indicator - Enhanced with softer, pinker gradient */
   .recording-active {
     position: relative;
     overflow: hidden;
 
-    /* Bright golden glow for normal recording state */
+    /* Softer gradient with pink/rose tones */
     background-image:
       linear-gradient(to right,
-        rgba(251, 191, 36, 1),
-        rgba(251, 191, 36, 1) var(--progress, 0%),
-        rgba(251, 191, 36, 0.5) calc(var(--progress, 0%) + 0.5%),
-        rgba(245, 158, 11, 0.4) 100%
+        rgba(251, 191, 36, 0.9),
+        rgba(251, 191, 36, 0.9) var(--progress, 0%),
+        rgba(249, 168, 212, 0.7) calc(var(--progress, 0%) + 0.5%),
+        rgba(244, 114, 182, 0.5) 100%
       ),
       /* Subtle noise texture overlay */
       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
@@ -679,41 +677,42 @@ import { fade } from 'svelte/transition';
     }
   }
   
-  /* Button container for consistent spacing */
-  .button-container {
+  /* Fixed button container for consistent spacing and positioning */
+  .fixed-button-container {
     display: flex;
     justify-content: center;
     width: 100%;
-    min-height: 64px;
+    height: 70px; /* Fixed height to prevent layout shifts */
     position: relative;
     margin: 1rem 0;
     z-index: 5; /* Ensure it stays on top during transitions */
   }
   
-  /* Recording indicator - minimalist pulsing dot that matches our aesthetic */
+  /* Recording indicator - more noticeable pulsing dot */
   .recording-indicator {
     position: absolute;
     top: 50%;
-    right: 30px;
+    right: 28px;
     transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: linear-gradient(145deg, #fca5a5, #f472b6);
-    box-shadow: 0 0 8px rgba(244, 114, 182, 0.6);
-    animation: recording-pulse 2s infinite ease-in-out;
+    background: linear-gradient(145deg, #f9a8d4, #ec4899);
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.9);
+    animation: recording-pulse 1.5s infinite ease-in-out;
+    z-index: 10;
   }
   
   @keyframes recording-pulse {
     0%, 100% {
-      opacity: 0.9;
+      opacity: 1;
       transform: translateY(-50%) scale(1);
-      box-shadow: 0 0 5px rgba(244, 114, 182, 0.6);
+      box-shadow: 0 0 8px rgba(236, 72, 153, 0.9);
     }
     50% {
       opacity: 1;
-      transform: translateY(-50%) scale(1.3);
-      box-shadow: 0 0 12px rgba(244, 114, 182, 0.8);
+      transform: translateY(-50%) scale(1.4);
+      box-shadow: 0 0 15px rgba(236, 72, 153, 1);
     }
   }
 </style>
