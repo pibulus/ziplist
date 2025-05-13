@@ -4,6 +4,7 @@
   import { activeListItems } from '$lib/services/lists/listsStore';
   import { waveformData } from '$lib/services';
   import { onMount, onDestroy } from 'svelte';
+import { fade } from 'svelte/transition';
 
   // Props
   export let recording = false;
@@ -202,21 +203,26 @@
   const dispatch = createEventDispatcher();
 </script>
 
-{#if transcribing}
-  <div
-    class="progress-container relative h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full bg-amber-200 shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
-    role="progressbar"
-    aria-label="Transcription progress"
-    aria-valuenow={progress}
-    aria-valuemin="0"
-    aria-valuemax="100"
-  >
+<!-- Always show a button-like container for consistent spacing -->
+<div class="button-container" transition:fade={{ duration: 50 }}>
+  {#if transcribing}
     <div
-      class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-rose-300"
-      style="width: {progress}%;"
-    ></div>
-  </div>
-{:else}
+      class="progress-container relative h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full bg-amber-200 shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
+      role="progressbar"
+      aria-label="Transcription progress"
+      aria-valuenow={progress}
+      aria-valuemin="0"
+      aria-valuemax="100"
+      transition:fade={{ duration: 200 }}
+    >
+      <div
+        class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-rose-300"
+        style="width: {progress}%;"
+      >
+        <span class="text-white font-bold z-10 relative">Processing...</span>
+      </div>
+    </div>
+  {:else}
   <button
     bind:this={recordButtonElement}
     class="{baseButtonClasses} {clipboardSuccessClasses}"
@@ -227,6 +233,7 @@
     class:recording-warning={isWarning && recording}
     class:recording-danger={isDanger && recording}
     style={baseStyle}
+    transition:fade={{ duration: 200 }}
     on:click={() => {
       dispatch('click');
       // Only update phrases for next time after a click
@@ -268,6 +275,7 @@
             <span class="cta__label relative z-10 px-1 py-0.5 rounded-lg" class:text-shadow-recording={recording} style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em;">
               {buttonLabel}
             </span>
+            <!-- No timer display - keeping it minimal -->
             <span class="sr-only">
               {#if recording}
                 {formatTime(recordingDuration)} of {formatTime(ANIMATION.RECORDING.FREE_LIMIT)}
@@ -277,8 +285,14 @@
         </span>
       </span>
     </span>
+    
+    <!-- Recording indicator - minimalist pulsing dot -->
+    {#if recording}
+      <div class="recording-indicator"></div>
+    {/if}
   </button>
-{/if}
+  {/if}
+</div> <!-- Close the button container -->
 
 <style>
   /* Base button styling */
@@ -662,6 +676,44 @@
     }
     100% {
       transform: scaleY(1.05);
+    }
+  }
+  
+  /* Button container for consistent spacing */
+  .button-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 64px;
+    position: relative;
+    margin: 1rem 0;
+    z-index: 5; /* Ensure it stays on top during transitions */
+  }
+  
+  /* Recording indicator - minimalist pulsing dot that matches our aesthetic */
+  .recording-indicator {
+    position: absolute;
+    top: 50%;
+    right: 30px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #fca5a5, #f472b6);
+    box-shadow: 0 0 8px rgba(244, 114, 182, 0.6);
+    animation: recording-pulse 2s infinite ease-in-out;
+  }
+  
+  @keyframes recording-pulse {
+    0%, 100% {
+      opacity: 0.9;
+      transform: translateY(-50%) scale(1);
+      box-shadow: 0 0 5px rgba(244, 114, 182, 0.6);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-50%) scale(1.3);
+      box-shadow: 0 0 12px rgba(244, 114, 182, 0.8);
     }
   }
 </style>
