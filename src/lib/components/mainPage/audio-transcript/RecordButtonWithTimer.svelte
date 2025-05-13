@@ -18,11 +18,20 @@
   let recordButtonElement;
   let audioVisualizerElement;
 
+  // Visualization constants
+  const WAVE_BAR_COUNT = 12;
+  const PULSE_FADE_RATE = 0.05;
+  const WAVE_FADE_RATE = 0.9;
+  const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35; // Lower is more sensitive
+  const PULSE_SMOOTHING_FACTOR_OLD = 0.8; // Weight of current intensity
+  const PULSE_SMOOTHING_FACTOR_NEW = 0.2; // Weight of new audio level
+  const RANDOM_PHRASE_HOVER_UPDATE_CHANCE = 0.3;
+
   // Audio visualization state
   let audioLevel = 0;
   let animationFrameId;
   let pulseIntensity = 0;
-  let waveformLevels = Array(12).fill(0); // For wave bars visualization
+  let waveformLevels = Array(WAVE_BAR_COUNT).fill(0); // For wave bars visualization
 
   // Subscribe to waveform data for visualization
   const unsubscribeWaveform = waveformData.subscribe(data => {
@@ -45,13 +54,12 @@
   function updateVisualization() {
     if (!recording) {
       // Fade out when not recording
-      pulseIntensity = Math.max(0, pulseIntensity - 0.05);
-      waveformLevels = waveformLevels.map(level => level * 0.9); // Fade out bars
+      pulseIntensity = Math.max(0, pulseIntensity - PULSE_FADE_RATE);
+      waveformLevels = waveformLevels.map(level => level * WAVE_FADE_RATE); // Fade out bars
     } else {
       // Smooth the audio level changes for more natural animation
-      // Using a more responsive scaling factor (35 instead of 100) for better visibility
-      const targetIntensity = Math.min(1, audioLevel / 35);
-      pulseIntensity = pulseIntensity * 0.8 + targetIntensity * 0.2; // More responsive blending
+      const targetIntensity = Math.min(1, audioLevel / AUDIO_LEVEL_SENSITIVITY_FACTOR);
+      pulseIntensity = pulseIntensity * PULSE_SMOOTHING_FACTOR_OLD + targetIntensity * PULSE_SMOOTHING_FACTOR_NEW;
     }
 
     // Apply the visualization effect when element exists
@@ -167,7 +175,10 @@
   $: buttonLabel = recording ? 'Stop Recording' : (hasActiveList ? currentAddPhrase : currentStartPhrase);
 
   // Compute CSS classes reactively for better organization
-  $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 text-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl";
+  $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 text-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
+  
+  // CSS classes for clipboard success state
+  $: clipboardSuccessClasses = clipboardSuccess ? "notification-pulse border border-purple-200 bg-purple-50" : "";
   
   // Progress tracking style for recording state
   $: progressStyle = recording 
@@ -199,12 +210,7 @@
 {:else}
   <button
     bind:this={recordButtonElement}
-    class={baseButtonClasses}
-    class:text-black={true}
-    class:notification-pulse={clipboardSuccess}
-    class:border={clipboardSuccess}
-    class:border-purple-200={clipboardSuccess}
-    class:bg-purple-50={clipboardSuccess}
+    class="{baseButtonClasses} {clipboardSuccessClasses}"
     class:has-list-button={hasActiveList && !recording}
     class:pulse-subtle={!recording && !hasActiveList && !clipboardSuccess}
     class:recording-active={recording}
@@ -215,7 +221,7 @@
     on:click={() => dispatch('click')}
     on:mouseenter={() => {
       dispatch('preload');
-      if (!recording && Math.random() < 0.3) {
+      if (!recording && Math.random() < RANDOM_PHRASE_HOVER_UPDATE_CHANCE) {
         updateRandomPhrases();
       }
     }}
@@ -228,7 +234,7 @@
     <!-- Wave bars visualization - only shown when recording -->
     {#if recording}
       <div class="wave-visualization">
-        {#each Array(12) as _, i}
+        {#each { length: WAVE_BAR_COUNT } as _, i}
           <div class="wave-bar" style="--index: {i}; --height: var(--wave-level-{i}, 0%);"></div>
         {/each}
       </div>
