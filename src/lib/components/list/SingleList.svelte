@@ -610,22 +610,7 @@
     transform: translateY(-1px);
   }
 
-  .zl-item-text-button:hover:not(:disabled)::after {
-    content: '';
-    position: absolute;
-    width: 26px; /* Increased from 20px for more visibility */
-    height: 26px; /* Increased from 20px for more visibility */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(201, 120, 255, 0.5)' stroke='rgba(201, 120, 255, 1)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E");
-    background-size: contain;
-    background-repeat: no-repeat;
-    right: -28px; /* Adjusted from -26px to accommodate larger icon */
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0;
-    animation: fadeIn 0.3s forwards ease-out;
-    filter: drop-shadow(0 0 8px rgba(201, 120, 255, 0.6)); /* Enhanced shadow */
-    z-index: 2; /* Ensure it displays above other elements */
-  }
+  /* Pencil icon removed as requested */
 
   /* Enhanced sparkle effect on hover */
   .zl-item-text-button:hover:not(:disabled)::before {
