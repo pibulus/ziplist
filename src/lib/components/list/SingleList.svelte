@@ -13,11 +13,14 @@
   let editedItemText = '';
   let isCreatingNewItem = false;
   let newItemText = '';
+  let listReady = false; // Track when list is fully loaded
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
     if (activeListData) {
       list = activeListData;
+      // Add a small delay before showing content
+      setTimeout(() => listReady = true, 300);
     }
   });
 
@@ -25,6 +28,11 @@
     // Initialize the lists store
     listsStore.initialize();
     listsService.getAllLists();
+    
+    // Fallback to show content if something goes wrong with data loading
+    setTimeout(() => {
+      if (!listReady) listReady = true;
+    }, 800);
   });
 
   onDestroy(() => {
@@ -254,7 +262,9 @@
   <div class="card-content">
     <!-- List Items -->
     <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? 100 + (list.items.length * 90) : 320}px;">
-      {#if list.items.length > 0}
+      {#if listReady}
+        {#if list.items.length > 0}
+          <div in:fade={{ duration: 400, delay: 200 }}>
         <ul class="zl-list" role="list">
           {#each sortedItems as item, index (item.id)}
             <li
@@ -343,10 +353,11 @@
             </li>
           {/each}
         </ul>
-      {:else}
+          </div>
+        {:else}
         <!-- Friendly minimalist empty state -->
-        <div class="zl-empty-state" 
-          transition:fade={{ duration: 400, delay: 100 }}
+        <div in:fade={{ duration: 400, delay: 200 }}
+          class="zl-empty-state" 
           on:click={() => { isCreatingNewItem = true; }}
           class:clickable={!isCreatingNewItem}
           class:isCreatingNewItem={isCreatingNewItem}
@@ -391,6 +402,7 @@
             </div>
           {/if}
         </div>
+        {/if}
       {/if}
     </div>
   </div>
@@ -437,9 +449,6 @@
     50% { transform: translateY(-10px); }
   }
   
-  .fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-  }
   
   /* Card styling with improved gradient - enhanced for "chonky" feel */
   .zl-card {
@@ -487,7 +496,7 @@
       width: calc(100% - 32px - 32px - 1.75rem); /* Adjusted calculation for mobile padding */
     }
 
-    .zl-input, .zl-edit-input {
+    .zl-edit-input {
       padding: 0.75rem 1rem; /* Slightly reduced padding on mobile */
     }
   }
@@ -908,7 +917,7 @@
   }
 
   /* Input fields - enhanced for "chonky" feel to match list items */
-  .zl-input, .zl-edit-input {
+  .zl-edit-input {
     font-family: 'Space Mono', monospace;
     font-weight: 800;
     border: 2px solid rgba(201, 120, 255, 0.3);
@@ -941,63 +950,16 @@
     max-width: none; /* Ensure it doesn't collapse to text width */
   }
 
-  .zl-input::placeholder, .zl-edit-input::placeholder {
+  .zl-edit-input::placeholder {
     color: #aaaaaa;
   }
 
-  .zl-input:focus, .zl-edit-input:focus {
+  .zl-edit-input:focus {
     border-color: rgba(201, 120, 255, 0.6);
     box-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
     background-color: rgba(255, 255, 255, 0.95);
   }
   
-  /* Buttons - enhanced for "chonky" feel */
-  .zl-button {
-    border: none;
-    border-radius: 14px; /* Increased from 12px for softer corners */
-    padding: 0.7rem 1.3rem; /* Increased from 0.6rem 1.1rem for larger touch target */
-    font-weight: 600; /* Increased from 500 for more visibility */
-    font-size: 1rem; /* Increased from 0.95rem for better readability */
-    font-family: 'Space Mono', monospace;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    min-height: 48px; /* Added to ensure consistent height and good touch target */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .zl-button.primary {
-    background: linear-gradient(135deg, #e9a8ff 0%, #c978ff 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(201, 120, 255, 0.25); /* Enhanced shadow */
-    border: 2px solid rgba(201, 120, 255, 0.1); /* Added subtle border */
-  }
-
-  .zl-button.primary:hover:not(:disabled) {
-    box-shadow: 0 6px 15px rgba(201, 120, 255, 0.35); /* Enhanced shadow on hover */
-    transform: translateY(-3px) scale(1.03); /* Added subtle scale effect */
-  }
-
-  .zl-button.primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .zl-button.secondary {
-    background: rgba(255, 255, 255, 0.8);
-    color: #c978ff;
-    border: 2px solid rgba(201, 120, 255, 0.3); /* Increased from 1px for more "chonky" feel */
-  }
-
-  .zl-button.secondary:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: rgba(201, 120, 255, 0.5);
-    box-shadow: 0 4px 10px rgba(201, 120, 255, 0.15); /* Enhanced shadow */
-    transform: translateY(-3px) scale(1.02); /* Added subtle scale effect */
-  }
   
   
   /* ELEGANT DRAG AND DROP STYLING */
@@ -1170,9 +1132,4 @@
     background: rgba(255, 200, 230, 1);
   }
   
-  /* Tailwind margin utilities */
-  .my-2 {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
 </style>
