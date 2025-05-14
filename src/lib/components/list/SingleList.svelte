@@ -405,141 +405,153 @@
     /* -- START .zl-card Animated Gradient Theme Variables -- */
     
     /* Angle of the linear gradient - controls the direction of the gradient flow */
-    --zl-card-bg-gradient-angle: 120deg;
+    --zl-card-bg-gradient-angle: 135deg;
     
-    /* Start color of the gradient - cool mint tone */
-    --zl-card-bg-gradient-color-start: #e0f7fa;
+    /* Start color of the gradient - peachy off-white tone */
+    --zl-card-bg-gradient-color-start: #fff6e5;
     
-    /* Second color - vibrant turquoise tone for more visible gradient */
-    --zl-card-bg-gradient-color-second: #40e0d0;
+    /* Second color - soft pink for more visible gradient */
+    --zl-card-bg-gradient-color-second: #ffecf0;
     
-    /* Middle color of the gradient - soft aqua tone */
-    --zl-card-bg-gradient-color-mid: #4dd0e1;
+    /* Middle color of the gradient - soft pink tone */
+    --zl-card-bg-gradient-color-mid: #ffd4da;
     
-    /* Fourth color - deeper aqua green for gradient variation */
-    --zl-card-bg-gradient-color-fourth: #00bcd4;
+    /* Fourth color - light lavender-pink for gradient variation */
+    --zl-card-bg-gradient-color-fourth: #ffd0e0;
     
-    /* End color of the gradient - deeper blue tone */
-    --zl-card-bg-gradient-color-end: #0097a7;
+    /* End color of the gradient - lavender-pink tone */
+    --zl-card-bg-gradient-color-end: #ffc6e5;
     
     /* Duration for one full cycle of the background gradient animation */
-    --zl-card-bg-gradient-animation-duration: 15s;
+    --zl-card-bg-gradient-animation-duration: 30s;
     
     /* Size of the background gradient - larger than the element for the shifting effect */
-    --zl-card-bg-gradient-size: 400% 400%;
+    --zl-card-bg-gradient-size: 300% 300%;
     
     /* Border radius for the card - creates the pillowy, rounded appearance */
     --zl-card-border-radius: 32px;
     
     /* Border width and color for the card - contributes to the "chonky" feel */
     --zl-card-border-width: 4px;
-    --zl-card-border-color: rgba(0, 188, 212, 0.6);
+    --zl-card-border-color: rgba(255, 212, 218, 0.8);
     
     /* Box shadow for the card - adds depth and dimension */
-    --zl-card-box-shadow: 0 12px 30px rgba(0, 151, 167, 0.25);
+    --zl-card-box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25);
     
     /* -- END .zl-card Animated Gradient Theme Variables -- */
     
     /* -- START List Item Theme Variables -- */
     
     /* Base colors - derived from card gradient */
-    --zl-primary-color: var(--zl-card-bg-gradient-color-fourth, #00bcd4);
-    --zl-secondary-color: var(--zl-card-bg-gradient-color-mid, #4dd0e1);
-    --zl-accent-color: var(--zl-card-bg-gradient-color-end, #0097a7);
-    --zl-highlight-color: var(--zl-card-bg-gradient-color-second, #40e0d0);
+    --zl-primary-color: #c978ff;
+    --zl-secondary-color: var(--zl-card-bg-gradient-color-mid, #ffd4da);
+    --zl-accent-color: #ff6ac2;
+    --zl-highlight-color: var(--zl-card-bg-gradient-color-second, #ffecf0);
     
     /* Text colors */
     --zl-text-color-primary: #444444;
     --zl-text-color-secondary: #666666;
     --zl-text-color-disabled: #9d9d9d;
-    --zl-text-hover-color: #0097a7;
+    --zl-text-hover-color: #c978ff;
     
     /* List item styling */
     --zl-item-bg: rgba(255, 255, 255, 0.5);
     --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
     --zl-item-border-radius: 20px;
-    --zl-item-border-color: rgba(0, 188, 212, 0.6);
-    --zl-item-border-hover-color: rgba(0, 188, 212, 0.9);
-    --zl-item-box-shadow: 0 4px 10px rgba(0, 151, 167, 0.1);
-    --zl-item-hover-box-shadow: 0 8px 20px rgba(0, 151, 167, 0.2);
+    --zl-item-border-color: rgba(255, 212, 218, 0.6);
+    --zl-item-border-hover-color: rgba(255, 212, 218, 0.9);
+    --zl-item-box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
+    --zl-item-hover-box-shadow: 0 8px 20px rgba(201, 120, 255, 0.2);
     
     /* Checked item styling */
     --zl-item-checked-opacity: 0.75;
     --zl-item-checked-bg: rgba(245, 240, 250, 0.4);
-    --zl-item-checked-border-color: rgba(0, 188, 212, 0.2);
+    --zl-item-checked-border-color: rgba(201, 120, 255, 0.2);
     
     /* Drag and drop styling */
-    --zl-item-dragging-border: 3px solid rgba(0, 188, 212, 0.85);
+    --zl-item-dragging-border: 3px solid rgba(201, 120, 255, 0.85);
     --zl-item-dragging-bg: rgba(255, 255, 255, 1);
-    --zl-item-dragging-shadow: 0 15px 30px rgba(0, 151, 167, 0.4);
+    --zl-item-dragging-shadow: 0 15px 30px rgba(201, 120, 255, 0.4);
     --zl-item-dragover-bg: rgba(252, 242, 255, 0.9);
-    --zl-item-dragover-border: 2px solid rgba(0, 188, 212, 0.8);
-    --zl-item-dragover-shadow: 0 8px 20px rgba(0, 151, 167, 0.3);
+    --zl-item-dragover-border: 2px solid rgba(201, 120, 255, 0.8);
+    --zl-item-dragover-shadow: 0 8px 20px rgba(201, 120, 255, 0.3);
     
     /* Checkbox styling */
     --zl-checkbox-size: 32px;
     --zl-checkbox-border-radius: 12px;
-    --zl-checkbox-border: 2px solid rgba(0, 188, 212, 0.5);
+    --zl-checkbox-border: 2px solid rgba(201, 120, 255, 0.5);
     --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
-    --zl-checkbox-hover-border: 2px solid rgba(0, 188, 212, 0.7);
+    --zl-checkbox-hover-border: 2px solid rgba(201, 120, 255, 0.7);
     --zl-checkbox-hover-bg: rgba(255, 245, 250, 0.8);
-    --zl-checkbox-checked-gradient-start: var(--zl-card-bg-gradient-color-fourth, #00bcd4);
-    --zl-checkbox-checked-gradient-end: var(--zl-card-bg-gradient-color-end, #0097a7);
-    --zl-checkbox-checked-shadow: 0 3px 8px rgba(0, 151, 167, 0.2);
+    --zl-checkbox-checked-gradient-start: #e9a8ff;
+    --zl-checkbox-checked-gradient-end: #c978ff;
+    --zl-checkbox-checked-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
     --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
     
     /* Text button styling */
-    --zl-text-button-hover-bg: linear-gradient(135deg, rgba(224, 247, 250, 0.7), rgba(77, 208, 225, 0.2));
-    --zl-text-button-focus-shadow: 0 3px 8px rgba(0, 188, 212, 0.2);
+    --zl-text-button-hover-bg: linear-gradient(135deg, rgba(252, 235, 246, 0.7), rgba(255, 242, 253, 0.9));
+    --zl-text-button-focus-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
     
     /* Grab handle styling */
-    --zl-grab-handle-color: rgba(0, 188, 212, 0.8);
+    --zl-grab-handle-color: rgba(201, 120, 255, 0.8);
     --zl-grab-handle-opacity: 0.6;
     --zl-grab-handle-hover-opacity: 1;
     
     /* Delete button styling */
     --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
-    --zl-delete-button-border: 1px solid rgba(0, 188, 212, 0.4);
+    --zl-delete-button-border: 1px solid rgba(201, 120, 255, 0.4);
     --zl-delete-button-hover-bg: rgba(255, 225, 240, 0.95);
-    --zl-delete-button-hover-border: rgba(0, 188, 212, 0.8);
-    --zl-delete-button-text-color: rgba(0, 188, 212, 0.9);
+    --zl-delete-button-hover-border: rgba(201, 120, 255, 0.8);
+    --zl-delete-button-text-color: rgba(201, 120, 255, 0.9);
     
     /* Drop indicator styling */
-    --zl-drop-indicator-color: rgba(0, 188, 212, 0.7);
-    --zl-drop-arrow-bg: rgba(0, 188, 212, 0.9);
-    --zl-drop-arrow-shadow: 0 0 8px rgba(0, 151, 167, 0.4);
+    --zl-drop-indicator-color: rgba(201, 120, 255, 0.7);
+    --zl-drop-arrow-bg: rgba(201, 120, 255, 0.9);
+    --zl-drop-arrow-shadow: 0 0 8px rgba(201, 120, 255, 0.4);
     
     /* Edit input styling */
-    --zl-edit-input-border: 2px solid rgba(0, 188, 212, 0.3);
+    --zl-edit-input-border: 2px solid rgba(201, 120, 255, 0.3);
     --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
-    --zl-edit-input-focus-border: rgba(0, 188, 212, 0.6);
-    --zl-edit-input-focus-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+    --zl-edit-input-focus-border: rgba(201, 120, 255, 0.6);
+    --zl-edit-input-focus-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
     
     /* Empty state styling */
     --zl-empty-state-bg: linear-gradient(135deg, rgba(255, 245, 250, 0.4), rgba(255, 235, 245, 0.4));
-    --zl-empty-state-border: 3px dashed rgba(0, 188, 212, 0.3);
-    --zl-empty-title-color: var(--zl-primary-color, #00bcd4);
+    --zl-empty-state-border: 3px dashed rgba(201, 120, 255, 0.3);
+    --zl-empty-title-color: var(--zl-primary-color, #c978ff);
     
     /* New item input styling */
-    --zl-new-item-input-border: 2px solid rgba(0, 188, 212, 0.4);
-    --zl-new-item-input-focus-border: rgba(0, 188, 212, 0.7);
-    --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+    --zl-new-item-input-border: 2px solid rgba(201, 120, 255, 0.4);
+    --zl-new-item-input-focus-border: rgba(201, 120, 255, 0.7);
+    --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
     
     /* -- END List Item Theme Variables -- */
   }
   
-  /* 
-  * Original theme - peachy pink gradient.
-  * To revert to this theme, uncomment and apply to a parent element.
-  
-  .theme-peachy {
-    --zl-card-bg-gradient-color-start: #fff6e5;
-    --zl-card-bg-gradient-color-mid: #ffd4da;
-    --zl-card-bg-gradient-color-end: #ffc6e5;
-    --zl-card-border-color: rgba(255, 212, 218, 0.8);
-    --zl-card-box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25);
-  }
-  */
+  /* Alternative theme - cool mint gradient.
+   * To use this theme, uncomment and apply to a parent element.
+   *
+   * .theme-mint {
+   *   --zl-card-bg-gradient-angle: 120deg;
+   *   --zl-card-bg-gradient-color-start: #e0f7fa;
+   *   --zl-card-bg-gradient-color-second: #40e0d0;
+   *   --zl-card-bg-gradient-color-mid: #4dd0e1;
+   *   --zl-card-bg-gradient-color-fourth: #00bcd4;
+   *   --zl-card-bg-gradient-color-end: #0097a7;
+   *   --zl-card-border-color: rgba(0, 188, 212, 0.6);
+   *   --zl-card-box-shadow: 0 12px 30px rgba(0, 151, 167, 0.25);
+   *   
+   *   --zl-primary-color: var(--zl-card-bg-gradient-color-fourth, #00bcd4);
+   *   --zl-secondary-color: var(--zl-card-bg-gradient-color-mid, #4dd0e1);
+   *   --zl-accent-color: var(--zl-card-bg-gradient-color-end, #0097a7);
+   *   --zl-highlight-color: var(--zl-card-bg-gradient-color-second, #40e0d0);
+   *   
+   *   --zl-text-hover-color: #0097a7;
+   *   --zl-item-border-color: rgba(0, 188, 212, 0.6);
+   *   --zl-item-border-hover-color: rgba(0, 188, 212, 0.9);
+   *   --zl-item-box-shadow: 0 4px 10px rgba(0, 151, 167, 0.1);
+   * }
+   */
   
   /* Animation keyframes */
   @keyframes sparkle {
@@ -584,10 +596,9 @@
    */
   @keyframes gradient-shift {
     0% { background-position: 0% 0%; }
-    20% { background-position: 30% 50%; }
-    40% { background-position: 70% 20%; }
-    60% { background-position: 100% 100%; }
-    80% { background-position: 50% 70%; }
+    25% { background-position: 50% 50%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 50% 50%; }
     100% { background-position: 0% 0%; }
   }
   
