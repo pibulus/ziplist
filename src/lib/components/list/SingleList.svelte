@@ -405,44 +405,139 @@
     /* -- START .zl-card Animated Gradient Theme Variables -- */
     
     /* Angle of the linear gradient - controls the direction of the gradient flow */
-    --zl-card-bg-gradient-angle: 135deg;
+    --zl-card-bg-gradient-angle: 120deg;
     
-    /* Start color of the gradient - peachy off-white tone */
-    --zl-card-bg-gradient-color-start: #fff6e5;
+    /* Start color of the gradient - cool mint tone */
+    --zl-card-bg-gradient-color-start: #e0f7fa;
     
-    /* Middle color of the gradient - soft pink tone */
-    --zl-card-bg-gradient-color-mid: #ffd4da;
+    /* Second color - vibrant turquoise tone for more visible gradient */
+    --zl-card-bg-gradient-color-second: #40e0d0;
     
-    /* End color of the gradient - lavender-pink tone */
-    --zl-card-bg-gradient-color-end: #ffc6e5;
+    /* Middle color of the gradient - soft aqua tone */
+    --zl-card-bg-gradient-color-mid: #4dd0e1;
+    
+    /* Fourth color - deeper aqua green for gradient variation */
+    --zl-card-bg-gradient-color-fourth: #00bcd4;
+    
+    /* End color of the gradient - deeper blue tone */
+    --zl-card-bg-gradient-color-end: #0097a7;
     
     /* Duration for one full cycle of the background gradient animation */
-    --zl-card-bg-gradient-animation-duration: 30s;
+    --zl-card-bg-gradient-animation-duration: 15s;
     
     /* Size of the background gradient - larger than the element for the shifting effect */
-    --zl-card-bg-gradient-size: 300% 300%;
+    --zl-card-bg-gradient-size: 400% 400%;
     
     /* Border radius for the card - creates the pillowy, rounded appearance */
     --zl-card-border-radius: 32px;
     
     /* Border width and color for the card - contributes to the "chonky" feel */
     --zl-card-border-width: 4px;
-    --zl-card-border-color: rgba(255, 212, 218, 0.8);
+    --zl-card-border-color: rgba(0, 188, 212, 0.6);
     
     /* Box shadow for the card - adds depth and dimension */
-    --zl-card-box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25);
+    --zl-card-box-shadow: 0 12px 30px rgba(0, 151, 167, 0.25);
     
     /* -- END .zl-card Animated Gradient Theme Variables -- */
+    
+    /* -- START List Item Theme Variables -- */
+    
+    /* Base colors - derived from card gradient */
+    --zl-primary-color: var(--zl-card-bg-gradient-color-fourth, #00bcd4);
+    --zl-secondary-color: var(--zl-card-bg-gradient-color-mid, #4dd0e1);
+    --zl-accent-color: var(--zl-card-bg-gradient-color-end, #0097a7);
+    --zl-highlight-color: var(--zl-card-bg-gradient-color-second, #40e0d0);
+    
+    /* Text colors */
+    --zl-text-color-primary: #444444;
+    --zl-text-color-secondary: #666666;
+    --zl-text-color-disabled: #9d9d9d;
+    --zl-text-hover-color: #0097a7;
+    
+    /* List item styling */
+    --zl-item-bg: rgba(255, 255, 255, 0.5);
+    --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
+    --zl-item-border-radius: 20px;
+    --zl-item-border-color: rgba(0, 188, 212, 0.6);
+    --zl-item-border-hover-color: rgba(0, 188, 212, 0.9);
+    --zl-item-box-shadow: 0 4px 10px rgba(0, 151, 167, 0.1);
+    --zl-item-hover-box-shadow: 0 8px 20px rgba(0, 151, 167, 0.2);
+    
+    /* Checked item styling */
+    --zl-item-checked-opacity: 0.75;
+    --zl-item-checked-bg: rgba(245, 240, 250, 0.4);
+    --zl-item-checked-border-color: rgba(0, 188, 212, 0.2);
+    
+    /* Drag and drop styling */
+    --zl-item-dragging-border: 3px solid rgba(0, 188, 212, 0.85);
+    --zl-item-dragging-bg: rgba(255, 255, 255, 1);
+    --zl-item-dragging-shadow: 0 15px 30px rgba(0, 151, 167, 0.4);
+    --zl-item-dragover-bg: rgba(252, 242, 255, 0.9);
+    --zl-item-dragover-border: 2px solid rgba(0, 188, 212, 0.8);
+    --zl-item-dragover-shadow: 0 8px 20px rgba(0, 151, 167, 0.3);
+    
+    /* Checkbox styling */
+    --zl-checkbox-size: 32px;
+    --zl-checkbox-border-radius: 12px;
+    --zl-checkbox-border: 2px solid rgba(0, 188, 212, 0.5);
+    --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
+    --zl-checkbox-hover-border: 2px solid rgba(0, 188, 212, 0.7);
+    --zl-checkbox-hover-bg: rgba(255, 245, 250, 0.8);
+    --zl-checkbox-checked-gradient-start: var(--zl-card-bg-gradient-color-fourth, #00bcd4);
+    --zl-checkbox-checked-gradient-end: var(--zl-card-bg-gradient-color-end, #0097a7);
+    --zl-checkbox-checked-shadow: 0 3px 8px rgba(0, 151, 167, 0.2);
+    --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
+    
+    /* Text button styling */
+    --zl-text-button-hover-bg: linear-gradient(135deg, rgba(224, 247, 250, 0.7), rgba(77, 208, 225, 0.2));
+    --zl-text-button-focus-shadow: 0 3px 8px rgba(0, 188, 212, 0.2);
+    
+    /* Grab handle styling */
+    --zl-grab-handle-color: rgba(0, 188, 212, 0.8);
+    --zl-grab-handle-opacity: 0.6;
+    --zl-grab-handle-hover-opacity: 1;
+    
+    /* Delete button styling */
+    --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
+    --zl-delete-button-border: 1px solid rgba(0, 188, 212, 0.4);
+    --zl-delete-button-hover-bg: rgba(255, 225, 240, 0.95);
+    --zl-delete-button-hover-border: rgba(0, 188, 212, 0.8);
+    --zl-delete-button-text-color: rgba(0, 188, 212, 0.9);
+    
+    /* Drop indicator styling */
+    --zl-drop-indicator-color: rgba(0, 188, 212, 0.7);
+    --zl-drop-arrow-bg: rgba(0, 188, 212, 0.9);
+    --zl-drop-arrow-shadow: 0 0 8px rgba(0, 151, 167, 0.4);
+    
+    /* Edit input styling */
+    --zl-edit-input-border: 2px solid rgba(0, 188, 212, 0.3);
+    --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
+    --zl-edit-input-focus-border: rgba(0, 188, 212, 0.6);
+    --zl-edit-input-focus-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+    
+    /* Empty state styling */
+    --zl-empty-state-bg: linear-gradient(135deg, rgba(255, 245, 250, 0.4), rgba(255, 235, 245, 0.4));
+    --zl-empty-state-border: 3px dashed rgba(0, 188, 212, 0.3);
+    --zl-empty-title-color: var(--zl-primary-color, #00bcd4);
+    
+    /* New item input styling */
+    --zl-new-item-input-border: 2px solid rgba(0, 188, 212, 0.4);
+    --zl-new-item-input-focus-border: rgba(0, 188, 212, 0.7);
+    --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+    
+    /* -- END List Item Theme Variables -- */
   }
   
   /* 
-  * Example of an alternative theme.
-  * To use, add a parent element with the class 'theme-ocean'.
+  * Original theme - peachy pink gradient.
+  * To revert to this theme, uncomment and apply to a parent element.
   
-  .theme-ocean {
-    --zl-card-bg-gradient-color-start: #e0f7fa;
-    --zl-card-bg-gradient-color-mid: #b3e5fc;
-    --zl-card-bg-gradient-color-end: #81d4fa;
+  .theme-peachy {
+    --zl-card-bg-gradient-color-start: #fff6e5;
+    --zl-card-bg-gradient-color-mid: #ffd4da;
+    --zl-card-bg-gradient-color-end: #ffc6e5;
+    --zl-card-border-color: rgba(255, 212, 218, 0.8);
+    --zl-card-box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25);
   }
   */
   
@@ -489,9 +584,10 @@
    */
   @keyframes gradient-shift {
     0% { background-position: 0% 0%; }
-    25% { background-position: 50% 50%; }
-    50% { background-position: 100% 100%; }
-    75% { background-position: 50% 50%; }
+    20% { background-position: 30% 50%; }
+    40% { background-position: 70% 20%; }
+    60% { background-position: 100% 100%; }
+    80% { background-position: 50% 70%; }
     100% { background-position: 0% 0%; }
   }
   
@@ -551,7 +647,9 @@
     background: linear-gradient(
       var(--zl-card-bg-gradient-angle),
       var(--zl-card-bg-gradient-color-start),
+      var(--zl-card-bg-gradient-color-second),
       var(--zl-card-bg-gradient-color-mid),
+      var(--zl-card-bg-gradient-color-fourth),
       var(--zl-card-bg-gradient-color-end)
     );
     background-size: var(--zl-card-bg-gradient-size);
@@ -652,27 +750,41 @@
     position: relative;
   }
   
-  /* Individual list items */
+  /**
+   * Individual list items
+   * 
+   * Styled using CSS variables for easy theming. The default appearance is a light
+   * card with subtle shadows and borders that react to hover and interaction states.
+   */
   .zl-item {
-    border-radius: 20px; /* Increased to 20px as per feedback for desktop */
-    background: rgba(255, 255, 255, 0.5);
+    /* Base appearance */
+    border-radius: var(--zl-item-border-radius, 20px);
+    background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
     padding: 16px 16px; /* Adjusted to 16px horizontal padding to avoid excessive text wrapping */
+    
+    /* Structural layout */
     display: flex;
-    align-items: flex-start; /* Changed from center to allow items to expand vertically */
-    gap: 1.25rem; /* Increased from 1rem for better element separation */
-    transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
-    position: relative;
-    cursor: grab;
-    border-left: 4px solid rgba(201, 120, 255, 0.3);
-    border: 2px solid rgba(255, 212, 218, 0.6);
+    align-items: flex-start; /* Allow items to expand vertically */
+    gap: 1.25rem; /* Space between elements */
+    justify-content: space-between;
+    
+    /* Sizing */
     min-height: 80px; /* Minimum height for consistent sizing */
     height: auto; /* Allow height to grow with content */
     max-height: none; /* Remove any max height constraints */
-    justify-content: space-between;
+    
+    /* Visual effects */
+    box-shadow: var(--zl-item-box-shadow, 0 4px 10px rgba(201, 120, 255, 0.1));
+    border: 2px solid var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
+    border-left: 4px solid var(--zl-item-border-color, rgba(201, 120, 255, 0.3));
+    
+    /* Interaction */
+    position: relative;
+    cursor: grab;
+    transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  /* Only add will-change to unchecked items that can be dragged - don't use it on all items to avoid performance issues */
+  /* Performance optimization - only add will-change to draggable items */
   .zl-item:not(.checked):not(.editing) {
     will-change: transform;
   }
@@ -683,12 +795,13 @@
     cursor: default;
   }
 
+  /* Hover state - elevate and highlight the item */
   .zl-item:hover {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--zl-item-hover-bg, rgba(255, 255, 255, 0.8));
     transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(201, 120, 255, 0.2);
-    border-left: 4px solid rgba(201, 120, 255, 0.7);
-    border-color: rgba(255, 212, 218, 0.9);
+    box-shadow: var(--zl-item-hover-box-shadow, 0 8px 20px rgba(201, 120, 255, 0.2));
+    border-left: 4px solid var(--zl-item-border-hover-color, rgba(201, 120, 255, 0.7));
+    border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
   }
   
   .zl-item::after {
@@ -709,47 +822,75 @@
     opacity: 1;
   }
   
+  /**
+   * Checked (completed) item styling
+   * 
+   * Reduces visual prominence with decreased opacity, scale, and shadow
+   * while maintaining the theme connection through border and background
+   */
   .zl-item.checked {
-    opacity: 0.75;
-    background: rgba(245, 240, 250, 0.4);
-    border-left: 4px solid rgba(201, 120, 255, 0.2);
+    opacity: var(--zl-item-checked-opacity, 0.75);
+    background: var(--zl-item-checked-bg, rgba(245, 240, 250, 0.4));
+    border-left: 4px solid var(--zl-item-checked-border-color, rgba(201, 120, 255, 0.2));
     transform: scale(0.98);
-    box-shadow: 0 2px 6px rgba(201, 120, 255, 0.05);
-    border-color: rgba(255, 212, 218, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 151, 167, 0.05);
+    border-color: var(--zl-item-checked-border-color, rgba(255, 212, 218, 0.4));
   }
   
-  /* Item text */
+  /**
+   * Item text styling
+   * 
+   * Controls the appearance of text within list items, including size,
+   * weight, color, and spacing - all themeable through CSS variables
+   */
   .zl-item-text {
+    /* Typography */
     font-size: 1.1rem;
     font-weight: 800;
     line-height: 1.5;
-    color: #444444;
-    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    color: var(--zl-text-color-primary, #444444);
     font-family: 'Space Mono', monospace;
     letter-spacing: 0.8px;
+    
+    /* Layout and wrapping */
     box-sizing: border-box;
     display: inline-block;
     width: 100%;
     text-align: left;
     position: relative;
     vertical-align: middle;
-    padding: 6px 0; /* Increased from 4px for better vertical spacing */
+    padding: 6px 0; /* Vertical spacing */
     min-height: 32px; /* Match checkbox height for vertical alignment */
-    word-wrap: break-word; /* Ensure text wraps properly */
-    overflow-wrap: break-word; /* Modern property for text wrapping */
+    
+    /* Text wrapping for long content */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
     hyphens: auto; /* Enable hyphenation for better text breaks */
+    
+    /* Animation */
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  /* Edit state indication for unchecked items */
+  /**
+   * Hover state for unchecked item text
+   * 
+   * Provides visual feedback when hovering over editable text with color
+   * change, subtle glow, and slight elevation
+   */
   .zl-item:not(.checked) .zl-item-text-button:hover .zl-item-text {
-    color: #c978ff;
-    text-shadow: 0 0 8px rgba(201, 120, 255, 0.3);
+    color: var(--zl-text-hover-color, #c978ff);
+    text-shadow: 0 0 8px rgba(0, 151, 167, 0.3);
     transform: translateY(-1px) scale(1.01);
   }
 
+  /**
+   * Checked text styling
+   * 
+   * Visually indicates completion with a themed strikethrough and muted color
+   */
   .zl-item-text.checked {
-    text-decoration: line-through rgba(201, 120, 255, 0.5) 1.5px;
-    color: #9d9d9d;
+    text-decoration: line-through var(--zl-primary-color, rgba(201, 120, 255, 0.5)) 1.5px;
+    color: var(--zl-text-color-disabled, #9d9d9d);
   }
 
   /* Text button styling */
@@ -822,7 +963,12 @@
     cursor: default;
   }
   
-  /* Custom checkbox styling */
+  /**
+   * Custom checkbox styling
+   * 
+   * Creates a visually appealing, themeable custom checkbox that
+   * animates on interaction and shows a sparkle effect when checked
+   */
   .zl-checkbox-wrapper {
     position: relative;
     display: inline-flex;
@@ -833,6 +979,7 @@
     align-self: center; /* Center vertically in the list item */
   }
 
+  /* Hide the actual checkbox input while keeping it accessible */
   .zl-checkbox {
     position: absolute;
     opacity: 0;
@@ -841,33 +988,52 @@
     width: 0;
   }
 
+  /**
+   * Custom checkbox visual element
+   * 
+   * The visual representation of the checkbox that users see and interact with,
+   * fully customizable through CSS variables
+   */
   .zl-checkbox-custom {
     position: relative;
     display: inline-block;
-    width: 32px; /* Increased to 32px as per feedback for better touch target */
-    height: 32px; /* Increased to 32px as per feedback for better touch target */
-    border: 2px solid rgba(201, 120, 255, 0.5);
-    border-radius: 12px; /* Increased from 10px for softer corners */
-    background-color: rgba(255, 255, 255, 0.8);
+    width: var(--zl-checkbox-size, 32px);
+    height: var(--zl-checkbox-size, 32px);
+    border: var(--zl-checkbox-border, 2px solid rgba(201, 120, 255, 0.5));
+    border-radius: var(--zl-checkbox-border-radius, 12px);
+    background-color: var(--zl-checkbox-bg, rgba(255, 255, 255, 0.8));
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 3px 7px rgba(201, 120, 255, 0.15); /* Enhanced shadow */
+    box-shadow: var(--zl-checkbox-shadow, 0 3px 7px rgba(0, 151, 167, 0.15));
   }
   
+  /* Hover state for the checkbox */
   .zl-checkbox-wrapper:hover .zl-checkbox-custom {
-    border-color: rgba(201, 120, 255, 0.7);
-    background-color: rgba(255, 245, 250, 0.8);
+    border: var(--zl-checkbox-hover-border, 2px solid rgba(0, 188, 212, 0.7));
+    background-color: var(--zl-checkbox-hover-bg, rgba(255, 245, 250, 0.8));
     transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.15);
+    box-shadow: var(--zl-checkbox-hover-shadow, 0 3px 8px rgba(0, 151, 167, 0.15));
   }
   
-  /* Checkbox checked state */
+  /**
+   * Checked state styling
+   * 
+   * Changes the appearance when checked with a gradient background
+   * that uses theme colors defined in CSS variables
+   */
   .zl-checkbox:checked + .zl-checkbox-custom {
-    background: linear-gradient(145deg, #e9a8ff 0%, #c978ff 100%);
+    background: linear-gradient(145deg, 
+      var(--zl-checkbox-checked-gradient-start, #4dd0e1) 0%, 
+      var(--zl-checkbox-checked-gradient-end, #0097a7) 100%);
     border-color: transparent;
-    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
+    box-shadow: var(--zl-checkbox-checked-shadow, 0 3px 8px rgba(0, 151, 167, 0.2));
   }
   
-  /* Sparkle effect - simplified */
+  /**
+   * Sparkle effect when checkbox is checked
+   * 
+   * Creates a radiating glow effect that provides visual feedback
+   * when an item is marked as complete
+   */
   .zl-checkbox:checked + .zl-checkbox-custom::after {
     content: '';
     position: absolute;
@@ -876,7 +1042,9 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+    background: radial-gradient(circle, 
+      var(--zl-checkbox-sparkle-color, rgba(255, 255, 255, 0.8)) 0%, 
+      rgba(255, 255, 255, 0) 70%);
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
     animation: sparkle 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.5) forwards;
@@ -1049,67 +1217,91 @@
   
   
   
-  /* ELEGANT DRAG AND DROP STYLING */
+  /**
+   * DRAG AND DROP STYLING
+   *
+   * Styles for drag and drop interactions that provide clear visual feedback
+   * to users when moving items or hovering over drop targets.
+   */
   @keyframes float {
     0%, 100% { transform: translateY(0) rotate(-0.5deg); }
     50% { transform: translateY(-3px) rotate(0.5deg); }
   }
 
   @keyframes pulse-border {
-    0%, 100% { border-color: rgba(201, 120, 255, 0.6); }
-    50% { border-color: rgba(201, 120, 255, 1); }
+    0%, 100% { border-color: var(--zl-item-border-color, rgba(201, 120, 255, 0.6)); }
+    50% { border-color: var(--zl-item-border-hover-color, rgba(201, 120, 255, 1)); }
   }
 
+  /**
+   * Item being dragged styling
+   * 
+   * Enhances visibility and provides motion feedback during drag operations
+   */
   .zl-item.dragging {
-    opacity: 1; /* Fully opaque instead of slightly transparent */
-    background-color: rgba(255, 255, 255, 1); /* Solid white background */
+    opacity: 1; /* Fully opaque for better visibility */
+    background-color: var(--zl-item-dragging-bg, rgba(255, 255, 255, 1));
     transform: scale(1.03);
-    box-shadow: 0 15px 30px rgba(201, 120, 255, 0.4); /* Enhanced shadow */
+    box-shadow: var(--zl-item-dragging-shadow, 0 15px 30px rgba(0, 151, 167, 0.4));
     z-index: 10;
-    border: 3px solid rgba(201, 120, 255, 0.85); /* Solid border instead of dashed */
+    border: var(--zl-item-dragging-border, 3px solid rgba(0, 188, 212, 0.85));
     animation: float 2s infinite ease-in-out;
     cursor: grabbing;
     will-change: transform, opacity, border;
   }
 
+  /**
+   * Item being hovered over as a drop target
+   * 
+   * Indicates where the dragged item will be placed when dropped
+   */
   .zl-item.drag-over {
     position: relative;
     margin-top: 20px; /* Creates space for the item to fit */
-    background-color: rgba(252, 242, 255, 0.9);
-    border: 2px solid rgba(201, 120, 255, 0.8);
-    box-shadow: 0 8px 20px rgba(201, 120, 255, 0.3);
+    background-color: var(--zl-item-dragover-bg, rgba(252, 242, 255, 0.9));
+    border: var(--zl-item-dragover-border, 2px solid rgba(0, 188, 212, 0.8));
+    box-shadow: var(--zl-item-dragover-shadow, 0 8px 20px rgba(0, 151, 167, 0.3));
     transform: translateY(2px); /* Subtle shift to indicate item movement */
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy transition */
   }
 
-  /* Enhanced drop indicator for clearer visual feedback */
+  /**
+   * Drop indicator line
+   * 
+   * Horizontal indicator that shows where an item will be inserted
+   */
   .drop-indicator {
     position: absolute;
     top: -12px;
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, transparent, rgba(201, 120, 255, 0.7), transparent);
+    background: linear-gradient(90deg, transparent, var(--zl-drop-indicator-color, rgba(0, 188, 212, 0.7)), transparent);
     border-radius: 2px;
     animation: pulse-opacity 1.5s infinite ease-in-out;
     z-index: 5;
     pointer-events: none;
   }
 
-  /* Dropdown arrow to show insertion position */
+  /**
+   * Drop target arrow
+   * 
+   * Small arrow that points to the exact insertion point when dragging
+   */
   .drop-arrow {
     position: absolute;
     top: -6px;
     left: 50%;
     width: 14px;
     height: 14px;
-    background-color: rgba(201, 120, 255, 0.9);
+    background-color: var(--zl-drop-arrow-bg, rgba(0, 188, 212, 0.9));
     border-radius: 50%;
     transform: translateX(-50%);
-    box-shadow: 0 0 8px rgba(201, 120, 255, 0.4);
+    box-shadow: var(--zl-drop-arrow-shadow, 0 0 8px rgba(0, 151, 167, 0.4));
     animation: pulse-glow 1.5s infinite ease-in-out;
   }
 
+  /* Arrow down indicator using a rotated square */
   .drop-arrow::after {
     content: '';
     position: absolute;
@@ -1132,13 +1324,18 @@
     50% { box-shadow: 0 0 12px rgba(201, 120, 255, 0.7); }
   }
 
-  /* Enhanced grab indicator with lines - slightly smaller than original */
+  /**
+   * Grab handle indicator
+   *
+   * Visual element indicating an item can be dragged, with three horizontal lines
+   * that react to hover states and maintain proper touch target sizing.
+   */
   .grab-indicator {
     display: flex;
     flex-direction: column;
     gap: 4px; /* Spacing between lines */
     margin-right: 12px; /* Maintain side margin */
-    opacity: 0.6; /* Increased from 0.5 for better visibility */
+    opacity: var(--zl-grab-handle-opacity, 0.6);
     transition: all 0.25s ease;
     padding: 8px 8px; /* Increased padding to ensure 32px touch target */
     min-width: 32px; /* Ensures minimum width for touch target */
@@ -1149,32 +1346,33 @@
     position: relative;
   }
 
-
+  /* Individual grab handle lines */
   .grab-indicator span {
     width: 16px; /* Slightly smaller than original 18px */
     height: 2.5px; /* Slightly smaller than original 3px */
-    background-color: rgba(201, 120, 255, 0.8);
+    background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 0.8));
     border-radius: 2px;
     transition: transform 0.2s ease, width 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   }
 
+  /* Hover state for the grab handle */
   .zl-item:hover .grab-indicator {
-    opacity: 1;
-    transform: scale(1.1); /* Maintain subtle scale effect on hover */
+    opacity: var(--zl-grab-handle-hover-opacity, 1);
+    transform: scale(1.1); /* Subtle scale effect on hover */
   }
 
-
+  /* Enhanced visibility of grab handle lines on hover */
   .zl-item:hover .grab-indicator span {
-    background-color: rgba(201, 120, 255, 1); /* Fully opaque on hover */
-  }
-
-  /* Subtle hover effect for drag handle */
-  .zl-item:hover .grab-indicator span {
-    background-color: rgba(201, 120, 255, 1); /* Fully opaque on hover */
-    box-shadow: 0 1px 3px rgba(201, 120, 255, 0.3); /* Subtle glow */
+    background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1)); 
+    box-shadow: 0 1px 3px rgba(0, 151, 167, 0.3); /* Subtle glow */
   }
   
-  /* Delete button styling */
+  /**
+   * Delete button styling
+   *
+   * Small circular button that appears on hover to allow item deletion,
+   * with appropriate transitions and hover effects.
+   */
   .delete-button {
     position: absolute;
     top: 8px;
@@ -1182,38 +1380,42 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(201, 120, 255, 0.4);
+    background: var(--zl-delete-button-bg, rgba(255, 255, 255, 0.8));
+    border: var(--zl-delete-button-border, 1px solid rgba(0, 188, 212, 0.4));
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    opacity: 0;
+    opacity: 0; /* Hidden until item is hovered */
     transform: scale(0.8);
     transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 10;
-    box-shadow: 0 2px 5px rgba(201, 120, 255, 0.15);
+    box-shadow: 0 2px 5px rgba(0, 151, 167, 0.15);
   }
   
+  /* X icon inside delete button */
   .delete-icon {
     font-size: 18px;
     line-height: 1;
-    color: rgba(201, 120, 255, 0.9);
+    color: var(--zl-delete-button-text-color, rgba(0, 188, 212, 0.9));
     font-weight: bold;
   }
   
+  /* Show delete button when list item is hovered */
   .zl-item:hover .delete-button {
     opacity: 1;
     transform: scale(1);
   }
   
+  /* Delete button hover state */
   .delete-button:hover {
-    background: rgba(255, 225, 240, 0.95);
-    border-color: rgba(201, 120, 255, 0.8);
+    background: var(--zl-delete-button-hover-bg, rgba(255, 225, 240, 0.95));
+    border-color: var(--zl-delete-button-hover-border, rgba(0, 188, 212, 0.8));
     transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.3);
+    box-shadow: 0 3px 8px rgba(0, 151, 167, 0.3);
   }
   
+  /* Delete button active state (when clicked) */
   .delete-button:active {
     transform: scale(0.9);
     background: rgba(255, 200, 230, 1);
