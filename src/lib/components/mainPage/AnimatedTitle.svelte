@@ -59,9 +59,9 @@
   </h1>
 </div>
 
-<!-- Updated subheadline with improved typography and brand voice -->
+<!-- Updated subheadline with improved typography and reduced bottom margin -->
 <p
-  class="mx-auto mt-5 mb-6 text-base text-center cursor-default select-none slide-in-subtitle max-w-prose text-gray-700/85 sm:mt-6 sm:mb-7 sm:text-lg md:text-xl lg:text-2xl"
+  class="mx-auto mt-4 mb-3 text-base text-center cursor-default select-none slide-in-subtitle max-w-prose text-gray-700/85 sm:mt-5 sm:mb-4 sm:text-lg md:text-xl lg:text-2xl"
   style="font-weight: 400; letter-spacing: 0.015em; line-height: 1.4; max-inline-size: 40ch; text-wrap: balance; font-variation-settings: 'wght' 400, 'opsz' 16;"
 >
   {#each subtitle.split('\n') as line, i}

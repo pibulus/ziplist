@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
   import { fade, fly } from 'svelte/transition';
@@ -11,6 +11,8 @@
   let dragOverItemId = null;
   let editingItemId = null;
   let editedItemText = '';
+  let isCreatingNewItem = false;
+  let newItemText = '';
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
@@ -68,6 +70,27 @@
   function autoFocus(node) {
     node.focus();
     return {};
+  }
+
+  // Action for detecting clicks outside an element
+  function clickOutside(node, { enabled, callback }) {
+    const handleClick = (event) => {
+      if (enabled && !node.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+    
+    return {
+      update(params) {
+        enabled = params.enabled;
+        callback = params.callback;
+      },
+      destroy() {
+        document.removeEventListener('click', handleClick, true);
+      }
+    };
   }
   
   // Drag and drop functions
@@ -230,7 +253,7 @@
 <div class="zl-card">
   <div class="card-content">
     <!-- List Items -->
-    <div class="zl-list-container">
+    <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? 100 + (list.items.length * 90) : 320}px;">
       {#if list.items.length > 0}
         <ul class="zl-list" role="list">
           {#each sortedItems as item, index (item.id)}
@@ -245,6 +268,7 @@
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: 300 }}
               in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
+              out:fly={{ y: -20, duration: 300 }}
               aria-grabbed={draggedItemId === item.id ? 'true' : 'false'}
               aria-dropeffect="move"
               role="listitem"
@@ -305,14 +329,67 @@
                     <span></span>
                   </div>
                 {/if}
+                
+                <!-- Delete button - visible on hover -->
+                <button 
+                  type="button" 
+                  class="delete-button" 
+                  on:click|stopPropagation={() => listsService.removeItem(item.id)}
+                  title="Delete item"
+                  aria-label="Delete item: {item.text}"
+                >
+                  <span class="delete-icon">×</span>
+                </button>
             </li>
           {/each}
         </ul>
       {:else}
-        <!-- Empty state -->
-        <div class="zl-empty-state" transition:fade={{ duration: 200 }}>
-          <p class="zl-empty-title">No thoughts, just vibes</p>
-          <p class="zl-empty-description">Your list is a blank canvas waiting for inspiration</p>
+        <!-- Friendly minimalist empty state -->
+        <div class="zl-empty-state" 
+          transition:fade={{ duration: 400, delay: 100 }}
+          on:click={() => { isCreatingNewItem = true; }}
+          class:clickable={!isCreatingNewItem}
+          class:isCreatingNewItem={isCreatingNewItem}
+        >
+          <div class="zl-empty-content">
+            <p class="zl-empty-title">Your list awaits</p>
+            <p class="zl-empty-description">Hit that yellow button</p>
+            <p class="zl-empty-hint">or click here to type</p>
+          </div>
+          
+          {#if isCreatingNewItem}
+            <div 
+              class="zl-new-item-container" 
+              transition:fade={{ duration: 150 }}
+              use:clickOutside={{ 
+                enabled: isCreatingNewItem, 
+                callback: () => {
+                  newItemText = '';
+                  isCreatingNewItem = false;
+                }
+              }}
+            >
+              <input 
+                type="text" 
+                class="zl-new-item-input" 
+                placeholder="Type your item here..." 
+                bind:value={newItemText}
+                on:keydown={(e) => {
+                  if (e.key === 'Enter' && newItemText.trim()) {
+                    listsService.addItem(newItemText.trim());
+                    newItemText = '';
+                    isCreatingNewItem = false;
+                  } else if (e.key === 'Escape') {
+                    newItemText = '';
+                    isCreatingNewItem = false;
+                  }
+                }}
+                use:autoFocus
+                on:click|stopPropagation={() => {}}
+              />
+              <div class="zl-new-item-hint">Press Enter to add, Escape to cancel, or click outside</div>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -382,6 +459,7 @@
     margin: 0 auto;
     margin-top: 2rem; /* Increased from 1.75rem */
     margin-bottom: 2.5rem; /* Increased from 2.25rem */
+    height: auto;
   }
 
   /* Media query for mobile responsiveness */
@@ -456,6 +534,7 @@
     display: flex;
     flex-direction: column;
     min-height: 320px;
+    overflow: hidden;
   }
   
   /* List container */
@@ -463,6 +542,7 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
   
   .zl-list {
@@ -473,6 +553,7 @@
     flex-direction: column;
     gap: 20px; /* Increased from 14px to 20px for more "chonky" separation */
     margin-bottom: 1.5rem;
+    position: relative;
   }
   
   /* Individual list items */
@@ -489,7 +570,9 @@
     cursor: grab;
     border-left: 4px solid rgba(201, 120, 255, 0.3);
     border: 2px solid rgba(255, 212, 218, 0.6);
-    min-height: 60px; /* Minimum height, but will grow with content */
+    min-height: 80px; /* Minimum height for consistent sizing */
+    height: auto; /* Allow height to grow with content */
+    max-height: none; /* Remove any max height constraints */
     justify-content: space-between;
   }
 
@@ -554,8 +637,11 @@
     text-align: left;
     position: relative;
     vertical-align: middle;
-    padding: 4px 0; /* Increased from 2px for better vertical spacing */
+    padding: 6px 0; /* Increased from 4px for better vertical spacing */
     min-height: 32px; /* Match checkbox height for vertical alignment */
+    word-wrap: break-word; /* Ensure text wraps properly */
+    overflow-wrap: break-word; /* Modern property for text wrapping */
+    hyphens: auto; /* Enable hyphenation for better text breaks */
   }
 
   /* Edit state indication for unchecked items */
@@ -579,14 +665,15 @@
     cursor: pointer;
     font-family: inherit;
     display: inline-flex;
-    align-items: center;
-    width: auto;
+    align-items: flex-start; /* Align at the top for long content */
+    width: 100%; /* Ensure button takes up full width of container */
     border-radius: 8px; /* Increased from 6px for softer corners */
     transition: all 0.2s ease;
     margin-right: auto;
     position: relative;
-    min-height: 36px; /* Increased to account for wrapped text */
-    align-self: center; /* Center vertically if text wraps */
+    min-height: 36px; /* Minimum height for the button */
+    height: auto; /* Allow height to expand with content */
+    align-self: stretch; /* Stretch to match container height */
     flex-wrap: wrap; /* Allow wrapping of text content */
   }
 
@@ -599,22 +686,7 @@
     transform: translateY(-1px);
   }
 
-  .zl-item-text-button:hover:not(:disabled)::after {
-    content: '';
-    position: absolute;
-    width: 26px; /* Increased from 20px for more visibility */
-    height: 26px; /* Increased from 20px for more visibility */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(201, 120, 255, 0.5)' stroke='rgba(201, 120, 255, 1)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E");
-    background-size: contain;
-    background-repeat: no-repeat;
-    right: -28px; /* Adjusted from -26px to accommodate larger icon */
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0;
-    animation: fadeIn 0.3s forwards ease-out;
-    filter: drop-shadow(0 0 8px rgba(201, 120, 255, 0.6)); /* Enhanced shadow */
-    z-index: 2; /* Ensure it displays above other elements */
-  }
+  /* Pencil icon removed as requested */
 
   /* Enhanced sparkle effect on hover */
   .zl-item-text-button:hover:not(:disabled)::before {
@@ -715,47 +787,110 @@
     z-index: 5;
   }
   
-  /* Empty state - enhanced for "chonky" feel */
+  /* Friendly minimalist empty state */  
   .zl-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 3.5rem 1.5rem; /* Increased padding for more spaciousness */
-    min-height: 240px; /* Increased from 200px as per feedback */
-    position: relative;
+    padding: 5rem 1.5rem;
+    height: 320px; /* Fixed height instead of min-height */
+    width: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, rgba(255, 245, 250, 0.4), rgba(255, 235, 245, 0.4));
+    border: 3px dashed rgba(201, 120, 255, 0.3);
+    border-radius: 24px;
+    margin: 1.5rem 0;
+    transition: background 0.2s ease, border-color 0.2s ease; /* Transition only non-layout properties */
+  }
+
+  .zl-empty-state.clickable {
+    cursor: pointer;
+  }
+
+  .zl-empty-state.clickable:hover {
+    background: linear-gradient(135deg, rgba(255, 245, 250, 0.6), rgba(255, 235, 245, 0.6));
+    border-color: rgba(201, 120, 255, 0.5);
   }
   
-  .zl-empty-state::before {
-    content: '';
+  .zl-empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+  }
+  
+  .isCreatingNewItem .zl-empty-content {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .zl-new-item-container {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: absolute;
-    width: 150px;
-    height: 150px;
-    background: radial-gradient(circle, rgba(236, 158, 255, 0.15) 0%, rgba(236, 158, 255, 0) 70%);
-    border-radius: 50%;
-    z-index: 0;
-    animation: pulse 5s infinite ease-in-out;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .zl-new-item-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border-radius: 18px;
+    border: 2px solid rgba(201, 120, 255, 0.4);
+    background: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    color: #333;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .zl-new-item-input:focus {
+    border-color: rgba(201, 120, 255, 0.7);
+    box-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
+  }
+
+  .zl-new-item-hint {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.8rem;
+    font-family: 'Space Mono', monospace;
   }
   
   .zl-empty-title {
-    font-weight: 600;
+    font-weight: 800;
     color: #c978ff;
-    margin-bottom: 0.8rem;
-    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
     font-family: 'Space Mono', monospace;
-    position: relative;
-    z-index: 1;
+    letter-spacing: 0.8px;
   }
   
   .zl-empty-description {
-    color: #9d9d9d;
-    font-size: 0.95rem;
-    max-width: 270px;
+    color: #555;
+    font-size: 1.3rem;
     font-family: 'Space Mono', monospace;
-    position: relative;
-    z-index: 1;
-    margin-bottom: 2rem;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  
+  .zl-empty-hint {
+    color: #666;
+    font-size: 1.1rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 400;
+    letter-spacing: 0.4px;
   }
   
   
@@ -766,8 +901,9 @@
     min-height: 44px;
     margin-right: auto;
     display: flex;
-    align-items: center;
-    align-self: center; /* Center vertically in list item */
+    align-items: flex-start; /* Align at the top for multi-line content */
+    padding-top: 4px; /* Add a little padding at the top for vertical alignment */
+    align-self: stretch; /* Stretch to fill the height of the parent */
     width: calc(100% - 32px - 32px - 2rem); /* Full width minus checkbox, handle, and padding */
   }
 
@@ -947,11 +1083,11 @@
     50% { box-shadow: 0 0 12px rgba(201, 120, 255, 0.7); }
   }
 
-  /* Enhanced grab indicator - more obvious that items can be dragged */
+  /* Enhanced grab indicator with lines - slightly smaller than original */
   .grab-indicator {
     display: flex;
     flex-direction: column;
-    gap: 4px; /* Optimized for 3 dots */
+    gap: 4px; /* Spacing between lines */
     margin-right: 12px; /* Maintain side margin */
     opacity: 0.6; /* Increased from 0.5 for better visibility */
     transition: all 0.25s ease;
@@ -966,11 +1102,11 @@
 
 
   .grab-indicator span {
-    width: 18px; /* Maintain width */
-    height: 3px; /* Maintain height */
+    width: 16px; /* Slightly smaller than original 18px */
+    height: 2.5px; /* Slightly smaller than original 3px */
     background-color: rgba(201, 120, 255, 0.8);
     border-radius: 2px;
-    transition: transform 0.2s ease, width 0.2s ease;
+    transition: transform 0.2s ease, width 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .zl-item:hover .grab-indicator {
@@ -987,6 +1123,51 @@
   .zl-item:hover .grab-indicator span {
     background-color: rgba(201, 120, 255, 1); /* Fully opaque on hover */
     box-shadow: 0 1px 3px rgba(201, 120, 255, 0.3); /* Subtle glow */
+  }
+  
+  /* Delete button styling */
+  .delete-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(201, 120, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(201, 120, 255, 0.15);
+  }
+  
+  .delete-icon {
+    font-size: 18px;
+    line-height: 1;
+    color: rgba(201, 120, 255, 0.9);
+    font-weight: bold;
+  }
+  
+  .zl-item:hover .delete-button {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .delete-button:hover {
+    background: rgba(255, 225, 240, 0.95);
+    border-color: rgba(201, 120, 255, 0.8);
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.3);
+  }
+  
+  .delete-button:active {
+    transform: scale(0.9);
+    background: rgba(255, 200, 230, 1);
   }
   
   /* Tailwind margin utilities */
