@@ -13,14 +13,11 @@
   let editedItemText = '';
   let isCreatingNewItem = false;
   let newItemText = '';
-  let listReady = false; // Track when list is fully loaded
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
     if (activeListData) {
       list = activeListData;
-      // Add a small delay before showing content
-      setTimeout(() => listReady = true, 300);
     }
   });
 
@@ -28,11 +25,6 @@
     // Initialize the lists store
     listsStore.initialize();
     listsService.getAllLists();
-    
-    // Fallback to show content if something goes wrong with data loading
-    setTimeout(() => {
-      if (!listReady) listReady = true;
-    }, 800);
   });
 
   onDestroy(() => {
@@ -262,10 +254,8 @@
   <div class="card-content">
     <!-- List Items -->
     <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? 100 + (list.items.length * 90) : 320}px;">
-      {#if listReady}
-        {#if list.items.length > 0}
-          <div in:fade={{ duration: 400, delay: 200 }}>
-        <ul class="zl-list" role="list">
+      {#if list.items.length > 0}
+        <ul class="zl-list" role="list" in:fade={{ duration: 200 }}>
           {#each sortedItems as item, index (item.id)}
             <li
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
@@ -353,11 +343,10 @@
             </li>
           {/each}
         </ul>
-          </div>
-        {:else}
+      {:else}
         <!-- Friendly minimalist empty state -->
-        <div in:fade={{ duration: 400, delay: 200 }}
-          class="zl-empty-state" 
+        <div class="zl-empty-state"
+          in:fade={{ duration: 300, delay: 50 }}
           on:click={() => { isCreatingNewItem = true; }}
           class:clickable={!isCreatingNewItem}
           class:isCreatingNewItem={isCreatingNewItem}
@@ -402,7 +391,6 @@
             </div>
           {/if}
         </div>
-        {/if}
       {/if}
     </div>
   </div>
