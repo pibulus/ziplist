@@ -397,6 +397,55 @@
 </div>
 
 <style>
+  /* 
+  * Define CSS Custom Properties (variables) for the animated gradient background.
+  * These variables allow for easy theme customization and maintenance.
+  */
+  :root {
+    /* -- START .zl-card Animated Gradient Theme Variables -- */
+    
+    /* Angle of the linear gradient - controls the direction of the gradient flow */
+    --zl-card-bg-gradient-angle: 135deg;
+    
+    /* Start color of the gradient - peachy off-white tone */
+    --zl-card-bg-gradient-color-start: #fff6e5;
+    
+    /* Middle color of the gradient - soft pink tone */
+    --zl-card-bg-gradient-color-mid: #ffd4da;
+    
+    /* End color of the gradient - lavender-pink tone */
+    --zl-card-bg-gradient-color-end: #ffc6e5;
+    
+    /* Duration for one full cycle of the background gradient animation */
+    --zl-card-bg-gradient-animation-duration: 30s;
+    
+    /* Size of the background gradient - larger than the element for the shifting effect */
+    --zl-card-bg-gradient-size: 300% 300%;
+    
+    /* Border radius for the card - creates the pillowy, rounded appearance */
+    --zl-card-border-radius: 32px;
+    
+    /* Border width and color for the card - contributes to the "chonky" feel */
+    --zl-card-border-width: 4px;
+    --zl-card-border-color: rgba(255, 212, 218, 0.8);
+    
+    /* Box shadow for the card - adds depth and dimension */
+    --zl-card-box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25);
+    
+    /* -- END .zl-card Animated Gradient Theme Variables -- */
+  }
+  
+  /* 
+  * Example of an alternative theme.
+  * To use, add a parent element with the class 'theme-ocean'.
+  
+  .theme-ocean {
+    --zl-card-bg-gradient-color-start: #e0f7fa;
+    --zl-card-bg-gradient-color-mid: #b3e5fc;
+    --zl-card-bg-gradient-color-end: #81d4fa;
+  }
+  */
+  
   /* Animation keyframes */
   @keyframes sparkle {
     0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
@@ -424,6 +473,20 @@
     to { opacity: 1; transform: translateY(0); }
   }
   
+  /**
+   * Keyframes for the `gradient-shift` animation.
+   * 
+   * This animation moves the oversized background gradient by changing its position,
+   * creating a flowing, shifting effect. The positions form a smooth path that:
+   * 1. Starts at the top-left (0%, 0%)
+   * 2. Moves toward the center (50%, 50%)
+   * 3. Continues to the bottom-right (100%, 100%)
+   * 4. Returns toward the center (50%, 50%)
+   * 5. Finally returns to the start for a seamless loop
+   * 
+   * This carefully crafted path creates a gentle, natural-looking motion that
+   * enhances the "pillowy" feel of the card without being distracting.
+   */
   @keyframes gradient-shift {
     0% { background-position: 0% 0%; }
     25% { background-position: 50% 50%; }
@@ -438,25 +501,61 @@
   }
   
   
-  /* Card styling with improved gradient - enhanced for "chonky" feel */
+  /**
+   * Card styling with animated gradient background.
+   * 
+   * The .zl-card element features a soft, peachy gradient that subtly
+   * animates in the background, enhanced with a "chonky" feel through
+   * generous border-radius, padding, and drop shadow.
+   */
   .zl-card {
-    border-radius: 32px; /* Increased from 28px for more pillowy feel */
-    background: linear-gradient(135deg, #fff6e5, #ffd4da, #ffc6e5);
-    background-size: 300% 300%;
-    animation: gradient-shift 30s ease infinite;
-    box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25); /* Enhanced shadow */
-    border: 4px solid rgba(255, 212, 218, 0.8); /* Increased from 3px for more "chonky" feel */
-    padding: 2.5rem; /* Increased to 2.5rem as per feedback */
+    /* Core shape and structure */
+    border-radius: var(--zl-card-border-radius); /* Pillowy, rounded corners */
+    border: var(--zl-card-border-width) solid var(--zl-card-border-color);
+    padding: 2.5rem; /* Generous padding for content */
     position: relative;
     overflow: hidden;
-    font-family: 'Space Mono', monospace;
-    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    
+    /* Size and positioning */
     width: 100%;
-    max-width: 540px; /* Increased from 480px to improve text wrapping */
+    max-width: 540px; /* Optimized for text wrapping */
     margin: 0 auto;
-    margin-top: 2rem; /* Increased from 1.75rem */
-    margin-bottom: 2.5rem; /* Increased from 2.25rem */
+    margin-top: 2rem;
+    margin-bottom: 2.5rem;
     height: auto;
+    
+    /* Typography */
+    font-family: 'Space Mono', monospace;
+    
+    /* Transitions */
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    
+    /* Shadow for depth */
+    box-shadow: var(--zl-card-box-shadow);
+    
+    /**
+     * ANIMATED GRADIENT BACKGROUND:
+     * 
+     * 1. The linear-gradient creates a smooth blend of three colors
+     *    at the angle specified by the custom property.
+     * 
+     * 2. The background-size is set to 300% 300%, making the gradient
+     *    much larger than the actual element. This is essential for
+     *    the animation effect, as it allows different portions of the
+     *    gradient to be visible as the background-position changes.
+     * 
+     * 3. The animation applies the gradient-shift keyframes over the
+     *    specified duration, using ease timing for smooth movement,
+     *    and repeating infinitely for a continuous effect.
+     */
+    background: linear-gradient(
+      var(--zl-card-bg-gradient-angle),
+      var(--zl-card-bg-gradient-color-start),
+      var(--zl-card-bg-gradient-color-mid),
+      var(--zl-card-bg-gradient-color-end)
+    );
+    background-size: var(--zl-card-bg-gradient-size);
+    animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease infinite;
   }
 
   /* Media query for mobile responsiveness */
