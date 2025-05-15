@@ -387,163 +387,9 @@
 </div>
 
 <style>
-  /* 
-  * Define CSS Custom Properties (variables) for the animated gradient background.
-  * These variables allow for easy theme customization and maintenance.
-  */
-  :root {
-    /* -- START .zl-card Animated Gradient Theme Variables -- */
-    
-    /* Angle of the linear gradient - controls the direction of the gradient flow */
-    --zl-card-bg-gradient-angle: 135deg;
-    
-    /* Start color of the gradient - peachy off-white tone */
-    --zl-card-bg-gradient-color-start: #fff6e5;
-    
-    /* Second color - soft pink for more visible gradient */
-    --zl-card-bg-gradient-color-second: #ffecf0;
-    
-    /* Middle color of the gradient - soft pink tone */
-    --zl-card-bg-gradient-color-mid: #ffd4da;
-    
-    /* Fourth color - light lavender-pink for gradient variation */
-    --zl-card-bg-gradient-color-fourth: #ffd0e0;
-    
-    /* End color of the gradient - lavender-pink tone */
-    --zl-card-bg-gradient-color-end: #ffc6e5;
-    
-    /* Duration for one full cycle of the background gradient animation */
-    --zl-card-bg-gradient-animation-duration: 30s;
-    
-    /* Size of the background gradient - larger than the element for the shifting effect */
-    --zl-card-bg-gradient-size: 300% 300%;
-    
-    /* Border radius for the card - creates the pillowy, rounded appearance */
-    --zl-card-border-radius: 32px;
-    
-    /* Border width and color for the card - contributes to the "chonky" feel */
-    --zl-card-border-width: 4px;
-    --zl-card-border-color: rgba(255, 212, 218, 0.8);
-    
-    /* Box shadow for the card - adds depth and dimension */
-    --zl-card-box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25);
-    
-    /* -- END .zl-card Animated Gradient Theme Variables -- */
-    
-    /* -- START List Item Theme Variables -- */
-    
-    /* Base colors - derived from card gradient */
-    --zl-primary-color: #c978ff;
-    --zl-secondary-color: var(--zl-card-bg-gradient-color-mid, #ffd4da);
-    --zl-accent-color: #ff6ac2;
-    --zl-highlight-color: var(--zl-card-bg-gradient-color-second, #ffecf0);
-    
-    /* Text colors */
-    --zl-text-color-primary: #444444;
-    --zl-text-color-secondary: #666666;
-    --zl-text-color-disabled: #9d9d9d;
-    --zl-text-hover-color: #c978ff;
-    
-    /* List item styling */
-    --zl-item-bg: rgba(255, 255, 255, 0.5);
-    --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
-    --zl-item-border-radius: 20px;
-    --zl-item-border-color: rgba(255, 212, 218, 0.6);
-    --zl-item-border-hover-color: rgba(255, 212, 218, 0.9);
-    --zl-item-box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
-    --zl-item-hover-box-shadow: 0 8px 20px rgba(201, 120, 255, 0.2);
-    
-    /* Checked item styling */
-    --zl-item-checked-opacity: 0.75;
-    --zl-item-checked-bg: rgba(245, 240, 250, 0.4);
-    --zl-item-checked-border-color: rgba(201, 120, 255, 0.2);
-    
-    /* Drag and drop styling */
-    --zl-item-dragging-border: 3px solid rgba(201, 120, 255, 0.85);
-    --zl-item-dragging-bg: rgba(255, 255, 255, 1);
-    --zl-item-dragging-shadow: 0 15px 30px rgba(201, 120, 255, 0.4);
-    --zl-item-dragover-bg: rgba(252, 242, 255, 0.9);
-    --zl-item-dragover-border: 2px solid rgba(201, 120, 255, 0.8);
-    --zl-item-dragover-shadow: 0 8px 20px rgba(201, 120, 255, 0.3);
-    
-    /* Checkbox styling */
-    --zl-checkbox-size: 32px;
-    --zl-checkbox-border-radius: 12px;
-    --zl-checkbox-border: 2px solid rgba(201, 120, 255, 0.5);
-    --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
-    --zl-checkbox-hover-border: 2px solid rgba(201, 120, 255, 0.7);
-    --zl-checkbox-hover-bg: rgba(255, 245, 250, 0.8);
-    --zl-checkbox-checked-gradient-start: #e9a8ff;
-    --zl-checkbox-checked-gradient-end: #c978ff;
-    --zl-checkbox-checked-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
-    --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
-    
-    /* Text button styling */
-    --zl-text-button-hover-bg: linear-gradient(135deg, rgba(252, 235, 246, 0.7), rgba(255, 242, 253, 0.9));
-    --zl-text-button-focus-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
-    
-    /* Grab handle styling */
-    --zl-grab-handle-color: rgba(201, 120, 255, 0.8);
-    --zl-grab-handle-opacity: 0.6;
-    --zl-grab-handle-hover-opacity: 1;
-    
-    /* Delete button styling */
-    --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
-    --zl-delete-button-border: 1px solid rgba(201, 120, 255, 0.4);
-    --zl-delete-button-hover-bg: rgba(255, 225, 240, 0.95);
-    --zl-delete-button-hover-border: rgba(201, 120, 255, 0.8);
-    --zl-delete-button-text-color: rgba(201, 120, 255, 0.9);
-    
-    /* Drop indicator styling */
-    --zl-drop-indicator-color: rgba(201, 120, 255, 0.7);
-    --zl-drop-arrow-bg: rgba(201, 120, 255, 0.9);
-    --zl-drop-arrow-shadow: 0 0 8px rgba(201, 120, 255, 0.4);
-    
-    /* Edit input styling */
-    --zl-edit-input-border: 2px solid rgba(201, 120, 255, 0.3);
-    --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
-    --zl-edit-input-focus-border: rgba(201, 120, 255, 0.6);
-    --zl-edit-input-focus-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
-    
-    /* Empty state styling */
-    --zl-empty-state-bg: linear-gradient(135deg, rgba(255, 245, 250, 0.4), rgba(255, 235, 245, 0.4));
-    --zl-empty-state-border: 3px dashed rgba(201, 120, 255, 0.3);
-    --zl-empty-title-color: var(--zl-primary-color, #c978ff);
-    
-    /* New item input styling */
-    --zl-new-item-input-border: 2px solid rgba(201, 120, 255, 0.4);
-    --zl-new-item-input-focus-border: rgba(201, 120, 255, 0.7);
-    --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(201, 120, 255, 0.1);
-    
-    /* -- END List Item Theme Variables -- */
-  }
-  
-  /* Alternative theme - cool mint gradient.
-   * To use this theme, uncomment and apply to a parent element.
-   *
-   * .theme-mint {
-   *   --zl-card-bg-gradient-angle: 120deg;
-   *   --zl-card-bg-gradient-color-start: #e0f7fa;
-   *   --zl-card-bg-gradient-color-second: #40e0d0;
-   *   --zl-card-bg-gradient-color-mid: #4dd0e1;
-   *   --zl-card-bg-gradient-color-fourth: #00bcd4;
-   *   --zl-card-bg-gradient-color-end: #0097a7;
-   *   --zl-card-border-color: rgba(0, 188, 212, 0.6);
-   *   --zl-card-box-shadow: 0 12px 30px rgba(0, 151, 167, 0.25);
-   *   
-   *   --zl-primary-color: var(--zl-card-bg-gradient-color-fourth, #00bcd4);
-   *   --zl-secondary-color: var(--zl-card-bg-gradient-color-mid, #4dd0e1);
-   *   --zl-accent-color: var(--zl-card-bg-gradient-color-end, #0097a7);
-   *   --zl-highlight-color: var(--zl-card-bg-gradient-color-second, #40e0d0);
-   *   
-   *   --zl-text-hover-color: #0097a7;
-   *   --zl-item-border-color: rgba(0, 188, 212, 0.6);
-   *   --zl-item-border-hover-color: rgba(0, 188, 212, 0.9);
-   *   --zl-item-box-shadow: 0 4px 10px rgba(0, 151, 167, 0.1);
-   * }
-   */
-  
-  /* Animation keyframes */
+  /* ========================================
+     1. ANIMATION KEYFRAMES
+     ======================================== */
   @keyframes sparkle {
     0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -625,7 +471,7 @@
     font-family: 'Space Mono', monospace;
     
     /* Transitions */
-    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: var(--zl-transition-standard);
     
     /* Shadow for depth */
     box-shadow: var(--zl-card-box-shadow);
@@ -658,6 +504,10 @@
   }
 
   /* Media query for mobile responsiveness */
+  /* ========================================
+     8. RESPONSIVE ADJUSTMENTS
+     ======================================== */
+     
   @media (max-width: 480px) {
     .zl-card {
       padding: 2rem 1rem; /* Reduced side padding on mobile */
@@ -687,6 +537,10 @@
     }
   }
   
+  /* ========================================
+     2. CARD STYLING
+     ======================================== */
+     
   /* Subtle inner border effect */
   .zl-card::before {
     content: '';
@@ -697,7 +551,7 @@
     bottom: 0;
     border-radius: 28px;
     padding: 2px;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(201, 120, 255, 0.2));
+    background: var(--zl-card-inner-border-gradient);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: destination-out;
@@ -715,14 +569,14 @@
     left: -50px;
     width: 150px;
     height: 150px;
-    background: radial-gradient(circle, rgba(255, 202, 236, 0.3) 0%, rgba(255, 202, 236, 0) 70%);
+    background: radial-gradient(circle, rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0.3) 0%, rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0) 70%);
     border-radius: 50%;
     opacity: 0.5;
     pointer-events: none;
     animation: soft-pulse 8s infinite alternate ease-in-out;
   }
   
-  /* Card content */
+  /* Card content container */
   .card-content {
     position: relative;
     z-index: 2;
@@ -732,6 +586,10 @@
     overflow: hidden;
   }
   
+  /* ========================================
+     3. LIST STRUCTURE
+     ======================================== */
+     
   /* List container */
   .zl-list-container {
     flex-grow: 1;
@@ -746,11 +604,18 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Increased from 14px to 20px for more "chonky" separation */
-    margin-bottom: 1.5rem;
+    gap: var(--zl-spacing-m); /* Increased from 14px to 20px for more "chonky" separation */
+    margin-bottom: var(--zl-spacing-m);
     position: relative;
+    /* Optimize rendering with content-visibility */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 400px; /* Approximate list height */
   }
   
+  /* ========================================
+     4. LIST ITEMS & INTERACTION STATES
+     ======================================== */
+     
   /**
    * Individual list items
    * 
@@ -761,7 +626,7 @@
     /* Base appearance */
     border-radius: var(--zl-item-border-radius, 20px);
     background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
-    padding: 16px 16px; /* Adjusted to 16px horizontal padding to avoid excessive text wrapping */
+    padding: var(--zl-spacing-s) var(--zl-spacing-s); /* Adjusted to 16px horizontal padding to avoid excessive text wrapping */
     
     /* Structural layout */
     display: flex;
@@ -775,19 +640,27 @@
     max-height: none; /* Remove any max height constraints */
     
     /* Visual effects */
-    box-shadow: var(--zl-item-box-shadow, 0 4px 10px rgba(201, 120, 255, 0.1));
+    box-shadow: var(--zl-item-box-shadow, 0 4px 10px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.1));
     border: 2px solid var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
-    border-left: 4px solid var(--zl-item-border-color, rgba(201, 120, 255, 0.3));
+    border-left: 4px solid var(--zl-item-border-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.3));
     
     /* Interaction */
     position: relative;
     cursor: grab;
-    transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: var(--zl-transition-standard);
   }
 
   /* Performance optimization - only add will-change to draggable items */
   .zl-item:not(.checked):not(.editing) {
-    will-change: transform;
+    /* Use transform and opacity for better GPU acceleration */
+    will-change: transform, opacity;
+  }
+  
+  /* Remove will-change during inactivity to save resources */
+  @media (prefers-reduced-motion) {
+    .zl-item:not(:hover):not(.dragging):not(.drag-over) {
+      will-change: auto;
+    }
   }
 
   /* Change cursor for items being edited */
@@ -800,8 +673,8 @@
   .zl-item:hover {
     background: var(--zl-item-hover-bg, rgba(255, 255, 255, 0.8));
     transform: translateY(-3px);
-    box-shadow: var(--zl-item-hover-box-shadow, 0 8px 20px rgba(201, 120, 255, 0.2));
-    border-left: 4px solid var(--zl-item-border-hover-color, rgba(201, 120, 255, 0.7));
+    box-shadow: var(--zl-item-hover-box-shadow, 0 8px 20px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.2));
+    border-left: 4px solid var(--zl-item-border-hover-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.7));
     border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
   }
   
@@ -849,7 +722,7 @@
     font-size: 1.1rem;
     font-weight: 800;
     line-height: 1.5;
-    color: var(--zl-text-color-primary, #444444);
+    color: var(--zl-text-color-primary);
     font-family: 'Space Mono', monospace;
     letter-spacing: 0.8px;
     
@@ -868,8 +741,9 @@
     overflow-wrap: break-word;
     hyphens: auto; /* Enable hyphenation for better text breaks */
     
-    /* Animation */
-    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* Animation - use GPU-accelerated properties only */
+    transition: var(--zl-transition-fast);
+    will-change: transform, color;
   }
 
   /**
@@ -878,7 +752,8 @@
    * Provides visual feedback when hovering over editable text with color
    * change, subtle glow, and slight elevation
    */
-  .zl-item:not(.checked) .zl-item-text-button:hover .zl-item-text {
+  /* Simplified selector for better performance */
+  .zl-item-text-button:hover .zl-item-text:not(.checked) {
     color: var(--zl-text-hover-color, #c978ff);
     text-shadow: 0 0 8px rgba(0, 151, 167, 0.3);
     transform: translateY(-1px) scale(1.01);
@@ -945,16 +820,7 @@
     mix-blend-mode: screen;
   }
 
-  @keyframes sparkleIn {
-    0% { opacity: 0; }
-    30% { opacity: 0.5; }
-    100% { opacity: 0.8; }
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-50%) translateX(-5px); }
-    to { opacity: 1; transform: translateY(-50%) translateX(0); }
-  }
+  /* We can replace these with our more flexible animations using CSS variables */
 
   .zl-item-text-button:focus-visible:not(:disabled) {
     box-shadow: 0 0 0 2px rgba(201, 120, 255, 0.3);
@@ -964,6 +830,10 @@
     cursor: default;
   }
   
+  /* ========================================
+     5. INTERACTIVE ELEMENTS (CHECKBOXES, BUTTONS)
+     ======================================== */
+     
   /**
    * Custom checkbox styling
    * 
@@ -1046,12 +916,18 @@
     background: radial-gradient(circle, 
       var(--zl-checkbox-sparkle-color, rgba(255, 255, 255, 0.8)) 0%, 
       rgba(255, 255, 255, 0) 70%);
+    --sparkle-opacity-start: 0;
+    --sparkle-scale-start: 0;
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
-    animation: sparkle 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.5) forwards;
+    animation: sparkle 0.5s var(--zl-transition-easing-bounce) forwards;
     z-index: 5;
   }
   
+  /* ========================================
+     6. EMPTY STATE
+     ======================================== */
+     
   /* Friendly minimalist empty state */  
   .zl-empty-state {
     display: flex;
@@ -1063,11 +939,11 @@
     height: 320px; /* Fixed height instead of min-height */
     width: 100%;
     box-sizing: border-box;
-    background: linear-gradient(135deg, rgba(255, 245, 250, 0.4), rgba(255, 235, 245, 0.4));
-    border: 3px dashed rgba(201, 120, 255, 0.3);
+    background: var(--zl-empty-state-bg);
+    border: var(--zl-empty-state-border);
     border-radius: 24px;
     margin: 1.5rem 0;
-    transition: background 0.2s ease, border-color 0.2s ease; /* Transition only non-layout properties */
+    transition: var(--zl-transition-fast); /* Transition only non-layout properties */
   }
 
   .zl-empty-state.clickable {
@@ -1133,7 +1009,7 @@
   
   .zl-empty-title {
     font-weight: 800;
-    color: #c978ff;
+    color: var(--zl-empty-title-color);
     margin-bottom: 1.5rem;
     font-size: 2.2rem;
     font-family: 'Space Mono', monospace;
@@ -1141,7 +1017,7 @@
   }
   
   .zl-empty-description {
-    color: #555;
+    color: var(--zl-text-color-secondary);
     font-size: 1.3rem;
     font-family: 'Space Mono', monospace;
     line-height: 1.5;
@@ -1151,7 +1027,7 @@
   }
   
   .zl-empty-hint {
-    color: #666;
+    color: var(--zl-text-color-secondary);
     font-size: 1.1rem;
     font-family: 'Space Mono', monospace;
     font-weight: 400;
@@ -1202,7 +1078,7 @@
     top: 50%;
     left: 0;
     transform: translateY(-50%);
-    width: calc(100% - 16px); /* Full width within container minus small margin */
+    width: calc(100% - var(--zl-spacing-s)); /* Full width within container minus small margin */
     max-width: none; /* Ensure it doesn't collapse to text width */
   }
 
@@ -1218,20 +1094,44 @@
   
   
   
+  /* ========================================
+     7. DRAG AND DROP INTERACTIONS
+     ======================================== */
+     
   /**
    * DRAG AND DROP STYLING
    *
    * Styles for drag and drop interactions that provide clear visual feedback
    * to users when moving items or hovering over drop targets.
    */
+  /**
+   * Float animation with slight rotation
+   * 
+   * Used for: dragged items, hover effects
+   * Adds subtle movement and rotation for a more organic feel
+   */
   @keyframes float {
-    0%, 100% { transform: translateY(0) rotate(-0.5deg); }
-    50% { transform: translateY(-3px) rotate(0.5deg); }
+    0%, 100% { 
+      transform: translateY(var(--float-y-min, 0)) rotate(var(--float-rotate-min, -0.5deg)); 
+    }
+    50% { 
+      transform: translateY(var(--float-y-max, -3px)) rotate(var(--float-rotate-max, 0.5deg)); 
+    }
   }
 
+  /**
+   * Border color pulse animation
+   * 
+   * Used for: focus indicators, highlighting important elements
+   * Pulses between standard and highlighted border colors
+   */
   @keyframes pulse-border {
-    0%, 100% { border-color: var(--zl-item-border-color, rgba(201, 120, 255, 0.6)); }
-    50% { border-color: var(--zl-item-border-hover-color, rgba(201, 120, 255, 1)); }
+    0%, 100% { 
+      border-color: var(--pulse-border-color-min, var(--zl-item-border-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.6))); 
+    }
+    50% { 
+      border-color: var(--pulse-border-color-max, var(--zl-item-border-hover-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 1))); 
+    }
   }
 
   /**
@@ -1243,9 +1143,13 @@
     opacity: 1; /* Fully opaque for better visibility */
     background-color: var(--zl-item-dragging-bg, rgba(255, 255, 255, 1));
     transform: scale(1.03);
-    box-shadow: var(--zl-item-dragging-shadow, 0 15px 30px rgba(0, 151, 167, 0.4));
+    box-shadow: var(--zl-item-dragging-shadow, 0 15px 30px rgba(var(--zl-accent-color-rgb, 0, 151, 167), 0.4));
     z-index: 10;
-    border: var(--zl-item-dragging-border, 3px solid rgba(0, 188, 212, 0.85));
+    border: var(--zl-item-dragging-border, 3px solid rgba(var(--zl-accent-color-rgb, 0, 188, 212), 0.85));
+    --float-y-min: 0;
+    --float-y-max: -3px;
+    --float-rotate-min: -0.5deg;
+    --float-rotate-max: 0.5deg;
     animation: float 2s infinite ease-in-out;
     cursor: grabbing;
     will-change: transform, opacity, border;
@@ -1315,14 +1219,29 @@
     transform: rotate(45deg);
   }
 
+  /**
+   * Specific pulse-opacity animation instance
+   * Already covered by our generic pulse-opacity above
+   * Keeping name for clarity in existing code
+   */
   @keyframes pulse-opacity {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
+    0%, 100% { opacity: var(--pulse-opacity-min, 0.5); }
+    50% { opacity: var(--pulse-opacity-max, 1); }
   }
 
+  /**
+   * Box shadow pulse animation
+   * 
+   * Used for: focus effects, attention grabbers
+   * Pulses box shadow intensity for a glowing effect
+   */
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 8px rgba(201, 120, 255, 0.4); }
-    50% { box-shadow: 0 0 12px rgba(201, 120, 255, 0.7); }
+    0%, 100% { 
+      box-shadow: 0 0 8px rgba(var(--zl-primary-color-rgb, 201, 120, 255), var(--pulse-glow-opacity-min, 0.4)); 
+    }
+    50% { 
+      box-shadow: 0 0 12px rgba(var(--zl-primary-color-rgb, 201, 120, 255), var(--pulse-glow-opacity-max, 0.7)); 
+    }
   }
 
   /**
