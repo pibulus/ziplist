@@ -1,7 +1,7 @@
 <script>
   import './ghost-animations.css';
   import './ghost-themes.css';
-  import ghostPathsUrl from './ghost-paths.svg?url';
+  import { GHOST_BODY_PATH, GHOST_EYE_LEFT_PATH, GHOST_EYE_RIGHT_PATH, GHOST_BACKGROUND_PATH } from './exportable/paths.js';
   import { initGradientAnimation, cleanupAnimation, cleanupAllAnimations } from './gradientAnimator';
   import { onMount, onDestroy } from 'svelte';
   
@@ -94,7 +94,6 @@
     <svg
       viewBox="0 0 1024 1024"
       xmlns="http://www.w3.org/2000/svg"
-      xmlns:xlink="http://www.w3.org/1999/xlink"
       class="ghost-svg theme-{theme}"
     >
       <defs>
@@ -132,9 +131,8 @@
       </defs>
 
       <g class="ghost-layer ghost-bg">
-        <use
-          xlink:href={ghostPathsUrl}
-          href={ghostPathsUrl + '#ghost-background'}
+        <path
+          d={GHOST_BACKGROUND_PATH}
           class="ghost-shape"
           id="ghost-shape"
           fill="url(#{theme}Gradient)"
@@ -142,9 +140,8 @@
       </g>
 
       <g class="ghost-layer ghost-outline">
-        <use
-          xlink:href={ghostPathsUrl}
-          href={ghostPathsUrl + '#ghost-body-path'}
+        <path
+          d={GHOST_BODY_PATH}
           class="ghost-outline-path"
           fill="#000000"
           opacity="1"
@@ -152,17 +149,15 @@
       </g>
 
       <g class="ghost-layer ghost-eyes">
-        <use
+        <path
           bind:this={leftEye}
-          xlink:href={ghostPathsUrl}
-          href={ghostPathsUrl + '#ghost-eye-left-path'}
+          d={GHOST_EYE_LEFT_PATH}
           class="ghost-eye ghost-eye-left"
           fill="#000000"
         />
-        <use
+        <path
           bind:this={rightEye}
-          xlink:href={ghostPathsUrl}
-          href={ghostPathsUrl + '#ghost-eye-right-path'}
+          d={GHOST_EYE_RIGHT_PATH}
           class="ghost-eye ghost-eye-right"
           fill="#000000"
         />
