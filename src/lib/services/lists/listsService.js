@@ -92,6 +92,46 @@ export class ListsService {
   }
   
   /**
+   * Add a predefined list (used for importing shared lists)
+   * @param {Object} list - Complete list object to add
+   * @returns {string} The ID of the newly added list
+   */
+  addList(list) {
+    if (!list || !list.name) {
+      throw new Error('Invalid list object');
+    }
+    
+    // Create a new list with the properties from the shared list
+    const name = list.name;
+    listsStore.addList(name);
+    
+    // Get the newly created list
+    const state = get(listsStore);
+    const newListId = state.activeListId;
+    
+    // Add all the items
+    if (list.items && list.items.length > 0) {
+      // Format for adding multiple items
+      const itemTexts = list.items.map(item => item.text);
+      listsStore.addItems(itemTexts, newListId);
+      
+      // Now toggle the checked items
+      const updatedState = get(listsStore);
+      const updatedList = updatedState.lists.find(l => l.id === newListId);
+      
+      if (updatedList) {
+        list.items.forEach((sourceItem, index) => {
+          if (sourceItem.checked && updatedList.items[index]) {
+            listsStore.toggleItem(updatedList.items[index].id, newListId);
+          }
+        });
+      }
+    }
+    
+    return newListId;
+  }
+  
+  /**
    * Set a list as the active list
    * @param {string} listId - ID of the list to activate
    */
