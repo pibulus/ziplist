@@ -3,9 +3,9 @@
   
   // Example branding schemes
   const brands = [
-    { 
-      name: 'TalkType', 
-      color: 'inherit', 
+    {
+      name: 'ZipList',
+      color: 'inherit',
       size: '65%'
     },
     { 
@@ -33,13 +33,13 @@
     <h2 class="text-xl font-semibold mb-4">Basic Usage</h2>
     <div class="p-6 bg-white rounded-lg shadow-md">
       <h3 class="text-4xl font-bold">
-        TalkType<AppSuffix />
+        ZipList<AppSuffix />
       </h3>
       <p class="text-gray-600">Default suffix with no customization</p>
       
       <pre class="mt-4 p-3 bg-gray-100 rounded text-sm overflow-x-auto">
 &lt;h1 class="text-4xl font-bold"&gt;
-  TalkType&lt;AppSuffix /&gt;
+  ZipList&lt;AppSuffix /&gt;
 &lt;/h1&gt;</pre>
     </div>
   </section>
@@ -89,9 +89,9 @@
       <h3 class="text-lg font-semibold mb-3">In Heading</h3>
       <div class="p-4 border border-gray-200 rounded">
         <h2 class="text-3xl font-bold">
-          TalkType<AppSuffix />
+          ZipList<AppSuffix />
         </h2>
-        <p class="mt-2">Voice-to-text that doesn't suck. Spooky good, freaky fast, always free.</p>
+        <p class="mt-2">Voice-to-lists made easy. Zip up a list lickety-split!</p>
       </div>
     </div>
     
@@ -99,7 +99,7 @@
       <h3 class="text-lg font-semibold mb-3">In Navigation</h3>
       <div class="p-4 border border-gray-200 rounded">
         <nav class="flex items-center space-x-6">
-          <div class="text-lg font-bold">TalkType<AppSuffix size="60%" /></div>
+          <div class="text-lg font-bold">ZipList<AppSuffix size="60%" /></div>
           <a href="#" class="text-gray-600 hover:text-gray-900">Features</a>
           <a href="#" class="text-gray-600 hover:text-gray-900">Pricing</a>
           <a href="#" class="text-gray-600 hover:text-gray-900">About</a>
@@ -111,7 +111,7 @@
       <h3 class="text-lg font-semibold mb-3">In Footer</h3>
       <div class="p-4 border border-gray-200 rounded">
         <footer class="text-sm text-gray-500">
-          © 2025 TalkType<AppSuffix size="60%" /> — All rights reserved.
+          © 2025 ZipList<AppSuffix size="60%" /> — All rights reserved.
         </footer>
       </div>
     </div>

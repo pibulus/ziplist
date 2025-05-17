@@ -144,11 +144,11 @@
 		<!-- App icon and title -->
 		<div class="prompt-header">
 			<div class="app-icon">
-				<img src="/icons/icon-192x192.png" alt="TalkType" width="48" height="48" />
+				<img src="/icons/icon-192x192.png" alt="ZipList" width="48" height="48" />
 			</div>
 			<div class="app-info">
-				<h2 id="pwa-prompt-title">Install TalkType</h2>
-				<p class="tagline">Voice-to-text that doesn't suck</p>
+				<h2 id="pwa-prompt-title">Install ZipList</h2>
+				<p class="tagline">Voice-to-lists made easy</p>
 			</div>
 		</div>
 		
@@ -174,7 +174,7 @@
 					{/if}
 				</div>
 			{:else}
-				<p>Add TalkType to your home screen for:</p>
+				<p>Add ZipList to your home screen for:</p>
 				<ul class="benefits-list">
 					<li>Faster loading</li>
 					<li>Full-screen experience</li>
@@ -186,7 +186,7 @@
 		<!-- Installation button -->
 		{#if !showPlatformInstructions}
 			<button type="button" class="install-button" on:click={handleInstall}>
-				Install TalkType
+				Install ZipList
 			</button>
 		{:else}
 			<button type="button" class="install-button ghost" on:click={close}>

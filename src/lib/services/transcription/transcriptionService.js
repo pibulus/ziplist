@@ -178,7 +178,7 @@ export class TranscriptionService {
       
       // Share using Web Share API
       await navigator.share({
-        title: 'TalkType Transcription',
+        title: 'ZipList Transcription',
         text: textWithAttribution
       });
       

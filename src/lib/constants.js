@@ -151,6 +151,23 @@ export const CTA_PHRASES = [
 	'Ready When You Are'
 ];
 
+// ZipList specific phrases for different button contexts
+export const ZIPLIST_START_PHRASES = [
+	'Talk It, List It',
+	'Click, Speak, List',
+	'Speak Your List',
+	'Say It, List It',
+	'Talk That List'
+];
+
+export const ZIPLIST_ADD_PHRASES = [
+	'Keep Zippin',
+	'What\'s Next?',
+	'Add A Thing',
+	'Keep Em Comin',
+	'Add A Zip'
+];
+
 // Clipboard Success Messages
 export const COPY_MESSAGES = [
 	'Copied to clipboard! ✨',

@@ -10,7 +10,7 @@
 	import RecordButtonWithTimer from './RecordButtonWithTimer.svelte';
 	import TranscriptDisplay from './TranscriptDisplay.svelte';
 	import PermissionError from './PermissionError.svelte';
-	import { ANIMATION, CTA_PHRASES, ATTRIBUTION, getRandomFromArray } from '$lib/constants';
+	import { ANIMATION, ATTRIBUTION, getRandomFromArray } from '$lib/constants';
 	import {
 		initializeServices,
 		audioService,
@@ -221,21 +221,11 @@
 					services.hapticService.startRecording();
 				}
 
-				// When using "New Recording" button, rotate to next phrase immediately
+				// When using "New Recording" button, just clear transcript
 				if ($transcriptionText) {
 					console.log('🧹 Clearing transcript for new recording');
 
-					// Pick a random CTA phrase that's not the current one
-					let newIndex;
-					do {
-						newIndex = Math.floor(Math.random() * (CTA_PHRASES.length - 1)) + 1; // Skip first one (Start Recording)
-					} while (newIndex === currentCtaIndex);
-
-					currentCtaIndex = newIndex;
-					currentCta = CTA_PHRASES[currentCtaIndex];
-					console.log(`🔥 Rotating to: "${currentCta}"`);
-
-					// Then clear transcript
+					// Clear transcript
 					transcriptionActions.completeTranscription('');
 				}
 
@@ -408,11 +398,9 @@
 	$: responsiveFontSize = getResponsiveFontSize($transcriptionText);
 
 	// CTA rotation
-	let currentCtaIndex = 0;
-	let currentCta = CTA_PHRASES[currentCtaIndex];
-
-	// Button label computation - fixed to show CTA phrases
-	$: buttonLabel = $isRecording ? 'Stop Recording' : $transcriptionText ? currentCta : currentCta;
+	// Button labels are now handled directly in RecordButtonWithTimer component
+	// We keep a placeholder here for compatibility
+	let buttonLabel = '';
 
 	// Handler for transcript component events
 	function handleTranscriptEvent(event) {

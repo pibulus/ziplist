@@ -99,7 +99,7 @@
 		
 		// Dispatch a custom event that other components can listen for
 		window.dispatchEvent(
-			new CustomEvent('talktype-setting-changed', {
+			new CustomEvent('ziplist-setting-changed', {
 				detail: { setting: 'theme', value: vibeId }
 			})
 		);
@@ -115,7 +115,7 @@
 
 		// Dispatch a custom event that the main page can listen for
 		window.dispatchEvent(
-			new CustomEvent('talktype-setting-changed', {
+			new CustomEvent('ziplist-setting-changed', {
 				detail: { setting: 'promptStyle', value: style }
 			})
 		);
@@ -128,7 +128,7 @@
 
 		// Dispatch a custom event that the main page can listen for (for backward compatibility)
 		window.dispatchEvent(
-			new CustomEvent('talktype-setting-changed', {
+			new CustomEvent('ziplist-setting-changed', {
 				detail: { setting: 'autoRecord', value: autoRecordValue }
 			})
 		);
@@ -210,7 +210,7 @@
 					<div>
 						<span class="text-sm font-medium text-gray-700">Auto-Record on Start</span>
 						<p class="mt-0.5 text-xs text-gray-500">
-							Start recording immediately when you open TalkType
+							Start recording immediately when you open ZipList
 						</p>
 					</div>
 					<label class="flex cursor-pointer items-center">
@@ -320,7 +320,7 @@
 			</div>
 
 			<div class="border-t border-pink-100 pt-2 text-center">
-				<p class="text-xs text-gray-500">TalkType • Made with 💜 by Dennis & Pablo</p>
+				<p class="text-xs text-gray-500">ZipList • Made with 💜 by Dennis & Pablo</p>
 			</div>
 		</div>
 	</div>

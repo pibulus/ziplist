@@ -6,8 +6,8 @@
   const dispatch = createEventDispatcher();
   
   // Component props
-  export let title = 'Ziplist';
-  export let subtitle = "Create stacked list cards with your voice. Quick, simple, spooky.";
+  export let title = 'ZipList';
+  export let subtitle = "Zip up a list lickety-split.\nEasy and quick, say it and tick.";
   
   // AppSuffix configuration
   export let showAppSuffix = true;
@@ -35,10 +35,10 @@
   >
     <!-- Use aria-hidden for spans if H1 has aria-label -->
     <span class="ziplist-main-word">
-      <span class="stagger-letter mr-[-0.06em]" aria-hidden="true">Z</span><span class="stagger-letter ml-[-0.04em]" aria-hidden="true">i</span><span
-        class="stagger-letter" aria-hidden="true">p</span
-      ><span class="stagger-letter" aria-hidden="true">l</span><span class="stagger-letter mr-[-0.04em]" aria-hidden="true">i</span><span
-        class="stagger-letter ml-[-0.03em]" aria-hidden="true">s</span
+      <span class="stagger-letter mr-[-0.01em]" aria-hidden="true">Z</span><span class="stagger-letter ml-[0.01em]" aria-hidden="true">i</span><span
+        class="stagger-letter mr-[-0.02em]" aria-hidden="true">p</span
+      ><span class="stagger-letter mr-[-0.02em]" aria-hidden="true">L</span><span class="stagger-letter" aria-hidden="true">i</span><span
+        class="stagger-letter ml-[0.01em]" aria-hidden="true">s</span
       ><span class="stagger-letter" aria-hidden="true">t</span>
     </span>
     
@@ -59,12 +59,14 @@
   </h1>
 </div>
 
-<!-- Updated subheadline with improved typography and brand voice -->
+<!-- Updated subheadline with improved typography and reduced bottom margin -->
 <p
-  class="mx-auto mt-5 mb-6 text-base text-center cursor-default select-none slide-in-subtitle max-w-prose text-gray-700/85 sm:mt-6 sm:mb-7 sm:text-lg md:text-xl lg:text-2xl"
+  class="mx-auto mt-4 mb-3 text-base text-center cursor-default select-none slide-in-subtitle max-w-prose text-gray-700/85 sm:mt-5 sm:mb-4 sm:text-lg md:text-xl lg:text-2xl"
   style="font-weight: 400; letter-spacing: 0.015em; line-height: 1.4; max-inline-size: 40ch; text-wrap: balance; font-variation-settings: 'wght' 400, 'opsz' 16;"
 >
-  {subtitle}
+  {#each subtitle.split('\n') as line, i}
+    {#if i > 0}<br>{/if}{line}
+  {/each}
 </p>
 
 <style>

@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	export let title = 'TalkType | Spooky Good Voice-to-Text';
+	export let title = 'ZipList | Zip up a list lickety-split';
 	export let description =
-		'TalkType turns your voice into text. Clean, simple, and freaky fast voice typing. Free forever. Tap the ghost and start talking!';
+		'ZipList turns your voice into organized lists. Clean, simple, and freaky fast list creation. Free forever. Tap the ghost and start talking!';
 	export let footerYear = new Date().getFullYear();
 </script>
 
@@ -29,7 +29,7 @@
 		>
 			<div class="copyright ml-4 flex flex-wrap items-center justify-center sm:ml-6 md:ml-8">
 				<span class="mr-1 text-sm text-xs font-medium tracking-tight sm:text-sm">
-					© {footerYear} TalkType
+					© {footerYear} ZipList
 				</span>
 				<span class="mx-1 text-pink-300 sm:mx-2">•</span>
 				<span class="text-xs font-light text-gray-600 sm:text-sm"

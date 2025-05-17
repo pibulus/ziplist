@@ -77,6 +77,10 @@ function createListsStore() {
         // Save to localStorage
         persistToStorage();
       }
+      
+      // Set up periodic cleanup of completed items
+      setupAutoCleanup();
+      
     } catch (error) {
       console.error('Error initializing lists from storage:', error);
       // Fallback to defaults on error
@@ -258,11 +262,18 @@ function createListsStore() {
           if (list.id === targetListId) {
             return {
               ...list,
-              items: list.items.map(item =>
-                item.id === itemId
-                  ? { ...item, checked: !item.checked }
-                  : item
-              ),
+              items: list.items.map(item => {
+                if (item.id === itemId) {
+                  const now = new Date().toISOString();
+                  return { 
+                    ...item, 
+                    checked: !item.checked,
+                    // Add completedAt timestamp when checked, remove it when unchecked
+                    completedAt: !item.checked ? now : undefined
+                  };
+                }
+                return item;
+              }),
               updatedAt: new Date().toISOString()
             };
           }
@@ -272,6 +283,9 @@ function createListsStore() {
     });
 
     persistToStorage();
+    
+    // If the item was checked, schedule cleanup of old completed items
+    cleanupCompletedItems();
   }
 
   // Edit an item's text
@@ -417,6 +431,70 @@ function createListsStore() {
     reorderItems,
     persistToStorage
   };
+}
+
+// Cleanup function for removing old completed items
+function cleanupCompletedItems() {
+  if (!browser) return;
+  
+  setTimeout(() => {
+    update(state => {
+      // 12 hours in milliseconds
+      const EXPIRATION_TIME = 12 * 60 * 60 * 1000;
+      const now = new Date();
+      
+      return {
+        ...state,
+        lists: state.lists.map(list => {
+          // Filter out completed items older than 12 hours
+          const filteredItems = list.items.filter(item => {
+            // Keep all unchecked items
+            if (!item.checked) return true;
+            
+            // Keep checked items with no completedAt timestamp (legacy items)
+            if (!item.completedAt) return true;
+            
+            // Check if the item was completed more than 12 hours ago
+            const completedAt = new Date(item.completedAt);
+            const ageMs = now - completedAt;
+            
+            // Keep it if it's newer than the expiration time
+            return ageMs < EXPIRATION_TIME;
+          });
+          
+          // Only update the list if items were removed
+          if (filteredItems.length !== list.items.length) {
+            return {
+              ...list,
+              items: filteredItems,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return list;
+        })
+      };
+    });
+    
+    persistToStorage();
+  }, 1000); // Small delay to give the UI time to update
+}
+
+// Set up periodic cleanup of completed items (every hour)
+function setupAutoCleanup() {
+  if (!browser) return;
+  
+  // Run cleanup immediately on load
+  cleanupCompletedItems();
+  
+  // Set interval to run cleanup every hour
+  const cleanupInterval = setInterval(() => {
+    cleanupCompletedItems();
+  }, 60 * 60 * 1000); // Every hour
+  
+  // Clean up interval on window unload
+  window.addEventListener('beforeunload', () => {
+    clearInterval(cleanupInterval);
+  });
 }
 
 // Create the store instance
