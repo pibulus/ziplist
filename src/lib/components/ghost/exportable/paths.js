@@ -1,9 +1,9 @@
 /**
  * Ghost SVG Path Definitions
- * 
+ *
  * This module provides the path data for the ghost SVG elements.
  * It's designed to be used by both the runtime components and the build process.
- * 
+ *
  * Usage:
  * - Runtime: Import directly in SVG components
  * - Build time: Used by the asset generation plugin
@@ -94,51 +94,51 @@ export const GHOST_BACKGROUND_PATH = `M513.4044 867.4816C500.6388 868.908 488.33
 // Theme color definitions
 export const THEME_COLORS = {
   peach: {
-    start: '#ff60e0',
-    startBright: '#ff4aed',
-    mid1: '#ff82ca',
-    mid1Bright: '#ff70d6',
-    mid2: '#ff9a85',
-    mid2Bright: '#ff8890',
-    mid3: '#ffb060',
-    mid3Bright: '#ffa550',
-    end: '#ffcf40',
-    endBright: '#ffdf30'
+    start: "#ff60e0",
+    startBright: "#ff4aed",
+    mid1: "#ff82ca",
+    mid1Bright: "#ff70d6",
+    mid2: "#ff9a85",
+    mid2Bright: "#ff8890",
+    mid3: "#ffb060",
+    mid3Bright: "#ffa550",
+    end: "#ffcf40",
+    endBright: "#ffdf30",
   },
   mint: {
-    start: '#0ac5ef',
-    startBright: '#20d0fa',
-    mid1: '#22d3ed',
-    mid1Bright: '#30dff8',
-    mid2: '#2dd4bf',
-    mid2Bright: '#38e0cc',
-    mid3: '#4ade80',
-    mid3Bright: '#60ea95',
-    end: '#a3e635',
-    endBright: '#b5f040'
+    start: "#0ac5ef",
+    startBright: "#20d0fa",
+    mid1: "#22d3ed",
+    mid1Bright: "#30dff8",
+    mid2: "#2dd4bf",
+    mid2Bright: "#38e0cc",
+    mid3: "#4ade80",
+    mid3Bright: "#60ea95",
+    end: "#a3e635",
+    endBright: "#b5f040",
   },
   bubblegum: {
-    start: '#c026d3',
-    startBright: '#d52ae6',
-    mid1: '#a855f7',
-    mid1Bright: '#b565ff',
-    mid2: '#8b5cf6',
-    mid2Bright: '#9a6aff',
-    mid3: '#6366f1',
-    mid3Bright: '#7276ff',
-    end: '#3b82f6',
-    endBright: '#4d90ff'
+    start: "#c026d3",
+    startBright: "#d52ae6",
+    mid1: "#a855f7",
+    mid1Bright: "#b565ff",
+    mid2: "#8b5cf6",
+    mid2Bright: "#9a6aff",
+    mid3: "#6366f1",
+    mid3Bright: "#7276ff",
+    end: "#3b82f6",
+    endBright: "#4d90ff",
   },
   rainbow: {
-    start: '#ff0080',
-    startBright: '#ff2090',
-    mid1: '#ff8c00',
-    mid1Bright: '#ff9a20',
-    mid2: '#ffed00',
-    mid2Bright: '#fff020',
-    mid3: '#00ff80',
-    mid3Bright: '#20ff95',
-    end: '#00bfff',
-    endBright: '#30d0ff'
-  }
+    start: "#ff0080",
+    startBright: "#ff2090",
+    mid1: "#ff8c00",
+    mid1Bright: "#ff9a20",
+    mid2: "#ffed00",
+    mid2Bright: "#fff020",
+    mid3: "#00ff80",
+    mid3Bright: "#20ff95",
+    end: "#00bfff",
+    endBright: "#30d0ff",
+  },
 };

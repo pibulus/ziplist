@@ -120,6 +120,12 @@ import { setTheme } from "./ghost/themeStore";
 setTheme("peach"); // Change to peach theme
 ```
 
+## File Operations
+
+- When reorganizing files, prefer using bash commands (`mv`, `mkdir`, etc.) over rewriting files
+- This preserves git history and is more efficient for large files
+- Example: `mv src/oldpath/file.js src/newpath/file.js` instead of read+write
+
 ## Editor Configuration
 
 - Default branch: main

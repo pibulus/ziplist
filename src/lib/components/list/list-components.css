@@ -1,11 +1,15 @@
 /* Import fonts - using Inter for friendly main text, Space Mono for accents */
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap");
 
 /* Base styles for list components */
 .list-mono {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   letter-spacing: 0;
 }
 
@@ -13,15 +17,18 @@
 .card-mono {
   border-radius: 28px;
   border: none;
-  background: linear-gradient(145deg, #FFF4ED, #FFF8F2);
-  box-shadow: 0 12px 24px rgba(160, 140, 220, 0.12), 0 0 0 1px rgba(200, 180, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  background: linear-gradient(145deg, #fff4ed, #fff8f2);
+  box-shadow:
+    0 12px 24px rgba(160, 140, 220, 0.12),
+    0 0 0 1px rgba(200, 180, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
 .card-mono::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -29,30 +36,51 @@
   bottom: 0;
   border-radius: 28px;
   padding: 1.5px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(200, 180, 255, 0.4));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(200, 180, 255, 0.4)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: destination-out;
   mask-composite: exclude;
   pointer-events: none;
 }
 
 .card-mono:hover {
-  box-shadow: 0 20px 30px rgba(160, 140, 220, 0.15), 0 0 0 1px rgba(200, 180, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 20px 30px rgba(160, 140, 220, 0.15),
+    0 0 0 1px rgba(200, 180, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
   transform: translateY(-3px);
-  background: linear-gradient(145deg, #FFF6F0, #FFF9F5);
+  background: linear-gradient(145deg, #fff6f0, #fff9f5);
 }
 
 .card-mono.active {
-  background: linear-gradient(145deg, #FFF6F0, #FFEEF8);
+  background: linear-gradient(145deg, #fff6f0, #ffeef8);
   transform: scale(1.02) translateY(-5px);
-  box-shadow: 0 20px 40px rgba(160, 140, 220, 0.25), 0 0 0 1px rgba(200, 180, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 20px 40px rgba(160, 140, 220, 0.25),
+    0 0 0 1px rgba(200, 180, 255, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8);
 }
 
 /* Sparkle animation for buttons */
 @keyframes sparkle {
-  0%, 100% { opacity: 0; transform: scale(0); }
-  50% { opacity: 1; transform: scale(1); }
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Card content container */
@@ -76,7 +104,7 @@
   text-align: center;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(181, 152, 255, 0.15);
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
 }
 
 .list-title:hover {
@@ -91,7 +119,9 @@
   background-color: rgba(255, 255, 255, 0.6);
   padding: 16px 18px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(186, 165, 240, 0.06), inset 0 0 0 1px rgba(200, 180, 255, 0.15);
+  box-shadow:
+    0 2px 8px rgba(186, 165, 240, 0.06),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.15);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -101,16 +131,17 @@
 }
 
 .list-item-mono::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 95%;
   height: 1px;
-  background: linear-gradient(90deg, 
-    rgba(200, 180, 255, 0), 
-    rgba(200, 180, 255, 0.2) 50%, 
+  background: linear-gradient(
+    90deg,
+    rgba(200, 180, 255, 0),
+    rgba(200, 180, 255, 0.2) 50%,
     rgba(200, 180, 255, 0)
   );
 }
@@ -120,9 +151,15 @@
 }
 
 .list-item-mono:hover {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(246, 240, 255, 0.8));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(246, 240, 255, 0.8)
+  );
   transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 5px 15px rgba(186, 165, 240, 0.1), inset 0 0 0 1px rgba(200, 180, 255, 0.25);
+  box-shadow:
+    0 5px 15px rgba(186, 165, 240, 0.1),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.25);
 }
 
 .list-item-mono.checked {
@@ -140,7 +177,9 @@
 
 .list-item-mono.drag-over {
   background-color: rgba(245, 238, 255, 0.8);
-  box-shadow: 0 5px 15px rgba(186, 165, 240, 0.15), inset 0 0 0 1px rgba(181, 152, 255, 0.3);
+  box-shadow:
+    0 5px 15px rgba(186, 165, 240, 0.15),
+    inset 0 0 0 1px rgba(181, 152, 255, 0.3);
 }
 
 /* Checkbox */
@@ -177,7 +216,7 @@
 }
 
 .checkbox-mono:checked::before {
-  content: '';
+  content: "";
   width: 12px;
   height: 12px;
   transform: scale(0);
@@ -190,14 +229,18 @@
 
 /* Confetti elements for checkbox */
 .checkbox-mono:checked::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
   transform: translate(-50%, -50%) scale(0);
   opacity: 0;
   animation: sparkle 0.4s ease-out forwards;
@@ -214,7 +257,7 @@
 
 /* Item text */
 .item-text {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
@@ -241,8 +284,9 @@
   padding-top: 1.25rem;
   border-top: 1px solid rgba(200, 180, 255, 0.15);
   height: 70px;
-  background: linear-gradient(180deg, 
-    rgba(255, 244, 237, 0), 
+  background: linear-gradient(
+    180deg,
+    rgba(255, 244, 237, 0),
     rgba(255, 250, 245, 0.8)
   );
 }
@@ -257,7 +301,7 @@
   align-items: center;
   gap: 0.3rem;
   font-size: 0.7rem;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 500;
   padding: 0.6rem;
   border-radius: 12px;
@@ -303,13 +347,17 @@
 }
 
 .action-btn.add::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%
+  );
   border-radius: 14px;
 }
 
@@ -325,7 +373,7 @@
 
 /* Input field styling */
 .mono-input {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 400;
   border: 2px solid rgba(200, 180, 255, 0.5);
   background-color: rgba(255, 255, 255, 0.8);
@@ -349,7 +397,7 @@
   font-weight: 500;
   color: #9d86e6;
   text-align: center;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
 }
 
 /* Add item form */
@@ -359,10 +407,16 @@
   gap: 0.8rem;
   margin-bottom: 1.25rem;
   padding: 1.2rem;
-  background: linear-gradient(145deg, rgba(255, 252, 249, 0.9), rgba(255, 245, 236, 0.9));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 252, 249, 0.9),
+    rgba(255, 245, 236, 0.9)
+  );
   border: none;
   border-radius: 18px;
-  box-shadow: 0 3px 10px rgba(186, 165, 240, 0.08), inset 0 0 0 1px rgba(200, 180, 255, 0.15);
+  box-shadow:
+    0 3px 10px rgba(186, 165, 240, 0.08),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.15);
 }
 
 .add-item-buttons {
@@ -382,7 +436,7 @@
   gap: 0.5rem;
   font-weight: 500;
   font-size: 0.95rem;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   letter-spacing: 0;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   cursor: pointer;
@@ -393,13 +447,17 @@
 }
 
 .add-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%
+  );
   border-radius: 14px;
 }
 
@@ -432,7 +490,7 @@
   padding: 2.5rem 1rem;
   height: 100%;
   min-height: 300px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .empty-icon {
@@ -448,7 +506,7 @@
   color: #9d86e6;
   margin-bottom: 0.6rem;
   font-size: 1.2rem;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
 }
 
 .empty-description {
@@ -505,14 +563,18 @@
   align-items: center;
   margin-top: 1.75rem;
   gap: 1.25rem;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .nav-btn-mono {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background: linear-gradient(145deg, rgba(255, 252, 249, 0.9), rgba(255, 245, 236, 0.9));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 252, 249, 0.9),
+    rgba(255, 245, 236, 0.9)
+  );
   border: none;
   display: flex;
   align-items: center;
@@ -521,13 +583,21 @@
   font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow: 0 3px 10px rgba(157, 134, 230, 0.15), inset 0 0 0 1px rgba(200, 180, 255, 0.2);
+  box-shadow:
+    0 3px 10px rgba(157, 134, 230, 0.15),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.2);
 }
 
 .nav-btn-mono:hover:not(:disabled) {
-  background: linear-gradient(145deg, rgba(250, 245, 255, 0.9), rgba(246, 241, 255, 0.9));
+  background: linear-gradient(
+    145deg,
+    rgba(250, 245, 255, 0.9),
+    rgba(246, 241, 255, 0.9)
+  );
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 5px 15px rgba(157, 134, 230, 0.25), inset 0 0 0 1px rgba(181, 152, 255, 0.3);
+  box-shadow:
+    0 5px 15px rgba(157, 134, 230, 0.25),
+    inset 0 0 0 1px rgba(181, 152, 255, 0.3);
   color: #8066d0;
 }
 
@@ -543,7 +613,9 @@
   background: rgba(181, 152, 255, 0.1);
   padding: 0.6rem 1.2rem;
   border-radius: 20px;
-  box-shadow: 0 2px 5px rgba(157, 134, 230, 0.05), inset 0 0 0 1px rgba(200, 180, 255, 0.1);
+  box-shadow:
+    0 2px 5px rgba(157, 134, 230, 0.05),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.1);
 }
 
 /* List container */
@@ -563,7 +635,8 @@
   text-align: center;
   border: none;
   height: 2px;
-  background: linear-gradient(90deg,
+  background: linear-gradient(
+    90deg,
     rgba(200, 180, 255, 0),
     rgba(200, 180, 255, 0.3) 50%,
     rgba(200, 180, 255, 0)
@@ -576,10 +649,10 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #FFF8F2;
+  background: #fff8f2;
   padding: 0 12px;
   font-size: 0.75rem;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   color: #9d86e6;
   font-weight: 500;
   letter-spacing: 0.03em;
@@ -605,10 +678,13 @@
 
 /* Celebration Message */
 .completion-message {
-  background: linear-gradient(135deg, #FFF4ED, #FFF8F2);
+  background: linear-gradient(135deg, #fff4ed, #fff8f2);
   padding: 0.8rem 1.2rem;
   border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(157, 134, 230, 0.15), 0 0 0 1px rgba(200, 180, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 8px 20px rgba(157, 134, 230, 0.15),
+    0 0 0 1px rgba(200, 180, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8);
   margin: 1rem auto 1.75rem;
   text-align: center;
   max-width: 90%;
@@ -618,18 +694,22 @@
 }
 
 .completion-message::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%
+  );
   z-index: 0;
 }
 
 .message-content {
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 600;
   color: #8066d0;
   font-size: 1.1rem;
@@ -648,19 +728,28 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
-    box-shadow: 0 8px 20px rgba(157, 134, 230, 0.15), 0 0 0 1px rgba(200, 180, 255, 0.2);
+    box-shadow:
+      0 8px 20px rgba(157, 134, 230, 0.15),
+      0 0 0 1px rgba(200, 180, 255, 0.2);
   }
   50% {
     transform: scale(1.03);
-    box-shadow: 0 12px 25px rgba(157, 134, 230, 0.25), 0 0 0 1px rgba(200, 180, 255, 0.3);
+    box-shadow:
+      0 12px 25px rgba(157, 134, 230, 0.25),
+      0 0 0 1px rgba(200, 180, 255, 0.3);
   }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Focus states for accessibility */

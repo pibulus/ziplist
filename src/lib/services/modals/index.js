@@ -1,1 +1,1 @@
-export { modalService } from './modalService';
+export { modalService } from "./modalService";

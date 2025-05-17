@@ -1,3 +1,3 @@
-import { ghostAnimationStore } from './ghostAnimationStore';
+import { ghostAnimationStore } from "./ghostAnimationStore";
 
 export { ghostAnimationStore };

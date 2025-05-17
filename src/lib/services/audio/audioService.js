@@ -1,13 +1,13 @@
-import { AudioStateManager, AudioStates } from './audioStates';
-import { audioState, audioActions, uiActions } from '../infrastructure/stores';
-import { get } from 'svelte/store';
+import { AudioStateManager, AudioStates } from "./audioStates";
+import { audioState, audioActions, uiActions } from "../infrastructure/stores";
+import { get } from "svelte/store";
 
 export const AudioEvents = {
-  RECORDING_STARTED: 'audio:recordingStarted',
-  RECORDING_STOPPED: 'audio:recordingStopped',
-  RECORDING_ERROR: 'audio:recordingError',
-  STATE_CHANGED: 'audio:stateChanged',
-  WAVEFORM_DATA: 'audio:waveformData'
+  RECORDING_STARTED: "audio:recordingStarted",
+  RECORDING_STOPPED: "audio:recordingStopped",
+  RECORDING_ERROR: "audio:recordingError",
+  STATE_CHANGED: "audio:stateChanged",
+  WAVEFORM_DATA: "audio:waveformData",
 };
 
 export class AudioService {
@@ -15,37 +15,39 @@ export class AudioService {
     this.mediaRecorder = null;
     this.audioChunks = [];
     this.audioContext = null;
-    this.isIOS = typeof window !== 'undefined' && /iPhone|iPad|iPod/.test(navigator.userAgent);
+    this.isIOS =
+      typeof window !== "undefined" &&
+      /iPhone|iPad|iPod/.test(navigator.userAgent);
     this.stream = null;
     this.analyser = null;
     this.cleanupPromise = null;
     this.animationFrameId = null;
-    
+
     this.stateManager = new AudioStateManager();
-    
+
     this.stateManager.addListener(({ oldState, newState, error }) => {
       console.log(`Audio state changed: ${oldState} -> ${newState}`);
-      
+
       // Update the store instead of emitting event
       audioActions.updateState(newState, error);
     });
   }
-  
+
   async initializeAudioContext() {
-    if (!this.audioContext && typeof window !== 'undefined') {
+    if (!this.audioContext && typeof window !== "undefined") {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       this.audioContext = new AudioContext();
     }
 
-    if (this.audioContext?.state === 'suspended') {
+    if (this.audioContext?.state === "suspended") {
       await this.audioContext.resume();
     }
 
-    return this.audioContext?.state === 'running';
+    return this.audioContext?.state === "running";
   }
 
   async checkMediaDevices() {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     if (!navigator?.mediaDevices?.getUserMedia) return false;
     return true;
   }
@@ -53,21 +55,21 @@ export class AudioService {
   async requestPermissions() {
     try {
       if (!(await this.checkMediaDevices())) {
-        throw new Error('MediaDevices API not available');
+        throw new Error("MediaDevices API not available");
       }
 
       if (this.isIOS) {
         const contextReady = await this.initializeAudioContext();
         if (!contextReady) {
-          throw new Error('Failed to initialize audio context');
+          throw new Error("Failed to initialize audio context");
         }
 
         const constraints = {
           audio: {
             echoCancellation: true,
             autoGainControl: true,
-            noiseSuppression: true
-          }
+            noiseSuppression: true,
+          },
         };
 
         try {
@@ -76,18 +78,28 @@ export class AudioService {
             return { granted: true, stream };
           } else {
             stream?.getTracks().forEach((track) => track.stop());
-            return { granted: false, error: new Error('No active audio stream after permission') };
+            return {
+              granted: false,
+              error: new Error("No active audio stream after permission"),
+            };
           }
         } catch (iosSpecificError) {
-          console.warn('iOS specific constraints failed, trying fallback:', iosSpecificError.message);
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          console.warn(
+            "iOS specific constraints failed, trying fallback:",
+            iosSpecificError.message,
+          );
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
           if (stream && stream.active) {
             return { granted: true, stream };
           } else {
             stream?.getTracks().forEach((track) => track.stop());
             return {
               granted: false,
-              error: new Error('No active audio stream after fallback permission')
+              error: new Error(
+                "No active audio stream after fallback permission",
+              ),
             };
           }
         }
@@ -98,8 +110,8 @@ export class AudioService {
           audio: {
             echoCancellation: false,
             noiseSuppression: false,
-            autoGainControl: false
-          }
+            autoGainControl: false,
+          },
         });
         if (stream && stream.active) {
           return { granted: true, stream };
@@ -107,20 +119,25 @@ export class AudioService {
           stream?.getTracks().forEach((track) => track.stop());
           return {
             granted: false,
-            error: new Error('No active audio stream after permission')
+            error: new Error("No active audio stream after permission"),
           };
         }
       } catch (detailedConstraintError) {
-        console.log('Detailed constraints failed, falling back to simple audio:', detailedConstraintError.message);
+        console.log(
+          "Detailed constraints failed, falling back to simple audio:",
+          detailedConstraintError.message,
+        );
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
           if (stream && stream.active) {
             return { granted: true, stream };
           } else {
             stream?.getTracks().forEach((track) => track.stop());
             return {
               granted: false,
-              error: new Error('No active audio stream after permission')
+              error: new Error("No active audio stream after permission"),
             };
           }
         } catch (fallbackError) {
@@ -128,7 +145,7 @@ export class AudioService {
         }
       }
     } catch (error) {
-      console.error('Error requesting audio permissions:', error);
+      console.error("Error requesting audio permissions:", error);
       return { granted: false, error };
     }
   }
@@ -138,33 +155,33 @@ export class AudioService {
       if (this.stateManager.getState() !== AudioStates.IDLE) {
         await this.cleanup();
       }
-      
+
       this.stateManager.setState(AudioStates.INITIALIZING);
       this.stateManager.setState(AudioStates.REQUESTING_PERMISSIONS);
-      
+
       const { granted, stream, error } = await this.requestPermissions();
 
       if (!granted) {
         this.stateManager.setState(AudioStates.PERMISSION_DENIED);
         uiActions.setPermissionError(true);
-        throw error || new Error('Permission not granted');
+        throw error || new Error("Permission not granted");
       }
 
       if (!stream) {
-        throw new Error('No audio stream available');
+        throw new Error("No audio stream available");
       }
 
       this.stateManager.setState(AudioStates.READY);
       this.audioChunks = [];
 
-      if (typeof MediaRecorder === 'undefined') {
-        throw new Error('MediaRecorder not supported');
+      if (typeof MediaRecorder === "undefined") {
+        throw new Error("MediaRecorder not supported");
       }
 
       try {
         const mimeTypes = this.isIOS
-          ? ['audio/mp4', 'audio/aac', 'audio/webm', '']
-          : ['audio/webm', 'audio/ogg', ''];
+          ? ["audio/mp4", "audio/aac", "audio/webm", ""]
+          : ["audio/webm", "audio/ogg", ""];
 
         let mediaRecorderOptions = null;
 
@@ -176,20 +193,22 @@ export class AudioService {
         }
 
         this.stream = stream;
-        this.mediaRecorder = new MediaRecorder(this.stream, mediaRecorderOptions);
+        this.mediaRecorder = new MediaRecorder(
+          this.stream,
+          mediaRecorderOptions,
+        );
 
         if (!this.audioContext) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           this.audioContext = new AudioContext();
         }
-        
+
         const source = this.audioContext.createMediaStreamSource(this.stream);
         this.analyser = this.audioContext.createAnalyser();
         this.analyser.fftSize = 256;
         source.connect(this.analyser);
-        
+
         this.startWaveformMonitoring();
-        
       } catch (mrError) {
         stream.getTracks().forEach((track) => track.stop());
         throw mrError;
@@ -200,47 +219,49 @@ export class AudioService {
           this.audioChunks.push(event.data);
         }
       };
-      
+
       this.mediaRecorder.start(1000);
       this.stateManager.setState(AudioStates.RECORDING);
-      
+
       // Update the store with mimeType
-      audioState.update(current => ({
+      audioState.update((current) => ({
         ...current,
-        mimeType: this.mediaRecorder.mimeType || 'audio/webm'
+        mimeType: this.mediaRecorder.mimeType || "audio/webm",
       }));
-      
+
       return true;
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error("Error starting recording:", error);
       this.stateManager.setState(AudioStates.ERROR, { error });
-      
-      uiActions.setErrorMessage(`Recording error: ${error.message || 'Unknown error'}`);
-      
+
+      uiActions.setErrorMessage(
+        `Recording error: ${error.message || "Unknown error"}`,
+      );
+
       await this.cleanup();
       throw error;
     }
   }
-  
+
   startWaveformMonitoring() {
     if (!this.analyser) return;
-    
+
     const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-    
+
     const updateWaveform = () => {
       if (this.stateManager.getState() !== AudioStates.RECORDING) {
         cancelAnimationFrame(this.animationFrameId);
         return;
       }
-      
+
       this.analyser.getByteFrequencyData(dataArray);
-      
+
       // Update store instead of emitting event
       audioActions.setWaveformData(Array.from(dataArray));
-      
+
       this.animationFrameId = requestAnimationFrame(updateWaveform);
     };
-    
+
     this.animationFrameId = requestAnimationFrame(updateWaveform);
   }
 
@@ -248,56 +269,56 @@ export class AudioService {
     return new Promise((resolve) => {
       // Update recording state to STOPPING
       audioActions.updateState(AudioStates.STOPPING);
-      
+
       // Check recorder state - attempt to stop even if internal state doesn't match
-      if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+      if (!this.mediaRecorder || this.mediaRecorder.state === "inactive") {
         this.stateManager.setState(AudioStates.IDLE);
         resolve(null); // No active recording to stop
         return;
       }
 
       // The mimeType should be determined before onstop is set up.
-      const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
-      
+      const mimeType = this.mediaRecorder.mimeType || "audio/webm";
+
       this.mediaRecorder.onstop = () => {
         // Create the Blob from this.audioChunks, which now contains all chunks
         // including the final one from the last dataavailable event.
         const audioBlob = new Blob(this.audioChunks, { type: mimeType });
-        
+
         // Update store with audio blob
         audioActions.setAudioBlob(audioBlob, mimeType);
-        
+
         // Immediately stop all tracks to ensure browser recording indicator is removed
         if (this.stream) {
-          this.stream.getTracks().forEach(track => {
+          this.stream.getTracks().forEach((track) => {
             track.stop();
           });
           // Clear the stream reference
           this.stream = null;
         }
-        
+
         this.audioChunks = [];
         this.mediaRecorder = null;
-        
+
         // Ensure state is properly reset
         this.stateManager.setState(AudioStates.IDLE);
-        
+
         resolve(audioBlob);
       };
 
       try {
         this.mediaRecorder.stop();
       } catch (error) {
-        console.warn('Error stopping MediaRecorder:', error.message);
-        
+        console.warn("Error stopping MediaRecorder:", error.message);
+
         // Ensure tracks are stopped even if MediaRecorder stop fails
         if (this.stream) {
-          this.stream.getTracks().forEach(track => {
+          this.stream.getTracks().forEach((track) => {
             track.stop();
           });
           this.stream = null;
         }
-        
+
         // Force state reset on error
         this.stateManager.setState(AudioStates.IDLE);
         resolve(null);
@@ -310,7 +331,7 @@ export class AudioService {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    
+
     if (this.cleanupPromise) {
       return this.cleanupPromise;
     }
@@ -320,17 +341,22 @@ export class AudioService {
       AudioStates.RECORDING,
       AudioStates.STOPPING,
       AudioStates.ERROR,
-      AudioStates.PAUSED
+      AudioStates.PAUSED,
     ];
 
-    if (!allowedCleanupStates.includes(currentState) && currentState !== AudioStates.IDLE) {
+    if (
+      !allowedCleanupStates.includes(currentState) &&
+      currentState !== AudioStates.IDLE
+    ) {
       return Promise.resolve();
     }
 
-    if (currentState === AudioStates.IDLE && 
-        !this.mediaRecorder && 
-        !this.stream && 
-        !this.audioContext) {
+    if (
+      currentState === AudioStates.IDLE &&
+      !this.mediaRecorder &&
+      !this.stream &&
+      !this.audioContext
+    ) {
       return Promise.resolve();
     }
 
@@ -344,7 +370,7 @@ export class AudioService {
 
   async #doCleanup() {
     try {
-      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
         await new Promise((resolve) => {
           const timeout = setTimeout(() => {
             resolve();
@@ -358,7 +384,7 @@ export class AudioService {
           try {
             this.mediaRecorder.stop();
           } catch (stopError) {
-            console.warn('Error stopping MediaRecorder:', stopError.message);
+            console.warn("Error stopping MediaRecorder:", stopError.message);
             resolve();
           }
         });
@@ -373,7 +399,7 @@ export class AudioService {
               track.stop();
               setTimeout(resolve, 500);
             });
-          })
+          }),
         );
         this.stream = null;
       }
@@ -383,7 +409,10 @@ export class AudioService {
           try {
             this.analyser.disconnect();
           } catch (analyserError) {
-            console.warn('Error disconnecting analyser:', analyserError.message);
+            console.warn(
+              "Error disconnecting analyser:",
+              analyserError.message,
+            );
           }
           this.analyser = null;
         }
@@ -393,14 +422,17 @@ export class AudioService {
             await this.audioContext.suspend();
             await new Promise((resolve) => setTimeout(resolve, 100));
           } catch (suspendError) {
-            console.warn('Error suspending iOS audio context:', suspendError.message);
+            console.warn(
+              "Error suspending iOS audio context:",
+              suspendError.message,
+            );
           }
         }
 
         try {
           await this.audioContext.close();
         } catch (closeError) {
-          console.warn('Error closing audio context:', closeError.message);
+          console.warn("Error closing audio context:", closeError.message);
         }
         this.audioContext = null;
       }
@@ -419,7 +451,7 @@ export class AudioService {
   getRecordingState() {
     return this.stateManager.getState();
   }
-  
+
   isRecording() {
     return this.stateManager.getState() === AudioStates.RECORDING;
   }

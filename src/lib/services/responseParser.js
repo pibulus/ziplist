@@ -1,6 +1,6 @@
 /**
  * Response Parser Service
- * 
+ *
  * Responsible for parsing and sanitizing responses from LLM models
  * Handles various edge cases like markdown code blocks, invalid JSON, etc.
  */
@@ -11,17 +11,17 @@
  * @returns {string} Cleaned text with only the useful content
  */
 export function cleanResponseText(text) {
-  if (!text) return '';
-  
+  if (!text) return "";
+
   // Remove any markdown code block markers
-  let cleaned = text.replace(/```(json|javascript|js)?/g, '');
-  
+  let cleaned = text.replace(/```(json|javascript|js)?/g, "");
+
   // Remove any HTML-like tags that might be in the response
-  cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, '');
-  
+  cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, "");
+
   // Remove any trailing or leading whitespace
   cleaned = cleaned.trim();
-  
+
   return cleaned;
 }
 
@@ -32,16 +32,16 @@ export function cleanResponseText(text) {
  */
 export function extractJSON(text) {
   if (!text) return null;
-  
+
   const cleaned = cleanResponseText(text);
-  
+
   // First try: Direct JSON parsing
   try {
     return JSON.parse(cleaned);
   } catch (e) {
-    console.warn('First JSON parse attempt failed:', e);
+    console.warn("First JSON parse attempt failed:", e);
   }
-  
+
   // Second try: Find JSON-like structure within text using regex
   try {
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
@@ -49,23 +49,23 @@ export function extractJSON(text) {
       return JSON.parse(jsonMatch[0]);
     }
   } catch (e) {
-    console.warn('Second JSON parse attempt failed:', e);
+    console.warn("Second JSON parse attempt failed:", e);
   }
-  
+
   // Third try: Fix common JSON syntax errors and try again
   try {
     // Fix missing commas between array items
     let fixedText = cleaned.replace(/"\s*"(?!\s*[,\]])/g, '", "');
-    
+
     // Fix trailing commas in arrays/objects
-    fixedText = fixedText.replace(/,(\s*[\]}])/g, '$1');
-    
+    fixedText = fixedText.replace(/,(\s*[\]}])/g, "$1");
+
     // Try to parse the fixed JSON
     return JSON.parse(fixedText);
   } catch (e) {
-    console.warn('Third JSON parse attempt with fixes failed:', e);
+    console.warn("Third JSON parse attempt with fixes failed:", e);
   }
-  
+
   // If all parsing attempts fail, return null
   return null;
 }
@@ -77,30 +77,33 @@ export function extractJSON(text) {
  */
 export function parseItemsFromResponse(responseText) {
   if (!responseText) return [];
-  
+
   // Try to extract items from JSON structure first
   const jsonData = extractJSON(responseText);
-  
+
   if (jsonData && jsonData.items && Array.isArray(jsonData.items)) {
-    return jsonData.items.filter(item => item && typeof item === 'string');
+    return jsonData.items.filter((item) => item && typeof item === "string");
   }
-  
+
   // Fallback: If JSON parsing fails, try to extract items line by line
-  const lines = responseText.split(/\n+/)
-    .map(line => {
+  const lines = responseText
+    .split(/\n+/)
+    .map((line) => {
       // Clean up each line
       let cleaned = line.trim();
-      
+
       // Remove common list markers
-      cleaned = cleaned.replace(/^[-•*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\]/, '').trim();
-      
+      cleaned = cleaned
+        .replace(/^[-•*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\]/, "")
+        .trim();
+
       // Remove quotes that might be from a json array
-      cleaned = cleaned.replace(/^["']|["']$/g, '').trim();
-      
+      cleaned = cleaned.replace(/^["']|["']$/g, "").trim();
+
       return cleaned;
     })
-    .filter(line => line.length > 0);  // Remove empty lines
-  
+    .filter((line) => line.length > 0); // Remove empty lines
+
   return lines;
 }
 
@@ -111,11 +114,11 @@ export function parseItemsFromResponse(responseText) {
  */
 export function parseModelResponse(responseText) {
   const items = parseItemsFromResponse(responseText);
-  
+
   return {
     success: items.length > 0,
     items,
     raw: responseText,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }

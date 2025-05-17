@@ -51,6 +51,7 @@ This will run the asset generation script without running a full build.
 ### 1. Exportable Paths Module
 
 The `src/lib/components/ghost/exportable/paths.js` file contains the definitive path data for:
+
 - Ghost body outline
 - Left eye
 - Right eye
@@ -59,6 +60,7 @@ The `src/lib/components/ghost/exportable/paths.js` file contains the definitive 
 ### 2. SVG Generation Utilities
 
 The `src/lib/components/ghost/exportable/index.js` file provides utility functions for generating SVGs:
+
 - `generateGhostSvg()` - Create complete ghost SVG with options
 - `generateStaticGhostSvg()` - Generate SVG optimized for static use
 - `generateIconGhostSvg()` - Generate simplified SVG for icons
@@ -67,6 +69,7 @@ The `src/lib/components/ghost/exportable/index.js` file provides utility functio
 ### 3. Vite Plugin
 
 The `vite-plugins/ghost-asset-generator.js` plugin:
+
 - Hooks into the Vite build process
 - Generates all static SVGs and PNGs
 - Optimizes assets with SVGO
@@ -77,12 +80,14 @@ The `vite-plugins/ghost-asset-generator.js` plugin:
 The plugin generates:
 
 1. **Theme-specific SVG files**:
+
    - `/static/assets/talktype-icon-bg-gradient.svg`
    - `/static/assets/talktype-icon-bg-gradient-mint.svg`
    - `/static/assets/talktype-icon-bg-gradient-bubblegum.svg`
    - `/static/assets/talktype-icon-bg-gradient-rainbow.svg`
 
 2. **Component SVG files**:
+
    - `/static/assets/talktype-icon-base.svg`
    - `/static/assets/talktype-icon-eyes.svg`
    - `/static/assets/talktype-icon-outline.svg`
@@ -90,6 +95,7 @@ The plugin generates:
    - `/static/combined-icon.svg`
 
 3. **Browser icons**:
+
    - `/static/favicon.png`
    - `/static/favicon-light.png`
    - `/static/favicon-dark.png`

@@ -4,8 +4,7 @@ export const promptTemplates = {
   // Standard prompt style (current implementation)
   standard: {
     transcribeAudio: {
-      text: 
-`Process this audio file into a structured JSON format with a list of tasks or items.
+      text: `Process this audio file into a structured JSON format with a list of tasks or items.
 The response MUST be valid JSON with ONLY this structure:
 
 {
@@ -29,8 +28,7 @@ Example valid response:
 {"items":["Reply to emails","Buy groceries","Schedule dentist appointment"]}`,
     },
     generateAnimation: {
-      text: 
-`Generate a CSS animation for a ghost SVG based on this description: '{{description}}'.
+      text: `Generate a CSS animation for a ghost SVG based on this description: '{{description}}'.
 Return a JSON object with the following structure:
 
 {
@@ -68,8 +66,7 @@ Critical requirements:
   // Surly pirate prompt style
   surlyPirate: {
     transcribeAudio: {
-      text: 
-`Process this audio into a structured JSON list of pirate-style items.
+      text: `Process this audio into a structured JSON list of pirate-style items.
 Format response as valid JSON with the following structure:
 
 {
@@ -87,8 +84,7 @@ Return ONLY raw JSON, no additional text or formatting.`,
   // L33T Sp34k prompt style
   leetSpeak: {
     transcribeAudio: {
-      text: 
-`Pr0c355 th15 4ud10 1nt0 4 5tructur3d J50N l15t 0f l33t 5p34k 1t3m5.
+      text: `Pr0c355 th15 4ud10 1nt0 4 5tructur3d J50N l15t 0f l33t 5p34k 1t3m5.
 F0rm4t r35p0n53 45 v4l1d J50N w1th th15 5tructur3:
 
 {
@@ -106,8 +102,7 @@ R3turn 0NLY r4w J50N, n0 4dd1t10n4l t3xt.`,
   // Sparkle Pop prompt style
   sparklePop: {
     transcribeAudio: {
-      text: 
-`OMG!!! Process this audio into a structured JSON list of SUPER bubbly items!!!
+      text: `OMG!!! Process this audio into a structured JSON list of SUPER bubbly items!!!
 Format response as valid JSON with this structure:
 
 {
@@ -126,8 +121,7 @@ Return ONLY raw JSON, no additional text or formatting!!!`,
   // Code Whisperer (formerly Prompt Engineer)
   codeWhisperer: {
     transcribeAudio: {
-      text: 
-`Process this audio into a structured JSON list of technical, precise items.
+      text: `Process this audio into a structured JSON list of technical, precise items.
 Format response as valid JSON with the following structure:
 
 {
@@ -146,8 +140,7 @@ Return ONLY raw JSON, no additional text or formatting.`,
   // Quill & Ink (formerly Victorian Author)
   quillAndInk: {
     transcribeAudio: {
-      text: 
-`Process this audio into a structured JSON list of eloquent Victorian-style items.
+      text: `Process this audio into a structured JSON list of eloquent Victorian-style items.
 Format response as valid JSON with the following structure:
 
 {

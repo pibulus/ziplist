@@ -48,6 +48,7 @@ The application layout follows a vertical stack pattern:
 ```
 
 The `PageLayout` component (`/src/lib/components/layout/PageLayout.svelte`) provides the base container with:
+
 - A gradient background (`bg-gradient-mesh`)
 - Responsive padding and spacing
 - Fixed footer with attribution and navigation buttons
@@ -58,11 +59,13 @@ The `PageLayout` component (`/src/lib/components/layout/PageLayout.svelte`) prov
 ### Ghost Component
 
 **Files:**
+
 - `/src/lib/components/ghost/Ghost.svelte`: Main ghost SVG component
 - `/src/lib/components/mainPage/GhostContainer.svelte`: Container for the ghost
 - `/src/lib/components/ghost/README.md`: Detailed documentation for the Ghost
 
 **Key Features:**
+
 - SVG-based interactive mascot with animation states
 - Serves as the primary recording trigger when clicked
 - Visual feedback for recording and processing states
@@ -75,6 +78,7 @@ The Ghost is a central UI element that responds to user interaction and provides
 ### List Components
 
 **Key Files:**
+
 - `/src/lib/components/list/ListCard.svelte`: Individual list display
 - `/src/lib/components/list/ListCarousel.svelte`: Container for multiple lists
 - `/src/lib/components/list/ListComponent.svelte`: Simple list display component
@@ -82,6 +86,7 @@ The Ghost is a central UI element that responds to user interaction and provides
 - `/src/lib/services/lists/listsStore.js`: State management for lists
 
 **ListCard Features:**
+
 - Display list name and items
 - Toggle item completion status
 - Drag-and-drop reordering with visual feedback
@@ -91,6 +96,7 @@ The Ghost is a central UI element that responds to user interaction and provides
 - Item filtering
 
 **ListCarousel Features:**
+
 - Displays lists in a 3D carousel layout
 - Touch swipe gesture support
 - Navigation buttons for list traversal
@@ -100,10 +106,12 @@ The Ghost is a central UI element that responds to user interaction and provides
 ### Recording Components
 
 **Key Files:**
+
 - `/src/lib/components/mainPage/audio-transcript/RecordButtonWithTimer.svelte`: Recording button with timer
 - `/src/lib/services/transcription/transcriptionService.js`: Handles voice transcription
 
 **Features:**
+
 - Visual recording button with gradient styling
 - Recording timer with progress indication
 - Warning states based on remaining recording time
@@ -115,12 +123,14 @@ The Ghost is a central UI element that responds to user interaction and provides
 The application uses Svelte stores for state management:
 
 **Core Stores:**
+
 - `listsStore`: Manages lists data, active list selection, and persistence
 - `ghostStateStore`: Manages ghost animation states and interactions
 - `themeStore`: Manages application theme
 - Various audio and transcription state stores
 
 **Data Flow:**
+
 1. User interactions (clicks, voice input) trigger UI components
 2. Components dispatch events or call services
 3. Services update stores with new state
@@ -131,6 +141,7 @@ The application uses Svelte stores for state management:
 The application uses service modules to encapsulate business logic:
 
 **Key Services:**
+
 - `listsService`: Provides methods for creating, updating, and managing lists
 - `transcriptionService`: Handles audio recording and transcription
 - `listParser`: Parses transcription results into structured list items
@@ -145,17 +156,20 @@ Services follow a singleton pattern where a single instance is exported for use 
 The application uses several animation techniques:
 
 **Text Animations:**
+
 - Staggered letter animations for the title
 - Slide-in animations for subtitles
 - CSS transitions for interactive elements
 
 **Ghost Animations:**
+
 - SVG-based animations for the ghost character
 - Eye tracking and blinking
 - State-based animations (recording, processing, idle)
 - Theme-based gradient animations
 
 **List Animations:**
+
 - 3D perspective transforms for the carousel
 - Transition effects between lists
 - Drag-and-drop interaction animations
