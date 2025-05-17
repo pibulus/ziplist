@@ -2,6 +2,7 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
+  import { shareList } from '$lib/services/share';
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   
@@ -13,6 +14,7 @@
   let editedItemText = '';
   let isCreatingNewItem = false;
   let newItemText = '';
+  let shareStatus = null; // To track share operation status
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
@@ -30,6 +32,29 @@
   onDestroy(() => {
     if (unsubscribe) unsubscribe();
   });
+  
+  // Share list function
+  async function handleShareList() {
+    if (!list || !list.items || list.items.length === 0) {
+      shareStatus = { success: false, message: 'Cannot share an empty list' };
+      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
+      return;
+    }
+    
+    try {
+      const result = await shareList(list);
+      if (result) {
+        shareStatus = { success: true, message: 'Link copied to clipboard!' };
+      } else {
+        shareStatus = { success: false, message: 'Failed to copy link' };
+      }
+      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
+    } catch (error) {
+      console.error('Failed to share list:', error);
+      shareStatus = { success: false, message: 'Failed to copy link' };
+      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
+    }
+  }
   
   // Separated active and completed items
   $: activeItems = list.items.filter(item => !item.checked);
@@ -246,6 +271,34 @@
 
 <div class="zl-card">
   <div class="card-content">
+    <!-- List header with share button -->
+    {#if list.name}
+      <div class="zl-list-header">
+        <h2 class="zl-list-title">{list.name}</h2>
+        <div class="zl-list-actions">
+          <button 
+            class="zl-share-button" 
+            on:click={handleShareList}
+            title="Copy share link to clipboard"
+            aria-label="Copy share link for list: {list.name}"
+          >
+            <span class="share-icon">↑</span>
+            <span class="share-text">Copy Link</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Share status notification -->
+      {#if shareStatus}
+        <div 
+          class="zl-share-notification {shareStatus.success ? 'success' : 'error'}" 
+          transition:fade={{duration: 200}}
+        >
+          {shareStatus.message}
+        </div>
+      {/if}
+    {/if}
+    
     <!-- List Items -->
     <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? 100 + (list.items.length * 90) : 320}px;">
       {#if list.items.length > 0}
@@ -1341,4 +1394,106 @@
     background: rgba(255, 200, 230, 1);
   }
   
+  /**
+   * List header and share button styles
+   *
+   * Styles for the list header with title and share button,
+   * maintaining the theme system for consistency
+   */
+  .zl-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px dashed var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
+  }
+  
+  .zl-list-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--zl-text-color-primary, #444444);
+    margin: 0;
+    padding: 0;
+    letter-spacing: 1px;
+  }
+  
+  .zl-list-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .zl-share-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, 
+      var(--zl-checkbox-checked-gradient-start, #e9a8ff) 0%, 
+      var(--zl-checkbox-checked-gradient-end, #c978ff) 100%);
+    border: none;
+    border-radius: 16px;
+    padding: 0.5rem 1rem;
+    color: white;
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: var(--zl-checkbox-checked-shadow, 0 3px 8px rgba(201, 120, 255, 0.2));
+  }
+  
+  .zl-share-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(201, 120, 255, 0.3);
+  }
+  
+  .zl-share-button:active {
+    transform: translateY(1px);
+  }
+  
+  .share-icon {
+    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  @media (max-width: 480px) {
+    .zl-list-title {
+      font-size: 1.3rem;
+    }
+    
+    .share-text {
+      display: none; /* Hide text on small screens */
+    }
+    
+    .zl-share-button {
+      padding: 0.5rem;
+    }
+  }
+  
+  /* Share notification styles */
+  .zl-share-notification {
+    background: white;
+    border-radius: 16px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    box-shadow: 0 3px 10px rgba(201, 120, 255, 0.15);
+    position: relative;
+  }
+  
+  .zl-share-notification.success {
+    background: linear-gradient(135deg, rgba(240, 255, 240, 1), rgba(220, 255, 230, 1));
+    border: 1px solid rgba(100, 200, 100, 0.3);
+    color: #2c7b2c;
+  }
+  
+  .zl-share-notification.error {
+    background: linear-gradient(135deg, rgba(255, 240, 240, 1), rgba(255, 220, 220, 1));
+    border: 1px solid rgba(200, 100, 100, 0.3);
+    color: #7b2c2c;
+  }
 </style>
