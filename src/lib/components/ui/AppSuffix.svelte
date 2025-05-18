@@ -1,5 +1,5 @@
 <script>
-  import { theme as themeStore } from '$lib/components/ghost/themeStore.js';
+  import { theme as themeStore } from '$lib/components/ghost/theme';
   import { THEMES } from '$lib/constants';
   import { onMount } from 'svelte';
   

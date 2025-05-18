@@ -1,7 +1,7 @@
 import { writable, derived, get } from "svelte/store";
 import { AudioStates } from "../audio/audioStates";
 import { ANIMATION } from "$lib/constants";
-import { ghostStateStore } from "$lib/components/ghost/stores/ghostStateStore.js";
+import { ghostStateStore } from "$lib/components/ghost/state";
 
 // Core audio state store
 export const audioState = writable({

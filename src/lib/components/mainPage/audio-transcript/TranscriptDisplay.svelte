@@ -1,7 +1,7 @@
 <script>
   import { ANIMATION, ATTRIBUTION } from '$lib/constants';
   import { createEventDispatcher, onMount } from 'svelte';
-  import Ghost from '$lib/components/ghost/Ghost.svelte';
+  import { Ghost } from '$lib/components/ghost';
   
   // Props
   export let transcript = '';

@@ -14,19 +14,16 @@ import {
   seedRandom,
   isBrowser,
   cleanupTimers,
-} from "../utils/animationUtils.js";
+} from "./animationUtils";
 import {
   ANIMATION_STATES,
   CSS_CLASSES,
   SPECIAL_CONFIG,
   WOBBLE_CONFIG,
   ANIMATION_TIMING,
-} from "../animationConfig.js";
-import { ghostStateStore } from "../stores/ghostStateStore.js";
-import {
-  initGradientAnimation,
-  cleanupAnimation,
-} from "../gradientAnimator.js";
+} from "./animationConfig";
+import { ghostStateStore } from "../state";
+import { initGradientAnimation, cleanupAnimation } from "./gradientAnimator";
 
 // Animation timers
 const timers = {

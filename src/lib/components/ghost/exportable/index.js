@@ -9,8 +9,18 @@ import {
   GHOST_BODY_PATH,
   GHOST_EYE_LEFT_PATH,
   GHOST_EYE_RIGHT_PATH,
+  GHOST_BACKGROUND_PATH,
   THEME_COLORS,
-} from "./paths.js";
+} from "./paths";
+
+// Re-export path constants for use in components
+export {
+  GHOST_BODY_PATH,
+  GHOST_EYE_LEFT_PATH,
+  GHOST_EYE_RIGHT_PATH,
+  GHOST_BACKGROUND_PATH,
+  THEME_COLORS
+};
 
 /**
  * Generate a complete ghost SVG for a specific theme

@@ -1,2 +1,2 @@
-export * from "./ghostStateStore.js";
-export * from "./ghostStore.js";
+export * from "./ghostStateStore";
+export * from "./ghostStore";

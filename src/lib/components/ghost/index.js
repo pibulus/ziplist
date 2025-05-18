@@ -1,32 +1,71 @@
-import { Ghost } from "./components";
+/**
+ * Ghost Component System
+ *
+ * This module exports the public API for the Ghost component system, providing
+ * access to the main Ghost component and related utilities.
+ *
+ * @module ghost
+ */
+
+import { Ghost, DisplayGhost } from "./components";
 import { createEyeTracking } from "./tracking";
 import { ghostStateStore } from "./state";
-import { theme } from "./theme";
+import { theme, setTheme, getThemeColor } from "./theme";
+import { applyInitialLoadEffect, applyPulseEffect } from "./animation";
 
-// For backwards compatibility with any missing imports
-const AnimationDebugger = null; // Replace with actual import if exists
+// Export the main components
+export { Ghost, DisplayGhost };
 
-// Export the main component and services
-export { Ghost, createEyeTracking, AnimationDebugger };
-
-// Export the animation system (using direct store access)
-export const GhostSystem = {
-  // Core stores
-  stateStore: ghostStateStore,
-  themeStore: theme,
-
-  // Debug component
-  Debugger: AnimationDebugger,
-  // Consumers can derive specific states like isRecording: derived(ghostStateStore, $s => $s.isRecording)
+// Export key utilities with descriptive names
+export {
+  createEyeTracking,
+  setTheme,
+  getThemeColor,
+  applyInitialLoadEffect,
+  applyPulseEffect,
 };
 
-// Re-export from subdirectories for easy access
+/**
+ * GhostSystem provides direct access to the core state and theme management systems.
+ * Use this for advanced control over the Ghost component.
+ *
+ * @example
+ * // Change theme
+ * import { GhostSystem } from '$lib/components/ghost';
+ * GhostSystem.themeStore.setTheme('mint');
+ *
+ * // Trigger animation state
+ * GhostSystem.stateStore.setAnimationState('recording');
+ */
+export const GhostSystem = {
+  // Core state management
+  stateStore: ghostStateStore,
+
+  // Theme management
+  themeStore: theme,
+};
+
+// Export specific submodules for advanced usage
 export * from "./components";
-export * from "./animation";
-export * from "./theme";
-export * from "./tracking";
 export * from "./state";
+export * from "./theme";
 export * from "./exportable";
 
-// Default export remains the Ghost component
+// Selective exports from animation and tracking for more controlled public API
+export { ANIMATION_STATES, ANIMATION_BEHAVIORS } from "./animation";
+
+/**
+ * The main Ghost component.
+ *
+ * @example
+ * <script>
+ *   import Ghost from '$lib/components/ghost';
+ * </script>
+ *
+ * <Ghost
+ *   isRecording={false}
+ *   isProcessing={false}
+ *   externalTheme={appTheme}
+ * />
+ */
 export default Ghost;

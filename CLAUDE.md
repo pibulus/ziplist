@@ -2,7 +2,10 @@
 
 ## Build & Development
 
-- `npm run dev` - Start development server
+⚠️ **CRITICAL DEVELOPMENT NOTICE** ⚠️
+
+- **NEVER RUN `npm run dev`** - This will cause significant issues with the application and server environment.
+
 - `npm run build` - Create production build
 - `npm run preview` - Preview production build
 - `npm run format` - Run Prettier formatter
@@ -16,12 +19,62 @@
 - **Formatting**: Prettier with svelte and tailwind plugins
 - **CSS**: Tailwind CSS with DaisyUI components
 - **Naming**: Use descriptive camelCase for variables, PascalCase for components
-- **Imports**: Use ES modules syntax, group imports by type
+- **Imports**: Use ES modules syntax, group imports by type, and follow the module pattern below
 - **Error Handling**: Avoid window reference errors in SSR context
 - **Component Structure**: Organize by functionality in lib/components
 - **Services**: External API interactions belong in lib/services
 - **Documentation**: Include JSDoc comments for functions
 - **Reactivity**: Use Svelte's reactive declarations and statements properly
+
+## Module & Import Pattern
+
+Each module should follow this organization pattern:
+
+1. **Directory Structure**:
+
+   - Every feature directory should have an `index.js` file that exports the public API
+   - Related files should be grouped in subdirectories (e.g., `animation/`, `state/`)
+   - Component files (.svelte) should be in a `components/` subdirectory
+
+2. **Import Best Practices**:
+
+   - Import from directories, not specific files, for cross-directory imports:
+
+     ```javascript
+     // Good
+     import { ghostStateStore } from "../state";
+
+     // Avoid
+     import { ghostStateStore } from "../state/ghostStateStore.js";
+     ```
+
+   - Use relative imports for files in the same directory:
+     ```javascript
+     // For files in the same directory
+     import { animate } from "./animator";
+     ```
+   - Omit file extensions in imports:
+
+     ```javascript
+     // Good
+     import { helper } from "./utils";
+
+     // Avoid
+     import { helper } from "./utils.js";
+     ```
+
+   - Use named exports and imports where possible (prefer destructuring)
+   - When importing from SvelteKit paths, use the aliases:
+     ```javascript
+     import { browser } from "$app/environment";
+     ```
+
+3. **Export Pattern**:
+   - Each `index.js` should re-export from its directory's files
+   - Export named functions/objects rather than defaults when possible
+   - Document the public API with JSDoc comments
+
+This approach improves maintainability, provides clear module boundaries, and makes imports less brittle during refactoring.
 
 ## Text Animation System
 
@@ -116,7 +169,7 @@ For detailed documentation of the Ghost component, including its architecture, a
 For implementing new themes or modifying existing ones, use the themeStore:
 
 ```javascript
-import { setTheme } from "./ghost/themeStore";
+import { setTheme } from "$lib/components/ghost";
 setTheme("peach"); // Change to peach theme
 ```
 

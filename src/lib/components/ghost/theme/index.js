@@ -1,2 +1,2 @@
-export * from "./themeStore.js";
-export * from "./gradientConfig.js";
+export * from "./themeStore";
+export * from "./gradientConfig";

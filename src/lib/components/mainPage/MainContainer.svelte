@@ -23,7 +23,7 @@
     userPreferences 
   } from '$lib/services/infrastructure/stores.js';
   import { AudioStates } from '$lib/services/audio/audioStates.js'; // Import AudioStates directly
-  import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js'; // Ensure ghostStateStore is imported
+  import { ghostStateStore } from '$lib/components/ghost'; // Import ghostStateStore for direct access
   import { PageLayout } from '$lib/components/layout';
   import SingleList from '../list/SingleList.svelte'; // Import the new SingleList component
   import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte'; // Import the button

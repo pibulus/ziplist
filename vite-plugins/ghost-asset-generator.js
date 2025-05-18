@@ -16,7 +16,7 @@ import {
   generateStaticGhostSvg,
   generateIconGhostSvg,
   generateGhostBackgroundSvg,
-} from "../src/lib/components/ghost/exportable/index.js";
+} from "../src/lib/components/ghost/exportable";
 
 // Get current directory
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -1,8 +1,8 @@
 <script>
-  import './ghost-animations.css';
-  import './ghost-themes.css';
-  import { GHOST_BODY_PATH, GHOST_EYE_LEFT_PATH, GHOST_EYE_RIGHT_PATH, GHOST_BACKGROUND_PATH } from './exportable/paths.js';
-  import { initGradientAnimation, cleanupAnimation, cleanupAllAnimations } from './gradientAnimator';
+  import '../animation/ghost-animations.css';
+  import '../theme/ghost-themes.css';
+  import { GHOST_BODY_PATH, GHOST_EYE_LEFT_PATH, GHOST_EYE_RIGHT_PATH, GHOST_BACKGROUND_PATH } from '../exportable';
+  import { initGradientAnimation, cleanupAnimation, cleanupAllAnimations } from '../animation';
   import { onMount, onDestroy } from 'svelte';
   
   // Direct theme prop - no store subscription

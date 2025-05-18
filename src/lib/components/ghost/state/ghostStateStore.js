@@ -15,7 +15,7 @@ import {
   CSS_CLASSES,
   WOBBLE_CONFIG, // Import WOBBLE_CONFIG
   BLINK_CONFIG, // Import BLINK_CONFIG
-} from "../animationConfig.js";
+} from "../animation";
 
 /**
  * Create the ghost animation state machine

@@ -1,7 +1,7 @@
 <script>
   import { browser } from '$app/environment';
-  import Ghost from '$lib/components/ghost/Ghost.svelte';
-  import { ModalCloseButton } from './index.js';
+  import { Ghost } from '$lib/components/ghost';
+  import { ModalCloseButton } from './index';
   
   export let closeModal;
   export let markIntroAsSeen;

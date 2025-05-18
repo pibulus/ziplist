@@ -12,13 +12,9 @@ import {
   ANIMATION_STATES,
   EYE_CONFIG,
   ANIMATION_BEHAVIORS,
-} from "../animationConfig.js";
-import {
-  seedRandom,
-  cleanupTimers,
-  isBrowser,
-} from "../utils/animationUtils.js";
-import { ghostStateStore } from "../stores/ghostStateStore.js";
+} from "./animationConfig";
+import { seedRandom, cleanupTimers, isBrowser } from "./animationUtils";
+import { ghostStateStore } from "../state";
 
 // Animation timers
 const timers = {

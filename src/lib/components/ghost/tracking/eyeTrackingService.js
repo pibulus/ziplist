@@ -1,7 +1,7 @@
 // Eye tracking service for ghost component
 import { browser } from "$app/environment";
 import { get } from "svelte/store";
-import { ghostStateStore } from "../state/index.js"; // Updated import path
+import { ghostStateStore } from "../state"; // Updated import path
 
 // Default configuration
 const defaultConfig = {

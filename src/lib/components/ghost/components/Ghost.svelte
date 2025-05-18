@@ -3,11 +3,11 @@
 	import { browser } from '$app/environment';
 
 	// CSS imports
-	import './ghost-animations.css';
+	import '../animation/ghost-animations.css';
 	// Removed import for ghost-themes.css (styles injected dynamically)
 
 	// SVG paths
-	import { GHOST_BODY_PATH, GHOST_EYE_LEFT_PATH, GHOST_EYE_RIGHT_PATH, GHOST_BACKGROUND_PATH } from './exportable/paths.js';
+	import { GHOST_BODY_PATH, GHOST_EYE_LEFT_PATH, GHOST_EYE_RIGHT_PATH, GHOST_BACKGROUND_PATH } from '../exportable';
 
 	// Configuration
 	import {
@@ -17,27 +17,28 @@
 		ANIMATION_TIMING, // Import ANIMATION_TIMING
 		WOBBLE_CONFIG, // Import WOBBLE_CONFIG
 		EYE_CONFIG
-	} from './animationConfig.js';
+	} from '../animation';
 
 	// Removed THEMES import (managed by themeStore)
 
 	// Import stores (main instances)
-	import { ghostStateStore, theme as localTheme, cssVariables } from './stores/index.js';
+	import { ghostStateStore } from '../state';
+	import { theme as localTheme, cssVariables } from '../theme';
 
 	// Import services (main instances)
-	import { animationService, blinkService } from './services/index.js';
+	import { animationService, blinkService } from '../animation';
 
 	// Import animation utilities
-	import { forceReflow } from './utils/animationUtils.js'; // Only forceReflow needed directly
+	import { forceReflow } from '../animation'; // Only forceReflow needed directly
 
 	// Import gradient animator for theme updates
-	// import { cleanupAllAnimations, initGradientAnimation } from './gradientAnimator.js'; // These seem to be unused based on later comments
+	// import { cleanupAllAnimations, initGradientAnimation } from '../animation'; // These seem to be unused based on later comments
 
 	// Import the new Svelte Action
-	import { initialGhostAnimation } from './actions/initialGhostAnimation.js';
+	import { initialGhostAnimation } from '../animation';
 
 	// Import eye tracking service
-	import { createEyeTracking } from './eyeTracking.js'; // Corrected path
+	import { createEyeTracking } from '../tracking';
 
 	// Props to communicate state
 	export let isRecording = false;

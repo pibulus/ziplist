@@ -1,7 +1,7 @@
 <script>
-  import Ghost from '$lib/components/ghost/Ghost.svelte';
+  import { Ghost } from '$lib/components/ghost';
   import { theme } from '$lib';
-  import { ModalCloseButton } from './index.js';
+  import { ModalCloseButton } from './index';
   export let closeModal;
 </script>
 

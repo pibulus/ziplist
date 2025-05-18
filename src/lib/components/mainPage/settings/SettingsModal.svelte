@@ -3,10 +3,10 @@
 	import { theme, autoRecord, showSettingsModal, applyTheme, promptStyle } from '$lib';
 	import { geminiService } from '$lib/services/geminiService';
 	import { PROMPT_STYLES } from '$lib/constants';
-	import DisplayGhost from '$lib/components/ghost/DisplayGhost.svelte';
-	import Ghost from '$lib/components/ghost/Ghost.svelte';
+	import { DisplayGhost } from '$lib/components/ghost';
+	import { Ghost } from '$lib/components/ghost';
 	import TranscriptionStyleSelector from './TranscriptionStyleSelector.svelte';
-	import { ModalCloseButton } from '../modals/index.js';
+	import { ModalCloseButton } from '../modals';
 
 	// Props for the modal
 	export let closeModal = () => {};
