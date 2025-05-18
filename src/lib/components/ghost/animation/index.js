@@ -5,7 +5,7 @@
  * Provides a clean public API while encapsulating implementation details.
  */
 
-// Import animation configuration
+// Import animation constants from dedicated file to prevent circular dependencies
 import {
   ANIMATION_STATES,
   ANIMATION_TRANSITIONS,
@@ -14,10 +14,14 @@ import {
   WOBBLE_CONFIG,
   BLINK_CONFIG,
   ANIMATION_TIMING,
-  ANIMATION_EFFECTS,
-  PULSE_CONFIG,
   EYE_CONFIG,
   SPECIAL_CONFIG
+} from "./animationConstants";
+
+// Import additional animation configuration
+import {
+  ANIMATION_EFFECTS,
+  PULSE_CONFIG
 } from "./animationConfig";
 
 // Import core services (default exports)

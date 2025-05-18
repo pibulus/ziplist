@@ -1,9 +1,12 @@
 /**
  * Ghost Animation State Store
  *
- * A reactive store for managing ghost animation states and transitions
+ * A unified reactive store for managing ghost animation states and transitions
  * using a formal state machine approach. This centralizes all state
  * management while leaving actual animation implementation to services.
+ * 
+ * This store consolidates functionality from the previous ghostStateStore and ghostStore
+ * to provide a single source of truth for ghost state management.
  */
 
 import { writable, derived, get } from "svelte/store";
@@ -13,9 +16,9 @@ import {
   ANIMATION_TRANSITIONS,
   ANIMATION_BEHAVIORS,
   CSS_CLASSES,
-  WOBBLE_CONFIG, // Import WOBBLE_CONFIG
-  BLINK_CONFIG, // Import BLINK_CONFIG
-} from "../animation";
+  WOBBLE_CONFIG,
+  BLINK_CONFIG
+} from "../animation/animationConstants";
 
 /**
  * Create the ghost animation state machine
@@ -46,7 +49,6 @@ function createGhostStateStore() {
     // isSpecialAnimationActive is now handled by current === ANIMATION_STATES.EASTER_EGG
     // Debug mode
     debug: true,
-    inactivityTimerId: null, // Clear timer on reset
     // First visit (for initial animation) - Default to false for SSR safety
     isFirstVisit: false,
     // Animation state timeouts
@@ -77,7 +79,7 @@ function createGhostStateStore() {
     if (!currentDebugFlag) return;
     // ADD THIS LINE
     console.log(
-      `[GhostStateStore DEBUGLOG_CHECK] Attempting to log (debugLog): "${message}". Current debug flag in store: ${currentDebugFlag}`,
+      `[GhostStateStore DEBUGLOG_CHECK] Attempting to log (debugLog): "${message}". Current debug flag in store: ${currentDebugFlag}`
     );
     // END ADD
     console[level](`[GhostState] ${message}`);
@@ -131,13 +133,13 @@ function createGhostStateStore() {
     if (!isValidTransition(currentState.current, newState)) {
       debugLog(
         `Invalid state transition: ${currentState.current} → ${newState}`,
-        "warn",
+        "warn"
       );
       return false;
     }
 
     debugLog(
-      `Animation state transition: ${currentState.current} → ${newState}`,
+      `Animation state transition: ${currentState.current} → ${newState}`
     );
 
     // Get behavior for new state
@@ -204,7 +206,7 @@ function createGhostStateStore() {
       // The state to return to will be determined inside the timeout,
       // typically the state active before this timed state began (e.g., IDLE or RECORDING for REACTING).
       debugLog(
-        `Setting cleanup timeout for ${newState} in ${behavior.cleanupDelay}ms`,
+        `Setting cleanup timeout for ${newState} in ${behavior.cleanupDelay}ms`
       );
 
       const timeoutId = setTimeout(() => {
@@ -227,7 +229,7 @@ function createGhostStateStore() {
           // Add more specific conditions here if other states need different return logic.
 
           debugLog(
-            `Cleanup for ${newState}: Transitioning to ${stateToReturnTo}`,
+            `Cleanup for ${newState}: Transitioning to ${stateToReturnTo}`
           );
           setAnimationState(stateToReturnTo);
         }
@@ -258,10 +260,10 @@ function createGhostStateStore() {
     // Skip if state is already correct to prevent cycles
     if (currentState.isRecording === isRecording) {
       console.log(
-        `Skipping redundant recording state update: already ${isRecording}`,
+        `Skipping redundant recording state update: already ${isRecording}`
       );
       console.log(
-        "[Debug Step 2] Exiting setRecording early - state already matches.",
+        "[Debug Step 2] Exiting setRecording early - state already matches."
       ); // Log early exit
       return;
     }
@@ -285,26 +287,26 @@ function createGhostStateStore() {
       const wobbleGroupStart = document.getElementById("ghost-wobble-group");
       console.log(
         "[Debug Step 3 - Start] Wobble group element:",
-        wobbleGroupStart,
+        wobbleGroupStart
       ); // Log element check result
       if (wobbleGroupStart) {
         // Always use the combined wobble class
         const wobbleClassStart = CSS_CLASSES.WOBBLE_BOTH;
         debugLog(
-          `[Imperative Wobble] Adding class ${wobbleClassStart} for start`,
+          `[Imperative Wobble] Adding class ${wobbleClassStart} for start`
         );
         console.log(
-          `[Wobble Debug ${Date.now()}] BEFORE adding start wobble class: ${wobbleClassStart}`,
+          `[Wobble Debug ${Date.now()}] BEFORE adding start wobble class: ${wobbleClassStart}`
         ); // Timestamp log
         wobbleGroupStart.classList.add(wobbleClassStart);
         console.log(
-          `[Wobble Debug ${Date.now()}] AFTER adding start wobble class: ${wobbleClassStart}`,
+          `[Wobble Debug ${Date.now()}] AFTER adding start wobble class: ${wobbleClassStart}`
         ); // Timestamp log
 
         // Schedule class removal and style reset (using updated duration from WOBBLE_CONFIG)
         const startTimeoutId = setTimeout(() => {
           debugLog(
-            `[Imperative Wobble] Removing class ${wobbleClassStart} after start`,
+            `[Imperative Wobble] Removing class ${wobbleClassStart} after start`
           );
           wobbleGroupStart.classList.remove(wobbleClassStart);
           clearStateTimeout("startWobbleCleanup"); // Clear self
@@ -322,7 +324,7 @@ function createGhostStateStore() {
       } else {
         debugLog(
           "[Imperative Wobble] Could not find wobble group for start",
-          "warn",
+          "warn"
         );
       }
 
@@ -340,7 +342,7 @@ function createGhostStateStore() {
           setAnimationState(ANIMATION_STATES.RECORDING);
         } else {
           debugLog(
-            "Recording stopped before next frame state transition could occur.",
+            "Recording stopped before next frame state transition could occur."
           );
         }
         // Clear the stored RAF ID after execution
@@ -385,26 +387,26 @@ function createGhostStateStore() {
       const wobbleGroupStop = document.getElementById("ghost-wobble-group");
       console.log(
         "[Debug Step 3 - Stop] Wobble group element:",
-        wobbleGroupStop,
+        wobbleGroupStop
       ); // Log element check result
       if (wobbleGroupStop) {
         // Always use the combined wobble class
         const wobbleClassStop = CSS_CLASSES.WOBBLE_BOTH;
         debugLog(
-          `[Imperative Wobble] Adding class ${wobbleClassStop} for stop`,
+          `[Imperative Wobble] Adding class ${wobbleClassStop} for stop`
         );
         console.log(
-          `[Wobble Debug ${Date.now()}] BEFORE adding stop wobble class: ${wobbleClassStop}`,
+          `[Wobble Debug ${Date.now()}] BEFORE adding stop wobble class: ${wobbleClassStop}`
         ); // Timestamp log
         wobbleGroupStop.classList.add(wobbleClassStop);
         console.log(
-          `[Wobble Debug ${Date.now()}] AFTER adding stop wobble class: ${wobbleClassStop}`,
+          `[Wobble Debug ${Date.now()}] AFTER adding stop wobble class: ${wobbleClassStop}`
         ); // Timestamp log
 
         // Schedule class removal and style reset (using updated duration from WOBBLE_CONFIG)
         const stopTimeoutId = setTimeout(() => {
           debugLog(
-            `[Imperative Wobble] Removing class ${wobbleClassStop} after stop`,
+            `[Imperative Wobble] Removing class ${wobbleClassStop} after stop`
           );
           wobbleGroupStop.classList.remove(wobbleClassStop);
           clearStateTimeout("stopWobbleCleanup"); // Clear self
@@ -422,7 +424,7 @@ function createGhostStateStore() {
       } else {
         debugLog(
           "[Imperative Wobble] Could not find wobble group for stop",
-          "warn",
+          "warn"
         );
       }
     }
@@ -566,7 +568,7 @@ function createGhostStateStore() {
 
     if (currentStoreState.current === ANIMATION_STATES.IDLE) {
       debugLog(
-        `Starting inactivity timer for ${BLINK_CONFIG.INACTIVITY_TIMEOUT}ms.`,
+        `Starting inactivity timer for ${BLINK_CONFIG.INACTIVITY_TIMEOUT}ms.`
       );
       const newTimerId = setTimeout(() => {
         debugLog("Inactivity timer expired. Transitioning to ASLEEP.");
@@ -600,13 +602,13 @@ function createGhostStateStore() {
     // ADD THESE LINES
     const storeBefore = get(_state);
     console.log(
-      `[GhostStateStore SETDEBUG_CALL] Called with: ${enabled}. Type: ${typeof enabled}. Current store debug before update: ${storeBefore.debug}`,
+      `[GhostStateStore SETDEBUG_CALL] Called with: ${enabled}. Type: ${typeof enabled}. Current store debug before update: ${storeBefore.debug}`
     );
     // END ADD
     _state.update((s) => ({ ...s, debug: !!enabled })); // Ensure it's a boolean
     // ADD THIS LINE
     console.log(
-      `[GhostStateStore SETDEBUG_RESULT] Store debug after update: ${get(_state).debug}`,
+      `[GhostStateStore SETDEBUG_RESULT] Store debug after update: ${get(_state).debug}`
     );
     // END ADD
   }
@@ -656,7 +658,7 @@ function createGhostStateStore() {
       setAnimationState(ANIMATION_STATES.REACTING);
     } else {
       debugLog(
-        `Skipping REACTING trigger, current state ${currentStateVal} is not IDLE or RECORDING.`,
+        `Skipping REACTING trigger, current state ${currentStateVal} is not IDLE or RECORDING.`
       );
     }
   }
@@ -670,7 +672,7 @@ function createGhostStateStore() {
   const _eyesClosed = derived(_state, ($state) => $state.eyesClosed); // Use _state
   const _isEyeTrackingEnabled = derived(
     _state,
-    ($state) => $state.isEyeTrackingEnabled,
+    ($state) => $state.isEyeTrackingEnabled
   ); // Use _state
   const _isFirstVisit = derived(_state, ($state) => $state.isFirstVisit); // Use _state
   // ---
@@ -693,8 +695,27 @@ function createGhostStateStore() {
 // Create singleton instance
 export const ghostStateStore = createGhostStateStore();
 
-// --- Removed redundant top-level derived exports ---
-// Convenience exports are now part of the ghostStateStore object itself
+// --- Legacy derived exports for compatibility with former ghostStore pattern ---
+// These exports ensure backward compatibility with any components 
+// that might have been using the original ghostStore pattern
+
+/**
+ * Direct export of isRecording store for Svelte reactivity via $ syntax
+ * @deprecated Use GhostSystem.stateStore.isRecording instead
+ */
+export const isRecording = ghostStateStore.isRecording;
+
+/**
+ * Direct export of isProcessing store for Svelte reactivity via $ syntax  
+ * @deprecated Use GhostSystem.stateStore.isProcessing instead
+ */
+export const isProcessing = ghostStateStore.isProcessing;
+
+/**
+ * Convenience store derived from ghostStateStore.currentState
+ * @deprecated Use GhostSystem.stateStore.currentState instead
+ */
+export const animationState = ghostStateStore.currentState;
 
 // Default export for convenience
 export default ghostStateStore;

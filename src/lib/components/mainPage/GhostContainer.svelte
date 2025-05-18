@@ -1,7 +1,7 @@
 <script>
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 	import { browser } from '$app/environment';
-	import Ghost from '$lib/components/ghost';
+	import { Ghost } from '$lib/components/ghost';
 	import { theme as appTheme } from '$lib';
 
 	// Props passed from the parent

@@ -3,74 +3,34 @@
  * Centralized configuration for ghost animation parameters
  */
 
-export const BLINK_CONFIG = {
-  MIN_GAP: 4000, // Minimum time between ambient blinks (ms)
-  MAX_GAP: 9000, // Maximum time between ambient blinks (ms)
-  INACTIVITY_TIMEOUT: 12000, // Time of no interaction in IDLE before falling asleep (ms)
-  SINGLE_DURATION: 180, // Duration of a single blink (ms) - increased to account for transitions
-  DOUBLE_PAUSE: 80, // Pause between blinks in a double-blink (ms) - increased for smoother effect
-  TRIPLE_PAUSE: 180, // Pause between blinks in a triple-blink (ms)
-  DOUBLE_CHANCE: 0.25, // Probability (0-1) of double blink vs single
-  THINKING_RATE: 180, // Time between blinks in thinking state (ms)
-  THINKING_INTERVAL: 1000, // Interval for thinking blink pattern (ms)
-  RESUME_DELAY: 500, // Delay before resuming blinks after state change (ms)
-};
+// Import shared constants from animationConstants.js to prevent circular dependencies
+import {
+  ANIMATION_STATES,
+  ANIMATION_TRANSITIONS,
+  ANIMATION_BEHAVIORS,
+  CSS_CLASSES,
+  ANIMATION_TIMING,
+  WOBBLE_CONFIG,
+  BLINK_CONFIG,
+  EYE_CONFIG,
+  SPECIAL_CONFIG
+} from "./animationConstants";
 
-export const WOBBLE_CONFIG = {
-  // Duration for combined left-right animation - Reduced again for even faster effect
-  DURATION: 290, // Duration of ghost wobble animation (ms) - Back to original faster speed
-  LEFT_CHANCE: 0.5, // Probability (0-1) of wobbling left vs right - No longer used for start/stop
-  CLEANUP_DELAY: 290, // Delay for wobble animation cleanup (ms) - Match faster duration
-};
-
-export const SPECIAL_CONFIG = {
-  CHECK_INTERVAL: 5000, // Time between special animation checks (ms)
-  CHANCE: 0.05, // Probability (0-1) of special animation occurring
-  DURATION: 2000, // Duration of special animation (ms)
+// Re-export the constants
+export {
+  ANIMATION_STATES,
+  ANIMATION_TRANSITIONS,
+  ANIMATION_BEHAVIORS,
+  CSS_CLASSES,
+  ANIMATION_TIMING,
+  WOBBLE_CONFIG,
+  BLINK_CONFIG,
+  EYE_CONFIG,
+  SPECIAL_CONFIG
 };
 
 export const PULSE_CONFIG = {
   DURATION: 600, // Duration of pulse animation (ms)
-};
-
-export const EYE_CONFIG = {
-  CLOSED_SCALE: 0.05, // Scale factor when eyes are closed
-  X_MULTIPLIER: 4, // Horizontal movement multiplier for eyes
-  Y_MULTIPLIER: 2, // Vertical movement multiplier for eyes
-  X_DIVISOR: 3, // Divisor for max horizontal tracking distance
-  Y_DIVISOR: 3, // Divisor for max vertical tracking distance
-  DEAD_ZONE: 0.05, // Dead zone for eye movement (0-1)
-  SMOOTHING: 0.15, // Smoothing factor for eye movement (0-1) - Adjusted for smoother tracking
-  REACT_DELAY: 500, // Delay before reacting to transcript (ms)
-  TEXT_THRESHOLD: 20, // Threshold for "long" transcript reactions
-  BLINK_TRANSITION: "0.075s cubic-bezier(0.4, 0.0, 0.2, 1)", // Transition for smooth eye blinks
-};
-
-export const ANIMATION_TIMING = {
-  INITIAL_LOAD_DURATION: 2500, // Duration for the new grow-and-wobble CSS animation (ms)
-  OBSERVER_SETUP_DELAY: 50, // Delay for observer setup (ms),
-  BASE_TRANSITION: "0.3s ease", // Global theme transition timing
-
-  // Animation durations
-  SHIMMER_DURATION: "5s", // Base shimmer animation duration
-  GRADIENT_SHIFT_DURATION: "12s", // Gradient shift animation duration
-  COLOR_PULSE_DURATION: "5s", // Color pulse animation duration
-  COLOR_PULSE_STAGGER: "0.5s", // Delay between color pulse animations
-  HOVER_DURATION: "1.2s", // Hover animation duration
-  GENTLE_FLOAT_DURATION: "3s", // Gentle float animation duration
-  RECORDING_PULSE_DURATION: "2s", // Recording pulse animation duration
-  GROW_DURATION: "2s", // Grow animation duration
-  FLOAT_DELAY: "2.5s", // Delay before float animation starts
-
-  // Flow animation durations per theme
-  PEACH_FLOW_DURATION: "9s",
-  MINT_FLOW_DURATION: "10s",
-  BUBBLEGUM_FLOW_DURATION: "12s",
-  RAINBOW_FLOW_DURATION: "9s",
-
-  // Flow animation easing
-  FLOW_EASE: "cubic-bezier(0.4, 0, 0.6, 1)",
-  SHIMMER_EASE: "ease-in-out",
 };
 
 // Global animation parameters
@@ -156,113 +116,6 @@ export const ANIMATION_EFFECTS = {
     SHADOW_OPACITY_MAX: 0.5,
     POSITION_SPEED: 0.12,
     POSITION_AMPLITUDE: "6%",
-  },
-};
-
-// CSS class names for consistent reference
-export const CSS_CLASSES = {
-  WOBBLE_LEFT: "wobble-left", // Still used? Maybe for other triggers? Keep for now.
-  WOBBLE_RIGHT: "wobble-right", // Still used? Maybe for other triggers? Keep for now.
-  WOBBLE_BOTH: "wobble-both", // New class for combined wobble
-  SPIN: "spin",
-  PULSE: "ghost-pulse",
-  INITIAL_LOAD: "initial-load",
-  RECORDING: "recording",
-  RECORDING_PEACH: "recording-glow-peach",
-  RECORDING_MINT: "recording-glow-mint",
-  RECORDING_BUBBLEGUM: "recording-glow-bubblegum",
-  RAINBOW_CYCLE: "rainbow-color-cycle",
-  ASLEEP: "asleep", // CSS class for the asleep state
-  WAKING_UP: "waking-up", // CSS class for the waking up state
-};
-
-// Animation state definitions
-export const ANIMATION_STATES = {
-  INITIAL: "initial",
-  IDLE: "idle",
-  THINKING: "thinking",
-  RECORDING: "recording",
-  REACTING: "reacting",
-  EASTER_EGG: "easter_egg", // New state for special animations
-  ASLEEP: "asleep", // New state for inactivity
-  WAKING_UP: "waking_up", // New state for waking transition
-  // WOBBLING state removed
-};
-
-// Valid state transitions (WOBBLING removed)
-export const ANIMATION_TRANSITIONS = {
-  [ANIMATION_STATES.INITIAL]: [ANIMATION_STATES.IDLE],
-  [ANIMATION_STATES.IDLE]: [
-    ANIMATION_STATES.THINKING,
-    ANIMATION_STATES.THINKING,
-    ANIMATION_STATES.RECORDING,
-    ANIMATION_STATES.REACTING,
-    ANIMATION_STATES.EASTER_EGG, // IDLE can transition to EASTER_EGG
-    ANIMATION_STATES.ASLEEP, // IDLE can transition to ASLEEP
-  ],
-  [ANIMATION_STATES.THINKING]: [
-    ANIMATION_STATES.IDLE,
-    ANIMATION_STATES.RECORDING,
-  ],
-  [ANIMATION_STATES.RECORDING]: [
-    ANIMATION_STATES.THINKING,
-    ANIMATION_STATES.IDLE,
-  ],
-  // WOBBLING transitions removed
-  [ANIMATION_STATES.REACTING]: [ANIMATION_STATES.IDLE],
-  [ANIMATION_STATES.EASTER_EGG]: [ANIMATION_STATES.IDLE], // EASTER_EGG transitions back to IDLE
-  [ANIMATION_STATES.ASLEEP]: [ANIMATION_STATES.WAKING_UP], // ASLEEP transitions to WAKING_UP
-  [ANIMATION_STATES.WAKING_UP]: [ANIMATION_STATES.IDLE], // WAKING_UP transitions to IDLE
-};
-
-// Animation behaviors for each state (WOBBLING removed)
-export const ANIMATION_BEHAVIORS = {
-  [ANIMATION_STATES.INITIAL]: {
-    blinkPattern: "none",
-    eyeTracking: false,
-    cleanupDelay: 0, // Manually controlled transition after initial animation + blink
-    growAnimation: true,
-  },
-  [ANIMATION_STATES.IDLE]: {
-    blinkPattern: "random",
-    blinkMinGap: BLINK_CONFIG.MIN_GAP,
-    blinkMaxGap: BLINK_CONFIG.MAX_GAP,
-    eyeTracking: true, // Ensure this is true for IDLE state eye tracking
-    cleanupDelay: 0,
-  },
-  [ANIMATION_STATES.THINKING]: {
-    blinkPattern: "rhythmic",
-    blinkInterval: BLINK_CONFIG.THINKING_INTERVAL,
-    blinkDuration: BLINK_CONFIG.THINKING_RATE,
-    eyeTracking: false,
-    cleanupDelay: BLINK_CONFIG.RESUME_DELAY,
-  },
-  [ANIMATION_STATES.RECORDING]: {
-    blinkPattern: "none",
-    eyeTracking: true,
-    cleanupDelay: 0,
-  },
-  // WOBBLING behavior removed
-  [ANIMATION_STATES.REACTING]: {
-    blinkPattern: "expression",
-    eyeTracking: true,
-    cleanupDelay: EYE_CONFIG.REACT_DELAY,
-  },
-  [ANIMATION_STATES.EASTER_EGG]: {
-    blinkPattern: "none", // No blinking during easter egg
-    eyeTracking: true, // Eyes can still track if desired, or set to false
-    cleanupDelay: SPECIAL_CONFIG.DURATION, // Duration of the easter egg
-    // Note: The actual animation (spin) is applied via CSS class in Ghost.svelte
-  },
-  [ANIMATION_STATES.ASLEEP]: {
-    blinkPattern: "none", // Eyes will be managed as closed by the state store
-    eyeTracking: false, // No eye tracking while asleep
-    cleanupDelay: 0, // Does not auto-transition out; requires interaction
-  },
-  [ANIMATION_STATES.WAKING_UP]: {
-    blinkPattern: "none", // Eyes controlled by wake-up animation
-    eyeTracking: false, // No eye tracking during wake-up
-    cleanupDelay: 1000, // Duration of the wake-up animation (ms)
   },
 };
 
@@ -357,6 +210,3 @@ export function injectAnimationVariables() {
   const cssVars = generateAnimationCssVariables();
   styleElement.textContent = `:root {\n  ${cssVars.replace(/\n/g, "\n  ")}\n}`;
 }
-
-// Removed injectAnimationVariables and generateAnimationCssVariables functions
-// Rely on themeStore.js and Ghost.svelte::initDynamicStyles for variable injection

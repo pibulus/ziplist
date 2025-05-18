@@ -12,6 +12,7 @@ import { createEyeTracking } from "./tracking";
 import { ghostStateStore } from "./state";
 import { theme, setTheme, getThemeColor } from "./theme";
 import { applyInitialLoadEffect, applyPulseEffect } from "./animation";
+import { ANIMATION_STATES, ANIMATION_BEHAVIORS } from "./animation/animationConstants";
 
 // Export the main components
 export { Ghost, DisplayGhost };
@@ -36,6 +37,19 @@ export {
  *
  * // Trigger animation state
  * GhostSystem.stateStore.setAnimationState('recording');
+ * 
+ * // Reactive access to ghost state in Svelte components:
+ * import { GhostSystem } from '$lib/components/ghost';
+ * 
+ * // Extract the specific stores you need for reactive use with $ syntax
+ * const isProcessingStore = GhostSystem.stateStore.isProcessing;
+ * const isRecordingStore = GhostSystem.stateStore.isRecording;
+ * 
+ * // Then in your template:
+ * // <Component isProcessing={$isProcessingStore} />
+ * 
+ * // IMPORTANT: Do NOT use $GhostSystem.stateStore.isProcessing directly!
+ * // This will cause a "store_invalid_shape" error because GhostSystem is not a store.
  */
 export const GhostSystem = {
   // Core state management
@@ -45,27 +59,5 @@ export const GhostSystem = {
   themeStore: theme,
 };
 
-// Export specific submodules for advanced usage
-export * from "./components";
-export * from "./state";
-export * from "./theme";
-export * from "./exportable";
-
-// Selective exports from animation and tracking for more controlled public API
-export { ANIMATION_STATES, ANIMATION_BEHAVIORS } from "./animation";
-
-/**
- * The main Ghost component.
- *
- * @example
- * <script>
- *   import Ghost from '$lib/components/ghost';
- * </script>
- *
- * <Ghost
- *   isRecording={false}
- *   isProcessing={false}
- *   externalTheme={appTheme}
- * />
- */
-export default Ghost;
+// Selective exports from animation for more controlled public API
+export { ANIMATION_STATES, ANIMATION_BEHAVIORS };

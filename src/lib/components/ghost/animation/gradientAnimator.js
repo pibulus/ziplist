@@ -7,6 +7,7 @@
  */
 
 import { gradientAnimations, animationTiming, getThemeColor } from "../theme";
+import { browser } from "$app/environment";
 
 // Animation state
 let animationFrames = {};
@@ -14,12 +15,20 @@ let gradientPositions = {};
 let stopColors = {};
 
 /**
+ * Checks if code is running in browser environment
+ * @returns {boolean} True if in browser environment
+ */
+function isBrowser() {
+  return typeof window !== 'undefined' && typeof document !== 'undefined' && browser;
+}
+
+/**
  * Initialize gradient animation for a specific theme
  * @param {string} themeId - Theme identifier (peach, mint, bubblegum, rainbow)
  * @param {SVGElement} svgElement - The SVG element containing the gradient
  */
 export function initGradientAnimation(themeId, svgElement) {
-  if (!svgElement) return;
+  if (!svgElement || !isBrowser()) return;
 
   // Clean up any existing animation for this theme
   cleanupAnimation(themeId);
@@ -46,6 +55,8 @@ export function initGradientAnimation(themeId, svgElement) {
  * @param {SVGLinearGradientElement} gradient - The gradient element to animate
  */
 function initGradientPositionAnimation(themeId, gradient) {
+  if (!isBrowser() || !gradient) return;
+  
   // Get configuration for this theme
   const config = gradientAnimations[themeId];
   const timingConfig = animationTiming.gradientShift;
@@ -86,7 +97,7 @@ function initGradientPositionAnimation(themeId, gradient) {
  * @param {SVGLinearGradientElement} gradient - The gradient element to animate
  */
 function animateGradientPosition(themeId, gradient) {
-  if (!gradient || !gradientPositions[themeId]) return;
+  if (!isBrowser() || !gradient || !gradientPositions[themeId]) return;
 
   const pos = gradientPositions[themeId];
 
@@ -115,7 +126,7 @@ function animateGradientPosition(themeId, gradient) {
  * @param {NodeList} stops - Collection of stop elements
  */
 function initStopColorAnimations(themeId, stops) {
-  if (!stops || !stops.length) return;
+  if (!isBrowser() || !stops || !stops.length) return;
 
   // Get configuration
   const config = gradientAnimations[themeId];
@@ -200,6 +211,8 @@ function initStopColorAnimations(themeId, stops) {
  * @param {number} stopIndex - Index of the stop to animate
  */
 function animateStopColor(themeId, stopIndex) {
+  if (!isBrowser()) return;
+  
   const colorState = stopColors[themeId]?.[stopIndex];
   if (!colorState) return;
 
@@ -258,6 +271,8 @@ function getCssVariable(name, fallback = "") {
  * @param {string} themeId - Theme identifier
  */
 export function cleanupAnimation(themeId) {
+  if (!isBrowser()) return;
+  
   // Clean up position animation
   if (animationFrames[`${themeId}_position`]) {
     cancelAnimationFrame(animationFrames[`${themeId}_position`]);
@@ -282,6 +297,8 @@ export function cleanupAnimation(themeId) {
  * Clean up all animations
  */
 export function cleanupAllAnimations() {
+  if (!isBrowser()) return;
+  
   Object.keys(animationFrames).forEach((key) => {
     cancelAnimationFrame(animationFrames[key]);
     delete animationFrames[key];

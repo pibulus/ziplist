@@ -23,7 +23,9 @@
     userPreferences 
   } from '$lib/services/infrastructure/stores.js';
   import { AudioStates } from '$lib/services/audio/audioStates.js'; // Import AudioStates directly
-  import { ghostStateStore } from '$lib/components/ghost'; // Import ghostStateStore for direct access
+  import { GhostSystem } from '$lib/components/ghost'; // Import GhostSystem for access to ghost state
+  // Extract the specific isProcessing store for proper reactivity
+  const isProcessingStore = GhostSystem.stateStore.isProcessing;
   import { PageLayout } from '$lib/components/layout';
   import SingleList from '../list/SingleList.svelte'; // Import the new SingleList component
   import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte'; // Import the button
@@ -158,7 +160,7 @@
 
     if ($isRecording) {
       // Currently recording, so stop
-      ghostStateStore.setRecording(false); // Visually stop ghost recording animations
+      GhostSystem.stateStore.setRecording(false); // Visually stop ghost recording animations
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop(); // This will trigger onstop handler
         // audioActions.updateState will be called in onstop
@@ -168,13 +170,13 @@
       }
     } else {
       // Not recording, so start
-      ghostStateStore.setRecording(true); // Visually start ghost recording animations
+      GhostSystem.stateStore.setRecording(true); // Visually start ghost recording animations
       audioChunks = []; // Clear previous chunks
 
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.error('getUserMedia not supported on this browser!');
-          ghostStateStore.setRecording(false);
+          GhostSystem.stateStore.setRecording(false);
           audioActions.updateState(AudioStates.ERROR, 'getUserMedia is not supported.');
           uiActions.setErrorMessage('Audio recording is not supported on this browser.');
           return;
@@ -231,7 +233,7 @@
         
         mediaRecorder.onerror = (event) => {
           console.error('MediaRecorder error:', event.error);
-          ghostStateStore.setRecording(false);
+          GhostSystem.stateStore.setRecording(false);
           audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
           uiActions.setErrorMessage(`Recording error: ${event.error.name}`);
           stream.getTracks().forEach(track => track.stop());
@@ -241,7 +243,7 @@
 
       } catch (err) {
         console.error('Error starting recording (getUserMedia or MediaRecorder setup):', err);
-        ghostStateStore.setRecording(false); // Revert visual state
+        GhostSystem.stateStore.setRecording(false); // Revert visual state
         let errorMessage = 'Could not start recording.';
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           audioActions.updateState(AudioStates.PERMISSION_DENIED);
@@ -357,7 +359,7 @@
   <GhostContainer
     bind:this={ghostContainer}
     isRecording={$isRecording}
-    isProcessing={$ghostStateStore.isProcessing}
+    isProcessing={$isProcessingStore}
     on:toggleRecording={handleToggleRecording}
   />
   <ContentContainer

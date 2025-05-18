@@ -6,11 +6,13 @@ This document provides quick examples for using the Ghost component in your appl
 
 ```svelte
 <script>
-  import Ghost from '$lib/components/ghost';
+  import { Ghost } from '$lib/components/ghost';
 </script>
 
 <Ghost />
 ```
+
+> **IMPORTANT**: Note that Ghost is now imported as a named export, not a default export.
 
 ## With Theme and State Control
 
@@ -154,19 +156,17 @@ GhostSystem.stateStore.wakeUp(); // Wake up from sleep state
 
 ## Working with Reactive Stores
 
-You can subscribe to Ghost state changes:
+You can subscribe to Ghost state changes correctly by first extracting the store references:
 
 ```svelte
 <script>
   import { GhostSystem } from '$lib/components/ghost';
 
-  // Subscribe to state changes
-  let currentState = 'initial';
-  let isRecording = false;
-
-  // Using deconstructed stores directly
-  import { currentState as ghostCurrentState, isRecording as ghostIsRecording } from '$lib/components/ghost';
-
+  // IMPORTANT: First extract the specific stores you need
+  const ghostCurrentState = GhostSystem.stateStore.currentState;
+  const ghostIsRecording = GhostSystem.stateStore.isRecording;
+  
+  // Then use $ syntax with these store references
   $: console.log('Current state:', $ghostCurrentState);
   $: console.log('Recording state:', $ghostIsRecording);
 </script>
@@ -176,6 +176,8 @@ You can subscribe to Ghost state changes:
   <p>Recording: {$ghostIsRecording ? 'Yes' : 'No'}</p>
 </div>
 ```
+
+> **IMPORTANT**: Note the pattern of first extracting the specific store objects and then using the `$` syntax with the extracted references. Do not use `$GhostSystem.stateStore.isRecording` directly as this will cause Svelte errors.
 
 ## Customization Tips
 

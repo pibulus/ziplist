@@ -8,13 +8,33 @@
  */
 
 import { ANIMATION_TIMING, WOBBLE_CONFIG } from "./animationConfig";
+import { browser } from "$app/environment";
+
+/**
+ * Checks if code is running in browser environment
+ * @returns {boolean} True if in browser environment
+ */
+function isBrowser() {
+  return typeof window !== 'undefined' && typeof document !== 'undefined' && browser;
+}
 
 export function initialGhostAnimation(node, initialParams) {
+  // Check for browser environment first
+  if (!isBrowser()) {
+    return {
+      update() {},
+      destroy() {}
+    };
+  }
+
   let blinkTimeoutId = null;
   // Persist debug state across updates, initialized from the first set of params.
   let currentDebugState = initialParams?.debug || false;
 
   function runSetup(params) {
+    // Always check browser environment
+    if (!isBrowser()) return;
+
     // Always clear any existing timeout and remove the class from a potential previous run.
     if (blinkTimeoutId) {
       clearTimeout(blinkTimeoutId);
@@ -73,6 +93,9 @@ export function initialGhostAnimation(node, initialParams) {
     }
 
     blinkTimeoutId = setTimeout(() => {
+      // Always check browser environment in async operations
+      if (!isBrowser()) return;
+
       // Re-check debug state as it might have changed if update was called.
       // However, currentDebugState is updated at the start of runSetup.
       if (currentDebugState) {
@@ -92,6 +115,9 @@ export function initialGhostAnimation(node, initialParams) {
         rightEye
       ) {
         blinkService.performDoubleBlink({ leftEye, rightEye }, () => {
+          // Check browser environment again in callback
+          if (!isBrowser()) return;
+
           if (currentDebugState) {
             console.log(
               '[Action initialGhostAnimation] Double blink complete. Dispatching "initialAnimationComplete" event.',
@@ -121,9 +147,13 @@ export function initialGhostAnimation(node, initialParams) {
       // - params initially undefined, then becoming defined (action activates).
       // - params initially defined, then becoming undefined (action deactivates/cleans up).
       // - params changing (e.g., debug flag toggling).
+      if (!isBrowser()) return;
       runSetup(newParams);
     },
     destroy() {
+      // Check browser environment before cleanup
+      if (!isBrowser()) return;
+      
       // Cleanup when the element is unmounted.
       if (blinkTimeoutId) {
         clearTimeout(blinkTimeoutId);

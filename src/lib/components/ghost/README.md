@@ -308,17 +308,34 @@ Key features include:
 
 The Ghost component relies heavily on Svelte stores for managing its complex state and coordinating animations.
 
+### Unified State Management
+
+The Ghost component uses a consolidated state management approach with a single source of truth. All state is managed through the `GhostSystem` object exported from the main index.js file:
+
+```javascript
+import { GhostSystem } from '$lib/components/ghost';
+
+// To set state:
+GhostSystem.stateStore.setRecording(true);
+GhostSystem.stateStore.setAnimationState(ANIMATION_STATES.RECORDING);
+
+// For reactive access in Svelte components:
+const isProcessingStore = GhostSystem.stateStore.isProcessing;
+// Then in template:
+<Component isProcessing={$isProcessingStore} />
+```
+
 ### Core State (`ghostStateStore.js`)
 
 This store implements a state machine (`ANIMATION_STATES`) to manage the ghost's primary mode (e.g., `IDLE`, `RECORDING`, `THINKING`). It also tracks:
 
 - `isRecording`: Boolean flag for audio recording.
 - `isProcessing`: Boolean flag for audio processing.
-- `isWobbling`, `wobbleDirection`: Flags for the transient wobble effect.
 - `eyesClosed`, `eyePosition`: State related to eye animations.
 - `isFirstVisit`: Flag for triggering the initial load animation.
+- `currentState`, `previousState`: Current and previous animation states.
 
-Components interact with this store via exported functions like `setRecording`, `setProcessing`, `setAnimationState`, etc.
+Components interact with this store via exported functions like `setRecording`, `setProcessing`, `setAnimationState`, and other methods accessed through the `GhostSystem.stateStore` object.
 
 ### Theme State (`themeStore.js`)
 
@@ -332,7 +349,7 @@ This store manages the current visual theme (`peach`, `mint`, etc.). Key feature
 
 The `Ghost.svelte` component primarily uses props (`isRecording`, `isProcessing`, `externalTheme`) to receive state from its parent. It then syncs these prop changes to the `ghostStateStore`.
 
-Reactive statements (`$:`) in `Ghost.svelte` monitor the stores (`$ghostStateStore`, `$themeStore`, `$cssVariables`) and apply necessary updates, such as:
+Reactive statements (`$:`) in `Ghost.svelte` monitor the stores and apply necessary updates, such as:
 
 - Binding CSS classes based on state (e.g., `.recording`).
 - Applying theme changes by re-initializing gradient animations.
@@ -342,13 +359,13 @@ Reactive statements (`$:`) in `Ghost.svelte` monitor the stores (`$ghostStateSto
 // Example: Syncing prop changes to the store
 $: if (isRecording !== lastRecordingState) {
   lastRecordingState = isRecording;
-  ghostStateStore.setRecording(isRecording); // Inform the store
+  GhostSystem.stateStore.setRecording(isRecording); // Inform the store
 }
 
 // Example: Reacting to store changes for CSS classes
-$: wobbleGroupClasses = `ghost-wobble-group ${
-  $ghostStateStore.isWobbling ? $ghostStateStore.wobbleDirection : ""
-}`.trim();
+$: if ($GhostSystem.stateStore.current === ANIMATION_STATES.RECORDING) {
+  // Apply recording styles
+}
 ```
 
 Global theme state is observed reactively:
