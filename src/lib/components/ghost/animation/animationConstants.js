@@ -1,6 +1,6 @@
 /**
  * Animation Constants
- * 
+ *
  * Shared constants for Ghost component animations.
  * This module is separate to prevent circular dependencies
  * between the animation services and state management.
@@ -125,6 +125,7 @@ export const CSS_CLASSES = {
   PULSE: "pulse",
   SPIN: "spin",
   ASLEEP: "asleep",
+  WAKING_UP: "waking-up",
   INITIAL_LOAD: "initial-load-effect",
 };
 
@@ -136,6 +137,23 @@ export const ANIMATION_TIMING = {
   RECORD_TO_IDLE_DELAY: 100,
   // Total duration of initial load animation, including growth and wobble
   INITIAL_LOAD_DURATION: 2400, // ms
+
+  // Added missing timing properties used in animationConfig.js
+  BASE_TRANSITION: "all 0.3s ease",
+  SHIMMER_DURATION: "5s",
+  SHIMMER_EASE: "ease-in-out",
+  GRADIENT_SHIFT_DURATION: "12s",
+  COLOR_PULSE_DURATION: "5s",
+  COLOR_PULSE_STAGGER: "0.5s",
+
+  // Theme-specific flow animation durations
+  PEACH_FLOW_DURATION: "9s",
+  MINT_FLOW_DURATION: "10s",
+  BUBBLEGUM_FLOW_DURATION: "12s",
+  RAINBOW_FLOW_DURATION: "9s",
+
+  // Flow animation easing
+  FLOW_EASE: "cubic-bezier(0.4, 0, 0.6, 1)",
 };
 
 /**
@@ -181,6 +199,15 @@ export const EYE_CONFIG = {
   REACT_DELAY: 300,
   // Threshold for different reactions based on text length
   TEXT_THRESHOLD: 12,
+
+  // Added missing configuration properties for eye tracking
+  // Smoothing factor for eye movement (lower values = more responsive, higher = smoother)
+  SMOOTHING: 0.2,
+  // Divisors for calculating maximum distance thresholds
+  X_DIVISOR: 3,
+  Y_DIVISOR: 3,
+  // CSS transition for eye blink animation
+  BLINK_TRANSITION: "0.08s cubic-bezier(0.4, 0, 0.2, 1)",
 };
 
 /**
