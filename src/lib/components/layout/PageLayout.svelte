@@ -1,9 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
+	import { GhostStateDebug } from '$lib/components/ghost';
+	
 	export let title = 'ZipList | Zip up a list lickety-split';
 	export let description =
 		'ZipList turns your voice into organized lists. Clean, simple, and freaky fast list creation. Free forever. Tap the ghost and start talking!';
 	export let footerYear = new Date().getFullYear();
+	export let debug = true; // Debug flag, set to true by default
 </script>
 
 <svelte:head>
@@ -14,6 +17,9 @@
 <section
 	class="bg-gradient-mesh main center hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-16 pt-[clamp(4rem,12vh,8rem)] font-sans text-black antialiased sm:px-6 md:px-10 lg:pb-16"
 >
+	{#if debug}
+		<GhostStateDebug position="bottom-right" />
+	{/if}
 	<div
 		class="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg md:max-w-2xl lg:max-w-3xl"
 	>

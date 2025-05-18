@@ -7,7 +7,7 @@
  * @module ghost
  */
 
-import { Ghost, DisplayGhost } from "./components";
+import { Ghost, DisplayGhost, GhostStateDebug } from "./components";
 import { createEyeTracking } from "./tracking";
 import { ghostStateStore } from "./state";
 import { theme, setTheme, getThemeColor } from "./theme";
@@ -15,7 +15,7 @@ import { applyInitialLoadEffect, applyPulseEffect } from "./animation";
 import { ANIMATION_STATES, ANIMATION_BEHAVIORS } from "./animation/animationConstants";
 
 // Export the main components
-export { Ghost, DisplayGhost };
+export { Ghost, DisplayGhost, GhostStateDebug };
 
 // Export key utilities with descriptive names
 export {

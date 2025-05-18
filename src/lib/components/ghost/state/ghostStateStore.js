@@ -36,8 +36,11 @@ function createGhostStateStore() {
     isProcessing: false,
     // Whether the eyes are closed (for blinking)
     eyesClosed: false,
-    // Eye tracking position
-    eyePosition: { x: 0, y: 0 },
+    // Eye tracking position - ensure initial values are valid numbers to prevent NaN issues
+    eyePosition: { 
+      x: 0, // Explicitly use 0 as safe initial position
+      y: 0  // Explicitly use 0 as safe initial position
+    },
     // Whether eye tracking is enabled
     isEyeTrackingEnabled: true,
     // --- Wobble state removed - handled imperatively ---
@@ -144,6 +147,20 @@ function createGhostStateStore() {
 
     // Get behavior for new state
     const behavior = ANIMATION_BEHAVIORS[newState];
+    
+    // Explicit handling for transition from INITIAL state to other states
+    // This ensures eyes are properly reset after the initial animation
+    if (currentState.current === ANIMATION_STATES.INITIAL && 
+        (newState === ANIMATION_STATES.IDLE || newState === ANIMATION_STATES.RECORDING)) {
+      debugLog(
+        `Handling special case: transition from INITIAL to ${newState} - ensuring eyes are open`
+      );
+      // Ensure eyes are open when transitioning away from INITIAL state
+      if (currentState.eyesClosed) {
+        debugLog(`Eyes were closed, forcing them open during transition from INITIAL state`);
+        currentState.eyesClosed = false;  // Set this early for state update below
+      }
+    }
 
     // Clear current state timeout if exists (except for inactivity timer which is managed separately)
     if (
@@ -458,10 +475,18 @@ function createGhostStateStore() {
    * @param {number} y - Normalized Y position (-1 to 1)
    */
   function setEyePosition(x, y) {
+    // Guard against NaN values to prevent invalid eye positions
+    const safeX = isNaN(x) ? 0 : x;
+    const safeY = isNaN(y) ? 0 : y;
+    
+    if (isNaN(x) || isNaN(y)) {
+      debugLog(`Received NaN eye position, using fallback. Original: [${x}, ${y}], Safe: [${safeX}, ${safeY}]`, "warn");
+    }
+    
     _state.update((s) => ({
       // Use _state
       ...s,
-      eyePosition: { x, y },
+      eyePosition: { x: safeX, y: safeY },
     }));
   }
 

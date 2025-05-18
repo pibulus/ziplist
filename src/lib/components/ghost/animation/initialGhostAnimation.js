@@ -9,6 +9,7 @@
 
 import { ANIMATION_TIMING, WOBBLE_CONFIG } from "./animationConfig";
 import { browser } from "$app/environment";
+import { ghostStateStore } from "../state";
 
 /**
  * Checks if code is running in browser environment
@@ -114,15 +115,33 @@ export function initialGhostAnimation(node, initialParams) {
         leftEye &&
         rightEye
       ) {
+        // Make sure eyes are open before performing the double blink
+        blinkService.applyEyeTransforms(leftEye, rightEye);
+        
         blinkService.performDoubleBlink({ leftEye, rightEye }, () => {
           // Check browser environment again in callback
           if (!isBrowser()) return;
 
           if (currentDebugState) {
             console.log(
-              '[Action initialGhostAnimation] Double blink complete. Dispatching "initialAnimationComplete" event.',
+              '[Action initialGhostAnimation] Double blink complete. Ensuring eyes are open and dispatching "initialAnimationComplete" event.',
             );
           }
+          
+          // Explicitly ensure eyes are open after initial animation completes
+          // This fixes the issue where eyes might stay closed after the initial animation
+          if (blinkService && leftEye && rightEye) {
+            // First update the store state
+            blinkService.ghostStateStore.setEyesClosed(false);
+            // Then force the visual update through applyEyeTransforms 
+            setTimeout(() => {
+              blinkService.applyEyeTransforms(leftEye, rightEye);
+              if (currentDebugState) {
+                console.log('[Action initialGhostAnimation] Forced eye open state after animation.');
+              }
+            }, 50); // Small delay to ensure state update is processed
+          }
+          
           node.dispatchEvent(new CustomEvent("initialAnimationComplete"));
         });
       } else {

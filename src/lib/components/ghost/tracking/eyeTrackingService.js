@@ -107,27 +107,40 @@ export function createEyeTracking(customConfig = {}) {
       const distanceY = event.clientY - ghostCenterY;
 
       // Calculate normalized position (-1 to 1)
-      const maxDistanceX = window.innerWidth / config.maxDistanceX;
-      const maxDistanceY = window.innerHeight / config.maxDistanceY;
+      // Guard against division by zero or undefined values
+      const maxDistanceX = window.innerWidth / (config.maxDistanceX || 3);
+      const maxDistanceY = window.innerHeight / (config.maxDistanceY || 3);
+      
+      // Ensure we don't divide by zero or NaN
+      const safeMaxDistanceX = !maxDistanceX || isNaN(maxDistanceX) ? 1 : maxDistanceX;
+      const safeMaxDistanceY = !maxDistanceY || isNaN(maxDistanceY) ? 1 : maxDistanceY;
+      
+      // Compute normalized positions with checks for invalid calculations
       const targetNormalizedX = Math.max(
         -1,
-        Math.min(1, distanceX / maxDistanceX),
+        Math.min(1, isNaN(distanceX / safeMaxDistanceX) ? 0 : distanceX / safeMaxDistanceX),
       );
       const targetNormalizedY = Math.max(
         -1,
-        Math.min(1, distanceY / maxDistanceY),
+        Math.min(1, isNaN(distanceY / safeMaxDistanceY) ? 0 : distanceY / safeMaxDistanceY),
       );
 
       // Apply smoothing for more natural movement to internal state
-      state.eyePositionX =
-        state.eyePositionX +
+      const newX = state.eyePositionX +
         (targetNormalizedX - state.eyePositionX) * config.eyeSensitivity;
-      state.eyePositionY =
-        state.eyePositionY +
+      const newY = state.eyePositionY +
         (targetNormalizedY - state.eyePositionY) * config.eyeSensitivity;
+      
+      // Guard against NaN values before updating state
+      state.eyePositionX = isNaN(newX) ? 0 : newX;
+      state.eyePositionY = isNaN(newY) ? 0 : newY;
 
       // Update the central store with the smoothed, normalized positions
-      ghostStateStore.setEyePosition(state.eyePositionX, state.eyePositionY);
+      // Add guard clause to ensure we never send NaN values to the store
+      ghostStateStore.setEyePosition(
+        isNaN(state.eyePositionX) ? 0 : state.eyePositionX, 
+        isNaN(state.eyePositionY) ? 0 : state.eyePositionY
+      );
 
       if (config.debug && Math.random() < 0.01) {
         // Log only occasionally to prevent spamming
