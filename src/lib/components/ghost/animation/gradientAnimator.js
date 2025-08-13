@@ -19,7 +19,9 @@ let stopColors = {};
  * @returns {boolean} True if in browser environment
  */
 function isBrowser() {
-  return typeof window !== 'undefined' && typeof document !== 'undefined' && browser;
+  return (
+    typeof window !== "undefined" && typeof document !== "undefined" && browser
+  );
 }
 
 /**
@@ -56,7 +58,7 @@ export function initGradientAnimation(themeId, svgElement) {
  */
 function initGradientPositionAnimation(themeId, gradient) {
   if (!isBrowser() || !gradient) return;
-  
+
   // Get configuration for this theme
   const config = gradientAnimations[themeId];
   const timingConfig = animationTiming.gradientShift;
@@ -212,7 +214,7 @@ function initStopColorAnimations(themeId, stops) {
  */
 function animateStopColor(themeId, stopIndex) {
   if (!isBrowser()) return;
-  
+
   const colorState = stopColors[themeId]?.[stopIndex];
   if (!colorState) return;
 
@@ -272,7 +274,7 @@ function getCssVariable(name, fallback = "") {
  */
 export function cleanupAnimation(themeId) {
   if (!isBrowser()) return;
-  
+
   // Clean up position animation
   if (animationFrames[`${themeId}_position`]) {
     cancelAnimationFrame(animationFrames[`${themeId}_position`]);
@@ -298,7 +300,7 @@ export function cleanupAnimation(themeId) {
  */
 export function cleanupAllAnimations() {
   if (!isBrowser()) return;
-  
+
   Object.keys(animationFrames).forEach((key) => {
     cancelAnimationFrame(animationFrames[key]);
     delete animationFrames[key];

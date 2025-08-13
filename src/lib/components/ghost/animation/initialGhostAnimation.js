@@ -16,7 +16,9 @@ import { ghostStateStore } from "../state";
  * @returns {boolean} True if in browser environment
  */
 function isBrowser() {
-  return typeof window !== 'undefined' && typeof document !== 'undefined' && browser;
+  return (
+    typeof window !== "undefined" && typeof document !== "undefined" && browser
+  );
 }
 
 export function initialGhostAnimation(node, initialParams) {
@@ -24,7 +26,7 @@ export function initialGhostAnimation(node, initialParams) {
   if (!isBrowser()) {
     return {
       update() {},
-      destroy() {}
+      destroy() {},
     };
   }
 
@@ -117,7 +119,7 @@ export function initialGhostAnimation(node, initialParams) {
       ) {
         // Make sure eyes are open before performing the double blink
         blinkService.applyEyeTransforms(leftEye, rightEye);
-        
+
         blinkService.performDoubleBlink({ leftEye, rightEye }, () => {
           // Check browser environment again in callback
           if (!isBrowser()) return;
@@ -127,21 +129,23 @@ export function initialGhostAnimation(node, initialParams) {
               '[Action initialGhostAnimation] Double blink complete. Ensuring eyes are open and dispatching "initialAnimationComplete" event.',
             );
           }
-          
+
           // Explicitly ensure eyes are open after initial animation completes
           // This fixes the issue where eyes might stay closed after the initial animation
           if (blinkService && leftEye && rightEye) {
             // First update the store state
             blinkService.ghostStateStore.setEyesClosed(false);
-            // Then force the visual update through applyEyeTransforms 
+            // Then force the visual update through applyEyeTransforms
             setTimeout(() => {
               blinkService.applyEyeTransforms(leftEye, rightEye);
               if (currentDebugState) {
-                console.log('[Action initialGhostAnimation] Forced eye open state after animation.');
+                console.log(
+                  "[Action initialGhostAnimation] Forced eye open state after animation.",
+                );
               }
             }, 50); // Small delay to ensure state update is processed
           }
-          
+
           node.dispatchEvent(new CustomEvent("initialAnimationComplete"));
         });
       } else {
@@ -172,7 +176,7 @@ export function initialGhostAnimation(node, initialParams) {
     destroy() {
       // Check browser environment before cleanup
       if (!isBrowser()) return;
-      
+
       // Cleanup when the element is unmounted.
       if (blinkTimeoutId) {
         clearTimeout(blinkTimeoutId);

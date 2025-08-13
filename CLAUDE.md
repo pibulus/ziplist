@@ -31,13 +31,11 @@
 Each module should follow this organization pattern:
 
 1. **Directory Structure**:
-
    - Every feature directory should have an `index.js` file that exports the public API
    - Related files should be grouped in subdirectories (e.g., `animation/`, `state/`)
    - Component files (.svelte) should be in a `components/` subdirectory
 
 2. **Import Best Practices**:
-
    - Import from directories, not specific files, for cross-directory imports:
 
      ```javascript

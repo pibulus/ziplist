@@ -12,7 +12,10 @@ import { createEyeTracking } from "./tracking";
 import { ghostStateStore } from "./state";
 import { theme, setTheme, getThemeColor } from "./theme";
 import { applyInitialLoadEffect, applyPulseEffect } from "./animation";
-import { ANIMATION_STATES, ANIMATION_BEHAVIORS } from "./animation/animationConstants";
+import {
+  ANIMATION_STATES,
+  ANIMATION_BEHAVIORS,
+} from "./animation/animationConstants";
 
 // Export the main components
 export { Ghost, DisplayGhost, GhostStateDebug };
@@ -37,17 +40,17 @@ export {
  *
  * // Trigger animation state
  * GhostSystem.stateStore.setAnimationState('recording');
- * 
+ *
  * // Reactive access to ghost state in Svelte components:
  * import { GhostSystem } from '$lib/components/ghost';
- * 
+ *
  * // Extract the specific stores you need for reactive use with $ syntax
  * const isProcessingStore = GhostSystem.stateStore.isProcessing;
  * const isRecordingStore = GhostSystem.stateStore.isRecording;
- * 
+ *
  * // Then in your template:
  * // <Component isProcessing={$isProcessingStore} />
- * 
+ *
  * // IMPORTANT: Do NOT use $GhostSystem.stateStore.isProcessing directly!
  * // This will cause a "store_invalid_shape" error because GhostSystem is not a store.
  */

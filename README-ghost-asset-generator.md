@@ -80,14 +80,12 @@ The `vite-plugins/ghost-asset-generator.js` plugin:
 The plugin generates:
 
 1. **Theme-specific SVG files**:
-
    - `/static/assets/talktype-icon-bg-gradient.svg`
    - `/static/assets/talktype-icon-bg-gradient-mint.svg`
    - `/static/assets/talktype-icon-bg-gradient-bubblegum.svg`
    - `/static/assets/talktype-icon-bg-gradient-rainbow.svg`
 
 2. **Component SVG files**:
-
    - `/static/assets/talktype-icon-base.svg`
    - `/static/assets/talktype-icon-eyes.svg`
    - `/static/assets/talktype-icon-outline.svg`
@@ -95,7 +93,6 @@ The plugin generates:
    - `/static/combined-icon.svg`
 
 3. **Browser icons**:
-
    - `/static/favicon.png`
    - `/static/favicon-light.png`
    - `/static/favicon-dark.png`

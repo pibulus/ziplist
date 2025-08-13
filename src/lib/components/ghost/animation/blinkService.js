@@ -38,42 +38,50 @@ export function applyEyeTransforms(leftEye, rightEye) {
 
   // Log the eye state in debug mode to help diagnose issues
   if (state.debug) {
-    console.log(`[BlinkService] Applying eye transforms. Eyes closed: ${state.eyesClosed}, Position: [${state.eyePosition.x.toFixed(2)}, ${state.eyePosition.y.toFixed(2)}]`);
+    console.log(
+      `[BlinkService] Applying eye transforms. Eyes closed: ${state.eyesClosed}, Position: [${state.eyePosition.x.toFixed(2)}, ${state.eyePosition.y.toFixed(2)}]`,
+    );
   }
 
   if (state.eyesClosed) {
     // Apply closed eyes transform
     leftEye.style.transform = `scaleY(${EYE_CONFIG.CLOSED_SCALE})`;
     rightEye.style.transform = `scaleY(${EYE_CONFIG.CLOSED_SCALE})`;
-    
+
     if (state.debug) {
-      console.log(`[BlinkService] Applied closed eyes transform: scaleY(${EYE_CONFIG.CLOSED_SCALE})`);
+      console.log(
+        `[BlinkService] Applied closed eyes transform: scaleY(${EYE_CONFIG.CLOSED_SCALE})`,
+      );
     }
   } else {
     // Apply position transforms with guard clauses against NaN values
     const { x, y } = state.eyePosition;
-    
+
     // Guard against NaN values in position coordinates
     const safeX = isNaN(x) ? 0 : x;
     const safeY = isNaN(y) ? 0 : y;
-    
+
     // Calculate transforms with additional NaN check
-    const xTransform = isNaN(safeX * EYE_CONFIG.X_MULTIPLIER) 
-      ? 0 
+    const xTransform = isNaN(safeX * EYE_CONFIG.X_MULTIPLIER)
+      ? 0
       : safeX * EYE_CONFIG.X_MULTIPLIER;
-    const yTransform = isNaN(safeY * EYE_CONFIG.Y_MULTIPLIER) 
-      ? 0 
+    const yTransform = isNaN(safeY * EYE_CONFIG.Y_MULTIPLIER)
+      ? 0
       : safeY * EYE_CONFIG.Y_MULTIPLIER;
 
     // Apply transforms, ensuring they're always valid CSS values
     leftEye.style.transform = `translate(${xTransform}px, ${yTransform}px)`;
     rightEye.style.transform = `translate(${xTransform}px, ${yTransform}px)`;
-    
+
     if (state.debug) {
-      console.log(`[BlinkService] Applied open eyes transform: translate(${xTransform}px, ${yTransform}px)`);
+      console.log(
+        `[BlinkService] Applied open eyes transform: translate(${xTransform}px, ${yTransform}px)`,
+      );
       // Add debug log for NaN detection
       if (isNaN(x) || isNaN(y)) {
-        console.warn(`[BlinkService] Detected NaN in eye position, using fallback. Original: [${x}, ${y}], Safe: [${safeX}, ${safeY}]`);
+        console.warn(
+          `[BlinkService] Detected NaN in eye position, using fallback. Original: [${x}, ${y}], Safe: [${safeX}, ${safeY}]`,
+        );
       }
     }
   }
@@ -411,5 +419,5 @@ export default {
   reactToTranscript,
   cleanupBlinking,
   // Expose the ghostStateStore for direct access in special cases
-  ghostStateStore
+  ghostStateStore,
 };

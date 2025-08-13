@@ -32,7 +32,7 @@ We currently have two stores managing overlapping aspects of the Ghost component
    - Create a transitional bridge between the stores
 
 3. **Update Index Exports**:
-   - Modify state/index.js to export consolidated interfaces 
+   - Modify state/index.js to export consolidated interfaces
    - Document the transition for developers
 
 4. **Remove Redundant Code**:

@@ -165,7 +165,7 @@ You can subscribe to Ghost state changes correctly by first extracting the store
   // IMPORTANT: First extract the specific stores you need
   const ghostCurrentState = GhostSystem.stateStore.currentState;
   const ghostIsRecording = GhostSystem.stateStore.isRecording;
-  
+
   // Then use $ syntax with these store references
   $: console.log('Current state:', $ghostCurrentState);
   $: console.log('Recording state:', $ghostIsRecording);

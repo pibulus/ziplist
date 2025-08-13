@@ -313,7 +313,7 @@ The Ghost component relies heavily on Svelte stores for managing its complex sta
 The Ghost component uses a consolidated state management approach with a single source of truth. All state is managed through the `GhostSystem` object exported from the main index.js file:
 
 ```javascript
-import { GhostSystem } from '$lib/components/ghost';
+import { GhostSystem } from "$lib/components/ghost";
 
 // To set state:
 GhostSystem.stateStore.setRecording(true);
@@ -322,7 +322,7 @@ GhostSystem.stateStore.setAnimationState(ANIMATION_STATES.RECORDING);
 // For reactive access in Svelte components:
 const isProcessingStore = GhostSystem.stateStore.isProcessing;
 // Then in template:
-<Component isProcessing={$isProcessingStore} />
+<Component isProcessing={$isProcessingStore} />;
 ```
 
 ### Core State (`ghostStateStore.js`)

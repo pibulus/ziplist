@@ -44,26 +44,22 @@ This directory contains reusable UI components used throughout the TalkType appl
 The component uses absolute positioning to place the `.app` suffix relative to the parent element with highly configurable positioning. Key features:
 
 1. **Flexible Positioning**:
-
    - Uses absolute positioning with responsive adjustments
    - Parent container should have `position: relative` and ideally `width: 0` with `overflow: visible`
    - Supports four position presets: bottom-right, bottom-left, top-right, top-left
    - Fine-grained control with offsetX and offsetY parameters
 
 2. **Visual Style**:
-
    - Rotated -2° for an "off-kilter" appearance
    - Inherits font family and weight from parent
    - Subtle text shadow for dimensionality
    - 40% of parent font size by default (adjustable)
 
 3. **Hover Effect**:
-
    - Subtle scale and additional rotation on hover
    - Smooth transitions for all animations
 
 4. **Accessibility**:
-
    - Marked as `aria-hidden="true"` since it's decorative
 
 5. **Responsive Behavior**:

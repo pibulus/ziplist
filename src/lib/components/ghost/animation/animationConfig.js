@@ -13,7 +13,7 @@ import {
   WOBBLE_CONFIG,
   BLINK_CONFIG,
   EYE_CONFIG,
-  SPECIAL_CONFIG
+  SPECIAL_CONFIG,
 } from "./animationConstants";
 
 // Re-export the constants
@@ -26,7 +26,7 @@ export {
   WOBBLE_CONFIG,
   BLINK_CONFIG,
   EYE_CONFIG,
-  SPECIAL_CONFIG
+  SPECIAL_CONFIG,
 };
 
 export const PULSE_CONFIG = {

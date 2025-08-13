@@ -1,6 +1,6 @@
 /**
  * Ghost Animation Module
- * 
+ *
  * Centralized export point for all animation-related functionality.
  * Provides a clean public API while encapsulating implementation details.
  */
@@ -15,14 +15,11 @@ import {
   BLINK_CONFIG,
   ANIMATION_TIMING,
   EYE_CONFIG,
-  SPECIAL_CONFIG
+  SPECIAL_CONFIG,
 } from "./animationConstants";
 
 // Import additional animation configuration
-import {
-  ANIMATION_EFFECTS,
-  PULSE_CONFIG
-} from "./animationConfig";
+import { ANIMATION_EFFECTS, PULSE_CONFIG } from "./animationConfig";
 
 // Import core services (default exports)
 import animationServiceObj from "./animationService";
@@ -34,14 +31,14 @@ import {
   toggleClasses,
   seedRandom,
   isBrowser,
-  cleanupTimers
+  cleanupTimers,
 } from "./animationUtils";
 
 // Import animation functions
 import {
   initGradientAnimation,
   cleanupAnimation,
-  cleanupAllAnimations
+  cleanupAllAnimations,
 } from "./gradientAnimator";
 
 // Import the Svelte action
@@ -59,27 +56,17 @@ export {
   ANIMATION_EFFECTS,
   PULSE_CONFIG,
   EYE_CONFIG,
-  SPECIAL_CONFIG
+  SPECIAL_CONFIG,
 };
 
 // Re-export the initialGhostAnimation Svelte action
 export { initialGhostAnimation };
 
 // Re-export utility functions
-export {
-  forceReflow,
-  toggleClasses,
-  seedRandom,
-  isBrowser,
-  cleanupTimers
-};
+export { forceReflow, toggleClasses, seedRandom, isBrowser, cleanupTimers };
 
 // Re-export gradient animation functions
-export {
-  initGradientAnimation,
-  cleanupAnimation,
-  cleanupAllAnimations
-};
+export { initGradientAnimation, cleanupAnimation, cleanupAllAnimations };
 
 // applyInitialLoadEffect is already exported via animationService destructuring
 
@@ -94,7 +81,7 @@ export const {
   applyInitialLoadEffect,
   applyPulseEffect,
   startSpecialAnimationWatch,
-  stopSpecialAnimationWatch
+  stopSpecialAnimationWatch,
 } = animationServiceObj;
 
 // Export specific functions from blink service for direct access
@@ -107,5 +94,5 @@ export const {
   applyRhythmicBlinkEffect,
   applyQuickBlinkEffect,
   reactToTranscript,
-  cleanupBlinking
+  cleanupBlinking,
 } = blinkServiceObj;

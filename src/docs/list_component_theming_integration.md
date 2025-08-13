@@ -42,7 +42,6 @@ Key component-level variables include:
 The app uses a theme service and attribute-based system:
 
 1. **Theme Definition**:
-
    - Themes defined in `/src/lib/constants.js`:
 
    ```javascript
@@ -55,7 +54,6 @@ The app uses a theme service and attribute-based system:
    ```
 
 2. **Theme Service**:
-
    - Located at `/src/lib/services/theme/themeService.js`
    - Manages theme state and application
    - Applies themes by setting `data-theme` attribute on document root:
@@ -70,7 +68,6 @@ The app uses a theme service and attribute-based system:
    ```
 
 3. **Early Theme Application**:
-
    - Initial theme applied via inline script in `/src/app.html` (lines 118-163)
    - Prevents flash of default theme during page load:
 
