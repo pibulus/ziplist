@@ -1,12 +1,24 @@
-# CLAUDE.md - Code Standards for TalkType
+# CLAUDE.md - Code Standards for ZipList
 
 ## Build & Development
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server (runs on http://localhost:50002)
 - `npm run build` - Create production build
 - `npm run preview` - Preview production build
 - `npm run format` - Run Prettier formatter
 - `npm run lint` - Check code formatting and run ESLint
+
+## Project Overview
+
+ZipList is a minimal voice-to-list todo app. Core features:
+- Voice recording → Gemini API transcription → list items
+- Full CRUD operations (add, toggle, edit, delete items)
+- Local storage persistence
+- PWA support with offline capability
+- Theme system (peach/pink variants)
+- Responsive design with mobile-first approach
+
+**Current State**: 65% complete. Core functionality works, needs polish and export features.
 
 ## Code Style Guidelines
 
@@ -21,6 +33,22 @@
 - **Services**: External API interactions belong in lib/services
 - **Documentation**: Include JSDoc comments for functions
 - **Reactivity**: Use Svelte's reactive declarations and statements properly
+
+## Architecture
+
+### Key Services
+- **geminiService.js**: Wrapper for audio transcription via Gemini API
+- **geminiApiService.js**: Low-level Gemini API calls (REQUIRED - do not delete)
+- **transcriptionService.js**: Manages transcription flow with progress animation
+- **listsService.js**: Processes transcription results into list items
+- **listsStore.js**: Svelte store for list state and local storage
+- **themeService.js**: Theme switching and persistence
+
+### Component Structure
+- **MainContainer.svelte**: Top-level container, handles recording state
+- **GhostContainer.svelte**: SVG ghost character (linked to recording state)
+- **SingleList.svelte**: Individual list component with full CRUD
+- **RecordButtonWithTimer.svelte**: Voice recording button with visual feedback
 
 ## Text Animation System
 
