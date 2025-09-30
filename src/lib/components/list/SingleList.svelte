@@ -217,20 +217,14 @@
   }
 
 
-  // Item editing functions
   function startEditingItem(item) {
-    // Don't start editing checked items
     if (item.checked) return;
-
     editingItemId = item.id;
     editedItemText = item.text;
-
-    // No need for manual focus with the autoFocus action
   }
 
   function saveItemEdit() {
     if (editedItemText.trim() && editingItemId !== null) {
-      // Process text for capitalization but store original
       listsService.editItem(editingItemId, editedItemText.trim());
       cancelItemEdit();
     }
@@ -273,7 +267,6 @@
               aria-dropeffect="move"
               role="listitem"
             >
-              <!-- Drop indicator visible when item is a drop target -->
               {#if dragOverItemId === item.id}
                 <div class="drop-indicator">
                   <div class="drop-arrow"></div>
@@ -321,7 +314,6 @@
                 {/if}
               </div>
 
-                <!-- Enhanced drag handle indicator -->
                 {#if !item.checked && editingItemId !== item.id}
                   <div class="grab-indicator" aria-hidden="true" title="Drag to reorder">
                     <span></span>
@@ -329,8 +321,7 @@
                     <span></span>
                   </div>
                 {/if}
-                
-                <!-- Delete button - visible on hover -->
+
                 <button 
                   type="button" 
                   class="delete-button" 
@@ -344,7 +335,6 @@
           {/each}
         </ul>
       {:else}
-        <!-- Friendly minimalist empty state -->
         <div class="zl-empty-state"
           in:fade={{ duration: 300, delay: 50 }}
           on:click={() => { isCreatingNewItem = true; }}

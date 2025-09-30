@@ -29,26 +29,19 @@ function createListsStore() {
     if (!browser) return;
 
     try {
-      // Read directly from localStorage for debugging
       const rawListsJSON = localStorage.getItem(STORAGE_KEYS.LISTS);
-      console.log('Raw lists JSON from localStorage:', rawListsJSON);
-      
-      // Check for existing stored lists
       let storedLists = null;
+
       try {
         if (rawListsJSON) {
           storedLists = JSON.parse(rawListsJSON);
-          console.log('Parsed stored lists:', storedLists);
         }
       } catch (parseError) {
         console.error('Error parsing lists JSON:', parseError);
       }
-      
+
       const storedActiveListId = localStorage.getItem(STORAGE_KEYS.ACTIVE_LIST_ID);
-      console.log('Stored active list ID:', storedActiveListId);
-      
       const storedVersionRaw = localStorage.getItem(STORAGE_KEYS.LISTS_VERSION);
-      console.log('Stored version raw:', storedVersionRaw);
       const storedVersion = storedVersionRaw ? parseInt(storedVersionRaw, 10) : 0;
 
       // Initialize with stored data or defaults
@@ -99,20 +92,11 @@ function createListsStore() {
 
     try {
       const state = get({ subscribe });
-      // Ensure we're actually getting data from the store
-      console.log('Persisting lists to storage:', state.lists);
-      
-      // Explicitly stringify to debug
       const listsJSON = JSON.stringify(state.lists);
-      console.log('Lists JSON:', listsJSON);
-      
-      // Use direct localStorage call for debugging
+
       localStorage.setItem(STORAGE_KEYS.LISTS, listsJSON);
       localStorage.setItem(STORAGE_KEYS.ACTIVE_LIST_ID, state.activeListId || '');
       localStorage.setItem(STORAGE_KEYS.LISTS_VERSION, String(state.version));
-      
-      // Verify it was stored properly
-      console.log('Verification - Lists in localStorage:', localStorage.getItem(STORAGE_KEYS.LISTS));
     } catch (error) {
       console.error('Error persisting lists to storage:', error);
     }
@@ -392,12 +376,11 @@ function createListsStore() {
         ...state,
         lists: state.lists.map(list => {
           if (list.id === targetListId) {
-            // Update order field for each item based on its new position
             const updatedItems = reorderedItems.map((item, index) => ({
               ...item,
               order: index
             }));
-            
+
             return {
               ...list,
               items: updatedItems,
@@ -408,8 +391,60 @@ function createListsStore() {
         })
       };
     });
-    
+
     persistToStorage();
+  }
+
+  // Cleanup function for removing old completed items
+  function cleanupCompletedItems() {
+    if (!browser) return;
+
+    setTimeout(() => {
+      update(state => {
+        const EXPIRATION_TIME = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+        const now = new Date();
+
+        return {
+          ...state,
+          lists: state.lists.map(list => {
+            const filteredItems = list.items.filter(item => {
+              if (!item.checked) return true;
+              if (!item.completedAt) return true; // Legacy items without timestamp
+
+              const completedAt = new Date(item.completedAt);
+              const ageMs = now - completedAt;
+              return ageMs < EXPIRATION_TIME;
+            });
+
+            if (filteredItems.length !== list.items.length) {
+              return {
+                ...list,
+                items: filteredItems,
+                updatedAt: new Date().toISOString()
+              };
+            }
+            return list;
+          })
+        };
+      });
+
+      persistToStorage();
+    }, 1000);
+  }
+
+  // Set up periodic cleanup of completed items (every hour)
+  function setupAutoCleanup() {
+    if (!browser) return;
+
+    cleanupCompletedItems();
+
+    const cleanupInterval = setInterval(() => {
+      cleanupCompletedItems();
+    }, 60 * 60 * 1000); // Every hour
+
+    window.addEventListener('beforeunload', () => {
+      clearInterval(cleanupInterval);
+    });
   }
 
   // Initialize when created
@@ -431,70 +466,6 @@ function createListsStore() {
     reorderItems,
     persistToStorage
   };
-}
-
-// Cleanup function for removing old completed items
-function cleanupCompletedItems() {
-  if (!browser) return;
-  
-  setTimeout(() => {
-    update(state => {
-      // 12 hours in milliseconds
-      const EXPIRATION_TIME = 12 * 60 * 60 * 1000;
-      const now = new Date();
-      
-      return {
-        ...state,
-        lists: state.lists.map(list => {
-          // Filter out completed items older than 12 hours
-          const filteredItems = list.items.filter(item => {
-            // Keep all unchecked items
-            if (!item.checked) return true;
-            
-            // Keep checked items with no completedAt timestamp (legacy items)
-            if (!item.completedAt) return true;
-            
-            // Check if the item was completed more than 12 hours ago
-            const completedAt = new Date(item.completedAt);
-            const ageMs = now - completedAt;
-            
-            // Keep it if it's newer than the expiration time
-            return ageMs < EXPIRATION_TIME;
-          });
-          
-          // Only update the list if items were removed
-          if (filteredItems.length !== list.items.length) {
-            return {
-              ...list,
-              items: filteredItems,
-              updatedAt: new Date().toISOString()
-            };
-          }
-          return list;
-        })
-      };
-    });
-    
-    persistToStorage();
-  }, 1000); // Small delay to give the UI time to update
-}
-
-// Set up periodic cleanup of completed items (every hour)
-function setupAutoCleanup() {
-  if (!browser) return;
-  
-  // Run cleanup immediately on load
-  cleanupCompletedItems();
-  
-  // Set interval to run cleanup every hour
-  const cleanupInterval = setInterval(() => {
-    cleanupCompletedItems();
-  }, 60 * 60 * 1000); // Every hour
-  
-  // Clean up interval on window unload
-  window.addEventListener('beforeunload', () => {
-    clearInterval(cleanupInterval);
-  });
 }
 
 // Create the store instance

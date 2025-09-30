@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { get } from 'svelte/store'; // get should be imported from svelte/store
+  import { get } from 'svelte/store';
   import { browser } from '$app/environment';
   import GhostContainer from './GhostContainer.svelte';
   import ContentContainer from './ContentContainer.svelte';
@@ -8,30 +8,29 @@
   import { geminiService } from '$lib/services/geminiService';
   import { themeService } from '$lib/services/theme';
   import { modalService } from '$lib/services/modals';
-  import { transcriptionService } from '$lib/services/transcription/transcriptionService.js'; // Added transcriptionService
+  import { transcriptionService } from '$lib/services/transcription/transcriptionService.js';
   import { firstVisitService, isFirstVisit } from '$lib/services/first-visit';
   import { pwaService, deferredInstallPrompt, showPwaInstallPrompt } from '$lib/services/pwa';
-  import { 
-    isRecording, 
-    isTranscribing, 
-    transcriptionProgress, 
-    recordingDuration, 
-    audioState, 
-    audioActions, 
-    uiState, 
-    uiActions, 
-    userPreferences 
+  import {
+    isRecording,
+    isTranscribing,
+    transcriptionProgress,
+    recordingDuration,
+    audioState,
+    audioActions,
+    uiState,
+    uiActions,
+    userPreferences
   } from '$lib/services/infrastructure/stores.js';
-  import { AudioStates } from '$lib/services/audio/audioStates.js'; // Import AudioStates directly
-  import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js'; // Ensure ghostStateStore is imported
+  import { AudioStates } from '$lib/services/audio/audioStates.js';
+  import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js';
   import { PageLayout } from '$lib/components/layout';
-  import SingleList from '../list/SingleList.svelte'; // Import the new SingleList component
-  import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte'; // Import the button
+  import SingleList from '../list/SingleList.svelte';
+  import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte';
   import { fade } from 'svelte/transition';
   import { StorageUtils } from '$lib/services/infrastructure/storageUtils';
   import { STORAGE_KEYS } from '$lib/constants';
 
-  // Import modals lazily
   import { AboutModal, ExtensionModal, IntroModal } from './modals';
 
   // Lazy load settings modal - only import when needed
@@ -42,11 +41,7 @@
   let PwaInstallPrompt;
   let loadingPwaPrompt = false;
 
-  // Track speech model preloading state
   let speechModelPreloaded = false;
-
-  // State variables for recording and processing
-  // let isProcessing = false; // This is now derived from $ghostStateStore.isProcessing
   let mediaRecorder = null;
   let audioChunks = [];
 
@@ -120,15 +115,12 @@
   function preloadSpeechModel() {
     if (!speechModelPreloaded && browser) {
       debug('Preloading speech model for faster response');
-      speechModelPreloaded = true; // Assume success initially
+      speechModelPreloaded = true;
 
-      // Make sure the current prompt style is set before preloading
-      if (browser) {
-        const savedStyle = StorageUtils.getItem(STORAGE_KEYS.PROMPT_STYLE);
-        if (savedStyle) {
-          debug(`Setting prompt style from localStorage: ${savedStyle}`);
-          geminiService.setPromptStyle(savedStyle);
-        }
+      const savedStyle = StorageUtils.getItem(STORAGE_KEYS.PROMPT_STYLE);
+      if (savedStyle) {
+        debug(`Setting prompt style from localStorage: ${savedStyle}`);
+        geminiService.setPromptStyle(savedStyle);
       }
 
       // Log available prompt styles
@@ -198,31 +190,20 @@
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
           
           const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-          audioChunks = []; // Reset for next recording
+          audioChunks = [];
 
           if (audioBlob.size === 0) {
             debug('Audio blob is empty, not transcribing.');
             audioActions.updateState(AudioStates.IDLE);
-            // Potentially provide feedback to user about empty recording
             return;
           }
 
           try {
             await transcriptionService.transcribeAudio(audioBlob);
-            // transcriptionService handles success/error and updates transcriptionState
-            // which in turn might trigger ghost reactions or other UI updates.
-            // On successful transcription, it eventually sets transcriptionState.inProgress = false.
-            // We might want to explicitly set audio state to IDLE after transcription attempt.
-            // For now, let transcriptionService and its store updates handle subsequent states.
           } catch (transcriptionError) {
             console.error('Transcription failed in onstop:', transcriptionError);
-            // transcriptionService.setTranscriptionError should have been called
           } finally {
-            // Ensure stream tracks are stopped to release camera/mic
             stream.getTracks().forEach(track => track.stop());
-            // Regardless of transcription outcome, audio processing is done.
-            // If transcription was successful, it would have set its own states.
-            // If it failed, error state is set. We can transition to IDLE if not already handled.
             if (get(audioState).state === AudioStates.PROCESSING) {
               audioActions.updateState(AudioStates.IDLE);
             }
@@ -265,16 +246,10 @@
     handleToggleRecording();
   }
 
-  // Closes the PWA install prompt
   function closePwaInstallPrompt() {
     debug('ℹ️ PWA install prompt dismissed.');
-    // Update the store value through the service
     pwaService.dismissPrompt();
   }
-
-  // Component references
-  let ghostContainer;
-  let contentContainer;
 
   // Lifecycle hooks
   onMount(() => {
