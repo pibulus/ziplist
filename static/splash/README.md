@@ -1,4 +1,4 @@
-# TalkType iOS Splash Screens
+# ZipList iOS Splash Screens
 
 This directory contains splash screen images for iOS devices when installed as a PWA.
 
@@ -28,8 +28,8 @@ npm install sharp
 node scripts/generate-splash-screens.js
 ```
 
-The script will generate all required splash screens with the TalkType ghost logo centered on a peach gradient background.
+The script will generate all required splash screens with the ZipList ghost logo centered on a peach gradient background.
 
 ## Why Splash Screens Matter
 
-Splash screens provide a smooth, native-feeling launch experience when users open TalkType from their home screen. They help reinforce the brand and make the app feel more professional and integrated with the device.
+Splash screens provide a smooth, native-feeling launch experience when users open ZipList from their home screen. They help reinforce the brand and make the app feel more professional and integrated with the device.

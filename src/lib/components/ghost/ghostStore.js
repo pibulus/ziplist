@@ -11,7 +11,7 @@ const createGhostStore = () => {
     isProcessing: false,
     theme: {
       current: 'peach', // 'peach', 'mint', 'bubblegum', 'rainbow'
-      bgPath: '/talktype-icon-bg-gradient.svg'
+      bgPath: '/ziplist-icon-bg-gradient.svg'
     }
   });
 
@@ -21,11 +21,11 @@ const createGhostStore = () => {
     
     switch (theme) {
       case 'mint':
-        return '/talktype-icon-bg-gradient-mint.svg';
+        return '/ziplist-icon-bg-gradient-mint.svg';
       case 'bubblegum':
-        return '/talktype-icon-bg-gradient-bubblegum.svg';
+        return '/ziplist-icon-bg-gradient-bubblegum.svg';
       case 'rainbow':
-        return '/talktype-icon-bg-gradient-rainbow.svg';
+        return '/ziplist-icon-bg-gradient-rainbow.svg';
       default: // Default to peach
         return '/talktype-icon-bg-gradient.svg';
     }

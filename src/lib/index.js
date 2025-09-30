@@ -75,19 +75,19 @@ export function applyTheme(vibeId) {
       // Set the appropriate gradient SVG based on theme
       switch(vibeId) {
         case CONSTANTS.THEMES.MINT:
-          ghostBg.src = '/talktype-icon-bg-gradient-mint.svg';
+          ghostBg.src = '/ziplist-icon-bg-gradient-mint.svg';
           ghostBg.classList.remove('rainbow-animated');
           break;
         case CONSTANTS.THEMES.BUBBLEGUM:
-          ghostBg.src = '/talktype-icon-bg-gradient-bubblegum.svg';
+          ghostBg.src = '/ziplist-icon-bg-gradient-bubblegum.svg';
           ghostBg.classList.remove('rainbow-animated');
           break;
         case CONSTANTS.THEMES.RAINBOW:
-          ghostBg.src = '/talktype-icon-bg-gradient-rainbow.svg';
+          ghostBg.src = '/ziplist-icon-bg-gradient-rainbow.svg';
           ghostBg.classList.add('rainbow-animated');
           break;
         default: // Default to peach
-          ghostBg.src = '/talktype-icon-bg-gradient.svg';
+          ghostBg.src = '/ziplist-icon-bg-gradient.svg';
           ghostBg.classList.remove('rainbow-animated');
           break;
       }

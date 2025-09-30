@@ -315,7 +315,7 @@
 
     // Listen for settings changes
     if (browser) {
-      window.addEventListener('talktype-setting-changed', (event) => {
+      window.addEventListener('ziplist-setting-changed', (event) => {
         if (event.detail && event.detail.setting === 'autoRecord') {
           debug(`Setting changed event: autoRecord = ${event.detail.value}`);
           // No immediate action needed, setting will apply on next page load/refresh

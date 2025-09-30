@@ -3,7 +3,7 @@ import { browser } from '$app/environment';
 import { promptTemplates, applyTemplate } from './promptTemplates';
 
 // Create a store for the current prompt style
-const STORAGE_KEY = 'talktype-prompt-style';
+const STORAGE_KEY = 'ziplist-prompt-style';
 const DEFAULT_STYLE = 'standard';
 
 // Initialize with stored preference or default

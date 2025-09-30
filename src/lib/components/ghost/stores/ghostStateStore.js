@@ -421,25 +421,6 @@ function createGhostStateStore() {
 
 	// --- Removed applyWobbleEffectFlags function ---
 
-	/**
-	 * Set the wobble direction (now primarily used by external triggers)
-	 * @param {string} direction - Wobble direction CSS class
-	 */
-	// function setWobbleDirection(direction) { // Removed unused function
-	// 	// Get current state to check if this is a redundant update
-	// 	const currentState = get(_state); // Use _state
-	//
-	// 	// Skip if current direction already matches target direction to prevent cycles
-	// 	if (currentState.wobbleDirection === direction) {
-	// 		if (currentState.debug) {
-	// 			console.log(`Skipping redundant wobble direction update: already ${direction}`);
-	// 		}
-	// 		return; // This return makes the debugLog below unreachable
-	// 		// This function is now effectively a no-op as wobble is triggered directly
-	// 		// in setRecording. Could be removed if no external calls remain.
-	// 		// debugLog(`setWobbleDirection called with ${direction} - currently no-op`, 'warn');
-	// 	}
-	// } // Removed unused function
 
 	/**
 	 * Checks if it's the first visit based on body attribute (client-side only)

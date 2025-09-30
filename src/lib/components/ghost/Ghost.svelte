@@ -30,8 +30,6 @@
 	// Import animation utilities
 	import { forceReflow } from './utils/animationUtils.js'; // Only forceReflow needed directly
 
-	// Import gradient animator for theme updates
-	// import { cleanupAllAnimations, initGradientAnimation } from './gradientAnimator.js'; // These seem to be unused based on later comments
 
 	// Import the new Svelte Action
 	import { initialGhostAnimation } from './actions/initialGhostAnimation.js';

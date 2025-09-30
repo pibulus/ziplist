@@ -59,7 +59,7 @@
 
     // Dispatch a custom event that the main page can listen for
     window.dispatchEvent(
-      new CustomEvent('talktype-setting-changed', {
+      new CustomEvent('ziplist-setting-changed', {
         detail: { setting: 'promptStyle', value: style }
       })
     );

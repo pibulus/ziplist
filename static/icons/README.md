@@ -1,4 +1,4 @@
-# TalkType PWA Icons
+# ZipList PWA Icons
 
 This directory contains icon files required for PWA functionality.
 
@@ -32,7 +32,7 @@ const path = require('path');
 const sharp = require('sharp');
 
 // Source file - the main SVG icon
-const sourceFile = path.join(__dirname, 'static', 'talktype-icon.svg');
+const sourceFile = path.join(__dirname, 'static', 'ziplist-icon.svg');
 
 // PWA icon sizes
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
@@ -76,7 +76,7 @@ console.log('Icon generation completed.');
 
 ## Tips for Icon Generation
 
-- Use `talktype-icon.svg` as the source file for all icon generation
+- Use `ziplist-icon.svg` as the source file for all icon generation
 - For high-quality resizing of SVG to PNG, the Sharp library is recommended
 - Ensure icons have transparent backgrounds for proper display across platforms
 - The manifest.json file references these icons for PWA installation
@@ -84,7 +84,7 @@ console.log('Icon generation completed.');
 
 ## About Maskable and Theme-Aware Icons
 
-TalkType uses a comprehensive icon strategy to support various platforms and themes:
+ZipList uses a comprehensive icon strategy to support various platforms and themes:
 
 ### Maskable Icons
 
@@ -113,6 +113,6 @@ These are implemented with HTML `media` attributes to ensure proper loading.
 ## Path Consistency
 
 For icon references throughout the app:
-- Always use web paths: `/assets/talktype-icon-eyes.svg` not `/static/assets/talktype-icon-eyes.svg`
+- Always use web paths: `/assets/ziplist-icon-eyes.svg` not `/static/assets/ziplist-icon-eyes.svg`
 - Store theme variants in the `/assets/` directory for consistency
-- Reference files via SvelteKit's asset path: `%sveltekit.assets%/assets/talktype-icon-eyes.svg`
+- Reference files via SvelteKit's asset path: `%sveltekit.assets%/assets/ziplist-icon-eyes.svg`

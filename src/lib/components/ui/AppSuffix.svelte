@@ -32,13 +32,13 @@
     
     // Listen for custom events
     if (typeof window !== 'undefined') {
-      window.addEventListener('talktype-setting-changed', handleThemeChange);
+      window.addEventListener('ziplist-setting-changed', handleThemeChange);
     }
     
     return () => {
       // Clean up listener
       if (typeof window !== 'undefined') {
-        window.removeEventListener('talktype-setting-changed', handleThemeChange);
+        window.removeEventListener('ziplist-setting-changed', handleThemeChange);
       }
     };
   });

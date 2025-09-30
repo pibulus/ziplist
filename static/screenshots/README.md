@@ -1,6 +1,6 @@
-# TalkType PWA Screenshots
+# ZipList PWA Screenshots
 
-This directory contains screenshots for the TalkType PWA manifest.
+This directory contains screenshots for the ZipList PWA manifest.
 
 ## Required Screenshots
 
@@ -11,7 +11,7 @@ Place the following screenshots in this directory:
 
 ## How to Create Screenshots
 
-1. Open TalkType in a browser
+1. Open ZipList in a browser
 2. Use browser developer tools to set the viewport size:
    - Desktop: 1280x720
    - Mobile: 720x1280
