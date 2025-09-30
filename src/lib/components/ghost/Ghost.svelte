@@ -2,86 +2,55 @@
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 	import { browser } from '$app/environment';
 
-	// CSS imports
 	import './ghost-animations.css';
-	// Removed import for ghost-themes.css (styles injected dynamically)
-
-	// SVG paths
 	import ghostPathsUrl from './ghost-paths.svg?url';
 
-	// Configuration
 	import {
 		ANIMATION_STATES,
 		CSS_CLASSES,
 		PULSE_CONFIG,
-		ANIMATION_TIMING, // Import ANIMATION_TIMING
-		WOBBLE_CONFIG, // Import WOBBLE_CONFIG
+		ANIMATION_TIMING,
+		WOBBLE_CONFIG,
 		EYE_CONFIG
 	} from './animationConfig.js';
 
-	// Removed THEMES import (managed by themeStore)
-
-	// Import stores (main instances)
 	import { ghostStateStore, theme as localTheme, cssVariables } from './stores/index.js';
-
-	// Import services (main instances)
 	import { animationService, blinkService } from './services/index.js';
-
-	// Import animation utilities
-	import { forceReflow } from './utils/animationUtils.js'; // Only forceReflow needed directly
-
-
-	// Import the new Svelte Action
+	import { forceReflow } from './utils/animationUtils.js';
 	import { initialGhostAnimation } from './actions/initialGhostAnimation.js';
+	import { createEyeTracking } from './eyeTracking.js';
 
-	// Import eye tracking service
-	import { createEyeTracking } from './eyeTracking.js'; // Corrected path
-
-	// Props to communicate state
 	export let isRecording = false;
 	export let isProcessing = false;
-	// export let animationState = ANIMATION_STATES.IDLE; // Prop removed
-	export let debug = false; // General debug mode
-	export let debugAnim = false; // Animation debug mode - shows animation config
-	export let seed = 0; // Seed for randomizing animations, allows multiple ghosts to have unsynchronized animations
-	export let externalTheme = null; // Optional external theme store for integration with app-level theme
-
-	// Style props for flexible sizing and appearance
+	export let debug = false;
+	export let debugAnim = false;
+	export let seed = 0;
+	export let externalTheme = null;
 	export let width = '100%';
 	export let height = '100%';
 	export let opacity = 1;
 	export let scale = 1;
-	export let clickable = true; // Whether the ghost responds to clicks
+	export let clickable = true;
 
-	// DOM element references
 	let ghostSvg;
-	let leftEye; // Element reference for the left eye
-	let rightEye; // Element reference for the right eye
+	let leftEye;
+	let rightEye;
 	let backgroundElement;
 	let ghostStyleElement;
-	let ghostWobbleGroup; // Element reference for the wobble group
+	let ghostWobbleGroup;
 
-	// Timer references for cleanup (now primarily managed by services/actions)
-	// const timers = {}; // Removed as initialAnimationTimer is now in the action
-
-	// State tracking to prevent infinite loops
 	let lastRecordingState = false;
 	let lastProcessingState = false;
-	// let lastAnimationState = animationState; // Removed reference to undefined variable
 	let lastAppliedWobbleDirection = null;
 
-	// Additional state variables
 	let currentTheme;
 	let themeStore = externalTheme || localTheme;
 	let unsubscribeTheme;
 	let isRecordingTransition = false;
 	let manualStateChange = false;
-	let wakeUpBlinkTriggered = false; // Flag to ensure blink only triggers once per wake-up
-	let eyeTracker; // Variable to hold the eye tracking instance
+	let wakeUpBlinkTriggered = false;
+	let eyeTracker;
 
-	// Removed reactive variable for wobble group classes
-
-	// Event dispatcher
 	const dispatch = createEventDispatcher();
 
 	// Configure debug mode in stores once, not reactively

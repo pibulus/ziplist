@@ -6,118 +6,88 @@
   import { onMount, onDestroy } from 'svelte';
 import { fade } from 'svelte/transition';
 
-  // Props
   export let recording = false;
   export let transcribing = false;
   export let clipboardSuccess = false;
   export let recordingDuration = 0;
   export let isPremiumUser = false;
-  export let buttonLabel = ''; // Will be set reactively
-  export let progress = 0; // For transcription progress
+  export let buttonLabel = '';
+  export let progress = 0;
 
-  // Element refs
   let recordButtonElement;
   let audioVisualizerElement;
-
-  // Visualization constants
   const WAVE_BAR_COUNT = 12;
   const PULSE_FADE_RATE = 0.05;
   const WAVE_FADE_RATE = 0.9;
-  const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35; // Lower is more sensitive
-  const PULSE_SMOOTHING_FACTOR_OLD = 0.8; // Weight of current intensity
-  const PULSE_SMOOTHING_FACTOR_NEW = 0.2; // Weight of new audio level
+  const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35;
+  const PULSE_SMOOTHING_FACTOR_OLD = 0.8;
+  const PULSE_SMOOTHING_FACTOR_NEW = 0.2;
   const RANDOM_PHRASE_HOVER_UPDATE_CHANCE = 0.3;
 
-  // Audio visualization state
   let audioLevel = 0;
   let animationFrameId;
   let pulseIntensity = 0;
-  let waveformLevels = Array(WAVE_BAR_COUNT).fill(0); // For wave bars visualization
-
-  // Subscribe to waveform data for visualization
+  let waveformLevels = Array(WAVE_BAR_COUNT).fill(0);
   const unsubscribeWaveform = waveformData.subscribe(data => {
     if (data && data.length) {
-      // Calculate average level for pulse effect
       const sum = data.reduce((acc, val) => acc + val, 0);
       audioLevel = sum / data.length;
 
-      // Update waveform levels for wave bars
-      // Sample a subset of the frequency data for our visualization bars
       const step = Math.floor(data.length / waveformLevels.length);
       waveformLevels = waveformLevels.map((_, i) => {
         const dataIndex = i * step;
-        return Math.min(100, data[dataIndex] || 0); // Scale to max 100%
+        return Math.min(100, data[dataIndex] || 0);
       });
     }
   });
 
-  // Audio visualization animation
   function updateVisualization() {
     if (!recording) {
-      // Fade out when not recording
       pulseIntensity = Math.max(0, pulseIntensity - PULSE_FADE_RATE);
-      waveformLevels = waveformLevels.map(level => level * WAVE_FADE_RATE); // Fade out bars
+      waveformLevels = waveformLevels.map(level => level * WAVE_FADE_RATE);
     } else {
-      // Smooth the audio level changes for more natural animation
       const targetIntensity = Math.min(1, audioLevel / AUDIO_LEVEL_SENSITIVITY_FACTOR);
       pulseIntensity = pulseIntensity * PULSE_SMOOTHING_FACTOR_OLD + targetIntensity * PULSE_SMOOTHING_FACTOR_NEW;
     }
 
-    // Apply the visualization effect when element exists
     if (recordButtonElement) {
       recordButtonElement.style.setProperty('--pulse-intensity', pulseIntensity.toString());
 
-      // Update wave bars CSS custom properties
       waveformLevels.forEach((level, i) => {
         recordButtonElement.style.setProperty(`--wave-level-${i}`, `${level}%`);
       });
     }
 
-    // Continue animation
     animationFrameId = requestAnimationFrame(updateVisualization);
   }
 
-  // Local state
   let hasActiveList = false;
   let currentStartPhrase = '';
   let currentAddPhrase = '';
 
-  // Initialize on mount
   onMount(() => {
-    // Set phrases once on initial load to prevent flicker
     currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
     currentAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
-    
-    // Set initial button label based on list state
+
     buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
-    
-    // Start visualization animation
+
     updateVisualization();
   });
 
-  // Clean up on component destroy
   onDestroy(() => {
     if (unsubscribeWaveform) unsubscribeWaveform();
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
   });
-
-  // Subscribe to active list items to detect if we have a list
   const unsubscribe = activeListItems.subscribe(items => {
     const wasActiveList = hasActiveList;
     hasActiveList = items && items.length > 0;
-    
-    // Only update the button label if the list state changed and we're not recording
+
     if (!recording && wasActiveList !== hasActiveList && currentStartPhrase && currentAddPhrase) {
       buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
     }
   });
 
-  // Get random phrases for hover effect only - should not change visible text until click
   function updateRandomPhrases() {
-    // Only used after a click happens, to prepare for next view
-    // We don't update the button text itself until after a state change
-    
-    // Safely get a new start phrase different from the current one
     if (ZIPLIST_START_PHRASES.length > 1) {
       let newStartPhrase;
       do {
@@ -126,7 +96,6 @@ import { fade } from 'svelte/transition';
       currentStartPhrase = newStartPhrase;
     }
 
-    // Safely get a new add phrase different from the current one
     if (ZIPLIST_ADD_PHRASES.length > 1) {
       let newAddPhrase;
       do {
@@ -134,16 +103,11 @@ import { fade } from 'svelte/transition';
       } while (newAddPhrase === currentAddPhrase);
       currentAddPhrase = newAddPhrase;
     }
-    
-    // We no longer update the button label here to prevent flicker
-    // This function just prepares the next phrase for when it's needed
   }
-
-  // Handlers
   export function animateButtonPress() {
     if (recordButtonElement) {
       recordButtonElement.classList.remove('button-press');
-      void recordButtonElement.offsetWidth; // Force reflow
+      void recordButtonElement.offsetWidth;
       recordButtonElement.classList.add('button-press');
       setTimeout(() => {
         if (recordButtonElement) {
@@ -154,34 +118,28 @@ import { fade } from 'svelte/transition';
   }
 
   function handleKeyDown(event) {
-    // Space or Enter key to toggle recording when focused
     if ((event.key === 'Enter' || event.key === ' ') && !transcribing) {
-      event.preventDefault(); // Prevent default space/enter behavior
+      event.preventDefault();
       dispatch('click');
     }
   }
 
-  // Calculate time remaining
   function getTimeRemaining() {
     const timeLimit = isPremiumUser
       ? ANIMATION.RECORDING.PREMIUM_LIMIT
       : ANIMATION.RECORDING.FREE_LIMIT;
     return timeLimit - recordingDuration;
   }
-
-  // Reactive variables for timer states
   $: timeRemaining = getTimeRemaining();
   $: isWarning = timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
   $: isDanger = timeRemaining <= ANIMATION.RECORDING.DANGER_THRESHOLD;
 
-  // Format timer display (MM:SS)
   function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 
-  // Listening phrases for when recording is active
   const LISTENING_PHRASES = [
     'Listening...',
     'Taking notes...',
@@ -189,42 +147,32 @@ import { fade } from 'svelte/transition';
     'All ears...',
     'Catching your list...'
   ];
-  
+
   let currentListeningPhrase = 'Listening...';
   let previousRecordingState = false;
-  
-  // Update listening phrase when recording state changes
+
   $: {
     if (recording && !previousRecordingState) {
-      // Only update when transitioning from not recording to recording
       currentListeningPhrase = getRandomFromArray(LISTENING_PHRASES);
     }
     previousRecordingState = recording;
   }
-  
-  // Update button label based on recording state and active list
+
   $: buttonLabel = recording ? currentListeningPhrase : (hasActiveList ? currentAddPhrase : currentStartPhrase);
 
-  // Compute CSS classes reactively for better organization
   $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
-  
-  // CSS classes for clipboard success state
-  $: clipboardSuccessClasses = clipboardSuccess ? "notification-pulse border border-purple-200 bg-purple-50" : "";
-  
-  // Progress tracking style for recording state
-  $: progressStyle = recording 
-    ? `--progress: ${Math.min(recordingDuration / (isPremiumUser ? ANIMATION.RECORDING.PREMIUM_LIMIT : ANIMATION.RECORDING.FREE_LIMIT) * 100, 100)}%` 
-    : '';
-  
-  // Base button style with fixed dimensions and positioning
-  $: baseStyle = `min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; ${progressStyle}`;
 
-  // Event handling
+  $: clipboardSuccessClasses = clipboardSuccess ? "notification-pulse border border-purple-200 bg-purple-50" : "";
+
+  $: progressStyle = recording
+    ? `--progress: ${Math.min(recordingDuration / (isPremiumUser ? ANIMATION.RECORDING.PREMIUM_LIMIT : ANIMATION.RECORDING.FREE_LIMIT) * 100, 100)}%`
+    : '';
+
+  $: baseStyle = `min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; ${progressStyle}`;
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 </script>
 
-<!-- Fixed container with absolute positioning for both states -->
 <div class="fixed-button-container">
   {#if transcribing}
     <div
@@ -270,7 +218,6 @@ import { fade } from 'svelte/transition';
     aria-pressed={recording}
     aria-busy={transcribing}
   >
-    <!-- Wave bars visualization - only shown when recording -->
     {#if recording}
       <div class="wave-visualization">
         {#each { length: WAVE_BAR_COUNT } as _, i}
@@ -279,22 +226,18 @@ import { fade } from 'svelte/transition';
       </div>
     {/if}
 
-    <!-- Main button text -->
     <span
       class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
       style="letter-spacing: 0.02em;"
     >
-      <!-- Button label with integrated timer -->
       <span
         class="transform transition-all duration-300 ease-out scale-100 opacity-100"
       >
         <span class="button-content relative z-10">
-          <!-- Main label - the button text is on top of the progress bar -->
           <span class="flex items-center justify-center relative w-full">
             <span class="cta__label relative z-10 px-1 py-0.5 rounded-lg" class:text-shadow-recording={recording} style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em; text-align: center; width: 100%;">
               {buttonLabel}
             </span>
-            <!-- No timer display - keeping it minimal -->
             <span class="sr-only">
               {#if recording}
                 {formatTime(recordingDuration)} of {formatTime(ANIMATION.RECORDING.FREE_LIMIT)}
@@ -304,14 +247,13 @@ import { fade } from 'svelte/transition';
         </span>
       </span>
     </span>
-    
-    <!-- Recording indicator - minimalist pulsing dot -->
+
     {#if recording}
       <div class="recording-indicator"></div>
     {/if}
   </button>
   {/if}
-</div> <!-- Close the button container -->
+</div>
 
 <style>
   /* Base button styling */
