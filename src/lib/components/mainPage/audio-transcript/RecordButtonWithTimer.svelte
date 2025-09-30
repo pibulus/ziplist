@@ -62,29 +62,27 @@ import { fade } from 'svelte/transition';
   }
 
   let hasActiveList = false;
-  let currentStartPhrase = '';
-  let currentAddPhrase = '';
+  let currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
+  let currentAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
+
+  const unsubscribe = activeListItems.subscribe(items => {
+    const wasActiveList = hasActiveList;
+    hasActiveList = items && items.length > 0;
+
+    if (!recording && wasActiveList !== hasActiveList) {
+      buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
+    }
+  });
 
   onMount(() => {
-    currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
-    currentAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
-
     buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
-
     updateVisualization();
   });
 
   onDestroy(() => {
     if (unsubscribeWaveform) unsubscribeWaveform();
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
-  });
-  const unsubscribe = activeListItems.subscribe(items => {
-    const wasActiveList = hasActiveList;
-    hasActiveList = items && items.length > 0;
-
-    if (!recording && wasActiveList !== hasActiveList && currentStartPhrase && currentAddPhrase) {
-      buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
-    }
+    if (unsubscribe) unsubscribe();
   });
 
   function updateRandomPhrases() {
