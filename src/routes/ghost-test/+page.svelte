@@ -1,11 +1,11 @@
 <script>
-	import GhostTestContainer from '$lib/components/ghostTest/GhostTestContainer.svelte';
+	import GhostContainer from '$lib/components/mainPage/GhostContainer.svelte';
 </script>
 
 <svelte:head>
-	<title>Ghost Test - Unidirectional Data Flow</title>
-	<link rel="stylesheet" href="/ghost-data/ghost-themes.css" />
-	<link rel="stylesheet" href="/ghost-data/ghost-animations.css" />
+	<title>Ghost Test - ZipList</title>
 </svelte:head>
 
-<GhostTestContainer />
+<div class="min-h-screen flex items-center justify-center">
+	<GhostContainer />
+</div>
