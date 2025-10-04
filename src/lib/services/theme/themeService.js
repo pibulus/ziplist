@@ -5,7 +5,7 @@ import { STORAGE_KEYS } from '../../constants';
 export class ThemeService {
   constructor() {
     this.storageKey = STORAGE_KEYS.THEME;
-    this.defaultTheme = 'peach';
+    this.defaultTheme = 'focus';
     this.initialized = false;
   }
 

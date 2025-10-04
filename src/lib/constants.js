@@ -7,13 +7,13 @@
 
 // Theme/Vibe Configuration
 export const THEMES = {
-	PEACH: 'peach',
-	MINT: 'mint',
-	BUBBLEGUM: 'bubblegum',
-	RAINBOW: 'rainbow'
+	FOCUS: 'focus',
+	CHILL: 'chill',
+	ZEN: 'zen',
+	NOCTURNE: 'nocturne'
 };
 
-export const DEFAULT_THEME = THEMES.PEACH;
+export const DEFAULT_THEME = THEMES.FOCUS;
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
