@@ -30,6 +30,8 @@ export { audioService, AudioEvents } from './audio/audioService';
 
 // Transcription services
 export { transcriptionService, TranscriptionEvents } from './transcription/transcriptionService';
+export { simpleHybridService } from './transcription/simpleHybridService';
+export { whisperStatus } from './transcription/whisper/whisperService';
 
 // Store exports
 export { 

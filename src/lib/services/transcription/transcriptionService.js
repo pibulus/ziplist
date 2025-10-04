@@ -1,4 +1,5 @@
 import { geminiService as defaultGeminiService } from '$lib/services/geminiService';
+import { simpleHybridService } from './simpleHybridService';
 import { listParser } from '../listParser.js'; // Import the listParser
 import { listsService } from '../lists/listsService'; // Import the listsService
 import { transcriptionState, transcriptionActions, uiActions } from '../infrastructure/stores';
@@ -33,10 +34,10 @@ export class TranscriptionService {
       
       // Start progress animation
       this.startProgressAnimation();
-      
-      // Transcribe using Gemini
-      const transcriptText = await this.geminiService.transcribeAudio(audioBlob);
-      
+
+      // Transcribe using hybrid service (Whisper if ready, Gemini API as fallback)
+      const transcriptText = await simpleHybridService.transcribeAudio(audioBlob);
+
       // Complete progress animation with smooth transition
       this.completeProgressAnimation();
       
