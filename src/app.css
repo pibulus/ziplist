@@ -2,6 +2,7 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 @import './lib/styles/typography.css';
+@import './lib/styles/theme-variables.css';
 
 /* Remove outlines globally */
 *:focus {
