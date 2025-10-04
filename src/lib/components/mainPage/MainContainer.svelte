@@ -329,12 +329,14 @@
 </script>
 
 <PageLayout>
+  <!-- GHOST TEMPORARILY DISABLED - uncomment to restore
   <GhostContainer
     bind:this={ghostContainer}
     isRecording={$isRecording}
     isProcessing={$ghostStateStore.isProcessing}
     on:toggleRecording={handleToggleRecording}
   />
+  -->
   <ContentContainer
     bind:this={contentContainer}
   />
