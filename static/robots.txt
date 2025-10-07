@@ -1,0 +1,13 @@
+# robots.txt for ziplist.app
+# Welcome friendly search engine crawlers!
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ziplist.app/sitemap.xml
+
+# No crawling of debug/test pages
+Disallow: /list-test
+Disallow: /ghost-test
+Disallow: /ui-components
