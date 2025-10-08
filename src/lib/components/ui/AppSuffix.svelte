@@ -1,15 +1,14 @@
 <script>
-  import { theme as themeStore } from '$lib/components/ghost/themeStore.js';
-  import { THEMES } from '$lib/constants';
+  import { theme as themeStore, CONSTANTS } from '$lib';
   import { onMount } from 'svelte';
-  
+
   /**
    * AppSuffix Component
-   * 
+   *
    * A small tag-like suffix that appears adjacent to a product name,
    * designed to feel like a printed label rather than a continuation of the title.
    */
-  
+
   // Props with defaults
   export let color = "inherit"; // Default: inherit from parent
   export let size = "35%"; // Default: 35% of parent size (smaller suffix)
@@ -17,9 +16,9 @@
   export let offsetX = "-0.2em"; // Horizontal positioning
   export let offsetY = "6px"; // Vertical positioning
   export let position = "bottom-right"; // Position preset
-  
+
   // Keep current theme in sync with the global theme
-  $: currentTheme = $themeStore || THEMES.PEACH;
+  $: currentTheme = $themeStore || CONSTANTS.DEFAULT_THEME;
   
   // Listen for theme change events (for when theme changes from settings panel)
   onMount(() => {
@@ -87,19 +86,19 @@
   }
   
   /* Theme-specific gradients - darker for AA contrast */
-  .theme-peach .app-text {
+  .theme-focus .app-text {
     background-image: linear-gradient(to bottom right, #ff82ca, #ffb060);
   }
-  
-  .theme-mint .app-text {
+
+  .theme-chill .app-text {
     background-image: linear-gradient(to bottom right, #4ad8cb, #67e799);
   }
-  
-  .theme-bubblegum .app-text {
+
+  .theme-zen .app-text {
     background-image: linear-gradient(to bottom right, #9f8fff, #8183f4);
   }
-  
-  .theme-rainbow .app-text {
+
+  .theme-nocturne .app-text {
     background-image: linear-gradient(to right, #ff0080, #ff8c00, #ffed00, #00ff80, #00bfff);
     background-size: 200% auto;
     animation: rainbow-shift 3s linear infinite;

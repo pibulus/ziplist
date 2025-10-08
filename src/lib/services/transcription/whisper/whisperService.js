@@ -15,6 +15,8 @@ env.allowRemoteModels = true;
 env.useBrowserCache = true;
 // Use IndexedDB for persistent model storage across sessions
 env.useIndexedDB = true;
+// Don't check for local models - always use CDN (prevents 404 errors)
+env.allowLocalModels = false;
 // Don't set cacheDir - let it use default browser storage
 
 // Check for WebGPU support (10-100x faster!)

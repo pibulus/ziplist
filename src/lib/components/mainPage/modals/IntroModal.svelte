@@ -1,8 +1,7 @@
 <script>
   import { browser } from '$app/environment';
-  import Ghost from '$lib/components/ghost/Ghost.svelte';
   import { ModalCloseButton } from './index.js';
-  
+
   export let closeModal;
   export let markIntroAsSeen;
   export let triggerGhostClick;
@@ -27,12 +26,6 @@
     </form>
 
     <div class="space-y-5 sm:space-y-6 md:space-y-7 animate-fadeIn">
-      <div class="flex justify-center mb-4">
-        <div class="w-16 h-16 animate-pulse-slow">
-          <Ghost size="100%" clickable={false} class="intro-ghost" seed={12345} />
-        </div>
-      </div>
-
       <h1 id="intro_modal_title" class="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-gray-900">
         Ziplist's the best. <br> Organize the rest.
       </h1>
@@ -94,29 +87,4 @@
     }
   }
 
-  .animate-pulse-slow {
-    animation: pulse-slow 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-slow {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  }
-
-  :global(.intro-ghost) {
-    animation: intro-pulse 3s ease-in-out infinite;
-  }
-
-  @keyframes intro-pulse {
-    0%, 100% {
-      filter: brightness(1) saturate(1);
-    }
-    50% {
-      filter: brightness(1.1) saturate(1.1);
-    }
-  }
 </style>

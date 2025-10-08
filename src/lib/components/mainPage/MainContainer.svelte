@@ -337,9 +337,7 @@
     on:toggleRecording={handleToggleRecording}
   />
   -->
-  <ContentContainer
-    bind:this={contentContainer}
-  />
+  <ContentContainer />
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->
   <div class="flex justify-center my-4">
