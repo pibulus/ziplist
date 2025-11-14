@@ -1,18 +1,22 @@
 <script>
   import { fade, fly } from 'svelte/transition';
   import { listsService } from '$lib/services/lists/listsService';
+  import { postHogService } from '$lib/services/analytics/postHogService';
   import { goto } from '$app/navigation';
-  
+
   // Props
   export let sharedList;
   export let onClose = () => {};
-  
+
   // Import the list and navigate to home
   async function importList() {
     if (sharedList) {
       // Add the list using the listsService
       await listsService.addList(sharedList);
-      
+
+      // Track successful import
+      postHogService.trackListImported(sharedList.items?.length || 0, 'share_link');
+
       // Close dialog and navigate home
       onClose();
       goto('/');

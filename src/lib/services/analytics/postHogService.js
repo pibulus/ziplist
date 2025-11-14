@@ -115,6 +115,23 @@ class PostHogService {
     });
   }
 
+  // List sharing events
+  trackListShared(itemCount, success = true) {
+    this.trackEvent("list_shared", {
+      item_count: itemCount,
+      success,
+      timestamp: Date.now(),
+    });
+  }
+
+  trackListImported(itemCount, source = "share_link") {
+    this.trackEvent("list_imported", {
+      item_count: itemCount,
+      source, // 'share_link', 'url', 'manual'
+      timestamp: Date.now(),
+    });
+  }
+
   // Ghost interaction events
   trackGhostThemeChanged(fromTheme, toTheme) {
     this.trackEvent("ghost_theme_changed", {
