@@ -3,23 +3,40 @@
 ## Build & Development
 
 - `npm run dev` - Start development server (runs on http://localhost:3001)
+- `npm run dev:party` - Start PartyKit server for live collaboration (runs on http://localhost:1999)
 - `npm run build` - Create production build
 - `npm run preview` - Preview production build
 - `npm run format` - Run Prettier formatter
 - `npm run lint` - Check code formatting and run ESLint
 
+### Running Live Collaboration Locally
+
+For live collaboration features, you need to run BOTH servers:
+
+```bash
+# Terminal 1: Start SvelteKit dev server
+npm run dev
+
+# Terminal 2: Start PartyKit server
+npm run dev:party
+```
+
+Then visit http://localhost:3001 and click "Make Live" on any list!
+
 ## Project Overview
 
-ZipList is a minimal voice-to-list todo app. Core features:
+ZipList is a minimal voice-to-list todo app with live collaboration. Core features:
 
 - Voice recording → Gemini API transcription → list items
 - Full CRUD operations (add, toggle, edit, delete items)
+- **Live collaboration** - Real-time syncing with PartyKit
+- **Presence tracking** - See who's online ("Misty Fox", "Happy Frog", etc.)
 - Local storage persistence
 - PWA support with offline capability
 - Theme system (peach/pink variants)
 - Responsive design with mobile-first approach
 
-**Current State**: 65% complete. Core functionality works, needs polish and export features.
+**Current State**: 75% complete. Core functionality + live collab working!
 
 ## Code Style Guidelines
 
@@ -45,6 +62,14 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - **listsService.js**: Processes transcription results into list items
 - **listsStore.js**: Svelte store for list state and local storage
 - **themeService.js**: Theme switching and persistence
+
+### Live Collaboration Services (NEW!)
+
+- **avatarService.js**: Generates random avatar names ("Misty Fox", "Happy Frog")
+- **partyService.js**: PartySocket client for connecting to PartyKit rooms
+- **presenceStore.js**: Svelte store for tracking who's online
+- **liveListsService.js**: Layers live sync on top of listsStore
+- **party/listRoom.ts**: PartyKit server with Durable Objects storage
 
 ### Component Structure
 

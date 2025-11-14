@@ -1,0 +1,4 @@
+{
+  "name": "ziplist",
+  "main": "party/listRoom.ts"
+}
