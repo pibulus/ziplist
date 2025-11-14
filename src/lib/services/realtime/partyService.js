@@ -14,14 +14,21 @@ import { getOrCreateAvatar } from './avatarService.js';
 function getPartyKitHost() {
   if (typeof window === 'undefined') return '';
 
+  // Check for configured host in environment variable
+  const configuredHost = import.meta.env.VITE_PARTYKIT_HOST;
+  if (configuredHost) {
+    return configuredHost;
+  }
+
   // Development: use localhost
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'localhost:1999';
   }
 
-  // Production: use your deployed PartyKit host
-  // TODO: Replace with your actual PartyKit domain after deployment
-  return 'ziplist.your-username.partykit.dev';
+  // Fallback: construct from current hostname
+  // This assumes you deployed PartyKit with the same name as your app
+  console.warn('[PartyService] No VITE_PARTYKIT_HOST configured, using fallback');
+  return `ziplist.${window.location.hostname.split('.')[0]}.partykit.dev`;
 }
 
 /**
