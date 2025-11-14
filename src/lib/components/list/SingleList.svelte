@@ -3,6 +3,7 @@
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
   import { shareList } from '$lib/services/share';
+  import { postHogService } from '$lib/services/analytics/postHogService';
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   
@@ -40,18 +41,28 @@
       setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
       return;
     }
-    
+
     try {
       const result = await shareList(list);
-      if (result) {
-        shareStatus = { success: true, message: 'Link copied to clipboard!' };
+      if (result.success) {
+        if (result.urlTooLong) {
+          shareStatus = { success: true, message: 'Share link copied! Note: Very long URL, may not work in all apps.' };
+        } else {
+          shareStatus = { success: true, message: 'Share link copied!' };
+        }
+        // Track successful share
+        postHogService.trackListShared(list.items.length, true);
       } else {
-        shareStatus = { success: false, message: 'Failed to copy link' };
+        shareStatus = { success: false, message: 'Failed to share list' };
+        // Track failed share
+        postHogService.trackListShared(list.items.length, false);
       }
-      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
+      setTimeout(() => shareStatus = null, result.urlTooLong ? 5000 : 3000); // Show warning longer
     } catch (error) {
       console.error('Failed to share list:', error);
-      shareStatus = { success: false, message: 'Failed to copy link' };
+      shareStatus = { success: false, message: 'Failed to share list' };
+      // Track failed share
+      postHogService.trackListShared(list.items.length, false);
       setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
     }
   }
@@ -276,14 +287,14 @@
       <div class="zl-list-header">
         <h2 class="zl-list-title">{list.name}</h2>
         <div class="zl-list-actions">
-          <button 
-            class="zl-share-button" 
+          <button
+            class="zl-share-button"
             on:click={handleShareList}
-            title="Copy share link to clipboard"
-            aria-label="Copy share link for list: {list.name}"
+            title="Share this list"
+            aria-label="Share list: {list.name}"
           >
             <span class="share-icon">↑</span>
-            <span class="share-text">Copy Link</span>
+            <span class="share-text">Share</span>
           </button>
         </div>
       </div>

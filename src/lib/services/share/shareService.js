@@ -84,21 +84,44 @@ export function extractListDataFromUrl(url) {
 }
 
 /**
- * Share a list by copying its URL to clipboard
+ * Share a list using Web Share API (mobile) or clipboard (desktop)
  * @param {Object} list - The list to share
  * @param {string} baseUrl - The base URL of the application
- * @return {Promise<boolean>} Whether copying to clipboard was successful
+ * @return {Promise<{success: boolean, urlTooLong?: boolean}>} Result with success status and optional warning
  */
 export async function shareList(list, baseUrl = window.location.origin) {
   // Generate shareable URL
   const shareUrl = generateShareableUrl(list, baseUrl);
 
-  // Copy to clipboard
+  // Check URL length (warn if > 1500 characters, most browsers support 2000+)
+  const urlTooLong = shareUrl.length > 1500;
+
+  // Try Web Share API first (better mobile UX)
+  if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    try {
+      await navigator.share({
+        title: `${list.name} - ZipList`,
+        text: `Check out my list: ${list.name}`,
+        url: shareUrl,
+      });
+      return { success: true, urlTooLong };
+    } catch (e) {
+      // User cancelled share dialog or API not available
+      // Fall back to clipboard
+      if (e.name === "AbortError") {
+        // User cancelled, don't show error
+        return { success: false, urlTooLong: false };
+      }
+      console.log("Web Share API failed, falling back to clipboard", e);
+    }
+  }
+
+  // Fallback: Copy to clipboard
   try {
     await navigator.clipboard.writeText(shareUrl);
-    return true;
+    return { success: true, urlTooLong };
   } catch (e) {
     console.error("Failed to copy to clipboard", e);
-    return false;
+    return { success: false, urlTooLong: false };
   }
 }
