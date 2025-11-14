@@ -1,86 +1,113 @@
-import { geminiApiService } from "./geminiApiService";
 import { promptManager } from "./promptManager";
 import { parseModelResponse } from "./responseParser";
 
-// Export the original preloadModel function for backward compatibility
-const preloadModel = geminiApiService.preloadModel;
+const API_ENDPOINT = "/api/transcribe";
+const API_TIMEOUT_MS = 30000;
 
-// The main public geminiService object
+async function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function callTranscriptionApi({
+  audioData,
+  mimeType,
+  prompt,
+  promptStyle,
+}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        audioData,
+        mimeType,
+        prompt,
+        promptStyle,
+      }),
+      signal: controller.signal,
+      keepalive: true,
+    });
+
+    clearTimeout(timeoutId);
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || "Transcription failed");
+    }
+
+    return payload?.transcription || "";
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error.name === "AbortError") {
+      throw new Error("Transcription timed out (30s). Try again?");
+    }
+
+    throw error;
+  }
+}
+
 export const geminiService = {
-  // Expose the preload function for hover-based preloading
-  preloadModel,
+  // Client no longer initializes Gemini directly, but keep API for backward compatibility
+  preloadModel: () => Promise.resolve(),
 
-  // Get/set prompt style functions
   getPromptStyle: promptManager.getCurrentStyle,
   setPromptStyle: promptManager.setStyle,
   getAvailableStyles: promptManager.getAvailableStyles,
   subscribeToStyleChanges: promptManager.subscribe,
 
   async transcribeAudio(audioBlob) {
+    if (!(audioBlob instanceof Blob)) {
+      throw new Error("Invalid audio data provided");
+    }
+
     try {
       if (import.meta.env.DEV) {
-        console.log("🎤 Transcribing audio with Gemini");
+        console.log("🎤 Transcribing audio via /api/transcribe");
       }
 
-      // Ensure model is preloaded if possible
-      const { initialized } = geminiApiService.getModelStatus();
-      if (!initialized) {
-        try {
-          if (import.meta.env.DEV) {
-            console.log("🔍 Preloading model before transcription");
-          }
-          await preloadModel();
-        } catch (err) {
-          if (import.meta.env.DEV) {
-            console.log(
-              "⚠️ Preloading failed, continuing with transcription:",
-              err,
-            );
-          }
-        }
-      }
-
-      // Get the appropriate prompt based on current style
+      const promptStyle = promptManager.getCurrentStyle();
       const prompt = promptManager.getPrompt("transcribeAudio");
+      const base64Audio = await blobToBase64(audioBlob);
+      const mimeType = audioBlob.type || "audio/webm";
 
-      // Convert audio to format Gemini can use
-      const audioPart = await geminiApiService.blobToGenerativePart(audioBlob);
-
-      // Generate content with both prompt and audio data
-      const response = await geminiApiService.generateContent([
+      const transcription = await callTranscriptionApi({
+        audioData: base64Audio,
+        mimeType,
         prompt,
-        audioPart,
-      ]);
+        promptStyle,
+      });
 
       if (import.meta.env.DEV) {
-        console.log("✅ Audio transcription complete");
+        console.log("Raw response from Gemini:", transcription);
       }
 
-      // Get the raw response text
-      const responseText = response.text();
-
-      if (import.meta.env.DEV) {
-        console.log("Raw response from Gemini:", responseText);
-      }
-
-      // Use our robust parser to handle various response formats
-      const parsedResponse = parseModelResponse(responseText);
-
-      if (import.meta.env.DEV) {
-        console.log("Parsed response:", parsedResponse);
-      }
+      const parsedResponse = parseModelResponse(transcription);
 
       if (parsedResponse.success && parsedResponse.items.length > 0) {
-        // Return the items as a formatted string
         return parsedResponse.items.join("\n");
-      } else {
-        // Fallback to raw text if parsing fails completely
-        console.warn("Unable to extract structured items from response");
-        return responseText;
       }
+
+      console.warn(
+        "Unable to extract structured items from response, returning raw text",
+      );
+      return transcription;
     } catch (error) {
       console.error("❌ Error transcribing audio:", error);
-      throw new Error("Failed to transcribe audio with Gemini");
+      throw error;
     }
   },
 };

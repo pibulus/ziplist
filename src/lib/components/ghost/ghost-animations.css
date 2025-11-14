@@ -151,22 +151,22 @@
    ---------------------------------------- */
 
 /* Theme-specific styles */
-.theme-peach {
+.theme-focus {
   filter: drop-shadow(0 0 10px rgba(255, 120, 160, 0.25))
     drop-shadow(0 0 15px rgba(255, 150, 120, 0.15));
 }
 
-.theme-mint {
+.theme-chill {
   filter: drop-shadow(0 0 10px rgba(80, 235, 170, 0.25))
     drop-shadow(0 0 15px rgba(60, 220, 240, 0.15));
 }
 
-.theme-bubblegum {
+.theme-zen {
   filter: drop-shadow(0 0 10px rgba(200, 140, 255, 0.25))
     drop-shadow(0 0 15px rgba(255, 110, 180, 0.15));
 }
 
-.theme-rainbow {
+.theme-nocturne {
   filter: drop-shadow(0 0 10px rgba(255, 170, 190, 0.25))
     drop-shadow(0 0 15px rgba(210, 180, 255, 0.15))
     drop-shadow(0 0 1px rgba(255, 255, 255, 0.5));
@@ -177,34 +177,34 @@
    ---------------------------------------- */
 
 /* Hover effects - Now only static filter, animation removed */
-.theme-peach:hover {
+.theme-focus:hover {
   filter: drop-shadow(0 0 20px rgba(255, 130, 170, 0.85))
     drop-shadow(0 0 30px rgba(255, 160, 180, 0.7))
     drop-shadow(0 0 45px rgba(255, 180, 190, 0.5));
-  /* animation: peach-glow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
+  /* animation: focus-glow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
 }
 
-.theme-mint:hover {
+.theme-chill:hover {
   filter: drop-shadow(0 0 20px rgba(80, 235, 170, 0.85))
     drop-shadow(0 0 30px rgba(60, 220, 240, 0.65))
     drop-shadow(0 0 45px rgba(130, 255, 140, 0.5));
-  /* animation: mint-glow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
+  /* animation: chill-glow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
 }
 
-.theme-bubblegum:hover {
+.theme-zen:hover {
   filter: drop-shadow(0 0 20px rgba(210, 120, 255, 0.85))
     drop-shadow(0 0 30px rgba(255, 110, 180, 0.65))
     drop-shadow(0 0 45px rgba(170, 190, 255, 0.5));
-  /* animation: bubblegum-glow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
+  /* animation: zen-glow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
 }
 
-.theme-rainbow:hover {
+.theme-nocturne:hover {
   filter: drop-shadow(0 0 20px rgba(180, 130, 255, 0.85))
     drop-shadow(0 0 30px rgba(130, 160, 255, 0.7))
     drop-shadow(0 0 45px rgba(140, 180, 255, 0.6))
     drop-shadow(0 0 60px rgba(160, 220, 255, 0.5))
     drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
-  /* animation: rainbow-glow 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
+  /* animation: nocturne-glow 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; */ /* Removed */
 }
 
 /* ----------------------------------------
@@ -212,20 +212,20 @@
    ---------------------------------------- */
 
 /* Theme-specific recording animations - Simplified Selectors */
-.ghost-container.recording.theme-peach {
-  animation: recording-glow-peach 2s ease-in-out infinite;
+.ghost-container.recording.theme-focus {
+  animation: recording-glow-focus 2s ease-in-out infinite;
 }
 
-.ghost-container.recording.theme-mint {
-  animation: recording-glow-mint 2s ease-in-out infinite;
+.ghost-container.recording.theme-chill {
+  animation: recording-glow-chill 2s ease-in-out infinite;
 }
 
-.ghost-container.recording.theme-bubblegum {
-  animation: recording-glow-bubblegum 2s ease-in-out infinite;
+.ghost-container.recording.theme-zen {
+  animation: recording-glow-zen 2s ease-in-out infinite;
 }
 
-.ghost-container.recording.theme-rainbow {
-  animation: rainbow-color-cycle 3.5s ease-in-out infinite;
+.ghost-container.recording.theme-nocturne {
+  animation: nocturne-color-cycle 3.5s ease-in-out infinite;
 }
 
 /* ----------------------------------------
@@ -233,32 +233,32 @@
    ---------------------------------------- */
 
 /* Shape element animations per theme */
-.ghost-svg.theme-rainbow #ghost-shape {
-  animation: rainbowFlow 9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.ghost-svg.theme-nocturne #ghost-shape {
+  animation: nocturneFlow 9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   transform-origin: center;
   will-change: transform, filter;
 }
 
-.ghost-svg.theme-peach #ghost-shape {
+.ghost-svg.theme-focus #ghost-shape {
   animation:
     shimmer 5s infinite ease-in-out,
-    peachFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    focusFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
   transform-origin: center;
   will-change: transform, opacity, filter;
 }
 
-.ghost-svg.theme-mint #ghost-shape {
+.ghost-svg.theme-chill #ghost-shape {
   animation:
     shimmer 6s infinite ease-in-out,
-    mintFlow 10s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    chillFlow 10s infinite cubic-bezier(0.4, 0, 0.6, 1);
   transform-origin: center;
   will-change: transform, filter;
 }
 
-.ghost-svg.theme-bubblegum #ghost-shape {
+.ghost-svg.theme-zen #ghost-shape {
   animation:
     shimmer 7s infinite ease-in-out,
-    bubblegumFlow 12s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    zenFlow 12s infinite cubic-bezier(0.4, 0, 0.6, 1);
   transform-origin: center;
   will-change: transform, filter;
 }
@@ -267,82 +267,82 @@
    Gradient Animation Assignments
    ---------------------------------------- */
 
-/* Peach gradient animations - Re-enabled CSS animations */
-#peachGradient {
+/* Focus gradient animations - Re-enabled CSS animations */
+#focusGradient {
   animation: gradientShift 12s infinite ease-in-out;
   will-change: x1, y1, x2, y2;
 }
 
-#peachGradient stop:nth-child(1) {
+#focusGradient stop:nth-child(1) {
   animation: pinkPulse 5s infinite ease-in-out;
 }
 
-#peachGradient stop:nth-child(2) {
+#focusGradient stop:nth-child(2) {
   animation: rosePulse 5s 0.5s infinite ease-in-out;
 }
 
-#peachGradient stop:nth-child(3) {
-  animation: peachPulse 5s 1s infinite ease-in-out;
+#focusGradient stop:nth-child(3) {
+  animation: focusPulse 5s 1s infinite ease-in-out;
 }
 
-#peachGradient stop:nth-child(4) {
+#focusGradient stop:nth-child(4) {
   animation: mandarinPulse 5s 1.5s infinite ease-in-out;
 }
 
-#peachGradient stop:nth-child(5) {
+#focusGradient stop:nth-child(5) {
   animation: yellowPulse 5s 2s infinite ease-in-out;
 }
 
-/* Mint gradient animations - Re-enabled CSS animations */
-#mintGradient {
+/* Chill gradient animations - Re-enabled CSS animations */
+#chillGradient {
   animation: gradientShift 14s infinite ease-in-out;
   will-change: x1, y1, x2, y2;
 }
 
-#mintGradient stop:nth-child(1) {
-  animation: mintStartPulse 5s infinite ease-in-out;
+#chillGradient stop:nth-child(1) {
+  animation: chillStartPulse 5s infinite ease-in-out;
 }
 
-#mintGradient stop:nth-child(2) {
-  animation: mintMid1Pulse 5s 0.5s infinite ease-in-out;
+#chillGradient stop:nth-child(2) {
+  animation: chillMid1Pulse 5s 0.5s infinite ease-in-out;
 }
 
-#mintGradient stop:nth-child(3) {
-  animation: mintMid2Pulse 5s 1s infinite ease-in-out;
+#chillGradient stop:nth-child(3) {
+  animation: chillMid2Pulse 5s 1s infinite ease-in-out;
 }
 
-#mintGradient stop:nth-child(4) {
-  animation: mintMid3Pulse 5s 1.5s infinite ease-in-out;
+#chillGradient stop:nth-child(4) {
+  animation: chillMid3Pulse 5s 1.5s infinite ease-in-out;
 }
 
-#mintGradient stop:nth-child(5) {
-  animation: mintEndPulse 5s 2s infinite ease-in-out;
+#chillGradient stop:nth-child(5) {
+  animation: chillEndPulse 5s 2s infinite ease-in-out;
 }
 
-/* Bubblegum gradient animations - Re-enabled CSS animations */
-#bubblegumGradient {
+/* Zen gradient animations - Re-enabled CSS animations */
+#zenGradient {
   animation: gradientShift 16s infinite ease-in-out;
   will-change: x1, y1, x2, y2;
 }
 
-#bubblegumGradient stop:nth-child(1) {
-  animation: bubblegumStartPulse 5s infinite ease-in-out;
+#zenGradient stop:nth-child(1) {
+  animation: zenStartPulse 5s infinite ease-in-out;
 }
 
-#bubblegumGradient stop:nth-child(2) {
-  animation: bubblegumMid1Pulse 5s 0.5s infinite ease-in-out;
+#zenGradient stop:nth-child(2) {
+  animation: zenMid1Pulse 5s 0.5s infinite ease-in-out;
 }
 
-#bubblegumGradient stop:nth-child(3) {
-  animation: bubblegumMid2Pulse 5s 1s infinite ease-in-out;
+#zenGradient stop:nth-child(3) {
+  animation: zenMid2Pulse 5s 1s infinite ease-in-out;
 }
 
-#bubblegumGradient stop:nth-child(4) {
-  animation: bubblegumMid3Pulse 5s 1.5s infinite ease-in-out;
+#zenGradient stop:nth-child(4) {
+  animation: zenMid3Pulse 5s 1.5s infinite ease-in-out;
 }
 
-#bubblegumGradient stop:nth-child(5) {
-  animation: bubblegumEndPulse 5s 2s infinite ease-in-out;
+#zenGradient stop:nth-child(5) {
+  animation: zenEndPulse 5s 2s infinite ease-in-out;
 }
 
 /* ----------------------------------------
@@ -434,8 +434,8 @@
    Hover Glow Keyframe Animations
    ---------------------------------------- */
 
-/* Peach theme glow animation - analogous color scheme with transitions */
-@keyframes peach-glow {
+/* Focus theme glow animation - analogous color scheme with transitions */
+@keyframes focus-glow {
   0%,
   100% {
     filter: drop-shadow(0 0 10px rgba(255, 140, 170, 0.6))
@@ -451,8 +451,8 @@
   }
 }
 
-/* Mint theme glow animation - pastel colors with transitions */
-@keyframes mint-glow {
+/* Chill theme glow animation - pastel colors with transitions */
+@keyframes chill-glow {
   0%,
   100% {
     filter: drop-shadow(0 0 10px rgba(100, 230, 180, 0.6))
@@ -468,8 +468,8 @@
   }
 }
 
-/* Bubblegum theme glow animation - pastel purple/pink cycle */
-@keyframes bubblegum-glow {
+/* Zen theme glow animation - pastel purple/pink cycle */
+@keyframes zen-glow {
   0%,
   100% {
     filter: drop-shadow(0 0 10px rgba(200, 140, 255, 0.6))
@@ -485,8 +485,8 @@
   }
 }
 
-/* Rainbow theme glow animation - softer pastel colors with transitions */
-@keyframes rainbow-glow {
+/* Nocturne theme glow animation - softer pastel colors with transitions */
+@keyframes nocturne-glow {
   0%,
   100% {
     filter: drop-shadow(0 0 20px rgba(180, 130, 255, 0.95))
@@ -590,230 +590,230 @@
    Gradient Color Keyframes
    ---------------------------------------- */
 
-/* Peach theme gradient stop animations */
+/* Focus theme gradient stop animations */
 @keyframes pinkPulse {
   0% {
-    stop-color: var(--ghost-peach-start);
+    stop-color: var(--ghost-focus-start);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-peach-start-bright);
+    stop-color: var(--ghost-focus-start-bright);
     stop-opacity: 1;
   }
   100% {
-    stop-color: var(--ghost-peach-start);
+    stop-color: var(--ghost-focus-start);
     stop-opacity: 0.9;
   }
 }
 
 @keyframes rosePulse {
   0% {
-    stop-color: var(--ghost-peach-mid1);
+    stop-color: var(--ghost-focus-mid1);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-peach-mid1-bright);
+    stop-color: var(--ghost-focus-mid1-bright);
     stop-opacity: 0.8;
   }
   100% {
-    stop-color: var(--ghost-peach-mid1);
+    stop-color: var(--ghost-focus-mid1);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes peachPulse {
+@keyframes focusPulse {
   0% {
-    stop-color: var(--ghost-peach-mid2);
+    stop-color: var(--ghost-focus-mid2);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-peach-mid2-bright);
+    stop-color: var(--ghost-focus-mid2-bright);
     stop-opacity: 0.8;
   }
   100% {
-    stop-color: var(--ghost-peach-mid2);
+    stop-color: var(--ghost-focus-mid2);
     stop-opacity: 0.9;
   }
 }
 
 @keyframes mandarinPulse {
   0% {
-    stop-color: var(--ghost-peach-mid3);
+    stop-color: var(--ghost-focus-mid3);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-peach-mid3-bright);
+    stop-color: var(--ghost-focus-mid3-bright);
     stop-opacity: 0.7;
   }
   100% {
-    stop-color: var(--ghost-peach-mid3);
+    stop-color: var(--ghost-focus-mid3);
     stop-opacity: 0.9;
   }
 }
 
 @keyframes yellowPulse {
   0% {
-    stop-color: var(--ghost-peach-end);
+    stop-color: var(--ghost-focus-end);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-peach-end-bright);
+    stop-color: var(--ghost-focus-end-bright);
     stop-opacity: 0.85;
   }
   100% {
-    stop-color: var(--ghost-peach-end);
+    stop-color: var(--ghost-focus-end);
     stop-opacity: 0.9;
   }
 }
 
-/* Mint theme gradient stop animations */
-@keyframes mintStartPulse {
+/* Chill theme gradient stop animations */
+@keyframes chillStartPulse {
   0% {
-    stop-color: var(--ghost-mint-start);
+    stop-color: var(--ghost-chill-start);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-mint-start-bright);
+    stop-color: var(--ghost-chill-start-bright);
     stop-opacity: 1;
   }
   100% {
-    stop-color: var(--ghost-mint-start);
+    stop-color: var(--ghost-chill-start);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes mintMid1Pulse {
+@keyframes chillMid1Pulse {
   0% {
-    stop-color: var(--ghost-mint-mid1);
+    stop-color: var(--ghost-chill-mid1);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-mint-mid1-bright);
+    stop-color: var(--ghost-chill-mid1-bright);
     stop-opacity: 0.8;
   }
   100% {
-    stop-color: var(--ghost-mint-mid1);
+    stop-color: var(--ghost-chill-mid1);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes mintMid2Pulse {
+@keyframes chillMid2Pulse {
   0% {
-    stop-color: var(--ghost-mint-mid2);
+    stop-color: var(--ghost-chill-mid2);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-mint-mid2-bright);
+    stop-color: var(--ghost-chill-mid2-bright);
     stop-opacity: 0.8;
   }
   100% {
-    stop-color: var(--ghost-mint-mid2);
+    stop-color: var(--ghost-chill-mid2);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes mintMid3Pulse {
+@keyframes chillMid3Pulse {
   0% {
-    stop-color: var(--ghost-mint-mid3);
+    stop-color: var(--ghost-chill-mid3);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-mint-mid3-bright);
+    stop-color: var(--ghost-chill-mid3-bright);
     stop-opacity: 0.7;
   }
   100% {
-    stop-color: var(--ghost-mint-mid3);
+    stop-color: var(--ghost-chill-mid3);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes mintEndPulse {
+@keyframes chillEndPulse {
   0% {
-    stop-color: var(--ghost-mint-end);
+    stop-color: var(--ghost-chill-end);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-mint-end-bright);
+    stop-color: var(--ghost-chill-end-bright);
     stop-opacity: 0.85;
   }
   100% {
-    stop-color: var(--ghost-mint-end);
+    stop-color: var(--ghost-chill-end);
     stop-opacity: 0.9;
   }
 }
 
-/* Bubblegum theme gradient stop animations */
-@keyframes bubblegumStartPulse {
+/* Zen theme gradient stop animations */
+@keyframes zenStartPulse {
   0% {
-    stop-color: var(--ghost-bubblegum-start);
+    stop-color: var(--ghost-zen-start);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-bubblegum-start-bright);
+    stop-color: var(--ghost-zen-start-bright);
     stop-opacity: 1;
   }
   100% {
-    stop-color: var(--ghost-bubblegum-start);
+    stop-color: var(--ghost-zen-start);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes bubblegumMid1Pulse {
+@keyframes zenMid1Pulse {
   0% {
-    stop-color: var(--ghost-bubblegum-mid1);
+    stop-color: var(--ghost-zen-mid1);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-bubblegum-mid1-bright);
+    stop-color: var(--ghost-zen-mid1-bright);
     stop-opacity: 0.8;
   }
   100% {
-    stop-color: var(--ghost-bubblegum-mid1);
+    stop-color: var(--ghost-zen-mid1);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes bubblegumMid2Pulse {
+@keyframes zenMid2Pulse {
   0% {
-    stop-color: var(--ghost-bubblegum-mid2);
+    stop-color: var(--ghost-zen-mid2);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-bubblegum-mid2-bright);
+    stop-color: var(--ghost-zen-mid2-bright);
     stop-opacity: 0.8;
   }
   100% {
-    stop-color: var(--ghost-bubblegum-mid2);
+    stop-color: var(--ghost-zen-mid2);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes bubblegumMid3Pulse {
+@keyframes zenMid3Pulse {
   0% {
-    stop-color: var(--ghost-bubblegum-mid3);
+    stop-color: var(--ghost-zen-mid3);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-bubblegum-mid3-bright);
+    stop-color: var(--ghost-zen-mid3-bright);
     stop-opacity: 0.7;
   }
   100% {
-    stop-color: var(--ghost-bubblegum-mid3);
+    stop-color: var(--ghost-zen-mid3);
     stop-opacity: 0.9;
   }
 }
 
-@keyframes bubblegumEndPulse {
+@keyframes zenEndPulse {
   0% {
-    stop-color: var(--ghost-bubblegum-end);
+    stop-color: var(--ghost-zen-end);
     stop-opacity: 0.9;
   }
   50% {
-    stop-color: var(--ghost-bubblegum-end-bright);
+    stop-color: var(--ghost-zen-end-bright);
     stop-opacity: 0.85;
   }
   100% {
-    stop-color: var(--ghost-bubblegum-end);
+    stop-color: var(--ghost-zen-end);
     stop-opacity: 0.9;
   }
 }
@@ -985,7 +985,7 @@
    Theme Flow Animation Keyframes
    ---------------------------------------- */
 
-@keyframes rainbowFlow {
+@keyframes nocturneFlow {
   0% {
     filter: hue-rotate(0deg) saturate(1.4) brightness(1.15)
       drop-shadow(0 0 12px rgba(255, 120, 180, 0.35));
@@ -1012,7 +1012,7 @@
   }
 }
 
-@keyframes peachFlow {
+@keyframes focusFlow {
   0% {
     filter: saturate(1.2) brightness(1.05) hue-rotate(3deg)
       drop-shadow(0 0 8px rgba(120, 240, 200, 0.3));
@@ -1040,7 +1040,7 @@
   }
 }
 
-@keyframes mintFlow {
+@keyframes chillFlow {
   0% {
     filter: saturate(1.2) brightness(1.05) hue-rotate(3deg)
       drop-shadow(0 0 8px rgba(120, 240, 200, 0.3));
@@ -1068,7 +1068,7 @@
   }
 }
 
-@keyframes bubblegumFlow {
+@keyframes zenFlow {
   0% {
     filter: saturate(1.3) brightness(1.05) hue-rotate(-5deg)
       drop-shadow(0 0 8px rgba(200, 100, 240, 0.3));
@@ -1102,7 +1102,7 @@
 }
 
 /* Theme-specific recording glow animations */
-@keyframes recording-glow-peach {
+@keyframes recording-glow-focus {
   0%,
   5%,
   95%,
@@ -1121,7 +1121,7 @@
   }
 }
 
-@keyframes recording-glow-mint {
+@keyframes recording-glow-chill {
   0%,
   5%,
   95%,
@@ -1140,7 +1140,7 @@
   }
 }
 
-@keyframes recording-glow-bubblegum {
+@keyframes recording-glow-zen {
   0%,
   5%,
   95%,
@@ -1159,7 +1159,7 @@
   }
 }
 
-@keyframes rainbow-color-cycle {
+@keyframes nocturne-color-cycle {
   0%,
   100% {
     /* Base color: rgba(255, 50, 150, 1) - Magentaish Pink */

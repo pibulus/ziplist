@@ -38,7 +38,7 @@ The Ghost SVG has a layered architecture:
 <svg class="ghost-svg theme-{currentTheme}">
   <defs>
     <!-- Gradient definitions -->
-    <linearGradient id="peachGradient">...</linearGradient>
+    <linearGradient id="focusGradient">...</linearGradient>
     <!-- Other theme gradients... -->
   </defs>
 
@@ -99,10 +99,10 @@ The animation system follows these principles:
 
 The component supports four themes, each with unique colors and animation behaviors:
 
-1. **Peach**: Warm pink/orange gradient with subtle pulsing
-2. **Mint**: Cool green/blue gradient with calm transitions
-3. **Bubblegum**: Purple/pink gradient with energetic animations
-4. **Rainbow**: Full-spectrum color cycling with enhanced effects
+1. **Focus**: Warm pink/orange gradient with subtle pulsing
+2. **Chill**: Cool green/blue gradient with calm transitions
+3. **Zen**: Purple/pink gradient with energetic animations
+4. **Nocturne**: Full-spectrum color cycling with enhanced effects
 
 ### Theme Store (Centralized State Management)
 
@@ -140,7 +140,7 @@ Theme colors are defined in the `themeStore.js` as structured JavaScript objects
 
 ```javascript
 const themeColors = {
-  peach: {
+  focus: {
     start: "#ff60e0",
     startBright: "#ff4aed",
     mid1: "#ff82ca",
@@ -159,12 +159,12 @@ The ghost uses SVG linear gradients with animated color stops:
 ### Gradient Definition
 
 ```html
-<linearGradient id="peachGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-  <stop offset="0%" stop-color="var(--ghost-peach-start)" />
-  <stop offset="35%" stop-color="var(--ghost-peach-mid1)" />
-  <stop offset="65%" stop-color="var(--ghost-peach-mid2)" />
-  <stop offset="85%" stop-color="var(--ghost-peach-mid3)" />
-  <stop offset="100%" stop-color="var(--ghost-peach-end)" />
+<linearGradient id="focusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+  <stop offset="0%" stop-color="var(--ghost-focus-start)" />
+  <stop offset="35%" stop-color="var(--ghost-focus-mid1)" />
+  <stop offset="65%" stop-color="var(--ghost-focus-mid2)" />
+  <stop offset="85%" stop-color="var(--ghost-focus-mid3)" />
+  <stop offset="100%" stop-color="var(--ghost-focus-end)" />
 </linearGradient>
 ```
 
@@ -238,7 +238,7 @@ export const animationTiming = {
 
 // Theme-specific animation behaviors
 export const shapeAnimations = {
-  peach: {
+  focus: {
     flowDuration: 9,
     flowEase: "cubic-bezier(0.4, 0, 0.6, 1)",
     scale: { min: 1.0, mid: 1.012, steps: 1.005 },
@@ -272,10 +272,10 @@ Example of theme-specific animation application:
 
 ```css
 /* Shape element animations per theme */
-.ghost-svg.theme-peach #ghost-shape {
+.ghost-svg.theme-focus #ghost-shape {
   animation:
     shimmer 5s infinite ease-in-out,
-    peachFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    focusFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
   transform-origin: center;
   will-change: transform, opacity, filter;
 }
@@ -322,7 +322,7 @@ Components interact with this store via exported functions like `setRecording`, 
 
 ### Theme State (`themeStore.js`)
 
-This store manages the current visual theme (`peach`, `mint`, etc.). Key features:
+This store manages the current visual theme (`focus`, `chill`, etc.). Key features:
 
 - Persists the selected theme to `localStorage`.
 - Provides a derived store (`cssVariables`) containing all necessary CSS variables for the current theme's colors and animation parameters.
@@ -490,13 +490,13 @@ Common issues and their solutions:
 
    ```css
    /* Incorrect - targeting container group */
-   .ghost-svg.theme-peach .ghost-bg {
-     animation: peachFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
+   .ghost-svg.theme-focus .ghost-bg {
+     animation: focusFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
    }
 
    /* Correct - targeting element directly by ID */
-   .ghost-svg.theme-peach #ghost-shape {
-     animation: peachFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
+   .ghost-svg.theme-focus #ghost-shape {
+     animation: focusFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
    }
    ```
 

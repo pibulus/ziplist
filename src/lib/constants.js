@@ -7,13 +7,20 @@
 
 // Theme/Vibe Configuration
 export const THEMES = {
-  PEACH: "peach",
-  MINT: "mint",
-  BUBBLEGUM: "bubblegum",
-  RAINBOW: "rainbow",
+  FOCUS: "focus",
+  CHILL: "chill",
+  ZEN: "zen",
+  NOCTURNE: "nocturne",
 };
 
-export const DEFAULT_THEME = THEMES.PEACH;
+export const DEFAULT_THEME = THEMES.FOCUS;
+
+export const THEME_GHOST_ALIASES = {
+  [THEMES.FOCUS]: "peach",
+  [THEMES.CHILL]: "mint",
+  [THEMES.ZEN]: "bubblegum",
+  [THEMES.NOCTURNE]: "rainbow",
+};
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
@@ -23,6 +30,8 @@ export const STORAGE_KEYS = {
   AUTO_RECORD: "ziplist-autoRecord",
   PROMPT_STYLE: "ziplist-prompt-style",
   DEBUG_MODE: "ziplist-debug-mode",
+  PRIVACY_MODE: "ziplist_privacy_mode",
+  LAST_TRANSCRIPTION_METHOD: "ziplist-last-transcription-method",
 
   // PWA Related
   TRANSCRIPTION_COUNT: "ziplist-transcription-count",

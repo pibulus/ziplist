@@ -45,8 +45,8 @@ export const animationTiming = {
  * Controls how the ghost shape element animates
  */
 export const shapeAnimations = {
-  // Peach theme animation behavior
-  peach: {
+  // Focus theme animation behavior
+  focus: {
     flowDuration: 9, // Animation cycle in seconds
     flowEase: "cubic-bezier(0.4, 0, 0.6, 1)", // Custom easing
     scale: {
@@ -64,8 +64,8 @@ export const shapeAnimations = {
     },
   },
 
-  // Mint theme animation behavior
-  mint: {
+  // Chill theme animation behavior
+  chill: {
     flowDuration: 10,
     flowEase: "cubic-bezier(0.4, 0, 0.6, 1)",
     scale: {
@@ -83,8 +83,8 @@ export const shapeAnimations = {
     },
   },
 
-  // Bubblegum theme animation behavior
-  bubblegum: {
+  // Zen theme animation behavior
+  zen: {
     flowDuration: 12,
     flowEase: "cubic-bezier(0.4, 0, 0.6, 1)",
     scale: {
@@ -102,8 +102,8 @@ export const shapeAnimations = {
     },
   },
 
-  // Rainbow theme animation behavior
-  rainbow: {
+  // Nocturne theme animation behavior
+  nocturne: {
     flowDuration: 9,
     flowEase: "cubic-bezier(0.4, 0, 0.6, 1)",
     scale: {
@@ -125,7 +125,7 @@ export const shapeAnimations = {
       brightness: { min: 1.15, max: 1.22 },
     },
     shadow: {
-      enabled: true, // Rainbow has extra glow
+      enabled: true, // Nocturne has extra glow
       radius: { min: 8, max: 20 }, // Shadow size (pixels)
       opacity: { min: 0.35, max: 0.5 }, // Shadow intensity
     },
@@ -137,8 +137,8 @@ export const shapeAnimations = {
  * Controls the SVG gradient animation parameters
  */
 export const gradientAnimations = {
-  // Peach theme animation behavior
-  peach: {
+  // Focus theme animation behavior
+  focus: {
     position: {
       speed: 0.7, // Animation speed (rad/frame)
       amplitude: 4, // Movement amount (percentage)
@@ -147,8 +147,8 @@ export const gradientAnimations = {
     stopPositions: ["start", "mid1", "mid2", "mid3", "end"],
   },
 
-  // Mint theme animation behavior
-  mint: {
+  // Chill theme animation behavior
+  chill: {
     position: {
       speed: 0.08,
       amplitude: 4,
@@ -156,8 +156,8 @@ export const gradientAnimations = {
     stopPositions: ["start", "mid1", "mid2", "mid3", "end"],
   },
 
-  // Bubblegum theme animation behavior
-  bubblegum: {
+  // Zen theme animation behavior
+  zen: {
     position: {
       speed: 0.06,
       amplitude: 5,
@@ -165,8 +165,8 @@ export const gradientAnimations = {
     stopPositions: ["start", "mid1", "mid2", "mid3", "end"],
   },
 
-  // Rainbow theme animation behavior
-  rainbow: {
+  // Nocturne theme animation behavior
+  nocturne: {
     position: {
       speed: 0.12,
       amplitude: 6,

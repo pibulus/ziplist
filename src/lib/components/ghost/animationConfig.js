@@ -63,10 +63,10 @@ export const ANIMATION_TIMING = {
   FLOAT_DELAY: "2.5s", // Delay before float animation starts
 
   // Flow animation durations per theme
-  PEACH_FLOW_DURATION: "9s",
-  MINT_FLOW_DURATION: "10s",
-  BUBBLEGUM_FLOW_DURATION: "12s",
-  RAINBOW_FLOW_DURATION: "9s",
+  FOCUS_FLOW_DURATION: "9s",
+  CHILL_FLOW_DURATION: "10s",
+  ZEN_FLOW_DURATION: "12s",
+  NOCTURNE_FLOW_DURATION: "9s",
 
   // Flow animation easing
   FLOW_EASE: "cubic-bezier(0.4, 0, 0.6, 1)",
@@ -89,7 +89,7 @@ export const ANIMATION_EFFECTS = {
   COLOR_PULSE_END_OPACITY_MAX: 0.95,
 
   // Theme-specific animation parameters
-  PEACH: {
+  FOCUS: {
     HUE_ROTATE_MIN: "-7deg",
     HUE_ROTATE_MAX: "9deg",
     SATURATE_MIN: 1.15,
@@ -105,7 +105,7 @@ export const ANIMATION_EFFECTS = {
     POSITION_AMPLITUDE: "4%",
   },
 
-  MINT: {
+  CHILL: {
     HUE_ROTATE_MIN: "-2deg",
     HUE_ROTATE_MAX: "5deg",
     SATURATE_MIN: 1.2,
@@ -121,7 +121,7 @@ export const ANIMATION_EFFECTS = {
     POSITION_AMPLITUDE: "4%",
   },
 
-  BUBBLEGUM: {
+  ZEN: {
     HUE_ROTATE_MIN: "-8deg",
     HUE_ROTATE_MAX: "8deg",
     SATURATE_MIN: 1.3,
@@ -137,7 +137,7 @@ export const ANIMATION_EFFECTS = {
     POSITION_AMPLITUDE: "5%",
   },
 
-  RAINBOW: {
+  NOCTURNE: {
     HUE_ROTATE_MIN: "0deg",
     HUE_ROTATE_MAX: "360deg",
     HUE_ROTATE_FULL_CYCLE: true,
@@ -168,10 +168,10 @@ export const CSS_CLASSES = {
   PULSE: "ghost-pulse",
   INITIAL_LOAD: "initial-load",
   RECORDING: "recording",
-  RECORDING_PEACH: "recording-glow-peach",
-  RECORDING_MINT: "recording-glow-mint",
-  RECORDING_BUBBLEGUM: "recording-glow-bubblegum",
-  RAINBOW_CYCLE: "rainbow-color-cycle",
+  RECORDING_FOCUS: "recording-glow-focus",
+  RECORDING_CHILL: "recording-glow-chill",
+  RECORDING_ZEN: "recording-glow-zen",
+  NOCTURNE_CYCLE: "nocturne-color-cycle",
   ASLEEP: "asleep", // CSS class for the asleep state
   WAKING_UP: "waking-up", // CSS class for the waking up state
 };
@@ -290,10 +290,10 @@ export function generateAnimationCssVariables() {
   cssVars += `--ghost-eye-blink-transition: ${EYE_CONFIG.BLINK_TRANSITION};\n`;
 
   // Flow animation durations
-  cssVars += `--ghost-peach-flow-duration: ${ANIMATION_TIMING.PEACH_FLOW_DURATION};\n`;
-  cssVars += `--ghost-mint-flow-duration: ${ANIMATION_TIMING.MINT_FLOW_DURATION};\n`;
-  cssVars += `--ghost-bubblegum-flow-duration: ${ANIMATION_TIMING.BUBBLEGUM_FLOW_DURATION};\n`;
-  cssVars += `--ghost-rainbow-flow-duration: ${ANIMATION_TIMING.RAINBOW_FLOW_DURATION};\n`;
+  cssVars += `--ghost-focus-flow-duration: ${ANIMATION_TIMING.FOCUS_FLOW_DURATION};\n`;
+  cssVars += `--ghost-chill-flow-duration: ${ANIMATION_TIMING.CHILL_FLOW_DURATION};\n`;
+  cssVars += `--ghost-zen-flow-duration: ${ANIMATION_TIMING.ZEN_FLOW_DURATION};\n`;
+  cssVars += `--ghost-nocturne-flow-duration: ${ANIMATION_TIMING.NOCTURNE_FLOW_DURATION};\n`;
 
   // Flow animation easing
   cssVars += `--ghost-flow-ease: ${ANIMATION_TIMING.FLOW_EASE};\n`;
@@ -312,28 +312,28 @@ export function generateAnimationCssVariables() {
   cssVars += `--ghost-colorpulse-end-opacity-min: ${ANIMATION_EFFECTS.COLOR_PULSE_END_OPACITY_MIN};\n`;
   cssVars += `--ghost-colorpulse-end-opacity-max: ${ANIMATION_EFFECTS.COLOR_PULSE_END_OPACITY_MAX};\n`;
 
-  // Theme-specific parameters - Peach
-  cssVars += "\n/* Peach Theme Animation Parameters */\n";
-  Object.entries(ANIMATION_EFFECTS.PEACH).forEach(([key, value]) => {
-    cssVars += `--ghost-peach-${key.toLowerCase()}: ${value};\n`;
+  // Theme-specific parameters - Focus
+  cssVars += "\n/* Focus Theme Animation Parameters */\n";
+  Object.entries(ANIMATION_EFFECTS.FOCUS).forEach(([key, value]) => {
+    cssVars += `--ghost-focus-${key.toLowerCase()}: ${value};\n`;
   });
 
-  // Theme-specific parameters - Mint
-  cssVars += "\n/* Mint Theme Animation Parameters */\n";
-  Object.entries(ANIMATION_EFFECTS.MINT).forEach(([key, value]) => {
-    cssVars += `--ghost-mint-${key.toLowerCase()}: ${value};\n`;
+  // Theme-specific parameters - Chill
+  cssVars += "\n/* Chill Theme Animation Parameters */\n";
+  Object.entries(ANIMATION_EFFECTS.CHILL).forEach(([key, value]) => {
+    cssVars += `--ghost-chill-${key.toLowerCase()}: ${value};\n`;
   });
 
-  // Theme-specific parameters - Bubblegum
-  cssVars += "\n/* Bubblegum Theme Animation Parameters */\n";
-  Object.entries(ANIMATION_EFFECTS.BUBBLEGUM).forEach(([key, value]) => {
-    cssVars += `--ghost-bubblegum-${key.toLowerCase()}: ${value};\n`;
+  // Theme-specific parameters - Zen
+  cssVars += "\n/* Zen Theme Animation Parameters */\n";
+  Object.entries(ANIMATION_EFFECTS.ZEN).forEach(([key, value]) => {
+    cssVars += `--ghost-zen-${key.toLowerCase()}: ${value};\n`;
   });
 
-  // Theme-specific parameters - Rainbow
-  cssVars += "\n/* Rainbow Theme Animation Parameters */\n";
-  Object.entries(ANIMATION_EFFECTS.RAINBOW).forEach(([key, value]) => {
-    cssVars += `--ghost-rainbow-${key.toLowerCase()}: ${value};\n`;
+  // Theme-specific parameters - Nocturne
+  cssVars += "\n/* Nocturne Theme Animation Parameters */\n";
+  Object.entries(ANIMATION_EFFECTS.NOCTURNE).forEach(([key, value]) => {
+    cssVars += `--ghost-nocturne-${key.toLowerCase()}: ${value};\n`;
   });
 
   return cssVars;

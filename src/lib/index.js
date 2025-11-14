@@ -3,16 +3,35 @@ import { writable } from "svelte/store";
 import { browser } from "$app/environment";
 import * as CONSTANTS from "./constants";
 
+function normalizeThemeId(value) {
+  if (!value) return value;
+  switch (value) {
+    case "peach":
+      return CONSTANTS.THEMES.FOCUS;
+    case "mint":
+      return CONSTANTS.THEMES.CHILL;
+    case "bubblegum":
+      return CONSTANTS.THEMES.ZEN;
+    case "rainbow":
+      return CONSTANTS.THEMES.NOCTURNE;
+    default:
+      return value;
+  }
+}
+
 // Initialize store with localStorage value if available
 function createLocalStorageStore(key, initialValue) {
-  // Create the writable store
-  const store = writable(initialValue);
+  const isThemeStore = key === CONSTANTS.STORAGE_KEYS.THEME;
+  const startingValue = isThemeStore
+    ? normalizeThemeId(initialValue)
+    : initialValue;
+  const store = writable(startingValue);
 
   // Initialize from localStorage if in browser context
   if (browser) {
     const storedValue = localStorage.getItem(key);
     if (storedValue) {
-      store.set(storedValue);
+      store.set(isThemeStore ? normalizeThemeId(storedValue) : storedValue);
     }
   }
 
@@ -20,18 +39,20 @@ function createLocalStorageStore(key, initialValue) {
   return {
     subscribe: store.subscribe,
     set: (value) => {
+      const nextValue = isThemeStore ? normalizeThemeId(value) : value;
       if (browser) {
-        localStorage.setItem(key, value);
+        localStorage.setItem(key, nextValue);
       }
-      store.set(value);
+      store.set(nextValue);
     },
     update: (fn) => {
       store.update((storeValue) => {
         const newValue = fn(storeValue);
+        const normalized = isThemeStore ? normalizeThemeId(newValue) : newValue;
         if (browser) {
-          localStorage.setItem(key, newValue);
+          localStorage.setItem(key, normalized);
         }
-        return newValue;
+        return normalized;
       });
     },
   };
@@ -86,19 +107,19 @@ export function applyTheme(vibeId) {
     if (ghostBg) {
       // Set the appropriate gradient SVG based on theme
       switch (vibeId) {
-        case CONSTANTS.THEMES.MINT:
+        case CONSTANTS.THEMES.CHILL:
           ghostBg.src = "/ziplist-icon-bg-gradient-mint.svg";
           ghostBg.classList.remove("rainbow-animated");
           break;
-        case CONSTANTS.THEMES.BUBBLEGUM:
+        case CONSTANTS.THEMES.ZEN:
           ghostBg.src = "/ziplist-icon-bg-gradient-bubblegum.svg";
           ghostBg.classList.remove("rainbow-animated");
           break;
-        case CONSTANTS.THEMES.RAINBOW:
+        case CONSTANTS.THEMES.NOCTURNE:
           ghostBg.src = "/ziplist-icon-bg-gradient-rainbow.svg";
           ghostBg.classList.add("rainbow-animated");
           break;
-        default: // Default to peach
+        default:
           ghostBg.src = "/ziplist-icon-bg-gradient.svg";
           ghostBg.classList.remove("rainbow-animated");
           break;

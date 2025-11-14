@@ -16,7 +16,7 @@ let stopColors = {};
 
 /**
  * Initialize gradient animation for a specific theme
- * @param {string} themeId - Theme identifier (peach, mint, bubblegum, rainbow)
+ * @param {string} themeId - Theme identifier (focus, chill, zen, nocturne)
  * @param {SVGElement} svgElement - The SVG element containing the gradient
  */
 export function initGradientAnimation(themeId, svgElement) {

@@ -10,7 +10,7 @@ const createGhostStore = () => {
     isRecording: false,
     isProcessing: false,
     theme: {
-      current: "peach", // 'peach', 'mint', 'bubblegum', 'rainbow'
+      current: "focus", // 'focus', 'chill', 'zen', 'nocturne'
       bgPath: "/ziplist-icon-bg-gradient.svg",
     },
   });
@@ -20,13 +20,13 @@ const createGhostStore = () => {
     const theme = $store.theme.current;
 
     switch (theme) {
-      case "mint":
+      case "chill":
         return "/ziplist-icon-bg-gradient-mint.svg";
-      case "bubblegum":
+      case "zen":
         return "/ziplist-icon-bg-gradient-bubblegum.svg";
-      case "rainbow":
+      case "nocturne":
         return "/ziplist-icon-bg-gradient-rainbow.svg";
-      default: // Default to peach
+      default: // Default to focus
         return "/ziplist-icon-bg-gradient.svg";
     }
   });

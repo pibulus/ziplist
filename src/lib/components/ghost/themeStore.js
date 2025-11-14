@@ -7,7 +7,7 @@ import { WOBBLE_CONFIG, SPECIAL_CONFIG } from "./animationConfig"; // Import WOB
 
 // Theme configuration - color palette definitions
 const themeColors = {
-  peach: {
+  focus: {
     start: "#ff60e0",
     startBright: "#ff4aed",
     mid1: "#ff82ca",
@@ -25,7 +25,7 @@ const themeColors = {
     shadowColorBright: "rgba(255, 190, 170, 0.4)",
     shadowColorBrightest: "rgba(255, 210, 200, 0.5)",
   },
-  mint: {
+  chill: {
     start: "#0ac5ef",
     startBright: "#20d0fa",
     mid1: "#22d3ed",
@@ -43,7 +43,7 @@ const themeColors = {
     shadowColorBright: "rgba(100, 230, 210, 0.4)",
     shadowColorBrightest: "rgba(80, 220, 180, 0.5)",
   },
-  bubblegum: {
+  zen: {
     start: "#c026d3",
     startBright: "#d52ae6",
     mid1: "#a855f7",
@@ -62,7 +62,7 @@ const themeColors = {
     shadowColorBrighter: "rgba(180, 120, 220, 0.4)",
     shadowColorBrightest: "rgba(170, 130, 210, 0.45)",
   },
-  rainbow: {
+  nocturne: {
     start: "#ff0080",
     startBright: "#ff2090",
     mid1: "#ff8c00",
@@ -89,12 +89,12 @@ const themeColors = {
 
 // Get theme from localStorage or use default
 function getInitialTheme() {
-  if (!browser) return THEMES.PEACH;
+  if (!browser) return THEMES.FOCUS;
 
   const storedTheme = StorageUtils.getItem(STORAGE_KEYS.THEME);
   return storedTheme && Object.values(THEMES).includes(storedTheme)
     ? storedTheme
-    : THEMES.PEACH;
+    : THEMES.FOCUS;
 }
 
 // Create the main theme store
