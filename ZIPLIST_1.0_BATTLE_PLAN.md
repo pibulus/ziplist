@@ -1,4 +1,5 @@
 # ZipList 1.0 - Battle Plan
+
 **Goal**: Ship production-ready voice-to-list app with offline AI and sharing
 
 ---
@@ -8,6 +9,7 @@
 After deep reconnaissance of Dennis's three feature branches, here's the verdict:
 
 **Dennis crushed it.** All three branches are production-quality work:
+
 - ✅ **web-share-api**: Complete, tested, ready to merge
 - ✅ **offline-transcription-with-whisper**: **ALREADY WORKING IN TALKTYPE** - just needs porting
 - ✅ **analytics**: PostHog integration, clean spec, ready to implement
@@ -15,6 +17,7 @@ After deep reconnaissance of Dennis's three feature branches, here's the verdict
 The whisper "issues" Dennis documented were solved months ago in TalkType. We have a working reference implementation sitting at `/Users/pabloalvarado/Projects/active/apps/talktype/` with 4 production files.
 
 **New insight**: This combo (offline AI + list sharing) is genuinely unique. I've never seen it. Usually it's:
+
 - Cloud transcription + no offline = Google/Apple
 - Offline AI + no sharing = Privacy apps
 - List sharing + no voice = Traditional todo apps
@@ -26,6 +29,7 @@ The whisper "issues" Dennis documented were solved months ago in TalkType. We ha
 ## 📊 Current State Assessment
 
 ### What Works (65% Complete) ✅
+
 - Voice recording → Gemini transcription → lists
 - Full CRUD (add, edit, delete, toggle items)
 - Local storage persistence
@@ -35,6 +39,7 @@ The whisper "issues" Dennis documented were solved months ago in TalkType. We ha
 - Ghost animation for recording feedback
 
 ### What Needs Work
+
 1. **Settings still say "TalkType"** - Needs rebranding pass
 2. **No list sharing** - High-value feature missing
 3. **Online-only transcription** - Requires internet/API key
@@ -48,12 +53,14 @@ The whisper "issues" Dennis documented were solved months ago in TalkType. We ha
 ### Feature 1: List Sharing (web-share-api branch)
 
 **What Dennis Built**:
+
 - Complete `shareService.js` - encode/decode lists as base64 URLs
 - `ImportConfirmationDialog.svelte` - Beautiful 289-line import modal
 - URL format: `ziplist.app/import#listdata=eyJuYW1lIjoiR3JvY2VyaWVzI...`
 - Full spec with user stories
 
 **Integration Complexity**: 🟢 **EASY** (2-3 hours)
+
 1. Copy `src/lib/services/share/` directory
 2. Add "Share List" button to `SingleList.svelte`
 3. Create `src/routes/import/+page.svelte` to handle incoming shares
@@ -61,12 +68,14 @@ The whisper "issues" Dennis documented were solved months ago in TalkType. We ha
 5. Test: Share list → Open link → Import → Verify items
 
 **Why This Rocks**:
+
 - **Viral growth**: "Share grocery list with roommate" → They install app
 - **Practical utility**: No screenshots, no copy-paste, just share
 - **Zero infrastructure**: URL encoding = no server, no database
 - **Privacy-friendly**: Data only in URL, not stored anywhere
 
 **Files to Copy**:
+
 ```
 web-share-api:src/lib/services/share/
   ├── shareService.js         (104 lines)
@@ -80,6 +89,7 @@ web-share-api:src/lib/components/list/
 ### Feature 2: Offline Transcription (whisper branch)
 
 **What Dennis Built**:
+
 - Complete Whisper service architecture (14 files)
 - Model registry with tiny/base/small.en options
 - Model downloader with progress tracking
@@ -92,12 +102,14 @@ web-share-api:src/lib/components/list/
 Dennis wrote `whisper_implementation_issues.md` saying WASM URLs were broken and it returns mock data. **This was accurate at the time**. But it's been SOLVED in TalkType for months.
 
 **Proof**: TalkType has working whisper at `/Users/pabloalvarado/Projects/active/apps/talktype/src/lib/services/transcription/whisper/`:
+
 - `whisperService.js` (15k) - Production service
 - `audioConverter.js` (4.7k) - Audio pipeline
 - `modelRegistry.js` (6.1k) - Model definitions
 - `modelCacheService.js` (6.9k) - IndexedDB caching
 
 **Integration Complexity**: 🟡 **MEDIUM** (4-6 hours, not 8-12)
+
 1. Copy TalkType's whisper services (4 files, proven working)
 2. Add `@xenova/transformers` dependency (already in Dennis's branch)
 3. Wire up provider selector UI (Dennis already built this)
@@ -105,6 +117,7 @@ Dennis wrote `whisper_implementation_issues.md` saying WASM URLs were broken and
 5. Test transcription flow: Record → Convert → Whisper → Parse
 
 **Why This Is Huge**:
+
 - **Zero API costs after model download** - Infinite voice transcriptions
 - **Perfect privacy** - Nothing leaves device, ever
 - **Works offline** - Planes, tunnels, anywhere
@@ -114,6 +127,7 @@ Dennis wrote `whisper_implementation_issues.md` saying WASM URLs were broken and
 **The Magic**: After 39MB download, user gets **unlimited free voice transcriptions forever** with zero ongoing costs. This is impossible for cloud-dependent competitors.
 
 **Files to Copy**:
+
 ```
 FROM TALKTYPE (proven working):
   talktype:src/lib/services/transcription/whisper/
@@ -133,12 +147,14 @@ FROM DENNIS'S BRANCH (UI components):
 ### Feature 3: Analytics (analytics branch)
 
 **What Dennis Built**:
+
 - PostHog integration spec (175 lines)
 - Event schema (voice_recording_started, list_created, etc.)
 - 3-phase implementation plan
 - Privacy-conscious approach
 
 **Integration Complexity**: 🟢 **VERY EASY** (30-60 minutes)
+
 1. Sign up PostHog (free tier: 1M events/month)
 2. Add API key to `.env.local`
 3. Add PostHog script to `app.html`
@@ -151,6 +167,7 @@ FROM DENNIS'S BRANCH (UI components):
 5. Open PostHog dashboard, verify events flow
 
 **Why This Matters**:
+
 - **Understand usage**: Which features get used? Where do users drop off?
 - **Informed decisions**: Data > opinions for v1.1 priorities
 - **Track conversion**: How many recordings → successful lists?
@@ -163,7 +180,9 @@ FROM DENNIS'S BRANCH (UI components):
 ## 🧹 Cleanup Tasks
 
 ### 1. Remove TalkType Branding
+
 **Files to check** (search for "talktype" case-insensitive):
+
 - Settings modal text
 - About modal
 - Footer text
@@ -173,6 +192,7 @@ FROM DENNIS'S BRANCH (UI components):
 **Time**: 20 minutes
 
 ### 2. Ghost Icon Decision
+
 **Current status**: Works, adds 800 lines of complexity
 
 **Options**:
@@ -187,6 +207,7 @@ C. **Remove entirely** - Just show button state, super minimal
 ## 📋 Implementation Phases
 
 ### Phase 0: Branch Strategy (10 minutes)
+
 ```bash
 # Keep tactical-cleanup as stable base
 git checkout tactical-cleanup
@@ -198,9 +219,11 @@ git checkout -b v1.0-integration
 ```
 
 ### Phase 1: List Sharing (3 hours)
+
 **Rationale**: Highest value, lowest complexity, enables viral growth
 
 **Tasks**:
+
 1. ✅ Copy shareService from web-share-api branch
 2. ✅ Add share button to SingleList component
 3. ✅ Create /import route with confirmation dialog
@@ -209,6 +232,7 @@ git checkout -b v1.0-integration
 6. ✅ Add share icon to UI (use DaisyUI icons)
 
 **Testing checklist**:
+
 - [ ] Share list with 5 items
 - [ ] Open share link in new browser
 - [ ] Import confirmation shows correct items
@@ -221,9 +245,11 @@ git checkout -b v1.0-integration
 ---
 
 ### Phase 2: Offline Transcription (6 hours)
+
 **Rationale**: Core differentiator, already proven in TalkType
 
 **Tasks**:
+
 1. ✅ Copy TalkType whisper services (4 files)
 2. ✅ Add @xenova/transformers dependency
 3. ✅ Copy Dennis's provider selector UI
@@ -235,12 +261,14 @@ git checkout -b v1.0-integration
 9. ✅ Test intent classification ("clear list", etc.)
 
 **Critical**: Follow BUILD-offline-ai-guide.md for proper config:
+
 - ✅ Use `{ task: "transcribe" }` ONLY (no language param)
 - ✅ Audio format: 16kHz mono Float32Array
 - ✅ Default to whisper-tiny.en (39MB)
 - ✅ Cache in IndexedDB
 
 **Testing checklist**:
+
 - [ ] Download tiny model (39MB)
 - [ ] Record 3-4 second audio
 - [ ] Verify transcription accuracy
@@ -254,9 +282,11 @@ git checkout -b v1.0-integration
 ---
 
 ### Phase 3: Polish & Cleanup (2 hours)
+
 **Rationale**: Professional final touches
 
 **Tasks**:
+
 1. ✅ Search/replace all "TalkType" references
 2. ✅ Update Settings modal copy
 3. ✅ Update About modal with ZipList info
@@ -268,6 +298,7 @@ git checkout -b v1.0-integration
 9. ✅ Update CLAUDE.md with new features
 
 **Testing checklist**:
+
 - [ ] No "TalkType" text visible anywhere
 - [ ] PWA installs correctly on iOS
 - [ ] Settings show correct app name
@@ -277,9 +308,11 @@ git checkout -b v1.0-integration
 ---
 
 ### Phase 4: Analytics Integration (1 hour)
+
 **Rationale**: Ship instrumented, learn from real users
 
 **Tasks**:
+
 1. ✅ Sign up PostHog account
 2. ✅ Add VITE_POSTHOG_KEY to .env.local
 3. ✅ Add PostHog script to app.html
@@ -293,29 +326,30 @@ git checkout -b v1.0-integration
 6. ✅ Add privacy notice to About modal
 
 **Events to track initially**:
+
 ```javascript
 // Recording started
-posthog.capture('recording_started', {
-  source: 'main_button'
+posthog.capture("recording_started", {
+  source: "main_button",
 });
 
 // Transcription completed
-posthog.capture('transcription_completed', {
-  provider: 'whisper', // or 'gemini'
+posthog.capture("transcription_completed", {
+  provider: "whisper", // or 'gemini'
   success: true,
-  duration_ms: 2340
+  duration_ms: 2340,
 });
 
 // List created
-posthog.capture('list_created', {
+posthog.capture("list_created", {
   item_count: 5,
-  source: 'voice' // vs 'manual'
+  source: "voice", // vs 'manual'
 });
 
 // List shared
-posthog.capture('list_shared', {
+posthog.capture("list_shared", {
   item_count: 5,
-  method: 'native_share' // vs 'copy_link'
+  method: "native_share", // vs 'copy_link'
 });
 ```
 
@@ -324,6 +358,7 @@ posthog.capture('list_shared', {
 ## 🎯 Testing Strategy
 
 ### Functionality Testing
+
 - [ ] Voice recording works (check permissions)
 - [ ] Gemini transcription works (with API key)
 - [ ] Whisper transcription works (after model download)
@@ -336,6 +371,7 @@ posthog.capture('list_shared', {
 - [ ] Works offline (UI + whisper)
 
 ### Device Testing
+
 - [ ] Desktop Chrome
 - [ ] Desktop Safari
 - [ ] Desktop Firefox
@@ -344,6 +380,7 @@ posthog.capture('list_shared', {
 - [ ] iPad Safari
 
 ### Edge Cases
+
 - [ ] No microphone permission
 - [ ] No internet (whisper should work)
 - [ ] Whisper model fails to download
@@ -358,6 +395,7 @@ posthog.capture('list_shared', {
 ## 📦 Deployment Checklist
 
 ### Pre-Deploy
+
 - [ ] All tests passing
 - [ ] Lighthouse scores 85+
 - [ ] No console errors
@@ -367,6 +405,7 @@ posthog.capture('list_shared', {
 - [ ] .env.example has all keys
 
 ### Environment Variables
+
 ```bash
 # .env.local (not committed)
 VITE_GOOGLE_GEMINI_API_KEY=your_key_here
@@ -375,6 +414,7 @@ VITE_POSTHOG_HOST=https://app.posthog.com
 ```
 
 ### Build Test
+
 ```bash
 npm run build
 npm run preview
@@ -382,6 +422,7 @@ npm run preview
 ```
 
 ### Deploy to Vercel
+
 ```bash
 # Commit all changes
 git add -A
@@ -396,6 +437,7 @@ git push origin main
 ```
 
 ### Post-Deploy Verification
+
 - [ ] App loads at ziplist.app (or vercel domain)
 - [ ] Voice recording works
 - [ ] Whisper model downloads
@@ -425,23 +467,27 @@ git push origin main
 **Specific Wins**:
 
 **shareService.js**:
+
 - Clean encode/decode with proper error handling
 - URL format is clever (hash = no server needed)
 - Generates unique IDs to avoid collisions
 - Documented every function
 
 **whisperService.js** (TalkType):
+
 - Proper Web Worker usage (non-blocking UI)
 - IndexedDB caching strategy
 - Model registry abstraction
 - Progress tracking throughout pipeline
 
 **Intent Classifier**:
+
 - This is genuinely clever - most voice apps just transcribe
 - Parsing "clear list" vs "milk eggs bread" adds real intelligence
 - Makes voice feel more natural
 
 **PostHog Integration**:
+
 - Privacy-conscious event design
 - Phased rollout plan shows maturity
 - Didn't overengineer - kept it simple
@@ -484,6 +530,7 @@ This shows **good engineering practice**: Document blockers, track solutions, it
 4. **Positioning**: "The todo app that works in airplane mode"
 
 **Revenue Model** (optional, don't overthink):
+
 - Free: Core features (voice, lists, sharing, offline)
 - $3 one-time: Unlock unlimited lists (free tier = 10 lists)
 - $1 each: Premium themes, export formats, SmolLM features later
@@ -494,16 +541,16 @@ Or just keep it 100% free. It's **so cheap to run** (no API costs) that giving i
 
 ## ⏱️ Realistic Timeline
 
-| Phase | Time | When |
-|-------|------|------|
-| 0. Branch setup | 10 min | Day 1 morning |
-| 1. List sharing | 3 hours | Day 1 afternoon |
-| 2. Offline transcription | 6 hours | Day 2 |
-| 3. Polish & cleanup | 2 hours | Day 3 morning |
-| 4. Analytics | 1 hour | Day 3 afternoon |
-| Testing | 2 hours | Day 3 evening |
-| Deploy | 30 min | Day 3 night |
-| **Total** | **~15 hours** | **3 days** |
+| Phase                    | Time          | When            |
+| ------------------------ | ------------- | --------------- |
+| 0. Branch setup          | 10 min        | Day 1 morning   |
+| 1. List sharing          | 3 hours       | Day 1 afternoon |
+| 2. Offline transcription | 6 hours       | Day 2           |
+| 3. Polish & cleanup      | 2 hours       | Day 3 morning   |
+| 4. Analytics             | 1 hour        | Day 3 afternoon |
+| Testing                  | 2 hours       | Day 3 evening   |
+| Deploy                   | 30 min        | Day 3 night     |
+| **Total**                | **~15 hours** | **3 days**      |
 
 With your coding speed and Dennis's foundation, this is a **3-day blitz to production**.
 

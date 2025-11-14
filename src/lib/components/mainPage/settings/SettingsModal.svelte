@@ -37,20 +37,20 @@
 	// Theme options
 	const vibeOptions = [
 		{
-			id: 'focus',
-			name: 'Focus'
+			id: 'peach',
+			name: 'Peach'
 		},
 		{
-			id: 'chill',
-			name: 'Chill'
+			id: 'mint',
+			name: 'Mint'
 		},
 		{
-			id: 'zen',
-			name: 'Zen'
+			id: 'bubblegum',
+			name: 'Bubblegum'
 		},
 		{
-			id: 'nocturne',
-			name: 'Nocturne'
+			id: 'rainbow',
+			name: 'Rainbow'
 		}
 	];
 

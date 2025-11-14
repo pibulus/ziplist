@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from "$app/environment";
 
 export class ModalService {
   constructor() {
@@ -8,7 +8,7 @@ export class ModalService {
 
   openModal(modalId) {
     if (!browser) return;
-    
+
     const modal = document.getElementById(modalId);
     if (!modal) return;
 
@@ -17,13 +17,13 @@ export class ModalService {
     const width = document.body.clientWidth;
     this.modalOpen = true;
 
-    document.body.style.position = 'fixed';
+    document.body.style.position = "fixed";
     document.body.style.top = `-${this.scrollPosition}px`;
     document.body.style.width = `${width}px`;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     // Show the modal
-    if (typeof modal.showModal === 'function') {
+    if (typeof modal.showModal === "function") {
       modal.showModal();
     }
 
@@ -34,22 +34,22 @@ export class ModalService {
     if (!browser || !this.modalOpen) return;
 
     // Close any open dialogs
-    document.querySelectorAll('dialog[open]').forEach(dialog => {
-      if (dialog && typeof dialog.close === 'function') {
+    document.querySelectorAll("dialog[open]").forEach((dialog) => {
+      if (dialog && typeof dialog.close === "function") {
         dialog.close();
       }
     });
 
     // Restore body styles
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.overflow = '';
-    document.body.style.height = '';
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    document.body.style.overflow = "";
+    document.body.style.height = "";
 
     // Restore scroll position
     window.scrollTo(0, this.scrollPosition);
-    
+
     this.modalOpen = false;
   }
 

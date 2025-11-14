@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Ghost component is an animated SVG character that serves as the central UI element in the TalkType application. It provides visual feedback for audio recording and processing states through various animations and theme transitions. The component combines CSS animations with JavaScript-driven dynamic effects to create a responsive, visually appealing interface element.
+The Ghost component is an animated SVG character that serves as the central UI element in the ZipList application. It provides visual feedback for audio recording and processing states through various animations and theme transitions. The component combines CSS animations with JavaScript-driven dynamic effects to create a responsive, visually appealing interface element.
 
 ## Component Architecture
 
@@ -41,17 +41,17 @@ The Ghost SVG has a layered architecture:
     <linearGradient id="peachGradient">...</linearGradient>
     <!-- Other theme gradients... -->
   </defs>
-  
+
   <g class="ghost-layer ghost-bg">
     <!-- Background shape with gradient fill -->
     <use href="#ghost-background" class="ghost-shape" id="ghost-shape" />
   </g>
-  
+
   <g class="ghost-layer ghost-outline">
     <!-- Black outline -->
     <use href="#ghost-body-path" class="ghost-outline-path" />
   </g>
-  
+
   <g class="ghost-layer ghost-eyes">
     <!-- Eyes -->
     <use href="#ghost-eye-left-path" class="ghost-eye ghost-eye-left" />
@@ -61,12 +61,12 @@ The Ghost SVG has a layered architecture:
       <!-- Background shape with gradient fill -->
       <use href="#ghost-background" class="ghost-shape" id="ghost-shape" />
     </g>
-    
+
     <g class="ghost-layer ghost-outline">
       <!-- Black outline -->
       <use href="#ghost-body-path" class="ghost-outline-path" />
     </g>
-    
+
     <g class="ghost-layer ghost-eyes">
       <!-- Eyes -->
       <use href="#ghost-eye-left-path" class="ghost-eye ghost-eye-left" />
@@ -111,11 +111,17 @@ Themes are now managed using a centralized Svelte store in `themeStore.js`:
 ```javascript
 // Main theme store and derived values
 const theme = writable(getInitialTheme());
-const cssVariables = derived(theme, ($theme) => { /* generates CSS vars */ });
+const cssVariables = derived(theme, ($theme) => {
+  /* generates CSS vars */
+});
 
 // Helper functions
-function setTheme(newTheme) { /* updates the theme */ }
-function getThemeColor(themeName, position, bright = false) { /* gets specific colors */ }
+function setTheme(newTheme) {
+  /* updates the theme */
+}
+function getThemeColor(themeName, position, bright = false) {
+  /* gets specific colors */
+}
 
 export { theme, cssVariables, setTheme, getThemeColor, themeColors };
 ```
@@ -135,9 +141,9 @@ Theme colors are defined in the `themeStore.js` as structured JavaScript objects
 ```javascript
 const themeColors = {
   peach: {
-    start: '#ff60e0',
-    startBright: '#ff4aed',
-    mid1: '#ff82ca',
+    start: "#ff60e0",
+    startBright: "#ff4aed",
+    mid1: "#ff82ca",
     // ...more color definitions
   },
   // ...other themes
@@ -182,36 +188,36 @@ Animation behaviors are configured in `animationConfig.js`, which provides a cen
 ```javascript
 // Ghost Animation Configuration
 export const BLINK_CONFIG = {
-  MIN_GAP: 4000,         // Minimum time between ambient blinks (ms)
-  MAX_GAP: 9000,         // Maximum time between ambient blinks (ms)
-  SINGLE_DURATION: 300,  // Duration of a single blink (ms)
-  DOUBLE_PAUSE: 200,     // Pause between blinks in a double-blink (ms)
-  TRIPLE_PAUSE: 150,     // Pause between blinks in a triple-blink (ms)
-  DOUBLE_CHANCE: 0.25,   // Probability (0-1) of double blink vs single
-  THINKING_RATE: 150,    // Time between blinks in thinking state (ms)
+  MIN_GAP: 4000, // Minimum time between ambient blinks (ms)
+  MAX_GAP: 9000, // Maximum time between ambient blinks (ms)
+  SINGLE_DURATION: 300, // Duration of a single blink (ms)
+  DOUBLE_PAUSE: 200, // Pause between blinks in a double-blink (ms)
+  TRIPLE_PAUSE: 150, // Pause between blinks in a triple-blink (ms)
+  DOUBLE_CHANCE: 0.25, // Probability (0-1) of double blink vs single
+  THINKING_RATE: 150, // Time between blinks in thinking state (ms)
   THINKING_INTERVAL: 1000, // Interval for thinking blink pattern (ms)
-  RESUME_DELAY: 500      // Delay before resuming blinks after state change (ms)
+  RESUME_DELAY: 500, // Delay before resuming blinks after state change (ms)
 };
 
 export const EYE_CONFIG = {
-  CLOSED_SCALE: 0.05,    // Scale factor when eyes are closed
-  X_MULTIPLIER: 4,       // Horizontal movement multiplier for eyes
-  Y_MULTIPLIER: 2,       // Vertical movement multiplier for eyes
-  X_DIVISOR: 3,          // Divisor for max horizontal tracking distance
-  Y_DIVISOR: 3,          // Divisor for max vertical tracking distance
-  DEAD_ZONE: 0.05,       // Dead zone for eye movement (0-1)
-  SMOOTHING: 0.2,        // Smoothing factor for eye movement (0-1)
-  REACT_DELAY: 500,      // Delay before reacting to transcript (ms)
-  TEXT_THRESHOLD: 20     // Threshold for "long" transcript reactions
+  CLOSED_SCALE: 0.05, // Scale factor when eyes are closed
+  X_MULTIPLIER: 4, // Horizontal movement multiplier for eyes
+  Y_MULTIPLIER: 2, // Vertical movement multiplier for eyes
+  X_DIVISOR: 3, // Divisor for max horizontal tracking distance
+  Y_DIVISOR: 3, // Divisor for max vertical tracking distance
+  DEAD_ZONE: 0.05, // Dead zone for eye movement (0-1)
+  SMOOTHING: 0.2, // Smoothing factor for eye movement (0-1)
+  REACT_DELAY: 500, // Delay before reacting to transcript (ms)
+  TEXT_THRESHOLD: 20, // Threshold for "long" transcript reactions
 };
 
 // CSS class names for consistent reference
 export const CSS_CLASSES = {
-  WOBBLE_LEFT: 'wobble-left',
-  WOBBLE_RIGHT: 'wobble-right',
-  SPIN: 'spin',
-  PULSE: 'ghost-pulse',
-  INITIAL_LOAD: 'initial-load'
+  WOBBLE_LEFT: "wobble-left",
+  WOBBLE_RIGHT: "wobble-right",
+  SPIN: "spin",
+  PULSE: "ghost-pulse",
+  INITIAL_LOAD: "initial-load",
 };
 ```
 
@@ -223,9 +229,9 @@ Gradient behaviors are configured in `gradientConfig.js`:
 // Animation timing parameters
 export const animationTiming = {
   shimmer: {
-    duration: 5,              // Animation cycle in seconds
-    ease: 'ease-in-out',      // Easing function
-    opacityRange: [0.88, 1.0] // Min/max opacity values
+    duration: 5, // Animation cycle in seconds
+    ease: "ease-in-out", // Easing function
+    opacityRange: [0.88, 1.0], // Min/max opacity values
   },
   // ...more timing configurations
 };
@@ -234,7 +240,7 @@ export const animationTiming = {
 export const shapeAnimations = {
   peach: {
     flowDuration: 9,
-    flowEase: 'cubic-bezier(0.4, 0, 0.6, 1)',
+    flowEase: "cubic-bezier(0.4, 0, 0.6, 1)",
     scale: { min: 1.0, mid: 1.012, steps: 1.005 },
     // ...other animation parameters
   },
@@ -243,6 +249,7 @@ export const shapeAnimations = {
 ```
 
 These configurations control all animation aspects:
+
 - Timing parameters (durations, delays, intervals)
 - Animation probabilities and thresholds
 - Visual behavior values (scale factors, movement multipliers)
@@ -283,7 +290,7 @@ export function initGradientAnimation(themeId, svgElement) {
   // Find gradient element
   const gradientId = `${themeId}Gradient`;
   const gradient = svgElement.querySelector(`#${gradientId}`);
-  
+
   // Initialize animations
   initGradientPositionAnimation(themeId, gradient);
   initStopColorAnimations(themeId, stops);
@@ -291,6 +298,7 @@ export function initGradientAnimation(themeId, svgElement) {
 ```
 
 Key features include:
+
 - Position animation for gradient points
 - Color transitions for gradient stops
 - Cleanup mechanisms for animation frames
@@ -301,7 +309,9 @@ Key features include:
 The Ghost component relies heavily on Svelte stores for managing its complex state and coordinating animations.
 
 ### Core State (`ghostStateStore.js`)
+
 This store implements a state machine (`ANIMATION_STATES`) to manage the ghost's primary mode (e.g., `IDLE`, `RECORDING`, `THINKING`). It also tracks:
+
 - `isRecording`: Boolean flag for audio recording.
 - `isProcessing`: Boolean flag for audio processing.
 - `isWobbling`, `wobbleDirection`: Flags for the transient wobble effect.
@@ -311,15 +321,19 @@ This store implements a state machine (`ANIMATION_STATES`) to manage the ghost's
 Components interact with this store via exported functions like `setRecording`, `setProcessing`, `setAnimationState`, etc.
 
 ### Theme State (`themeStore.js`)
+
 This store manages the current visual theme (`peach`, `mint`, etc.). Key features:
+
 - Persists the selected theme to `localStorage`.
 - Provides a derived store (`cssVariables`) containing all necessary CSS variables for the current theme's colors and animation parameters.
 - Updates the `data-theme` attribute on the HTML root element.
 
 ### Component Interaction
+
 The `Ghost.svelte` component primarily uses props (`isRecording`, `isProcessing`, `externalTheme`) to receive state from its parent. It then syncs these prop changes to the `ghostStateStore`.
 
 Reactive statements (`$:`) in `Ghost.svelte` monitor the stores (`$ghostStateStore`, `$themeStore`, `$cssVariables`) and apply necessary updates, such as:
+
 - Binding CSS classes based on state (e.g., `.recording`).
 - Applying theme changes by re-initializing gradient animations.
 - Injecting dynamic CSS variables into the document head.
@@ -333,7 +347,7 @@ $: if (isRecording !== lastRecordingState) {
 
 // Example: Reacting to store changes for CSS classes
 $: wobbleGroupClasses = `ghost-wobble-group ${
-  $ghostStateStore.isWobbling ? $ghostStateStore.wobbleDirection : ''
+  $ghostStateStore.isWobbling ? $ghostStateStore.wobbleDirection : ""
 }`.trim();
 ```
 
@@ -349,6 +363,7 @@ $: if (currentTheme && ghostSvg) {
 ```
 
 This hybrid approach allows for:
+
 - Component-specific state to remain encapsulated
 - Shared state (themes) to be centrally managed and reactive
 - Automatic synchronization between components
@@ -364,20 +379,20 @@ The service provides a factory function `createEyeTracking()` that returns an ey
 ```javascript
 // Create a customized eye tracking instance
 const eyeTracking = createEyeTracking({
-  eyeSensitivity: 0.2,  // Smoothing factor (0-1)
-  maxDistanceX: 3,      // Maximum X distance divisor (screen width / this value)
-  maxDistanceY: 3,      // Maximum Y distance divisor (screen height / this value)
-  maxXMovement: 20,     // Maximum X movement in pixels
-  maxYMovement: 10,     // Maximum Y movement in pixels
-  enabled: true,        // Enable eye tracking by default
-  debug: false          // Debug mode
+  eyeSensitivity: 0.2, // Smoothing factor (0-1)
+  maxDistanceX: 3, // Maximum X distance divisor (screen width / this value)
+  maxDistanceY: 3, // Maximum Y distance divisor (screen height / this value)
+  maxXMovement: 20, // Maximum X movement in pixels
+  maxYMovement: 10, // Maximum Y movement in pixels
+  enabled: true, // Enable eye tracking by default
+  debug: false, // Debug mode
 });
 
 // Initialize with ghost element and eyes element
 eyeTracking.initialize(ghostElement, eyesElement);
 
 // Control eye state for blinking
-eyeTracking.setEyesClosed(true);  // Close eyes
+eyeTracking.setEyesClosed(true); // Close eyes
 eyeTracking.setEyesClosed(false); // Open eyes
 
 // Stop tracking when not needed
@@ -412,16 +427,16 @@ To use the Ghost component in a Svelte application:
 ```svelte
 <script>
   import Ghost from '$lib/components/ghost/Ghost.svelte';
-  
+
   let recording = false;
-  
+
   function handleToggleRecording() {
     recording = !recording;
   }
 </script>
 
 <div class="ghost-container">
-  <Ghost 
+  <Ghost
     isRecording={recording}
     animationState={recording ? 'wobble-start' : 'idle'}
     on:toggleRecording={handleToggleRecording}
@@ -478,11 +493,11 @@ Common issues and their solutions:
    .ghost-svg.theme-peach .ghost-bg {
      animation: peachFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
    }
-   
+
    /* Correct - targeting element directly by ID */
    .ghost-svg.theme-peach #ghost-shape {
      animation: peachFlow 9s infinite cubic-bezier(0.4, 0, 0.6, 1);
    }
    ```
-   
+
    This is especially important for complex animations involving transforms, which can behave unpredictably when applied to nested SVG group elements.

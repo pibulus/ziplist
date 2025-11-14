@@ -10,21 +10,15 @@
   let subtitleAnimationComplete = false;
 
   // Debug helper
-  function debug(message) {
-    // Uncomment the line below during development for verbose logging
-    // console.log(`[ContentContainer] ${message}`);
-  }
 
   // Function to handle title animation complete
   function handleTitleAnimationComplete() {
-    debug('Title animation complete');
     titleAnimationComplete = true;
     dispatch('titleAnimationComplete');
   }
 
   // Function to handle subtitle animation complete
   function handleSubtitleAnimationComplete() {
-    debug('Subtitle animation complete');
     subtitleAnimationComplete = true;
     dispatch('subtitleAnimationComplete');
   }

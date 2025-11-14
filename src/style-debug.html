@@ -1,247 +1,259 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DaisyUI vs Custom Style Debug</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f8f9fa;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-    
-    .table th, .table td {
-      padding: 12px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    
-    .table th {
-      background-color: #f2f2f2;
-    }
-    
-    .conflict {
-      background-color: #ffe0e0;
-    }
-    
-    .code {
-      font-family: monospace;
-      background-color: #f5f5f5;
-      padding: 2px 4px;
-      border-radius: 4px;
-    }
-    
-    .solutions {
-      margin-top: 40px;
-    }
-    
-    .solution-item {
-      margin-bottom: 24px;
-      padding: 20px;
-      border-radius: 8px;
-      background-color: #f0f7ff;
-    }
-    
-    .solution-title {
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    
-    .code-block {
-      background-color: #282c34;
-      color: #abb2bf;
-      padding: 16px;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-family: monospace;
-      margin: 16px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>DaisyUI vs Custom Style Analysis</h1>
-    
-    <h2>Potential Conflict Areas</h2>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Component</th>
-          <th>Our Class Name</th>
-          <th>DaisyUI Similar Class</th>
-          <th>Potential Conflict</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="conflict">
-          <td>Card</td>
-          <td><span class="code">.card-mono</span></td>
-          <td><span class="code">.card</span></td>
-          <td>High - DaisyUI's card component has base styles that might conflict with our custom styling</td>
-        </tr>
-        <tr class="conflict">
-          <td>Checkbox</td>
-          <td><span class="code">.checkbox-mono</span></td>
-          <td><span class="code">.checkbox</span></td>
-          <td>High - DaisyUI has significant form styling that affects checkboxes and likely overrides our custom styles</td>
-        </tr>
-        <tr>
-          <td>Button</td>
-          <td><span class="code">.add-btn</span></td>
-          <td><span class="code">.btn</span></td>
-          <td>Medium - Different class names but DaisyUI likely has some global button styling</td>
-        </tr>
-        <tr>
-          <td>Input field</td>
-          <td><span class="code">.mono-input</span></td>
-          <td><span class="code">.input</span></td>
-          <td>Medium - Different names but form styling might have conflicts</td>
-        </tr>
-        <tr>
-          <td>List items</td>
-          <td><span class="code">.list-item-mono</span></td>
-          <td><span class="code">.list-item</span></td>
-          <td>Low - Similar naming but less likely to have specific styling conflicts</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <h2>Solutions Implemented</h2>
-    <div class="solutions">
-      <div class="solution-item">
-        <div class="solution-title">1. Increased Specificity with Prefix Selectors</div>
-        <p>Adding <code>html body</code> prefix to all selectors to increase specificity and override DaisyUI defaults.</p>
-        <div class="code-block">
-          /* Before */
-          .card-mono { ... }
-          
-          /* After */
-          html body .card-mono { ... }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DaisyUI vs Custom Style Debug</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      .table th,
+      .table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+
+      .table th {
+        background-color: #f2f2f2;
+      }
+
+      .conflict {
+        background-color: #ffe0e0;
+      }
+
+      .code {
+        font-family: monospace;
+        background-color: #f5f5f5;
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+
+      .solutions {
+        margin-top: 40px;
+      }
+
+      .solution-item {
+        margin-bottom: 24px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #f0f7ff;
+      }
+
+      .solution-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      .code-block {
+        background-color: #282c34;
+        color: #abb2bf;
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: monospace;
+        margin: 16px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>DaisyUI vs Custom Style Analysis</h1>
+
+      <h2>Potential Conflict Areas</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Our Class Name</th>
+            <th>DaisyUI Similar Class</th>
+            <th>Potential Conflict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="conflict">
+            <td>Card</td>
+            <td><span class="code">.card-mono</span></td>
+            <td><span class="code">.card</span></td>
+            <td>
+              High - DaisyUI's card component has base styles that might
+              conflict with our custom styling
+            </td>
+          </tr>
+          <tr class="conflict">
+            <td>Checkbox</td>
+            <td><span class="code">.checkbox-mono</span></td>
+            <td><span class="code">.checkbox</span></td>
+            <td>
+              High - DaisyUI has significant form styling that affects
+              checkboxes and likely overrides our custom styles
+            </td>
+          </tr>
+          <tr>
+            <td>Button</td>
+            <td><span class="code">.add-btn</span></td>
+            <td><span class="code">.btn</span></td>
+            <td>
+              Medium - Different class names but DaisyUI likely has some global
+              button styling
+            </td>
+          </tr>
+          <tr>
+            <td>Input field</td>
+            <td><span class="code">.mono-input</span></td>
+            <td><span class="code">.input</span></td>
+            <td>
+              Medium - Different names but form styling might have conflicts
+            </td>
+          </tr>
+          <tr>
+            <td>List items</td>
+            <td><span class="code">.list-item-mono</span></td>
+            <td><span class="code">.list-item</span></td>
+            <td>
+              Low - Similar naming but less likely to have specific styling
+              conflicts
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Solutions Implemented</h2>
+      <div class="solutions">
+        <div class="solution-item">
+          <div class="solution-title">
+            1. Increased Specificity with Prefix Selectors
+          </div>
+          <p>
+            Adding <code>html body</code> prefix to all selectors to increase
+            specificity and override DaisyUI defaults.
+          </p>
+          <div class="code-block">
+            /* Before */ .card-mono { ... } /* After */ html body .card-mono {
+            ... }
+          </div>
         </div>
-      </div>
-      
-      <div class="solution-item">
-        <div class="solution-title">2. !important Flags for Critical Properties</div>
-        <p>Adding !important to ensure our custom styling takes precedence over DaisyUI's styling.</p>
-        <div class="code-block">
-          /* Before */
-          .checkbox-mono {
-            appearance: none;
-            width: 24px;
-            height: 24px;
-          }
-          
-          /* After */
-          html body .checkbox-mono {
-            appearance: none !important;
-            width: 24px !important;
-            height: 24px !important;
-          }
+
+        <div class="solution-item">
+          <div class="solution-title">
+            2. !important Flags for Critical Properties
+          </div>
+          <p>
+            Adding !important to ensure our custom styling takes precedence over
+            DaisyUI's styling.
+          </p>
+          <div class="code-block">
+            /* Before */ .checkbox-mono { appearance: none; width: 24px; height:
+            24px; } /* After */ html body .checkbox-mono { appearance: none
+            !important; width: 24px !important; height: 24px !important; }
+          </div>
         </div>
-      </div>
-      
-      <div class="solution-item">
-        <div class="solution-title">3. Attribute Selectors for Form Elements</div>
-        <p>Using attribute selectors for maximum specificity on form elements like checkboxes where conflicts are most likely.</p>
-        <div class="code-block">
-          /* Before */
-          .checkbox-mono:checked { ... }
-          
-          /* After */
-          html body input[type="checkbox"].checkbox-mono:checked { ... }
+
+        <div class="solution-item">
+          <div class="solution-title">
+            3. Attribute Selectors for Form Elements
+          </div>
+          <p>
+            Using attribute selectors for maximum specificity on form elements
+            like checkboxes where conflicts are most likely.
+          </p>
+          <div class="code-block">
+            /* Before */ .checkbox-mono:checked { ... } /* After */ html body
+            input[type="checkbox"].checkbox-mono:checked { ... }
+          </div>
         </div>
-      </div>
-      
-      <div class="solution-item">
-        <div class="solution-title">4. Double-Class Selectors</div>
-        <p>Duplicating class names in selectors for increased specificity in pseudo-elements.</p>
-        <div class="code-block">
-          /* Before */
-          .card-mono::before { ... }
-          
-          /* After */
-          html body .card-mono.card-mono::before { ... }
+
+        <div class="solution-item">
+          <div class="solution-title">4. Double-Class Selectors</div>
+          <p>
+            Duplicating class names in selectors for increased specificity in
+            pseudo-elements.
+          </p>
+          <div class="code-block">
+            /* Before */ .card-mono::before { ... } /* After */ html body
+            .card-mono.card-mono::before { ... }
+          </div>
         </div>
-      </div>
-      
-      <div class="solution-item">
-        <div class="solution-title">5. Z-index Management</div>
-        <p>Added explicit z-index values to ensure proper stacking of elements.</p>
-        <div class="code-block">
-          html body .card-content {
-            position: relative !important;
-            z-index: 2 !important;
-          }
-          
-          html body .card-mono::before {
-            z-index: 1 !important;
-          }
-        </div>
-      </div>
-    </div>
-    
-    <h2>Other Potential Solutions</h2>
-    <div class="solutions">
-      <div class="solution-item">
-        <div class="solution-title">1. Disable DaisyUI Components We Don't Need</div>
-        <p>If we have control over the tailwind.config.js, we could selectively disable DaisyUI components that conflict with our styling.</p>
-        <div class="code-block">
-          // In tailwind.config.js
-          daisyui: {
-            themes: [ ... ],
-            components: {
-              card: false,
-              checkbox: false,
-              // other components to disable
+
+        <div class="solution-item">
+          <div class="solution-title">5. Z-index Management</div>
+          <p>
+            Added explicit z-index values to ensure proper stacking of elements.
+          </p>
+          <div class="code-block">
+            html body .card-content { position: relative !important; z-index: 2
+            !important; } html body .card-mono::before { z-index: 1 !important;
             }
-          }
+          </div>
         </div>
       </div>
-      
-      <div class="solution-item">
-        <div class="solution-title">2. Namespace Our Components</div>
-        <p>Adding a unique namespace to all our custom components to avoid conflicts.</p>
-        <div class="code-block">
-          /* Instead of */
-          .card-mono { ... }
-          
-          /* Use */
-          .zl-card-mono { ... }
+
+      <h2>Other Potential Solutions</h2>
+      <div class="solutions">
+        <div class="solution-item">
+          <div class="solution-title">
+            1. Disable DaisyUI Components We Don't Need
+          </div>
+          <p>
+            If we have control over the tailwind.config.js, we could selectively
+            disable DaisyUI components that conflict with our styling.
+          </p>
+          <div class="code-block">
+            // In tailwind.config.js daisyui: { themes: [ ... ], components: {
+            card: false, checkbox: false, // other components to disable } }
+          </div>
         </div>
-      </div>
-      
-      <div class="solution-item">
-        <div class="solution-title">3. Load Our Styles Last</div>
-        <p>Ensure our custom styles are loaded after DaisyUI to override their defaults.</p>
-        <div class="code-block">
-          /* In a global CSS file */
-          @import 'tailwindcss/base';
-          @import 'tailwindcss/components';
-          @import 'daisyui/dist/full.css';
-          @import './list-components-fixed.css'; /* Load our styles last */
-          @import 'tailwindcss/utilities';
+
+        <div class="solution-item">
+          <div class="solution-title">2. Namespace Our Components</div>
+          <p>
+            Adding a unique namespace to all our custom components to avoid
+            conflicts.
+          </p>
+          <div class="code-block">
+            /* Instead of */ .card-mono { ... } /* Use */ .zl-card-mono { ... }
+          </div>
+        </div>
+
+        <div class="solution-item">
+          <div class="solution-title">3. Load Our Styles Last</div>
+          <p>
+            Ensure our custom styles are loaded after DaisyUI to override their
+            defaults.
+          </p>
+          <div class="code-block">
+            /* In a global CSS file */ @import 'tailwindcss/base'; @import
+            'tailwindcss/components'; @import 'daisyui/dist/full.css'; @import
+            './list-components-fixed.css'; /* Load our styles last */ @import
+            'tailwindcss/utilities';
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</body>
+  </body>
 </html>

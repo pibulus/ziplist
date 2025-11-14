@@ -1,6 +1,6 @@
-# TalkType Service Architecture
+# ZipList Service Architecture
 
-This directory contains the service layer for TalkType, restructured to use a modular architecture with event-based communication.
+This directory contains the service layer for ZipList, restructured to use a modular architecture with event-based communication.
 
 ## Service Overview
 
@@ -16,8 +16,8 @@ The architecture consists of several key services:
 ### Basic Usage
 
 ```javascript
-import { initializeServices } from '$lib/services';
-import { onMount, onDestroy } from 'svelte';
+import { initializeServices } from "$lib/services";
+import { onMount, onDestroy } from "svelte";
 
 // In your component script
 let services;
@@ -26,25 +26,25 @@ let unsubscribers = [];
 onMount(() => {
   // Initialize all services
   services = initializeServices({ debug: false });
-  
+
   // Subscribe to audio state changes
   unsubscribers.push(
-    services.eventBus.on('audio:stateChanged', (data) => {
-      console.log('Audio state changed:', data.currentState);
-    })
+    services.eventBus.on("audio:stateChanged", (data) => {
+      console.log("Audio state changed:", data.currentState);
+    }),
   );
-  
+
   // Subscribe to transcription completion
   unsubscribers.push(
-    services.eventBus.on('transcription:completed', (data) => {
-      console.log('Transcription complete:', data.text);
-    })
+    services.eventBus.on("transcription:completed", (data) => {
+      console.log("Transcription complete:", data.text);
+    }),
   );
 });
 
 onDestroy(() => {
   // Clean up subscriptions
-  unsubscribers.forEach(unsub => unsub());
+  unsubscribers.forEach((unsub) => unsub());
 });
 
 // Start recording function
@@ -52,7 +52,7 @@ async function startRecording() {
   try {
     await services.audioService.startRecording();
   } catch (error) {
-    console.error('Failed to start recording:', error);
+    console.error("Failed to start recording:", error);
   }
 }
 
@@ -64,7 +64,7 @@ async function stopAndTranscribe() {
       await services.transcriptionService.transcribeAudio(audioBlob);
     }
   } catch (error) {
-    console.error('Failed to transcribe:', error);
+    console.error("Failed to transcribe:", error);
   }
 }
 ```

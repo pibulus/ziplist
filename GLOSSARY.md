@@ -1,6 +1,7 @@
 # Glossary - ZipList
 
 ## Components (Svelte)
+
 - `MainContainer` - Top-level container, recording state (lib/components/mainPage/MainContainer.svelte)
 - `GhostContainer` - SVG ghost character linked to recording (lib/components/mainPage/GhostContainer.svelte)
 - `Ghost` - Base ghost SVG component (lib/components/ghost/Ghost.svelte)
@@ -17,6 +18,7 @@
 - `PageLayout` - Base page layout (lib/components/layout/PageLayout.svelte)
 
 ## Services
+
 - `geminiService.js` - Gemini API audio transcription wrapper (lib/services/)
 - `geminiApiService.js` - Low-level Gemini API calls (lib/services/)
 - `transcriptionService.js` - Transcription flow + progress animation (lib/services/)
@@ -26,6 +28,7 @@
 - `themeStore.js` - Ghost theme state management (lib/components/ghost/)
 
 ## Core Concepts
+
 - **Voice-to-List** - Record voice → Gemini transcription → auto-parsed list items
 - **Staggered Text Animation** - Letters fade/slide in with cascading delays (50-100ms)
 - **Ghost Animation System** - SVG-based reactive theming with direct element targeting

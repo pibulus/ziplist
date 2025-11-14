@@ -38,7 +38,7 @@ class PostHogService {
       capture_pageleave: true,
       disable_session_recording: true, // Disable session recordings for privacy
       disable_survey_popups: true, // Disable survey popups
-      property_blacklist: ['$current_url', '$referrer'], // Exclude potentially sensitive URL data
+      property_blacklist: ["$current_url", "$referrer"], // Exclude potentially sensitive URL data
       loaded: () => {
         this.isInitialized = true;
         this.processQueue();
@@ -173,14 +173,17 @@ class PostHogService {
   }
 
   sanitizeErrorMessage(message) {
-    if (!message || typeof message !== 'string') return 'Unknown error';
+    if (!message || typeof message !== "string") return "Unknown error";
 
     // Remove any potential personal data patterns
     return message
-      .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL_REDACTED]')
-      .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[CARD_REDACTED]')
-      .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN_REDACTED]')
-      .replace(/["']([^"']{10,})["']/g, '[TEXT_REDACTED]')
+      .replace(
+        /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+        "[EMAIL_REDACTED]",
+      )
+      .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, "[CARD_REDACTED]")
+      .replace(/\b\d{3}-\d{2}-\d{4}\b/g, "[SSN_REDACTED]")
+      .replace(/["']([^"']{10,})["']/g, "[TEXT_REDACTED]")
       .slice(0, 200); // Limit message length
   }
 

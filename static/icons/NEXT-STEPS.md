@@ -1,23 +1,23 @@
-# TalkType Icon System & PWA Implementation
+# ZipList Icon System & PWA Implementation
 
 ## The Ghost Icon System
 
-TalkType uses a layered SVG approach for the ghost icon:
+ZipList uses a layered SVG approach for the ghost icon:
 
 ### SVG Layer Structure
 
-- **Base Layer**: `/assets/talktype-icon-base.svg` or `/assets/talktype-icon-outline.svg`
-- **Background Gradient**: `/talktype-icon-bg-gradient*.svg` (with theme variants)
-- **Eyes Layer**: `/assets/talktype-icon-eyes.svg` (top layer for blinking animation)
+- **Base Layer**: `/assets/ziplist-icon-base.svg` or `/assets/ziplist-icon-outline.svg`
+- **Background Gradient**: `/ziplist-icon-bg-gradient*.svg` (with theme variants)
+- **Eyes Layer**: `/assets/ziplist-icon-eyes.svg` (top layer for blinking animation)
 
 ### Theme Variants
 
 All gradient backgrounds should be stored in `/static/assets/`:
 
-- **Peach (Default)**: `talktype-icon-bg-gradient.svg`
-- **Mint**: `talktype-icon-bg-gradient-mint.svg`
-- **Bubblegum**: `talktype-icon-bg-gradient-bubblegum.svg`
-- **Rainbow**: `talktype-icon-bg-gradient-rainbow.svg`
+- **Peach (Default)**: `ziplist-icon-bg-gradient.svg`
+- **Mint**: `ziplist-icon-bg-gradient-mint.svg`
+- **Bubblegum**: `ziplist-icon-bg-gradient-bubblegum.svg`
+- **Rainbow**: `ziplist-icon-bg-gradient-rainbow.svg`
 
 ### Icon Standards for Different Platforms
 
@@ -53,13 +53,11 @@ This will create:
 After generating the icons, test the PWA functionality:
 
 1. **Installation Test**:
-
    - Desktop: Look for the install icon in the Chrome address bar
    - Android: Use "Add to Home Screen" from Chrome menu
    - iOS: Use "Add to Home Screen" from Safari share menu
 
 2. **Offline Test**:
-
    - Enable airplane mode or use DevTools to simulate offline
    - Verify the offline page appears when trying to access the app
    - Test that the installed app can be launched offline

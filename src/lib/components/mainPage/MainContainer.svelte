@@ -45,52 +45,38 @@
   let mediaRecorder = null;
   let audioChunks = [];
 
-  // Debug Helper
-  function debug(message) {
-    // Uncomment the line below during development for verbose logging
-    // console.log(`[MainContainer] ${message}`);
-  }
-
   // Modal functions
   function showAboutModal() {
-    debug('showAboutModal called');
     modalService.openModal('about_modal');
   }
 
   function showExtensionModal() {
-    debug('showExtensionModal called');
     modalService.openModal('extension_modal');
   }
 
   async function openSettingsModal() {
-    debug('openSettingsModal called');
 
     // First, ensure any open dialogs are closed
     if (modalService.isModalOpen()) {
-      debug('Another modal was open, closing it first.');
       modalService.closeModal();
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     // Check if we're already loading the modal
     if (loadingSettingsModal) {
-      debug('SettingsModal is already loading, aborting.');
       return;
     }
 
     // Dynamically import the SettingsModal component if not already loaded
     if (!SettingsModal) {
       loadingSettingsModal = true;
-      debug('Lazy loading SettingsModal component...');
 
       try {
         // Import the component dynamically
         const module = await import('./settings/SettingsModal.svelte');
         SettingsModal = module.default;
-        debug('SettingsModal component loaded successfully');
       } catch (err) {
         console.error('Error loading SettingsModal:', err);
-        debug(`Error loading SettingsModal: ${err.message}`);
         loadingSettingsModal = false;
         return; // Don't proceed if loading failed
       } finally {
@@ -103,7 +89,6 @@
   }
 
   function closeSettingsModal() {
-    debug('closeSettingsModal called');
     modalService.closeModal();
   }
 
@@ -114,39 +99,32 @@
   // Function to preload speech model for faster initial response
   function preloadSpeechModel() {
     if (!speechModelPreloaded && browser) {
-      debug('Preloading speech model for faster response');
       speechModelPreloaded = true;
 
       const savedStyle = StorageUtils.getItem(STORAGE_KEYS.PROMPT_STYLE);
       if (savedStyle) {
-        debug(`Setting prompt style from localStorage: ${savedStyle}`);
         geminiService.setPromptStyle(savedStyle);
       }
 
       // Log available prompt styles
       const availableStyles = geminiService.getAvailableStyles();
-      debug(`Available prompt styles: ${availableStyles.join(', ')}`);
 
       geminiService
         .preloadModel()
         .then(() => {
-          debug('Speech model preloaded successfully.');
         })
         .catch((err) => {
           // Just log the error, don't block UI
           console.error('Error preloading speech model:', err);
-          debug(`Error preloading speech model: ${err.message}`);
           // Reset so we can try again
           speechModelPreloaded = false;
         });
     } else if (speechModelPreloaded) {
-      debug('Speech model already preloaded or preloading.');
     }
   }
 
   // Handle toggle recording from ghost
   async function handleToggleRecording() {
-    debug(`Toggle recording triggered from ghost. Current recording state: ${$isRecording}`);
 
     if ($isRecording) {
       // Currently recording, so stop
@@ -175,7 +153,6 @@
         mediaRecorder = new MediaRecorder(stream);
 
         mediaRecorder.onstart = () => {
-          debug('MediaRecorder started');
           audioActions.updateState(AudioStates.RECORDING);
         };
 
@@ -186,14 +163,12 @@
         };
 
         mediaRecorder.onstop = async () => {
-          debug('MediaRecorder stopped');
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
           
           const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
           audioChunks = [];
 
           if (audioBlob.size === 0) {
-            debug('Audio blob is empty, not transcribing.');
             audioActions.updateState(AudioStates.IDLE);
             return;
           }
@@ -241,13 +216,11 @@
 
   // Function to trigger ghost click
   function triggerGhostClick() {
-    debug('Triggering ghost click after intro modal close');
     // Forward to the toggle recording handler
     handleToggleRecording();
   }
 
   function closePwaInstallPrompt() {
-    debug('ℹ️ PWA install prompt dismissed.');
     pwaService.dismissPrompt();
   }
 
@@ -261,11 +234,9 @@
       if (!SettingsModal && !loadingSettingsModal) {
         try {
           loadingSettingsModal = true;
-          debug('Pre-loading SettingsModal component');
           const module = await import('./settings/SettingsModal.svelte');
           SettingsModal = module.default;
           loadingSettingsModal = false;
-          debug('SettingsModal component pre-loaded successfully');
         } catch (err) {
           console.error('Error pre-loading SettingsModal:', err);
           loadingSettingsModal = false;
@@ -278,31 +249,25 @@
       // Wait minimal time for component initialization
       setTimeout(() => {
         if (!$isRecording) { // Check store directly
-          debug('Auto-record enabled, attempting to start recording immediately');
           handleToggleRecording(); // Use the main toggle function
         } else {
-          debug('Auto-record: Conditions not met (already recording).');
         }
       }, 500);
     } else {
-      debug('Auto-record not enabled or not in browser.');
     }
 
     // Listen for settings changes
     if (browser) {
       window.addEventListener('ziplist-setting-changed', (event) => {
         if (event.detail && event.detail.setting === 'autoRecord') {
-          debug(`Setting changed event: autoRecord = ${event.detail.value}`);
           // No immediate action needed, setting will apply on next page load/refresh
         }
 
         if (event.detail && event.detail.setting === 'promptStyle') {
-          debug('Prompt style setting changed:', event.detail.value);
           // Update the prompt style in the service
           geminiService.setPromptStyle(event.detail.value);
         }
       });
-      debug('Added listener for settings changes.');
     }
 
     // Check if first visit to show intro
@@ -313,14 +278,11 @@
   $: if (browser && $showPwaInstallPrompt && !PwaInstallPrompt && !loadingPwaPrompt) {
     (async () => {
       loadingPwaPrompt = true;
-      debug('📱 Lazy loading PWA install prompt component due to $showPwaInstallPrompt change...');
       try {
         const module = await import('./pwa/PwaInstallPrompt.svelte');
         PwaInstallPrompt = module.default;
-        debug('📱 PWA install prompt component loaded successfully');
       } catch (err) {
         console.error('Error loading PWA install prompt:', err);
-        debug(`Error loading PWA install prompt: ${err.message}`);
       } finally {
         loadingPwaPrompt = false;
       }
@@ -329,14 +291,6 @@
 </script>
 
 <PageLayout>
-  <!-- GHOST TEMPORARILY DISABLED - uncomment to restore
-  <GhostContainer
-    bind:this={ghostContainer}
-    isRecording={$isRecording}
-    isProcessing={$ghostStateStore.isProcessing}
-    on:toggleRecording={handleToggleRecording}
-  />
-  -->
   <ContentContainer />
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->

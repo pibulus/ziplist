@@ -1,6 +1,6 @@
 # 🔧 TINKER.md - ZipList Quick Reference
 
-*For when you haven't touched this in 6 months and need to change something NOW*
+_For when you haven't touched this in 6 months and need to change something NOW_
 
 **ADHD MODE**: Jump to [QUICK WINS](#-quick-wins---80-of-what-youll-change) or [WHEN SHIT BREAKS](#-when-shit-breaks---top-3-fixes)
 
@@ -9,6 +9,7 @@
 ## 🚀 START HERE - RUN THE DAMN THING
 
 ### Dev Mode
+
 ```bash
 # STACK: SVELTEKIT + VITE + TAILWIND + DAISYUI
 npm run dev
@@ -16,12 +17,14 @@ npm run dev
 ```
 
 ### Production Build
+
 ```bash
 npm run build
 npm run preview
 ```
 
 ### Health Check
+
 ```bash
 npm run lint      # Check code quality
 npm run format    # Auto-format code
@@ -52,6 +55,7 @@ ziplist/
 ```
 
 ### The Files You'll Actually Touch:
+
 1. **src/lib/components/mainPage/MainContainer.svelte** - Top-level container + recording state
 2. **src/lib/components/ghost/GhostContainer.svelte** - Ghost character (visual feedback)
 3. **src/lib/components/list/SingleList.svelte** - Individual list with full CRUD
@@ -66,6 +70,7 @@ ziplist/
 ## 🎯 QUICK WINS - 80% OF WHAT YOU'LL CHANGE
 
 ### 1. Change the Main Text/Copy
+
 ```
 File: src/lib/components/mainPage/MainContainer.svelte
 Look for: Text content, headers, instructions
@@ -77,6 +82,7 @@ Also check:
 ```
 
 ### 2. Change Colors/Theme
+
 ```
 File: tailwind.config.js
 Look for: theme: { extend: { colors: {...} } }
@@ -88,6 +94,7 @@ Theme service: Handles peach/pink/mint variants (check themeService.js)
 ```
 
 ### 3. Change Voice Transcription API
+
 ```
 File: src/lib/services/geminiService.js
 Current: Google Gemini API (@google/generative-ai package)
@@ -105,6 +112,7 @@ Alternative APIs:
 ```
 
 ### 4. Change Default List Behavior
+
 ```
 File: src/lib/constants.js or relevant service file
 Look for: Default settings, list templates
@@ -116,6 +124,7 @@ Change: Auto-save timing, default list name, etc.
 ## 🔧 COMMON TWEAKS
 
 ### Add a New Page/Route
+
 ```bash
 # SvelteKit routing:
 Create: src/routes/newpage/+page.svelte
@@ -126,6 +135,7 @@ Create: src/routes/newpage/+layout.svelte
 ```
 
 ### Change Port
+
 ```bash
 # Vite default is 5173
 # To change, add to package.json dev script:
@@ -133,6 +143,7 @@ Create: src/routes/newpage/+layout.svelte
 ```
 
 ### Add/Remove DaisyUI Component
+
 ```bash
 # DaisyUI is already installed
 # Use components directly in Svelte files:
@@ -143,12 +154,14 @@ https://daisyui.com/components/
 ```
 
 ### Toggle Ghost Mode (if implemented)
+
 ```bash
 # Check src/lib/services or components for ghost mode
 # Usually a feature flag or localStorage key
 ```
 
 ### Change App Name/Title
+
 ```bash
 File: src/app.html
 Look for: <title>ZipList</title>
@@ -163,6 +176,7 @@ And: static/manifest.json (for PWA)
 ## 💥 WHEN SHIT BREAKS - TOP 3 FIXES
 
 ### 1. Port Already in Use
+
 ```bash
 # Find what's using port 5173:
 lsof -i :5173
@@ -174,6 +188,7 @@ kill -9 PID_NUMBER
 ```
 
 ### 2. Dependencies Fucked
+
 ```bash
 # Nuclear option:
 rm -rf node_modules package-lock.json
@@ -184,6 +199,7 @@ npm run dev
 ```
 
 ### 3. Build Fails
+
 ```bash
 # Clean everything:
 rm -rf dist .svelte-kit node_modules
@@ -200,6 +216,7 @@ npm run build
 ## 🚦 DEPLOYMENT - SHIP IT
 
 ### One-Liner Deploy (Vercel)
+
 ```bash
 # Install Vercel CLI:
 npm i -g vercel
@@ -209,6 +226,7 @@ vercel --prod
 ```
 
 ### Manual Deploy Steps
+
 1. Build it: `npm run build`
 2. Test it: `npm run preview`
 3. Push it: `git push origin main`
@@ -221,11 +239,13 @@ vercel --prod
 ## 🎤 VOICE TRANSCRIPTION NOTES
 
 Current setup (from package.json):
+
 - **Gemini**: `@google/generative-ai` - Cloud transcription
 - **Future**: Offline Whisper (see ZIPLIST_1.0_BATTLE_PLAN.md)
 - **Reference**: TalkType has working offline implementation
 
 To switch APIs:
+
 1. Change service in `src/lib/services/`
 2. Update API key in `.env` file
 3. Update imports in components
@@ -257,6 +277,7 @@ To switch APIs:
 - **Unique positioning**: Voice + offline AI + list sharing = rare combo
 
 ### Pablo's Project Quirks:
+
 - Voice-first (not text-first todo app)
 - Privacy-focused (offline transcription planned via TalkType port)
 - Ghost character personality (not just a tool)
@@ -283,6 +304,7 @@ npm run dev
 ```
 
 **Quick paths:**
+
 - Main page: `src/routes/+page.svelte`
 - Components: `src/lib/components/`
 - Voice/transcription: `src/lib/services/`
@@ -290,8 +312,9 @@ npm run dev
 - Constants: `src/lib/constants.js`
 
 **Battle plan:**
+
 - Read: `ZIPLIST_1.0_BATTLE_PLAN.md`
 
 ---
 
-*Generated for ZipList - Voice-to-list app with offline AI 🎤*
+_Generated for ZipList - Voice-to-list app with offline AI 🎤_

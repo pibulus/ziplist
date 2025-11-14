@@ -1,4 +1,5 @@
 # ZipList Cleanup Handoff - Session Continuation Plan
+
 **Date**: September 30, 2025
 **Branch**: tactical-cleanup
 **Status**: Ready for next session
@@ -24,6 +25,7 @@
 ## What's Been Done
 
 ### ✅ Completed (3 commits)
+
 1. **Tactical Cleanup** (baa2b35):
    - Removed all TalkType branding (14 references)
    - Renamed 4 static SVG files
@@ -49,10 +51,12 @@
 ### Priority 1: Resolve AudioToText Duplication 🔴
 
 **Problem**: Two nearly identical AudioToText.svelte files exist:
+
 - `/mainPage/AudioToText.svelte` (747 lines, older date: July 23)
 - `/mainPage/audio-transcript/AudioToText.svelte` (771 lines, older date: July 23)
 
 **Key Difference** (from diff):
+
 ```javascript
 // audio-transcript version has:
 transcriptionCompletedEvent, // <-- Import the new event store
@@ -62,15 +66,18 @@ import { CTA_PHRASES } from '$lib/constants'; // Missing in audio-transcript
 ```
 
 **Which is used?**
+
 ```javascript
 // From src/lib/components/mainPage/index.js:
-import AudioToText from './audio-transcript/AudioToText.svelte';
+import AudioToText from "./audio-transcript/AudioToText.svelte";
 ```
 
 **Conclusion**: `audio-transcript/AudioToText.svelte` is the canonical version.
 
 **Action**:
+
 1. ✅ Verify no imports from `/mainPage/AudioToText.svelte`:
+
    ```bash
    grep -r "from.*mainPage/AudioToText" src
    # Should return empty or only index.js with audio-transcript path
@@ -87,17 +94,19 @@ import AudioToText from './audio-transcript/AudioToText.svelte';
 **Problem**: `/audio-transcript/AudioToText.svelte` has ~100 lines of ghost integration code that never executes.
 
 **Evidence**:
+
 ```javascript
 // Line 57 - prop defined
 export let ghostComponent = null;
 
 // Lines 129-155, 429-435 - conditional calls
-if (ghostComponent && typeof ghostComponent.pulse === 'function') {
+if (ghostComponent && typeof ghostComponent.pulse === "function") {
   ghostComponent.pulse(); // NEVER runs - ghostComponent always null
 }
 ```
 
 **Verification Required**:
+
 ```bash
 # Check if ghostComponent prop is ever passed:
 grep -r "ghostComponent" src/lib/components/mainPage/MainContainer.svelte
@@ -107,6 +116,7 @@ grep -r "<AudioToText" src --include="*.svelte"
 **Expected**: No matches (MainContainer uses GhostContainer, different pattern)
 
 **Action** (if verified unused):
+
 1. Remove `export let ghostComponent = null;` (line 57)
 2. Remove all conditional ghost method calls:
    - Lines ~129-130 (pulse)
@@ -121,6 +131,7 @@ grep -r "<AudioToText" src --include="*.svelte"
 ### Priority 3: Fix Forward Declaration Anti-Pattern 🟡
 
 **Problem**: Functions exported before definition (line 67):
+
 ```javascript
 export { stopRecording, startRecording }; // Line 67
 // ...37 lines later...
@@ -133,6 +144,7 @@ async function stopRecording() { ... } // Line 143
 **Why it's bad**: Confusing, fragile, breaks logical flow
 
 **Action**:
+
 ```javascript
 // Move export to after function definitions:
 async function startRecording() {
@@ -148,6 +160,7 @@ export { stopRecording, startRecording };
 ```
 
 Or keep exports at top and use proper function declarations:
+
 ```javascript
 // At top with other exports
 export async function startRecording() {
@@ -160,16 +173,23 @@ export async function startRecording() {
 ### Priority 4: Remove Unnecessary PWA Wrappers 🟡
 
 **Problem**: Lines 72-77 are pure pass-throughs:
+
 ```javascript
 const shouldShowPWAPrompt = () => pwaService.shouldShowPwaPrompt();
 const recordPWAPromptShown = () => pwaService.recordPromptShown();
 const markPWAAsInstalled = () => pwaService.markAsInstalled();
 const isRunningAsPWA = () => pwaService.checkIfRunningAsPwa();
 
-export { shouldShowPWAPrompt, recordPWAPromptShown, markPWAAsInstalled, isRunningAsPWA };
+export {
+  shouldShowPWAPrompt,
+  recordPWAPromptShown,
+  markPWAAsInstalled,
+  isRunningAsPWA,
+};
 ```
 
 **Check if exported functions are used**:
+
 ```bash
 grep -r "shouldShowPWAPrompt\|recordPWAPromptShown\|markPWAAsInstalled\|isRunningAsPWA" src --include="*.svelte" --include="*.js" | grep -v "AudioToText.svelte"
 ```
@@ -182,20 +202,24 @@ grep -r "shouldShowPWAPrompt\|recordPWAPromptShown\|markPWAAsInstalled\|isRunnin
 ### Priority 5: Clean Up Comments (All Three Files) 🟡
 
 **AudioToText.svelte** (~15 comments to remove):
+
 - Section headers: `// Stores`, `// Actions`, `// Props`, `// Element refs`
 - Obvious inline: `// Export the isRecording store`, `// For ARIA announcements`
 - Archaeology: `// End of PWA tracking`, `// These functions have been moved to the Ghost component`
 
 **RecordButtonWithTimer.svelte** (~20 comments):
+
 - Section headers: `// Props`, `// Element refs`, `// Visualization constants`
 - Obvious inline: `// Calculate average level`, `// Update wave bars`
 
 **Ghost.svelte** (~30 comments):
+
 - **Archaeology** (delete these): `// Removed import for ghost-themes.css`, `// Removed THEMES import`
 - Redundant imports: `ANIMATION_TIMING, // Import ANIMATION_TIMING`
 - Section headers: `// CSS imports`, `// SVG paths`, `// Configuration`
 
 **Keep useful comments**:
+
 - Complex algorithm explanations
 - Non-obvious behavior
 - Accessibility notes
@@ -206,6 +230,7 @@ grep -r "shouldShowPWAPrompt\|recordPWAPromptShown\|markPWAAsInstalled\|isRunnin
 ### Priority 6: Minor Cleanup 🟢
 
 1. **Remove unused variable** (AudioToText.svelte line 45):
+
    ```javascript
    let progressContainerElement; // Never used - verify and remove
    ```
@@ -246,15 +271,15 @@ npm run build
 
 ## 📊 Expected Impact
 
-| Action | Lines Saved | Risk | Time |
-|--------|-------------|------|------|
-| Remove duplicate AudioToText | ~747 | Low | 5 min |
-| Remove ghost integration | ~30 | Low | 5 min |
-| Fix forward declarations | 0 | Low | 5 min |
-| Remove PWA wrappers | ~10 | Low | 5 min |
-| Clean comments (3 files) | ~75 | None | 10 min |
-| Minor cleanup | ~5 | None | 2 min |
-| **TOTAL** | **~867 lines** | **Low** | **~30 min** |
+| Action                       | Lines Saved    | Risk    | Time        |
+| ---------------------------- | -------------- | ------- | ----------- |
+| Remove duplicate AudioToText | ~747           | Low     | 5 min       |
+| Remove ghost integration     | ~30            | Low     | 5 min       |
+| Fix forward declarations     | 0              | Low     | 5 min       |
+| Remove PWA wrappers          | ~10            | Low     | 5 min       |
+| Clean comments (3 files)     | ~75            | None    | 10 min      |
+| Minor cleanup                | ~5             | None    | 2 min       |
+| **TOTAL**                    | **~867 lines** | **Low** | **~30 min** |
 
 ---
 
@@ -285,14 +310,17 @@ npm run build
 ## 📁 Files to Modify
 
 ### Must Touch:
+
 - `src/lib/components/mainPage/audio-transcript/AudioToText.svelte` (primary cleanup target)
 - `src/lib/components/mainPage/audio-transcript/RecordButtonWithTimer.svelte` (comment cleanup)
 - `src/lib/components/ghost/Ghost.svelte` (comment cleanup)
 
 ### Potentially Delete:
+
 - `src/lib/components/mainPage/AudioToText.svelte` (duplicate)
 
 ### Safe to Leave:
+
 - All other files (already cleaned in previous commits)
 
 ---
@@ -300,6 +328,7 @@ npm run build
 ## 🎓 Architectural Insights
 
 ### Current Pattern (Working):
+
 ```
 MainContainer.svelte
   ├─ GhostContainer (visual ghost)
@@ -308,6 +337,7 @@ MainContainer.svelte
 ```
 
 ### Old Pattern (Appears Unused):
+
 ```
 AudioToText.svelte
   ├─ AudioVisualizer

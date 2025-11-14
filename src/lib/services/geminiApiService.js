@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAIKEY = import.meta.env.VITE_GEMINI_API_KEY;
 if (!genAIKEY) {
-  console.error('VITE_GEMINI_API_KEY is not set in the environment variables.');
+  console.error("VITE_GEMINI_API_KEY is not set in the environment variables.");
 }
 const genAI = new GoogleGenerativeAI(genAIKEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
 // Track model initialization state
 let modelInitialized = false;
@@ -17,24 +17,29 @@ function preloadModel() {
   if (modelInitialized || initializationPromise) {
     return initializationPromise;
   }
-  
-  console.log('🔍 Preloading speech model for faster response');
-  
+
+  if (import.meta.env.DEV) {
+    console.log("🔍 Preloading speech model for faster response");
+  }
+
   // We create a very small "ping" query to initialize the model
   // This warms up the Gemini API connection and loads necessary client-side resources
-  initializationPromise = model.generateContent('hello')
-    .then(response => {
-      console.log('✅ Speech model preloaded successfully');
+  initializationPromise = model
+    .generateContent("hello")
+    .then((response) => {
+      if (import.meta.env.DEV) {
+        console.log("✅ Speech model preloaded successfully");
+      }
       modelInitialized = true;
       return response;
     })
-    .catch(error => {
-      console.error('❌ Error preloading speech model:', error);
+    .catch((error) => {
+      console.error("❌ Error preloading speech model:", error);
       // Reset the initialization state so we can try again
       initializationPromise = null;
       throw error;
     });
-    
+
   return initializationPromise;
 }
 
@@ -42,12 +47,12 @@ function blobToGenerativePart(blob) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64data = reader.result.split(',')[1];
+      const base64data = reader.result.split(",")[1];
       resolve({
         inlineData: {
           data: base64data,
-          mimeType: blob.type
-        }
+          mimeType: blob.type,
+        },
       });
     };
     reader.readAsDataURL(blob);
@@ -59,8 +64,8 @@ async function generateContent(promptData) {
     const result = await model.generateContent(promptData);
     return result.response;
   } catch (error) {
-    console.error('❌ Error generating content:', error);
-    throw new Error('Failed to generate content with Gemini');
+    console.error("❌ Error generating content:", error);
+    throw new Error("Failed to generate content with Gemini");
   }
 }
 
@@ -68,12 +73,12 @@ export const geminiApiService = {
   preloadModel,
   blobToGenerativePart,
   generateContent,
-  
+
   // Method to get model status
   getModelStatus() {
     return {
       initialized: modelInitialized,
-      initializing: !!initializationPromise && !modelInitialized
+      initializing: !!initializationPromise && !modelInitialized,
     };
-  }
+  },
 };

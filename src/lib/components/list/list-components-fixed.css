@@ -1,11 +1,15 @@
 /* Import fonts - using Inter for friendly main text, Space Mono for accents */
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap");
 
 /* Base styles for list components - Increased specificity by nesting selectors */
 html body .list-mono {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif !important;
   letter-spacing: 0 !important;
 }
 
@@ -13,8 +17,11 @@ html body .list-mono {
 html body .card-mono {
   border-radius: 28px !important;
   border: none !important;
-  background: linear-gradient(145deg, #FFF4ED, #FFF8F2) !important;
-  box-shadow: 0 12px 24px rgba(160, 140, 220, 0.12), 0 0 0 1px rgba(200, 180, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.6) !important;
+  background: linear-gradient(145deg, #fff4ed, #fff8f2) !important;
+  box-shadow:
+    0 12px 24px rgba(160, 140, 220, 0.12),
+    0 0 0 1px rgba(200, 180, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6) !important;
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
   position: relative !important;
   overflow: hidden !important;
@@ -22,7 +29,7 @@ html body .card-mono {
 
 /* Use double-class selector for higher specificity */
 html body .card-mono.card-mono::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -30,9 +37,17 @@ html body .card-mono.card-mono::before {
   bottom: 0;
   border-radius: 28px;
   padding: 1.5px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(200, 180, 255, 0.4));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(200, 180, 255, 0.4)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: destination-out;
   mask-composite: exclude;
   pointer-events: none;
@@ -40,21 +55,34 @@ html body .card-mono.card-mono::before {
 }
 
 html body .card-mono:hover {
-  box-shadow: 0 20px 30px rgba(160, 140, 220, 0.15), 0 0 0 1px rgba(200, 180, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.7) !important;
+  box-shadow:
+    0 20px 30px rgba(160, 140, 220, 0.15),
+    0 0 0 1px rgba(200, 180, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7) !important;
   transform: translateY(-3px) !important;
-  background: linear-gradient(145deg, #FFF6F0, #FFF9F5) !important;
+  background: linear-gradient(145deg, #fff6f0, #fff9f5) !important;
 }
 
 html body .card-mono.active {
-  background: linear-gradient(145deg, #FFF6F0, #FFEEF8) !important;
+  background: linear-gradient(145deg, #fff6f0, #ffeef8) !important;
   transform: scale(1.02) translateY(-5px) !important;
-  box-shadow: 0 20px 40px rgba(160, 140, 220, 0.25), 0 0 0 1px rgba(200, 180, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+  box-shadow:
+    0 20px 40px rgba(160, 140, 220, 0.25),
+    0 0 0 1px rgba(200, 180, 255, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Sparkle animation for buttons with increased specificity */
 @keyframes sparkle {
-  0%, 100% { opacity: 0; transform: scale(0); }
-  50% { opacity: 1; transform: scale(1); }
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Card content container with increased specificity */
@@ -79,7 +107,7 @@ html body .list-title {
   text-align: center !important;
   padding-bottom: 0.75rem !important;
   border-bottom: 1px solid rgba(181, 152, 255, 0.15) !important;
-  font-family: 'Nunito', sans-serif !important;
+  font-family: "Nunito", sans-serif !important;
 }
 
 html body .list-title:hover {
@@ -94,7 +122,9 @@ html body .list-item-mono {
   background-color: rgba(255, 255, 255, 0.6) !important;
   padding: 16px 18px !important;
   margin-bottom: 16px !important;
-  box-shadow: 0 2px 8px rgba(186, 165, 240, 0.06), inset 0 0 0 1px rgba(200, 180, 255, 0.15) !important;
+  box-shadow:
+    0 2px 8px rgba(186, 165, 240, 0.06),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.15) !important;
   transition: all 0.3s ease !important;
   display: flex !important;
   align-items: center !important;
@@ -104,16 +134,17 @@ html body .list-item-mono {
 }
 
 html body .list-item-mono::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 95%;
   height: 1px;
-  background: linear-gradient(90deg, 
-    rgba(200, 180, 255, 0), 
-    rgba(200, 180, 255, 0.2) 50%, 
+  background: linear-gradient(
+    90deg,
+    rgba(200, 180, 255, 0),
+    rgba(200, 180, 255, 0.2) 50%,
     rgba(200, 180, 255, 0)
   );
   z-index: 1;
@@ -124,9 +155,15 @@ html body .list-item-mono:last-child::after {
 }
 
 html body .list-item-mono:hover {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(246, 240, 255, 0.8)) !important;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(246, 240, 255, 0.8)
+  ) !important;
   transform: translateY(-3px) scale(1.01) !important;
-  box-shadow: 0 5px 15px rgba(186, 165, 240, 0.1), inset 0 0 0 1px rgba(200, 180, 255, 0.25) !important;
+  box-shadow:
+    0 5px 15px rgba(186, 165, 240, 0.1),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.25) !important;
 }
 
 html body .list-item-mono.checked {
@@ -144,7 +181,9 @@ html body .list-item-mono.dragging {
 
 html body .list-item-mono.drag-over {
   background-color: rgba(245, 238, 255, 0.8) !important;
-  box-shadow: 0 5px 15px rgba(186, 165, 240, 0.15), inset 0 0 0 1px rgba(181, 152, 255, 0.3) !important;
+  box-shadow:
+    0 5px 15px rgba(186, 165, 240, 0.15),
+    inset 0 0 0 1px rgba(181, 152, 255, 0.3) !important;
 }
 
 /* Checkbox - Complete override with attribute selectors for extreme specificity */
@@ -181,14 +220,21 @@ html body input[type="checkbox"].checkbox-mono:checked {
 }
 
 html body input[type="checkbox"].checkbox-mono:checked::before {
-  content: '' !important;
+  content: "" !important;
   width: 12px !important;
   height: 12px !important;
   transform: scale(0) !important;
   transition: 120ms transform ease-in-out !important;
   box-shadow: inset 1em 1em white !important;
   transform-origin: center !important;
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%) !important;
+  clip-path: polygon(
+    14% 44%,
+    0 65%,
+    50% 100%,
+    100% 16%,
+    80% 0%,
+    43% 62%
+  ) !important;
   animation: checkmark 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
   position: absolute !important;
   z-index: 3 !important;
@@ -196,14 +242,18 @@ html body input[type="checkbox"].checkbox-mono:checked::before {
 
 /* Confetti elements for checkbox - extra specificity */
 html body input[type="checkbox"].checkbox-mono:checked::after {
-  content: '' !important;
+  content: "" !important;
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   width: 40px !important;
   height: 40px !important;
   border-radius: 50% !important;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%) !important;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0) 70%
+  ) !important;
   transform: translate(-50%, -50%) scale(0) !important;
   opacity: 0 !important;
   animation: sparkle 0.4s ease-out forwards !important;
@@ -221,7 +271,7 @@ html body input[type="checkbox"].checkbox-mono:checked::after {
 
 /* Item text with increased specificity */
 html body .item-text {
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
   font-size: 1rem !important;
   font-weight: 400 !important;
   line-height: 1.5 !important;
@@ -248,8 +298,9 @@ html body .actions-toolbar {
   padding-top: 1.25rem !important;
   border-top: 1px solid rgba(200, 180, 255, 0.15) !important;
   height: 70px !important;
-  background: linear-gradient(180deg, 
-    rgba(255, 244, 237, 0), 
+  background: linear-gradient(
+    180deg,
+    rgba(255, 244, 237, 0),
     rgba(255, 250, 245, 0.8)
   ) !important;
   position: relative !important;
@@ -266,7 +317,7 @@ html body .action-btn {
   align-items: center !important;
   gap: 0.3rem !important;
   font-size: 0.7rem !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
   font-weight: 500 !important;
   padding: 0.6rem !important;
   border-radius: 12px !important;
@@ -312,13 +363,17 @@ html body .action-btn.add {
 }
 
 html body .action-btn.add::before {
-  content: '' !important;
+  content: "" !important;
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%
+  ) !important;
   border-radius: 14px !important;
 }
 
@@ -334,7 +389,7 @@ html body .action-btn.add:hover {
 
 /* Input field styling with increased specificity */
 html body .mono-input {
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
   font-weight: 400 !important;
   border: 2px solid rgba(200, 180, 255, 0.5) !important;
   background-color: rgba(255, 255, 255, 0.8) !important;
@@ -358,7 +413,7 @@ html body .mono-input.title {
   font-weight: 500 !important;
   color: #9d86e6 !important;
   text-align: center !important;
-  font-family: 'Nunito', sans-serif !important;
+  font-family: "Nunito", sans-serif !important;
 }
 
 /* Add item form with increased specificity */
@@ -368,10 +423,16 @@ html body .add-item-form {
   gap: 0.8rem !important;
   margin-bottom: 1.25rem !important;
   padding: 1.2rem !important;
-  background: linear-gradient(145deg, rgba(255, 252, 249, 0.9), rgba(255, 245, 236, 0.9)) !important;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 252, 249, 0.9),
+    rgba(255, 245, 236, 0.9)
+  ) !important;
   border: none !important;
   border-radius: 18px !important;
-  box-shadow: 0 3px 10px rgba(186, 165, 240, 0.08), inset 0 0 0 1px rgba(200, 180, 255, 0.15) !important;
+  box-shadow:
+    0 3px 10px rgba(186, 165, 240, 0.08),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.15) !important;
 }
 
 html body .add-item-buttons {
@@ -392,7 +453,7 @@ html body .add-btn {
   gap: 0.5rem !important;
   font-weight: 500 !important;
   font-size: 0.95rem !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
   letter-spacing: 0 !important;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
   cursor: pointer !important;
@@ -403,13 +464,17 @@ html body .add-btn {
 }
 
 html body .add-btn::before {
-  content: '' !important;
+  content: "" !important;
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%
+  ) !important;
   border-radius: 14px !important;
 }
 
@@ -442,7 +507,7 @@ html body .empty-state {
   padding: 2.5rem 1rem !important;
   height: 100% !important;
   min-height: 300px !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
 }
 
 html body .empty-icon {
@@ -458,7 +523,7 @@ html body .empty-title {
   color: #9d86e6 !important;
   margin-bottom: 0.6rem !important;
   font-size: 1.2rem !important;
-  font-family: 'Nunito', sans-serif !important;
+  font-family: "Nunito", sans-serif !important;
 }
 
 html body .empty-description {
@@ -515,14 +580,18 @@ html body .carousel-nav {
   align-items: center !important;
   margin-top: 1.75rem !important;
   gap: 1.25rem !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
 }
 
 html body .nav-btn-mono {
   width: 45px !important;
   height: 45px !important;
   border-radius: 50% !important;
-  background: linear-gradient(145deg, rgba(255, 252, 249, 0.9), rgba(255, 245, 236, 0.9)) !important;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 252, 249, 0.9),
+    rgba(255, 245, 236, 0.9)
+  ) !important;
   border: none !important;
   display: flex !important;
   align-items: center !important;
@@ -531,13 +600,21 @@ html body .nav-btn-mono {
   font-size: 1.2rem !important;
   cursor: pointer !important;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-  box-shadow: 0 3px 10px rgba(157, 134, 230, 0.15), inset 0 0 0 1px rgba(200, 180, 255, 0.2) !important;
+  box-shadow:
+    0 3px 10px rgba(157, 134, 230, 0.15),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.2) !important;
 }
 
 html body .nav-btn-mono:hover:not(:disabled) {
-  background: linear-gradient(145deg, rgba(250, 245, 255, 0.9), rgba(246, 241, 255, 0.9)) !important;
+  background: linear-gradient(
+    145deg,
+    rgba(250, 245, 255, 0.9),
+    rgba(246, 241, 255, 0.9)
+  ) !important;
   transform: translateY(-3px) scale(1.05) !important;
-  box-shadow: 0 5px 15px rgba(157, 134, 230, 0.25), inset 0 0 0 1px rgba(181, 152, 255, 0.3) !important;
+  box-shadow:
+    0 5px 15px rgba(157, 134, 230, 0.25),
+    inset 0 0 0 1px rgba(181, 152, 255, 0.3) !important;
   color: #8066d0 !important;
 }
 
@@ -553,7 +630,9 @@ html body .nav-counter-mono {
   background: rgba(181, 152, 255, 0.1) !important;
   padding: 0.6rem 1.2rem !important;
   border-radius: 20px !important;
-  box-shadow: 0 2px 5px rgba(157, 134, 230, 0.05), inset 0 0 0 1px rgba(200, 180, 255, 0.1) !important;
+  box-shadow:
+    0 2px 5px rgba(157, 134, 230, 0.05),
+    inset 0 0 0 1px rgba(200, 180, 255, 0.1) !important;
 }
 
 /* List container with increased specificity */
@@ -573,9 +652,10 @@ html body .mono-divider {
   text-align: center !important;
   border: none !important;
   height: 2px !important;
-  background: linear-gradient(90deg, 
-    rgba(200, 180, 255, 0), 
-    rgba(200, 180, 255, 0.3) 50%, 
+  background: linear-gradient(
+    90deg,
+    rgba(200, 180, 255, 0),
+    rgba(200, 180, 255, 0.3) 50%,
     rgba(200, 180, 255, 0)
   ) !important;
   margin: 1.4rem 0 !important;
@@ -586,10 +666,10 @@ html body .divider-text {
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  background: #FFF8F2 !important;
+  background: #fff8f2 !important;
   padding: 0 12px !important;
   font-size: 0.75rem !important;
-  font-family: 'Nunito', sans-serif !important;
+  font-family: "Nunito", sans-serif !important;
   color: #9d86e6 !important;
   font-weight: 500 !important;
   letter-spacing: 0.03em !important;
@@ -615,10 +695,13 @@ html body .fade-in {
 
 /* Celebration Message with increased specificity */
 html body .completion-message {
-  background: linear-gradient(135deg, #FFF4ED, #FFF8F2) !important;
+  background: linear-gradient(135deg, #fff4ed, #fff8f2) !important;
   padding: 0.8rem 1.2rem !important;
   border-radius: 20px !important;
-  box-shadow: 0 8px 20px rgba(157, 134, 230, 0.15), 0 0 0 1px rgba(200, 180, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+  box-shadow:
+    0 8px 20px rgba(157, 134, 230, 0.15),
+    0 0 0 1px rgba(200, 180, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
   margin: 1rem auto 1.75rem !important;
   text-align: center !important;
   max-width: 90% !important;
@@ -629,18 +712,22 @@ html body .completion-message {
 }
 
 html body .completion-message::before {
-  content: '' !important;
+  content: "" !important;
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%
+  ) !important;
   z-index: 1 !important;
 }
 
 html body .message-content {
-  font-family: 'Nunito', sans-serif !important;
+  font-family: "Nunito", sans-serif !important;
   font-weight: 600 !important;
   color: #8066d0 !important;
   font-size: 1.1rem !important;
@@ -659,19 +746,28 @@ html body .sparkle-icon {
 }
 
 @keyframes pulse {
-  0%, 100% { 
-    transform: scale(1); 
-    box-shadow: 0 8px 20px rgba(157, 134, 230, 0.15), 0 0 0 1px rgba(200, 180, 255, 0.2);
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 8px 20px rgba(157, 134, 230, 0.15),
+      0 0 0 1px rgba(200, 180, 255, 0.2);
   }
-  50% { 
-    transform: scale(1.03); 
-    box-shadow: 0 12px 25px rgba(157, 134, 230, 0.25), 0 0 0 1px rgba(200, 180, 255, 0.3);
+  50% {
+    transform: scale(1.03);
+    box-shadow:
+      0 12px 25px rgba(157, 134, 230, 0.25),
+      0 0 0 1px rgba(200, 180, 255, 0.3);
   }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Focus states for accessibility with increased specificity */
