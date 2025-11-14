@@ -1,12 +1,12 @@
 # UI Components
 
-This directory contains reusable UI components used throughout the TalkType application.
+This directory contains reusable UI components used throughout the ZipList application.
 
 ## Components
 
 ### AppSuffix
 
-`AppSuffix.svelte` is a specialized component that adds the ".app" suffix to the TalkType brand name.
+`AppSuffix.svelte` is a specialized component that adds the ".app" suffix to the ZipList brand name.
 
 #### Usage
 
@@ -16,9 +16,9 @@ This directory contains reusable UI components used throughout the TalkType appl
 </script>
 
 <h1>
-  TalkType
+  ZipList
   <span style="position: relative; display: inline-block; width: 0; height: 0; overflow: visible;">
-    <AppSuffix 
+    <AppSuffix
       offsetX="-0.3em"
       offsetY="8px"
       position="bottom-right"
@@ -29,21 +29,21 @@ This directory contains reusable UI components used throughout the TalkType appl
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `color` | string | `"inherit"` | The text color of the suffix |
-| `size` | string | `"40%"` | Size relative to parent (40% of parent font size) |
-| `customClass` | string | `""` | Additional CSS classes |
-| `offsetX` | string | `"-0.2em"` | Horizontal positioning offset |
-| `offsetY` | string | `"6px"` | Vertical positioning offset |
-| `position` | string | `"bottom-right"` | Position preset (bottom-right, bottom-left, top-right, top-left) |
-| `wiggleOnHover` | boolean | `true` | Whether to enable hover animation |
+| Prop            | Type    | Default          | Description                                                      |
+| --------------- | ------- | ---------------- | ---------------------------------------------------------------- |
+| `color`         | string  | `"inherit"`      | The text color of the suffix                                     |
+| `size`          | string  | `"40%"`          | Size relative to parent (40% of parent font size)                |
+| `customClass`   | string  | `""`             | Additional CSS classes                                           |
+| `offsetX`       | string  | `"-0.2em"`       | Horizontal positioning offset                                    |
+| `offsetY`       | string  | `"6px"`          | Vertical positioning offset                                      |
+| `position`      | string  | `"bottom-right"` | Position preset (bottom-right, bottom-left, top-right, top-left) |
+| `wiggleOnHover` | boolean | `true`           | Whether to enable hover animation                                |
 
 #### Implementation Details
 
 The component uses absolute positioning to place the `.app` suffix relative to the parent element with highly configurable positioning. Key features:
 
-1. **Flexible Positioning**: 
+1. **Flexible Positioning**:
    - Uses absolute positioning with responsive adjustments
    - Parent container should have `position: relative` and ideally `width: 0` with `overflow: visible`
    - Supports four position presets: bottom-right, bottom-left, top-right, top-left

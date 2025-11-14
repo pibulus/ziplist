@@ -24,12 +24,12 @@ Key component-level variables include:
   --zl-card-bg-gradient-color-start: #e0f7fa;
   --zl-card-bg-gradient-color-mid: #4dd0e1;
   --zl-card-bg-gradient-color-end: #0097a7;
-  
+
   /* Base theme colors derived from gradient */
   --zl-primary-color: var(--zl-card-bg-gradient-color-fourth, #00bcd4);
   --zl-secondary-color: var(--zl-card-bg-gradient-color-mid, #4dd0e1);
   --zl-accent-color: var(--zl-card-bg-gradient-color-end, #0097a7);
-  
+
   /* Component-specific styling variables */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
   --zl-checkbox-border: 2px solid rgba(0, 188, 212, 0.5);
@@ -41,25 +41,27 @@ Key component-level variables include:
 
 The app uses a theme service and attribute-based system:
 
-1. **Theme Definition**: 
+1. **Theme Definition**:
    - Themes defined in `/src/lib/constants.js`:
+
    ```javascript
    export const THEMES = {
-     PEACH: 'peach',
-     MINT: 'mint',
-     BUBBLEGUM: 'bubblegum',
-     RAINBOW: 'rainbow'
+     PEACH: "peach",
+     MINT: "mint",
+     BUBBLEGUM: "bubblegum",
+     RAINBOW: "rainbow",
    };
    ```
 
-2. **Theme Service**: 
+2. **Theme Service**:
    - Located at `/src/lib/services/theme/themeService.js`
    - Manages theme state and application
    - Applies themes by setting `data-theme` attribute on document root:
+
    ```javascript
    applyTheme(themeId) {
      if (!browser) return;
-     
+
      StorageUtils.setItem(this.storageKey, themeId);
      document.documentElement.setAttribute('data-theme', themeId);
    }
@@ -68,9 +70,10 @@ The app uses a theme service and attribute-based system:
 3. **Early Theme Application**:
    - Initial theme applied via inline script in `/src/app.html` (lines 118-163)
    - Prevents flash of default theme during page load:
+
    ```javascript
    const savedTheme = getStorageItem(THEME_KEY, DEFAULT_THEME);
-   document.documentElement.setAttribute('data-theme', savedTheme);
+   document.documentElement.setAttribute("data-theme", savedTheme);
    ```
 
 4. **Current CSS Variables**:
@@ -117,20 +120,20 @@ html[data-theme="peach"] {
   --zl-card-bg-gradient-size: 300% 300%;
   --zl-card-border-color: rgba(255, 212, 218, 0.8);
   --zl-card-box-shadow: 0 12px 30px rgba(201, 120, 255, 0.25);
-  
+
   /* Base theme colors derived from gradient */
   --zl-primary-color: #c978ff;
   --zl-secondary-color: #ff9fe5;
   --zl-accent-color: #ff6ac2;
   --zl-highlight-color: #ffb0d8;
-  
+
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
   --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
   --zl-item-border-color: rgba(255, 212, 218, 0.6);
   --zl-item-border-hover-color: rgba(255, 212, 218, 0.9);
   --zl-item-box-shadow: 0 4px 10px rgba(201, 120, 255, 0.1);
-  
+
   /* All other component variables defined in the theme */
   /* Copy from SingleList.svelte's current implementation */
   /* Adapt colors to match the peach theme */
@@ -147,13 +150,13 @@ html[data-theme="mint"] {
   --zl-card-bg-gradient-color-end: #0097a7;
   --zl-card-border-color: rgba(0, 188, 212, 0.6);
   --zl-card-box-shadow: 0 12px 30px rgba(0, 151, 167, 0.25);
-  
+
   /* Base theme colors derived from gradient */
   --zl-primary-color: #00bcd4;
   --zl-secondary-color: #4dd0e1;
   --zl-accent-color: #0097a7;
   --zl-highlight-color: #40e0d0;
-  
+
   /* All other component variables defined in the theme */
   /* Adapt colors to match the mint theme */
 }
@@ -181,11 +184,11 @@ html[data-theme="rainbow"] {
 Add the theme variables file to `/src/app.css` (around line 4-5):
 
 ```css
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-@import './lib/styles/typography.css';
-@import './lib/styles/theme-variables.css'; /* Add this line */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+@import "./lib/styles/typography.css";
+@import "./lib/styles/theme-variables.css"; /* Add this line */
 ```
 
 ### 3. Remove Local Variables from Component
@@ -194,39 +197,39 @@ Modify `/src/lib/components/list/SingleList.svelte` to remove the local `:root` 
 
 ```diff
 <style>
--  /* 
+-  /*
 -  * Define CSS Custom Properties (variables) for the animated gradient background.
 -  * These variables allow for easy theme customization and maintenance.
 -  */
 -  :root {
 -    /* -- START .zl-card Animated Gradient Theme Variables -- */
--    
+-
 -    /* Angle of the linear gradient - controls the direction of the gradient flow */
 -    --zl-card-bg-gradient-angle: 120deg;
--    
+-
 -    /* Start color of the gradient - cool mint tone */
 -    --zl-card-bg-gradient-color-start: #e0f7fa;
--    
+-
 -    /* ... all other variables ... */
 -  }
--  
--  /* 
+-
+-  /*
 -  * Example of an alternative theme.
 -  * To use, add a parent element with the class 'theme-ocean'.
--  
+-
 -  .theme-ocean {
 -    --zl-card-bg-gradient-color-start: #e0f7fa;
 -    --zl-card-bg-gradient-color-mid: #b3e5fc;
 -    --zl-card-bg-gradient-color-end: #81d4fa;
 -  }
 -  */
-  
+
   /* Animation keyframes */
   @keyframes sparkle {
     0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
-  
+
   /* ... rest of the component CSS ... */
 </style>
 ```
@@ -239,13 +242,13 @@ The SingleList component is already imported in MainContainer.svelte:
 
 ```javascript
 // In /src/lib/components/mainPage/MainContainer.svelte
-import SingleList from '../list/SingleList.svelte';
+import SingleList from "../list/SingleList.svelte";
 ```
 
 MainContainer also imports the theme service:
 
 ```javascript
-import { themeService } from '$lib/services/theme';
+import { themeService } from "$lib/services/theme";
 ```
 
 No additional integration is needed at the component level since the global CSS variables will automatically apply based on the `data-theme` attribute.
@@ -267,12 +270,13 @@ After implementing the changes, test the theme switching:
 To add smooth transitions between themes, add transition properties to the variables:
 
 ```css
-html[data-theme], 
+html[data-theme],
 html[data-theme] * {
-  transition: background-color 0.3s ease, 
-              color 0.3s ease, 
-              border-color 0.3s ease, 
-              box-shadow 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 ```
 
@@ -286,7 +290,7 @@ For advanced theming needs, consider extending the theme service to allow dynami
 // In themeService.js
 generateThemeFromColor(primaryColor) {
   // Generate a complete theme palette from one color
-  // Apply the theme by setting CSS variables directly 
+  // Apply the theme by setting CSS variables directly
   // This approach would require additional JS to set variables
 }
 ```
@@ -296,12 +300,14 @@ generateThemeFromColor(primaryColor) {
 1. **Consistent Naming**: Follow the established `--zl-*` prefix for all component variables
 
 2. **Hierarchical Variables**: Maintain the structure where base colors derive component-specific colors:
+
    ```css
    --zl-primary-color: #00bcd4;
    --zl-checkbox-border-color: var(--zl-primary-color);
    ```
 
 3. **Fallback Values**: Always include fallbacks in `var()` functions:
+
    ```css
    background-color: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
    ```
@@ -316,7 +322,7 @@ generateThemeFromColor(primaryColor) {
 - `/src/lib/services/theme/themeService.js`: Theme state management
 - `/src/lib/constants.js`: Theme definition constants
 - `/src/app.css`: Main CSS imports
-- `/src/app.html`: Early theme application 
+- `/src/app.html`: Early theme application
 - `/src/lib/components/mainPage/MainContainer.svelte`: Component importing SingleList
 
 ## Conclusion

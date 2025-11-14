@@ -14,18 +14,13 @@
     "prepare": "svelte-kit sync || echo ''",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
-    "lighthouse": "npm run build && lhci autorun",
-    "list": "node scripts/dev.js list",
-    "generate": "node scripts/dev.js generate",
-    "parse-prd": "node scripts/dev.js parse-prd"
+    "lighthouse": "npm run build && lhci autorun"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
     "@eslint/js": "^9.18.0",
     "@lhci/cli": "^0.14.0",
-    "@sveltejs/adapter-cloudflare": "7.2.4",
     "@sveltejs/adapter-netlify": "5.2.4",
-    "@sveltejs/adapter-vercel": "^5.5.2",
     "@sveltejs/kit": "^2.16.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tailwindcss/container-queries": "^0.1.1",
@@ -45,27 +40,9 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
     "@google/generative-ai": "^0.21.0",
     "@xenova/transformers": "2.17.2",
-    "boxen": "^8.0.1",
-    "chalk": "^4.1.2",
-    "cli-table3": "^0.6.5",
-    "commander": "^11.1.0",
-    "cors": "^2.8.5",
     "daisyui": "^4.12.23",
-    "dotenv": "^16.3.1",
-    "express": "^4.21.2",
-    "fastmcp": "^1.20.5",
-    "figlet": "^1.8.0",
-    "fuse.js": "^7.0.0",
-    "gradient-string": "^3.0.0",
-    "helmet": "^8.1.0",
-    "inquirer": "^12.5.0",
-    "jsonwebtoken": "^9.0.2",
-    "lru-cache": "^10.2.0",
-    "openai": "^4.89.0",
-    "ora": "^8.2.0",
     "posthog-js": "1.270.1"
   }
 }

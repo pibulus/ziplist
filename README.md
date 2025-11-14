@@ -34,7 +34,7 @@ Need Node.js 20+ and your terminal skills.
 git clone https://github.com/yourusername/ziplist.git
 cd ziplist
 
-# Install the goods  
+# Install the goods
 npm install
 
 # Fire it up
@@ -47,7 +47,7 @@ npm run build
 ## Dev Commands
 
 - `npm run dev` - Start the show
-- `npm run build` - Make it production-ready  
+- `npm run build` - Make it production-ready
 - `npm run preview` - Test your build
 - `npm run format` - Clean up the code (Prettier)
 - `npm run lint` - Catch the rough edges (ESLint)
@@ -57,7 +57,7 @@ npm run build
 
 ```
 /src
-├── lib/components/list/         # List card magic  
+├── lib/components/list/         # List card magic
 ├── lib/components/mainPage/     # Voice recording UI + modals
 ├── lib/services/lists/          # List brain logic
 ├── lib/services/transcription/  # Voice → text wizardry
@@ -69,7 +69,7 @@ npm run build
 ## Tech Stack
 
 - **SvelteKit** - Fast, modern, feels snappy
-- **Tailwind CSS + DaisyUI** - Pretty without the pain  
+- **Tailwind CSS + DaisyUI** - Pretty without the pain
 - **Web Speech API** - Browser-native voice recognition
 - **Local Storage** - Your lists stay yours, offline-first
 - **PWA Ready** - Full Progressive Web App with manifest and service worker
@@ -78,8 +78,9 @@ npm run build
 ## The Four Personalities
 
 Ziplist adapts its look and feel to match your mood:
+
 - **Warm sunset vibes** - Peachy, cozy energy
-- **Cool fresh energy** - Mint, clean focus  
+- **Cool fresh energy** - Mint, clean focus
 - **Playful pink pop** - Bubblegum fun
 - **Full spectrum joy** - Rainbow everything
 
@@ -96,6 +97,7 @@ Choose once, it remembers. Because good tools should feel like they know you.
 ## Chrome Extension
 
 Install the extension to use Ziplist's voice-to-text magic anywhere on the web:
+
 1. Download extension files (link in app)
 2. Unzip to a folder
 3. Open `chrome://extensions`

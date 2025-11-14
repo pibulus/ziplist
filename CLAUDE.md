@@ -2,7 +2,7 @@
 
 ## Build & Development
 
-- `npm run dev` - Start development server (runs on http://localhost:50002)
+- `npm run dev` - Start development server (runs on http://localhost:3001)
 - `npm run build` - Create production build
 - `npm run preview` - Preview production build
 - `npm run format` - Run Prettier formatter
@@ -11,6 +11,7 @@
 ## Project Overview
 
 ZipList is a minimal voice-to-list todo app. Core features:
+
 - Voice recording → Gemini API transcription → list items
 - Full CRUD operations (add, toggle, edit, delete items)
 - Local storage persistence
@@ -37,6 +38,7 @@ ZipList is a minimal voice-to-list todo app. Core features:
 ## Architecture
 
 ### Key Services
+
 - **geminiService.js**: Wrapper for audio transcription via Gemini API
 - **geminiApiService.js**: Low-level Gemini API calls (REQUIRED - do not delete)
 - **transcriptionService.js**: Manages transcription flow with progress animation
@@ -45,6 +47,7 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - **themeService.js**: Theme switching and persistence
 
 ### Component Structure
+
 - **MainContainer.svelte**: Top-level container, handles recording state
 - **GhostContainer.svelte**: SVG ghost character (linked to recording state)
 - **SingleList.svelte**: Individual list component with full CRUD
@@ -114,7 +117,7 @@ The Ziplist app uses subtle text animations for improved user experience:
 
 ## Ghost Component System
 
-The Ghost component is a central UI element in TalkType that uses an SVG-based approach with reactive theming.
+The Ghost component is a central UI element in ZipList that uses an SVG-based approach with reactive theming.
 
 For detailed documentation of the Ghost component, including its architecture, animation system, and theme implementation, refer to:
 

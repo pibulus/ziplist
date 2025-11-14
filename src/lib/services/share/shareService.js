@@ -12,12 +12,12 @@ export function encodeListForSharing(list) {
   // Strip unnecessary metadata and keep only essential data
   const essentialData = {
     name: list.name,
-    items: list.items.map(item => ({
+    items: list.items.map((item) => ({
       text: item.text,
-      checked: item.checked
-    }))
+      checked: item.checked,
+    })),
   };
-  
+
   // Compress and encode
   return btoa(JSON.stringify(essentialData));
 }
@@ -30,7 +30,7 @@ export function encodeListForSharing(list) {
 export function decodeSharedList(encodedData) {
   try {
     const listData = JSON.parse(atob(encodedData));
-    
+
     // Generate new IDs for the list and items
     const newList = {
       id: `list_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
@@ -40,12 +40,12 @@ export function decodeSharedList(encodedData) {
         text: item.text,
         checked: item.checked,
         completedAt: item.checked ? new Date().toISOString() : null,
-        order: index
+        order: index,
       })),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
-    
+
     return newList;
   } catch (e) {
     console.error("Failed to decode shared list", e);
@@ -74,9 +74,9 @@ export function extractListDataFromUrl(url) {
     // Parse the URL and extract the hash fragment
     const urlObj = new URL(url);
     const hashParams = new URLSearchParams(urlObj.hash.substring(1));
-    
+
     // Get the listdata parameter
-    return hashParams.get('listdata');
+    return hashParams.get("listdata");
   } catch (e) {
     console.error("Failed to extract list data from URL", e);
     return null;
@@ -92,7 +92,7 @@ export function extractListDataFromUrl(url) {
 export async function shareList(list, baseUrl = window.location.origin) {
   // Generate shareable URL
   const shareUrl = generateShareableUrl(list, baseUrl);
-  
+
   // Copy to clipboard
   try {
     await navigator.clipboard.writeText(shareUrl);

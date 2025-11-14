@@ -1,8 +1,8 @@
-export { 
-  pwaService, 
-  deferredInstallPrompt, 
-  transcriptionCount, 
-  showPwaInstallPrompt, 
+export {
+  pwaService,
+  deferredInstallPrompt,
+  transcriptionCount,
+  showPwaInstallPrompt,
   isPwaInstalled,
-  shouldShowPrompt
-} from './pwaService';
+  shouldShowPrompt,
+} from "./pwaService";

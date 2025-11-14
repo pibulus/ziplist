@@ -42,11 +42,11 @@ The `SingleList.svelte` component currently has several strengths and areas for 
 
 #### 1.1. Replace Hardcoded Colors
 
-| Current | Recommended Change |
-|---------|-------------------|
-| `#c978ff` (line 990) | `var(--zl-empty-title-color)` |
-| `#555` (line 999) | `var(--zl-text-color-secondary)` |
-| `#666` (line 1008) | `var(--zl-text-color-secondary)` |
+| Current                               | Recommended Change                   |
+| ------------------------------------- | ------------------------------------ |
+| `#c978ff` (line 990)                  | `var(--zl-empty-title-color)`        |
+| `#555` (line 999)                     | `var(--zl-text-color-secondary)`     |
+| `#666` (line 1008)                    | `var(--zl-text-color-secondary)`     |
 | `rgba(201, 120, 255, 0.3)` (line 923) | `var(--zl-empty-state-border-color)` |
 
 #### 1.2. Standardize Gradient Definitions
@@ -55,17 +55,28 @@ Replace hardcoded gradients with theme-based variables:
 
 ```css
 /* Current implementation */
-background: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(201, 120, 255, 0.2));
+background: linear-gradient(
+  145deg,
+  rgba(255, 255, 255, 0.6),
+  rgba(201, 120, 255, 0.2)
+);
 
 /* Recommended change */
-background: var(--zl-card-inner-border-gradient, linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(201, 120, 255, 0.2)));
+background: var(
+  --zl-card-inner-border-gradient,
+  linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(201, 120, 255, 0.2))
+);
 ```
 
 Add these new variables to `theme-variables.css` for each theme:
 
 ```css
 html[data-theme="focus"] {
-  --zl-card-inner-border-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 171, 119, 0.2));
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 171, 119, 0.2)
+  );
   /* ... other variables ... */
 }
 ```
@@ -81,11 +92,11 @@ Ensure all theme-specific styles use CSS variables with appropriate fallbacks:
   --zl-transition-duration-fast: 0.2s;
   --zl-transition-duration-normal: 0.3s;
   --zl-transition-duration-slow: 0.5s;
-  
+
   /* Transition easings */
   --zl-transition-easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --zl-transition-easing-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
-  
+
   /* Spacing units */
   --zl-spacing-xs: 0.5rem;
   --zl-spacing-s: 1rem;
@@ -103,13 +114,24 @@ Merge similar keyframes to reduce duplication:
 
 ```css
 /* Currently separate */
-@keyframes sparkle { /* ... */ }
-@keyframes sparkleIn { /* ... */ }
+@keyframes sparkle {
+  /* ... */
+}
+@keyframes sparkleIn {
+  /* ... */
+}
 
 /* Consolidate into one */
 @keyframes sparkle {
-  0%, 100% { opacity: var(--sparkle-opacity-start, 0); transform: translate(-50%, -50%) scale(var(--sparkle-scale-start, 0)); }
-  50% { opacity: var(--sparkle-opacity-mid, 1); transform: translate(-50%, -50%) scale(var(--sparkle-scale-mid, 1)); }
+  0%,
+  100% {
+    opacity: var(--sparkle-opacity-start, 0);
+    transform: translate(-50%, -50%) scale(var(--sparkle-scale-start, 0));
+  }
+  50% {
+    opacity: var(--sparkle-opacity-mid, 1);
+    transform: translate(-50%, -50%) scale(var(--sparkle-scale-mid, 1));
+  }
 }
 ```
 
@@ -132,9 +154,12 @@ Define a standard set of transitions and apply them consistently:
 ```css
 /* Define in :root */
 :root {
-  --zl-transition-standard: all var(--zl-transition-duration-normal) var(--zl-transition-easing-smooth);
-  --zl-transition-fast: all var(--zl-transition-duration-fast) var(--zl-transition-easing-smooth);
-  --zl-transition-bounce: all var(--zl-transition-duration-normal) var(--zl-transition-easing-bounce);
+  --zl-transition-standard: all var(--zl-transition-duration-normal)
+    var(--zl-transition-easing-smooth);
+  --zl-transition-fast: all var(--zl-transition-duration-fast)
+    var(--zl-transition-easing-smooth);
+  --zl-transition-bounce: all var(--zl-transition-duration-normal)
+    var(--zl-transition-easing-bounce);
 }
 
 /* Use consistently throughout the component */
@@ -194,26 +219,40 @@ Simplify and refine selectors for better performance:
 animation: shadow-pulse 2s infinite;
 
 @keyframes shadow-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(255, 120, 160, 0.25); }
-  50% { box-shadow: 0 0 20px rgba(255, 120, 160, 0.5); }
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 120, 160, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 120, 160, 0.5);
+  }
 }
 
 /* After */
 position: relative;
 
 &::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -10px;
-  background: radial-gradient(circle, rgba(255, 120, 160, 0.5), transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 120, 160, 0.5),
+    transparent 70%
+  );
   opacity: 0;
   z-index: -1;
   animation: opacity-pulse 2s infinite;
 }
 
 @keyframes opacity-pulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 ```
 
@@ -319,6 +358,7 @@ Below is the original phased implementation approach that was outlined for enhan
 ### Original Phase 1: Basic Visual Enhancements
 
 #### Card Component Improvements
+
 - [x] Update ListCard to fully utilize DaisyUI card structure
 - [x] Add `card-bordered` class with customized border thickness (more CHONKY)
 - [x] Integrate with existing theme system (use `themeService.getCurrentTheme()`)
@@ -328,6 +368,7 @@ Below is the original phased implementation approach that was outlined for enhan
 - [ ] Review spacing and layout for minimalist design
 
 #### List Item Styling
+
 - [x] Redesign list items with larger spacing between items
 - [x] Enhance checkbox component using DaisyUI styles (`checkbox-primary`, larger size)
 - [x] Add subtle hover effects for list items
@@ -335,6 +376,7 @@ Below is the original phased implementation approach that was outlined for enhan
 - [ ] Create a more satisfying completed item animation and transition
 
 #### Theme Integration
+
 - [ ] Ensure all color values reference the theme system
 - [ ] Test across all existing themes (focus, chill, zen, nocturne)
 - [ ] Add subtle shadow effects that complement the theme colors

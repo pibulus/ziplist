@@ -1,7 +1,7 @@
 // Minimal Ghost animation store
 // Handles shared state across components without over-engineering
 
-import { writable, derived, get } from 'svelte/store';
+import { writable, derived, get } from "svelte/store";
 
 // Core state for the ghost
 const createGhostStore = () => {
@@ -10,24 +10,24 @@ const createGhostStore = () => {
     isRecording: false,
     isProcessing: false,
     theme: {
-      current: 'peach', // 'peach', 'mint', 'bubblegum', 'rainbow'
-      bgPath: '/ziplist-icon-bg-gradient.svg'
-    }
+      current: "peach", // 'peach', 'mint', 'bubblegum', 'rainbow'
+      bgPath: "/ziplist-icon-bg-gradient.svg",
+    },
   });
 
   // Derived theme path updates automatically when theme changes
-  const themePath = derived(store, $store => {
+  const themePath = derived(store, ($store) => {
     const theme = $store.theme.current;
-    
+
     switch (theme) {
-      case 'mint':
-        return '/ziplist-icon-bg-gradient-mint.svg';
-      case 'bubblegum':
-        return '/ziplist-icon-bg-gradient-bubblegum.svg';
-      case 'rainbow':
-        return '/ziplist-icon-bg-gradient-rainbow.svg';
+      case "mint":
+        return "/ziplist-icon-bg-gradient-mint.svg";
+      case "bubblegum":
+        return "/ziplist-icon-bg-gradient-bubblegum.svg";
+      case "rainbow":
+        return "/ziplist-icon-bg-gradient-rainbow.svg";
       default: // Default to peach
-        return '/talktype-icon-bg-gradient.svg';
+        return "/ziplist-icon-bg-gradient.svg";
     }
   });
 
@@ -35,27 +35,27 @@ const createGhostStore = () => {
   return {
     subscribe: store.subscribe,
     themePath: themePath,
-    
+
     // Recording state
     setRecording: (value) => {
-      store.update(state => ({ ...state, isRecording: value }));
+      store.update((state) => ({ ...state, isRecording: value }));
     },
-    
+
     // Processing state
     setProcessing: (value) => {
-      store.update(state => ({ ...state, isProcessing: value }));
+      store.update((state) => ({ ...state, isProcessing: value }));
     },
-    
+
     // Theme handling
     setTheme: (theme) => {
-      store.update(state => ({ 
-        ...state, 
-        theme: { ...state.theme, current: theme }
+      store.update((state) => ({
+        ...state,
+        theme: { ...state.theme, current: theme },
       }));
     },
-    
+
     // Get current state without subscribing
-    getState: () => get(store)
+    getState: () => get(store),
   };
 };
 
@@ -63,6 +63,9 @@ const createGhostStore = () => {
 export const ghostStore = createGhostStore();
 
 // Convenience exports for easier component subscriptions
-export const isRecording = derived(ghostStore, $store => $store.isRecording);
-export const isProcessing = derived(ghostStore, $store => $store.isProcessing);
-export const theme = derived(ghostStore, $store => $store.theme.current);
+export const isRecording = derived(ghostStore, ($store) => $store.isRecording);
+export const isProcessing = derived(
+  ghostStore,
+  ($store) => $store.isProcessing,
+);
+export const theme = derived(ghostStore, ($store) => $store.theme.current);

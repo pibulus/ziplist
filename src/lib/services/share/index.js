@@ -8,5 +8,5 @@ export {
   decodeSharedList,
   generateShareableUrl,
   extractListDataFromUrl,
-  shareList
-} from './shareService.js';
+  shareList,
+} from "./shareService.js";

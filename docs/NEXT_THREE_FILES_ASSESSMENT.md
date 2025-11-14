@@ -1,4 +1,5 @@
 # ZipList Next Three Files Assessment
+
 **Date**: September 30, 2025
 **Files**: AudioToText.svelte, RecordButtonWithTimer.svelte, Ghost.svelte
 
@@ -13,6 +14,7 @@ These three files are **well-structured** but have minor comment bloat and some 
 ### Issues Found
 
 #### Excessive Section Header Comments (8 instances)
+
 - Line 19: `// Stores` - obvious from context
 - Line 30: `// Actions` - obvious from context
 - Line 37: `// Helper variable to check if we're in a browser environment` - could be simpler
@@ -23,6 +25,7 @@ These three files are **well-structured** but have minor comment bloat and some 
 - Line 56: `// Ghost component reference` - obvious from export
 
 #### Redundant Inline Comments
+
 - Line 23: `// Kept for display and general debug, but not for completion trigger` - overly verbose
 - Line 29: `// <-- Import the new event store` - arrow annotation is unnecessary
 - Line 49: `// For ARIA announcements` - obvious from variable name `screenReaderStatus`
@@ -39,6 +42,7 @@ These three files are **well-structured** but have minor comment bloat and some 
 - Line 117: `// Scroll to bottom when recording starts` - obvious from function name
 
 ### Severity
+
 🟡 **Minor** - Comment bloat, no functional issues
 
 ---
@@ -48,6 +52,7 @@ These three files are **well-structured** but have minor comment bloat and some 
 ### Issues Found
 
 #### Section Header Comments (6 instances)
+
 - Line 9: `// Props` - obvious
 - Line 18: `// Element refs` - obvious
 - Line 22: `// Visualization constants` - somewhat useful but could be cleaner
@@ -56,6 +61,7 @@ These three files are **well-structured** but have minor comment bloat and some 
 - Line 54: `// Audio visualization animation` - function name is self-documenting
 
 #### Redundant Inline Comments
+
 - Line 15: `// Will be set reactively` - obvious
 - Line 16: `// For transcription progress` - obvious from prop name
 - Line 26: `// Lower is more sensitive` - useful but could be in constant name
@@ -72,9 +78,11 @@ These three files are **well-structured** but have minor comment bloat and some 
 - Line 76: `// Continue animation` - obvious
 
 ### Minor Code Smell
+
 - Lines 26-29: Constants with inline comments - better to use descriptive names or JSDoc
 
 ### Severity
+
 🟡 **Minor** - Excessive comments, no functional issues
 
 ---
@@ -84,7 +92,9 @@ These three files are **well-structured** but have minor comment bloat and some 
 ### Issues Found
 
 #### "Removed" Comments (Archaeology)
-These document what *used* to be there - should be deleted:
+
+These document what _used_ to be there - should be deleted:
+
 - Line 7: `// Removed import for ghost-themes.css (styles injected dynamically)`
 - Line 22: `// Removed THEMES import (managed by themeStore)`
 - Line 43: `// export let animationState = ANIMATION_STATES.IDLE; // Prop removed`
@@ -93,6 +103,7 @@ These document what *used* to be there - should be deleted:
 - Line 82: `// Removed reactive variable for wobble group classes`
 
 #### Obvious Section Headers (7 instances)
+
 - Line 5: `// CSS imports` - obvious
 - Line 9: `// SVG paths` - obvious
 - Line 12: `// Configuration` - obvious
@@ -112,6 +123,7 @@ These document what *used* to be there - should be deleted:
 - Line 84: `// Event dispatcher` - obvious
 
 #### Inline Comments with Obvious Information
+
 - Line 31: `// Only forceReflow needed directly` - obvious from import
 - Line 38: `// Corrected path` - archaeology
 - Line 45: `// Animation debug mode - shows animation config` - obvious from name `debugAnim`
@@ -125,6 +137,7 @@ These document what *used* to be there - should be deleted:
 - Line 99: `// Update the theme store reference` - obvious
 
 ### Severity
+
 🟡 **Minor** - Excessive archaeology comments and obvious section headers
 
 ---
@@ -132,30 +145,38 @@ These document what *used* to be there - should be deleted:
 ## Recommended Fixes
 
 ### Priority 1: Remove "Removed" Comments (Ghost.svelte)
+
 These are code archaeology - delete all 6 instances. Version control handles history.
 
 ### Priority 2: Remove Obvious Section Headers
+
 **All 3 files**: Remove section comments like `// Props`, `// Element refs`, `// Stores`, etc.
 These add zero value and create visual noise.
 
 ### Priority 3: Remove Obvious Inline Comments
+
 **All 3 files**: Remove comments that just restate what the code does:
+
 - `// Export the isRecording store` next to `export const recording = isRecording;`
 - `// Calculate average level` before calculating average
 - `// Update wave bars` before updating wave bars
 
 ### Priority 4: Improve Constant Names (RecordButtonWithTimer.svelte)
+
 Instead of:
+
 ```javascript
 const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35; // Lower is more sensitive
 ```
 
 Consider:
+
 ```javascript
 const AUDIO_LEVEL_SENSITIVITY = 35; // Inverse sensitivity: lower = more sensitive
 ```
 
 Or use JSDoc:
+
 ```javascript
 /**
  * Audio level sensitivity factor (inverse: lower = more sensitive)
@@ -168,11 +189,11 @@ const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35;
 
 ## Code Quality Scores
 
-| File | Functionality | Clarity | Maintainability | Overall |
-|------|--------------|---------|-----------------|---------|
-| **AudioToText.svelte** | ✅ Excellent | 🟡 Good | 🟡 Good | **B+** |
-| **RecordButtonWithTimer.svelte** | ✅ Excellent | 🟡 Good | ✅ Excellent | **A-** |
-| **Ghost.svelte** | ✅ Excellent | 🟡 Good | 🟡 Good | **B+** |
+| File                             | Functionality | Clarity | Maintainability | Overall |
+| -------------------------------- | ------------- | ------- | --------------- | ------- |
+| **AudioToText.svelte**           | ✅ Excellent  | 🟡 Good | 🟡 Good         | **B+**  |
+| **RecordButtonWithTimer.svelte** | ✅ Excellent  | 🟡 Good | ✅ Excellent    | **A-**  |
+| **Ghost.svelte**                 | ✅ Excellent  | 🟡 Good | 🟡 Good         | **B+**  |
 
 **Overall**: All three files work perfectly, just need comment cleanup to reach A grade.
 
@@ -181,6 +202,7 @@ const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35;
 ## What NOT to Remove
 
 ### Keep These Comments (They Add Value):
+
 1. **Complex algorithm explanations** - e.g., smoothing factors math
 2. **Non-obvious behavior** - e.g., "prevent infinite loops" with state tracking
 3. **Public API documentation** - exported functions with JSDoc
@@ -188,6 +210,7 @@ const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35;
 5. **Accessibility notes** - ARIA implementation details
 
 ### Examples of Good Comments to Keep:
+
 ```javascript
 // Smooth the audio level using weighted average to prevent jittery animation
 pulseIntensity = pulseIntensity * 0.8 + targetIntensity * 0.2;

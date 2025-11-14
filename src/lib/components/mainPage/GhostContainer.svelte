@@ -15,20 +15,14 @@
 	let ghostComponent;
 
 	// Debug helper
-	function debug(message) {
-		// Uncomment the line below during development for verbose logging
-		// console.log(`[GhostContainer] ${message}`);
-	}
 
 	// Function to handle toggle recording action
 	function handleToggleRecording() {
-		debug('Toggle recording triggered by Ghost component');
 		dispatch('toggleRecording');
 	}
 
 	// Public method to trigger ghost click for parent
 	export function triggerGhostClick() {
-		debug('Triggering ghost click');
 		handleToggleRecording();
 	}
 

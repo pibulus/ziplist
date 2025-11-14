@@ -13,50 +13,61 @@
   --zl-secondary-color: #ffd4da;
   --zl-accent-color: #ff6ac2;
   --zl-highlight-color: #ffecf0;
-  
+
   /* Card gradient defaults */
   --zl-card-bg-gradient-animation-duration: 30s;
   --zl-card-bg-gradient-size: 300% 300%;
   --zl-card-border-radius: 32px;
   --zl-card-border-width: 4px;
-  --zl-card-inner-border-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(201, 120, 255, 0.2));
-  
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(201, 120, 255, 0.2)
+  );
+
   /* Text colors */
   --zl-text-color-primary: #444444;
   --zl-text-color-secondary: #666666;
   --zl-text-color-disabled: #9d9d9d;
-  
+
   /* Default item and component styling */
   --zl-item-border-radius: 20px;
   --zl-checkbox-size: 32px;
   --zl-checkbox-border-radius: 12px;
-  
+
   /* Empty state styling */
   --zl-empty-title-color: var(--zl-primary-color, #ffcc33);
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(255, 245, 250, 0.4), rgba(255, 235, 245, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(255, 245, 250, 0.4),
+    rgba(255, 235, 245, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(201, 120, 255, 0.3);
-  
+
   /* Animation durations */
   --zl-transition-duration-fast: 0.2s;
   --zl-transition-duration-normal: 0.3s;
   --zl-transition-duration-slow: 0.5s;
-  
+
   /* Transition easings */
   --zl-transition-easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --zl-transition-easing-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
-  
+
   /* Standard transitions */
-  --zl-transition-standard: all var(--zl-transition-duration-normal) var(--zl-transition-easing-smooth);
-  --zl-transition-fast: all var(--zl-transition-duration-fast) var(--zl-transition-easing-smooth);
-  --zl-transition-bounce: all var(--zl-transition-duration-normal) var(--zl-transition-easing-bounce);
-  
+  --zl-transition-standard: all var(--zl-transition-duration-normal)
+    var(--zl-transition-easing-smooth);
+  --zl-transition-fast: all var(--zl-transition-duration-fast)
+    var(--zl-transition-easing-smooth);
+  --zl-transition-bounce: all var(--zl-transition-duration-normal)
+    var(--zl-transition-easing-bounce);
+
   /* Spacing units */
   --zl-spacing-xs: 0.5rem;
   --zl-spacing-s: 1rem;
   --zl-spacing-m: 1.5rem;
   --zl-spacing-l: 2rem;
   --zl-spacing-xl: 2.5rem;
-  
+
   /* Animation parameters */
   --zl-sparkle-opacity-start: 0;
   --zl-sparkle-scale-start: 0;
@@ -73,34 +84,42 @@
 html[data-theme="focus"] {
   /* Card gradient - soft pastel tangerine sunrise with pink-yellow glow */
   --zl-card-bg-gradient-angle: 135deg;
-  --zl-card-bg-gradient-color-start: #FFF9F5;
-  --zl-card-bg-gradient-color-second: #FFE8DD;
-  --zl-card-bg-gradient-color-mid: #FFDBC5;
-  --zl-card-bg-gradient-color-fourth: #FFCAA9;
-  --zl-card-bg-gradient-color-end: #FFB88C;
+  --zl-card-bg-gradient-color-start: #fff9f5;
+  --zl-card-bg-gradient-color-second: #ffe8dd;
+  --zl-card-bg-gradient-color-mid: #ffdbc5;
+  --zl-card-bg-gradient-color-fourth: #ffcaa9;
+  --zl-card-bg-gradient-color-end: #ffb88c;
   --zl-card-border-color: rgba(255, 184, 140, 0.5);
   --zl-card-box-shadow: 0 12px 30px rgba(255, 171, 119, 0.2);
-  --zl-card-inner-border-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 171, 119, 0.2));
-  
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 171, 119, 0.2)
+  );
+
   /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(255, 248, 230, 0.4), rgba(255, 243, 215, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(255, 248, 230, 0.4),
+    rgba(255, 243, 215, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(255, 171, 119, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #FFAB77);
-  
+  --zl-empty-title-color: var(--zl-primary-color, #ffab77);
+
   /* Base theme colors derived from gradient */
-  --zl-primary-color: #FFAB77;
+  --zl-primary-color: #ffab77;
   --zl-primary-color-rgb: 255, 171, 119;
-  --zl-secondary-color: #FFCAA9;
-  --zl-accent-color: #FF8A5B;
+  --zl-secondary-color: #ffcaa9;
+  --zl-accent-color: #ff8a5b;
   --zl-accent-color-rgb: 255, 138, 91;
-  --zl-highlight-color: #FFF9F5;
-  --zl-text-hover-color: #FF8A5B;
-  
+  --zl-highlight-color: #fff9f5;
+  --zl-text-hover-color: #ff8a5b;
+
   /* Text colors - warm dark text for light background */
-  --zl-text-color-primary: #5B4B41;
-  --zl-text-color-secondary: #7D6B62;
-  --zl-text-color-disabled: #A89A94;
-  
+  --zl-text-color-primary: #5b4b41;
+  --zl-text-color-secondary: #7d6b62;
+  --zl-text-color-disabled: #a89a94;
+
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
   --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
@@ -108,12 +127,12 @@ html[data-theme="focus"] {
   --zl-item-border-hover-color: rgba(255, 204, 51, 0.7);
   --zl-item-box-shadow: 0 4px 10px rgba(255, 180, 0, 0.1);
   --zl-item-hover-box-shadow: 0 8px 20px rgba(255, 180, 0, 0.15);
-  
+
   /* Checked item styling */
   --zl-item-checked-opacity: 0.75;
   --zl-item-checked-bg: rgba(255, 248, 230, 0.4);
   --zl-item-checked-border-color: rgba(255, 204, 51, 0.25);
-  
+
   /* Drag and drop styling */
   --zl-item-dragging-border: 3px solid rgba(255, 204, 51, 0.7);
   --zl-item-dragging-bg: rgba(255, 255, 255, 1);
@@ -121,7 +140,7 @@ html[data-theme="focus"] {
   --zl-item-dragover-bg: rgba(255, 248, 230, 0.8);
   --zl-item-dragover-border: 2px solid rgba(255, 204, 51, 0.6);
   --zl-item-dragover-shadow: 0 8px 20px rgba(255, 180, 0, 0.2);
-  
+
   /* Checkbox styling */
   --zl-checkbox-border: 2px solid rgba(255, 204, 51, 0.5);
   --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
@@ -131,39 +150,47 @@ html[data-theme="focus"] {
   --zl-checkbox-checked-gradient-end: #ffcc33;
   --zl-checkbox-checked-shadow: 0 3px 8px rgba(255, 180, 0, 0.2);
   --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
-  
+
   /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(135deg, rgba(255, 248, 230, 0.7), rgba(255, 248, 230, 0.9));
+  --zl-text-button-hover-bg: linear-gradient(
+    135deg,
+    rgba(255, 248, 230, 0.7),
+    rgba(255, 248, 230, 0.9)
+  );
   --zl-text-button-focus-shadow: 0 3px 8px rgba(255, 180, 0, 0.2);
-  
+
   /* Grab handle styling */
   --zl-grab-handle-color: rgba(255, 204, 51, 0.7);
   --zl-grab-handle-opacity: 0.6;
   --zl-grab-handle-hover-opacity: 1;
-  
+
   /* Delete button styling */
   --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
   --zl-delete-button-border: 1px solid rgba(255, 204, 51, 0.4);
   --zl-delete-button-hover-bg: rgba(255, 248, 230, 0.95);
   --zl-delete-button-hover-border: rgba(255, 204, 51, 0.7);
   --zl-delete-button-text-color: rgba(255, 152, 0, 0.9);
-  
+
   /* Drop indicator styling */
   --zl-drop-indicator-color: rgba(255, 204, 51, 0.7);
   --zl-drop-arrow-bg: rgba(255, 204, 51, 0.9);
   --zl-drop-arrow-shadow: 0 0 8px rgba(255, 180, 0, 0.3);
-  
+
   /* Edit input styling */
   --zl-edit-input-border: 2px solid rgba(255, 204, 51, 0.3);
   --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
   --zl-edit-input-focus-border: rgba(255, 204, 51, 0.6);
   --zl-edit-input-focus-shadow: 0 0 0 3px rgba(255, 204, 51, 0.1);
-  
+
   /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(255, 248, 230, 0.4), rgba(255, 243, 215, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(255, 248, 230, 0.4),
+    rgba(255, 243, 215, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(255, 204, 51, 0.3);
   --zl-empty-title-color: var(--zl-primary-color, #ffcc33);
-  
+
   /* New item input styling */
   --zl-new-item-input-border: 2px solid rgba(255, 204, 51, 0.4);
   --zl-new-item-input-focus-border: rgba(255, 204, 51, 0.7);
@@ -179,29 +206,37 @@ html[data-theme="focus"] {
 html[data-theme="chill"] {
   /* Card gradient */
   --zl-card-bg-gradient-angle: 120deg;
-  --zl-card-bg-gradient-color-start: #E5F9F6;
-  --zl-card-bg-gradient-color-second: #D5F3F1;
-  --zl-card-bg-gradient-color-mid: #B7E5E5;
-  --zl-card-bg-gradient-color-fourth: #94D7DD;
-  --zl-card-bg-gradient-color-end: #71C9CE;
+  --zl-card-bg-gradient-color-start: #e5f9f6;
+  --zl-card-bg-gradient-color-second: #d5f3f1;
+  --zl-card-bg-gradient-color-mid: #b7e5e5;
+  --zl-card-bg-gradient-color-fourth: #94d7dd;
+  --zl-card-bg-gradient-color-end: #71c9ce;
   --zl-card-border-color: rgba(113, 201, 206, 0.6);
   --zl-card-box-shadow: 0 12px 30px rgba(38, 166, 192, 0.2);
-  --zl-card-inner-border-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(113, 201, 206, 0.2));
-  
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(113, 201, 206, 0.2)
+  );
+
   /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(240, 249, 255, 0.4), rgba(224, 247, 250, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(240, 249, 255, 0.4),
+    rgba(224, 247, 250, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(77, 208, 225, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #71C9CE);
-  
+  --zl-empty-title-color: var(--zl-primary-color, #71c9ce);
+
   /* Base theme colors derived from gradient */
-  --zl-primary-color: #71C9CE;
+  --zl-primary-color: #71c9ce;
   --zl-primary-color-rgb: 113, 201, 206;
-  --zl-secondary-color: #94D7DD;
-  --zl-accent-color: #4DA1A9;
+  --zl-secondary-color: #94d7dd;
+  --zl-accent-color: #4da1a9;
   --zl-accent-color-rgb: 77, 161, 169;
-  --zl-highlight-color: #E5F9F6;
-  --zl-text-hover-color: #4DA1A9;
-  
+  --zl-highlight-color: #e5f9f6;
+  --zl-text-hover-color: #4da1a9;
+
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
   --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
@@ -209,12 +244,12 @@ html[data-theme="chill"] {
   --zl-item-border-hover-color: rgba(77, 208, 225, 0.7);
   --zl-item-box-shadow: 0 4px 10px rgba(38, 166, 192, 0.1);
   --zl-item-hover-box-shadow: 0 8px 20px rgba(38, 166, 192, 0.15);
-  
+
   /* Checked item styling */
   --zl-item-checked-opacity: 0.75;
   --zl-item-checked-bg: rgba(240, 249, 255, 0.4);
   --zl-item-checked-border-color: rgba(77, 208, 225, 0.25);
-  
+
   /* Drag and drop styling */
   --zl-item-dragging-border: 3px solid rgba(77, 208, 225, 0.7);
   --zl-item-dragging-bg: rgba(255, 255, 255, 1);
@@ -222,7 +257,7 @@ html[data-theme="chill"] {
   --zl-item-dragover-bg: rgba(240, 249, 255, 0.8);
   --zl-item-dragover-border: 2px solid rgba(77, 208, 225, 0.6);
   --zl-item-dragover-shadow: 0 8px 20px rgba(38, 166, 192, 0.2);
-  
+
   /* Checkbox styling */
   --zl-checkbox-border: 2px solid rgba(77, 208, 225, 0.5);
   --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
@@ -232,39 +267,47 @@ html[data-theme="chill"] {
   --zl-checkbox-checked-gradient-end: #4dd0e1;
   --zl-checkbox-checked-shadow: 0 3px 8px rgba(38, 166, 192, 0.2);
   --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
-  
+
   /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(135deg, rgba(240, 249, 255, 0.7), rgba(240, 249, 255, 0.9));
+  --zl-text-button-hover-bg: linear-gradient(
+    135deg,
+    rgba(240, 249, 255, 0.7),
+    rgba(240, 249, 255, 0.9)
+  );
   --zl-text-button-focus-shadow: 0 3px 8px rgba(38, 166, 192, 0.2);
-  
+
   /* Grab handle styling */
   --zl-grab-handle-color: rgba(77, 208, 225, 0.7);
   --zl-grab-handle-opacity: 0.6;
   --zl-grab-handle-hover-opacity: 1;
-  
+
   /* Delete button styling */
   --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
   --zl-delete-button-border: 1px solid rgba(77, 208, 225, 0.4);
   --zl-delete-button-hover-bg: rgba(240, 249, 255, 0.95);
   --zl-delete-button-hover-border: rgba(77, 208, 225, 0.7);
   --zl-delete-button-text-color: rgba(38, 166, 192, 0.9);
-  
+
   /* Drop indicator styling */
   --zl-drop-indicator-color: rgba(77, 208, 225, 0.7);
   --zl-drop-arrow-bg: rgba(77, 208, 225, 0.9);
   --zl-drop-arrow-shadow: 0 0 8px rgba(38, 166, 192, 0.3);
-  
+
   /* Edit input styling */
   --zl-edit-input-border: 2px solid rgba(77, 208, 225, 0.3);
   --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
   --zl-edit-input-focus-border: rgba(77, 208, 225, 0.6);
   --zl-edit-input-focus-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
-  
+
   /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(240, 249, 255, 0.4), rgba(224, 247, 250, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(240, 249, 255, 0.4),
+    rgba(224, 247, 250, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(77, 208, 225, 0.3);
   --zl-empty-title-color: var(--zl-primary-color, #4dd0e1);
-  
+
   /* New item input styling */
   --zl-new-item-input-border: 2px solid rgba(77, 208, 225, 0.4);
   --zl-new-item-input-focus-border: rgba(77, 208, 225, 0.7);
@@ -280,34 +323,42 @@ html[data-theme="chill"] {
 html[data-theme="zen"] {
   /* Card gradient */
   --zl-card-bg-gradient-angle: 145deg;
-  --zl-card-bg-gradient-color-start: #F4EEFF;
-  --zl-card-bg-gradient-color-second: #E6DBFF;
-  --zl-card-bg-gradient-color-mid: #D0BFFF;
-  --zl-card-bg-gradient-color-fourth: #B197FC;
-  --zl-card-bg-gradient-color-end: #9775FA;
+  --zl-card-bg-gradient-color-start: #f4eeff;
+  --zl-card-bg-gradient-color-second: #e6dbff;
+  --zl-card-bg-gradient-color-mid: #d0bfff;
+  --zl-card-bg-gradient-color-fourth: #b197fc;
+  --zl-card-bg-gradient-color-end: #9775fa;
   --zl-card-border-color: rgba(151, 117, 250, 0.5);
   --zl-card-box-shadow: 0 12px 30px rgba(151, 117, 250, 0.2);
-  --zl-card-inner-border-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(151, 117, 250, 0.2));
-  
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(151, 117, 250, 0.2)
+  );
+
   /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(245, 245, 240, 0.4), rgba(232, 230, 223, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(245, 245, 240, 0.4),
+    rgba(232, 230, 223, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(151, 117, 250, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #9775FA);
-  
+  --zl-empty-title-color: var(--zl-primary-color, #9775fa);
+
   /* Base theme colors derived from gradient */
-  --zl-primary-color: #9775FA;
+  --zl-primary-color: #9775fa;
   --zl-primary-color-rgb: 151, 117, 250;
-  --zl-secondary-color: #B197FC;
-  --zl-accent-color: #845EF7;
+  --zl-secondary-color: #b197fc;
+  --zl-accent-color: #845ef7;
   --zl-accent-color-rgb: 132, 94, 247;
-  --zl-highlight-color: #F4EEFF;
-  --zl-text-hover-color: #845EF7;
-  
+  --zl-highlight-color: #f4eeff;
+  --zl-text-hover-color: #845ef7;
+
   /* Text colors */
-  --zl-text-color-primary: #382F66;
-  --zl-text-color-secondary: #5D5393;
-  --zl-text-color-disabled: #9A93C2;
-  
+  --zl-text-color-primary: #382f66;
+  --zl-text-color-secondary: #5d5393;
+  --zl-text-color-disabled: #9a93c2;
+
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
   --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
@@ -315,12 +366,12 @@ html[data-theme="zen"] {
   --zl-item-border-hover-color: rgba(169, 132, 103, 0.6);
   --zl-item-box-shadow: 0 4px 10px rgba(130, 100, 75, 0.1);
   --zl-item-hover-box-shadow: 0 8px 20px rgba(130, 100, 75, 0.15);
-  
+
   /* Checked item styling */
   --zl-item-checked-opacity: 0.75;
   --zl-item-checked-bg: rgba(245, 245, 240, 0.4);
   --zl-item-checked-border-color: rgba(169, 132, 103, 0.2);
-  
+
   /* Drag and drop styling */
   --zl-item-dragging-border: 3px solid rgba(169, 132, 103, 0.6);
   --zl-item-dragging-bg: rgba(255, 255, 255, 1);
@@ -328,7 +379,7 @@ html[data-theme="zen"] {
   --zl-item-dragover-bg: rgba(245, 245, 240, 0.8);
   --zl-item-dragover-border: 2px solid rgba(169, 132, 103, 0.5);
   --zl-item-dragover-shadow: 0 8px 20px rgba(130, 100, 75, 0.2);
-  
+
   /* Checkbox styling */
   --zl-checkbox-border: 2px solid rgba(169, 132, 103, 0.5);
   --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
@@ -338,39 +389,47 @@ html[data-theme="zen"] {
   --zl-checkbox-checked-gradient-end: #a98467;
   --zl-checkbox-checked-shadow: 0 3px 8px rgba(130, 100, 75, 0.2);
   --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
-  
+
   /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(135deg, rgba(245, 245, 240, 0.7), rgba(245, 245, 240, 0.9));
+  --zl-text-button-hover-bg: linear-gradient(
+    135deg,
+    rgba(245, 245, 240, 0.7),
+    rgba(245, 245, 240, 0.9)
+  );
   --zl-text-button-focus-shadow: 0 3px 8px rgba(130, 100, 75, 0.2);
-  
+
   /* Grab handle styling */
   --zl-grab-handle-color: rgba(169, 132, 103, 0.7);
   --zl-grab-handle-opacity: 0.6;
   --zl-grab-handle-hover-opacity: 1;
-  
+
   /* Delete button styling */
   --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
   --zl-delete-button-border: 1px solid rgba(169, 132, 103, 0.4);
   --zl-delete-button-hover-bg: rgba(245, 245, 240, 0.95);
   --zl-delete-button-hover-border: rgba(169, 132, 103, 0.7);
   --zl-delete-button-text-color: rgba(108, 124, 89, 0.9);
-  
+
   /* Drop indicator styling */
   --zl-drop-indicator-color: rgba(169, 132, 103, 0.7);
   --zl-drop-arrow-bg: rgba(169, 132, 103, 0.9);
   --zl-drop-arrow-shadow: 0 0 8px rgba(130, 100, 75, 0.3);
-  
+
   /* Edit input styling */
   --zl-edit-input-border: 2px solid rgba(169, 132, 103, 0.3);
   --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
   --zl-edit-input-focus-border: rgba(169, 132, 103, 0.6);
   --zl-edit-input-focus-shadow: 0 0 0 3px rgba(169, 132, 103, 0.1);
-  
+
   /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(245, 245, 240, 0.4), rgba(232, 230, 223, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(245, 245, 240, 0.4),
+    rgba(232, 230, 223, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(169, 132, 103, 0.3);
   --zl-empty-title-color: var(--zl-primary-color, #a98467);
-  
+
   /* New item input styling */
   --zl-new-item-input-border: 2px solid rgba(169, 132, 103, 0.4);
   --zl-new-item-input-focus-border: rgba(169, 132, 103, 0.7);
@@ -386,29 +445,37 @@ html[data-theme="zen"] {
 html[data-theme="nocturne"] {
   /* Card gradient - soft pastel moonlight with blue-green tones */
   --zl-card-bg-gradient-angle: 135deg;
-  --zl-card-bg-gradient-color-start: #8DB0C8;
-  --zl-card-bg-gradient-color-second: #98BDCF;
-  --zl-card-bg-gradient-color-mid: #7DA9AD;
-  --zl-card-bg-gradient-color-fourth: #68A3B3;
-  --zl-card-bg-gradient-color-end: #7B94C9;
+  --zl-card-bg-gradient-color-start: #8db0c8;
+  --zl-card-bg-gradient-color-second: #98bdcf;
+  --zl-card-bg-gradient-color-mid: #7da9ad;
+  --zl-card-bg-gradient-color-fourth: #68a3b3;
+  --zl-card-bg-gradient-color-end: #7b94c9;
   --zl-card-border-color: rgba(108, 164, 194, 0.5);
   --zl-card-box-shadow: 0 12px 30px rgba(132, 198, 187, 0.3);
-  --zl-card-inner-border-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(132, 198, 187, 0.2));
-  
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(132, 198, 187, 0.2)
+  );
+
   /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(235, 244, 250, 0.4), rgba(242, 240, 252, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(235, 244, 250, 0.4),
+    rgba(242, 240, 252, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(132, 198, 187, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #C487D2);
-  
+  --zl-empty-title-color: var(--zl-primary-color, #c487d2);
+
   /* Base theme colors derived from gradient */
-  --zl-primary-color: #C487D2;
+  --zl-primary-color: #c487d2;
   --zl-primary-color-rgb: 196, 135, 210;
-  --zl-secondary-color: #84C6BB;
-  --zl-accent-color: #6CA4C2;
+  --zl-secondary-color: #84c6bb;
+  --zl-accent-color: #6ca4c2;
   --zl-accent-color-rgb: 108, 164, 194;
-  --zl-highlight-color: #F8F8F2;
-  --zl-text-hover-color: #C487D2;
-  
+  --zl-highlight-color: #f8f8f2;
+  --zl-text-hover-color: #c487d2;
+
   /* List item styling - soothing muted colors */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
   --zl-item-hover-bg: rgba(240, 246, 255, 0.7);
@@ -416,17 +483,17 @@ html[data-theme="nocturne"] {
   --zl-item-border-hover-color: rgba(132, 198, 187, 0.7);
   --zl-item-box-shadow: 0 4px 10px rgba(123, 148, 201, 0.2);
   --zl-item-hover-box-shadow: 0 8px 20px rgba(123, 148, 201, 0.25);
-  
+
   /* Text colors - soft dark text on lighter background */
-  --zl-text-color-primary: #405B73;
-  --zl-text-color-secondary: #5A7A91;
-  --zl-text-color-disabled: #A1B5C5;
-  
+  --zl-text-color-primary: #405b73;
+  --zl-text-color-secondary: #5a7a91;
+  --zl-text-color-disabled: #a1b5c5;
+
   /* Checked item styling */
   --zl-item-checked-opacity: 0.75;
   --zl-item-checked-bg: rgba(235, 244, 250, 0.4);
   --zl-item-checked-border-color: rgba(132, 198, 187, 0.25);
-  
+
   /* Drag and drop styling */
   --zl-item-dragging-border: 3px solid rgba(196, 135, 210, 0.6);
   --zl-item-dragging-bg: rgba(255, 255, 255, 0.9);
@@ -434,49 +501,57 @@ html[data-theme="nocturne"] {
   --zl-item-dragover-bg: rgba(240, 246, 255, 0.8);
   --zl-item-dragover-border: 2px solid rgba(196, 135, 210, 0.5);
   --zl-item-dragover-shadow: 0 8px 20px rgba(196, 135, 210, 0.25);
-  
+
   /* Checkbox styling */
   --zl-checkbox-border: 2px solid rgba(132, 198, 187, 0.5);
   --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
   --zl-checkbox-hover-border: 2px solid rgba(196, 135, 210, 0.7);
   --zl-checkbox-hover-bg: rgba(242, 240, 252, 0.8);
-  --zl-checkbox-checked-gradient-start: #A6D0F8;
-  --zl-checkbox-checked-gradient-end: #84C6BB;
+  --zl-checkbox-checked-gradient-start: #a6d0f8;
+  --zl-checkbox-checked-gradient-end: #84c6bb;
   --zl-checkbox-checked-shadow: 0 3px 8px rgba(123, 148, 201, 0.3);
   --zl-checkbox-sparkle-color: rgba(196, 135, 210, 0.8);
-  
+
   /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(135deg, rgba(240, 246, 255, 0.7), rgba(235, 244, 250, 0.9));
+  --zl-text-button-hover-bg: linear-gradient(
+    135deg,
+    rgba(240, 246, 255, 0.7),
+    rgba(235, 244, 250, 0.9)
+  );
   --zl-text-button-focus-shadow: 0 3px 8px rgba(196, 135, 210, 0.25);
-  
+
   /* Grab handle styling */
   --zl-grab-handle-color: rgba(123, 148, 201, 0.7);
   --zl-grab-handle-opacity: 0.6;
   --zl-grab-handle-hover-opacity: 1;
-  
+
   /* Delete button styling */
   --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
   --zl-delete-button-border: 1px solid rgba(132, 198, 187, 0.4);
   --zl-delete-button-hover-bg: rgba(242, 240, 252, 0.95);
   --zl-delete-button-hover-border: rgba(196, 135, 210, 0.6);
   --zl-delete-button-text-color: rgba(123, 148, 201, 0.9);
-  
+
   /* Drop indicator styling */
   --zl-drop-indicator-color: rgba(196, 135, 210, 0.7);
   --zl-drop-arrow-bg: rgba(132, 198, 187, 0.8);
   --zl-drop-arrow-shadow: 0 0 8px rgba(123, 148, 201, 0.4);
-  
+
   /* Edit input styling */
   --zl-edit-input-border: 2px solid rgba(132, 198, 187, 0.4);
   --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
   --zl-edit-input-focus-border: rgba(196, 135, 210, 0.6);
   --zl-edit-input-focus-shadow: 0 0 0 3px rgba(196, 135, 210, 0.2);
-  
+
   /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(135deg, rgba(235, 244, 250, 0.4), rgba(242, 240, 252, 0.4));
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(235, 244, 250, 0.4),
+    rgba(242, 240, 252, 0.4)
+  );
   --zl-empty-state-border: 3px dashed rgba(132, 198, 187, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #C487D2);
-  
+  --zl-empty-title-color: var(--zl-primary-color, #c487d2);
+
   /* New item input styling */
   --zl-new-item-input-border: 2px solid rgba(196, 135, 210, 0.4);
   --zl-new-item-input-focus-border: rgba(196, 135, 210, 0.6);
@@ -484,10 +559,10 @@ html[data-theme="nocturne"] {
 }
 
 /* Optional: Add smooth transitions between themes */
-html[data-theme], 
+html[data-theme],
 html[data-theme] * {
-  transition: 
-    background-color 0.3s ease, 
-    border-color 0.3s ease, 
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
     box-shadow 0.3s ease;
 }

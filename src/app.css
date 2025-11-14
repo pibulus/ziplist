@@ -1,8 +1,8 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-@import './lib/styles/typography.css';
-@import './lib/styles/theme-variables.css';
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+@import "./lib/styles/typography.css";
+@import "./lib/styles/theme-variables.css";
 
 /* Remove outlines globally */
 *:focus {
@@ -16,7 +16,8 @@
 }
 
 /* Global scroll behavior improvement - more subtle */
-html, body {
+html,
+body {
   overscroll-behavior: none; /* Disable bounce/glow on over-scroll for the main page */
   -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
 }
@@ -37,7 +38,7 @@ html.modal-active {
   overflow: hidden !important;
   padding-right: 0 !important; /* Prevent layout shift */
   margin-right: 0 !important;
-  width: 100vw !important; 
+  width: 100vw !important;
   position: fixed !important;
 }
 
@@ -77,7 +78,7 @@ dialog.modal::backdrop {
   :root {
     --scrollbar-compensation: 0px;
   }
-  
+
   html.modal-active {
     padding-right: var(--scrollbar-compensation) !important;
   }
@@ -85,47 +86,47 @@ dialog.modal::backdrop {
 
 /* Custom classes for Lukens-style UI */
 .text-gradient {
-	fill: url(#gradient-fill);
+  fill: url(#gradient-fill);
 }
 
 @keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeUp {
-	from {
-		opacity: 0;
-		transform: translateY(15px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse-glow {
-	0% {
-		box-shadow: 0 0 5px rgba(255, 190, 60, 0.5);
-	}
-	50% {
-		box-shadow: 0 0 15px rgba(255, 190, 60, 0.8);
-	}
-	100% {
-		box-shadow: 0 0 5px rgba(255, 190, 60, 0.5);
-	}
+  0% {
+    box-shadow: 0 0 5px rgba(255, 190, 60, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 190, 60, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 190, 60, 0.5);
+  }
 }
 
 .animate-fadeIn {
-	animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
 .animate-fadeUp {
-	animation: fadeUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  animation: fadeUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }

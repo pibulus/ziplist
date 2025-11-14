@@ -1,20 +1,20 @@
-import { listsStore, activeList, activeListItems } from './listsStore';
-import { listParser } from '$lib/services/listParser';
-import { get } from 'svelte/store';
+import { listsStore, activeList, activeListItems } from "./listsStore";
+import { listParser } from "$lib/services/listParser";
+import { get } from "svelte/store";
 
 /**
  * Lists Service
- * 
+ *
  * Provides a high-level interface for interacting with lists
  * and processing voice commands to manipulate lists.
  */
 export class ListsService {
   constructor() {
     // Initialize the store
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Wait for next tick to ensure browser environment is fully ready
       setTimeout(() => {
-        console.log('Initializing lists store from listsService constructor');
+        console.log("Initializing lists store from listsService constructor");
         listsStore.initialize();
       }, 0);
     }
@@ -28,14 +28,14 @@ export class ListsService {
     if (!transcriptionResult) return;
 
     const { items, commands } = transcriptionResult;
-    
+
     // Process commands first
     if (commands && commands.length > 0) {
       for (const command of commands) {
         this._processCommand(command);
       }
     }
-    
+
     // Add any parsed items to the active list
     if (items && items.length > 0) {
       this._addItemsToActiveList(items);
@@ -49,28 +49,29 @@ export class ListsService {
    */
   _processCommand(command) {
     if (!command || !command.command) return;
-    
+
     switch (command.command) {
-      case 'CREATE_LIST':
+      case "CREATE_LIST":
         // Extract list name from parameters or use default
-        const listName = command.params && command.params.length > 0 
-          ? command.params[0] 
-          : 'New List';
+        const listName =
+          command.params && command.params.length > 0
+            ? command.params[0]
+            : "New List";
         this.createList(listName);
         break;
-        
-      case 'CLEAR_LIST':
+
+      case "CLEAR_LIST":
         this.clearActiveList();
         break;
-        
-      case 'REMOVE_LAST_ITEM':
+
+      case "REMOVE_LAST_ITEM":
         this.removeLastItem();
         break;
-        
-      case 'ADD_ITEM':
+
+      case "ADD_ITEM":
         // This is handled by the item processing directly
         break;
-        
+
       // Add future command handlers here
     }
   }
@@ -82,15 +83,15 @@ export class ListsService {
   getAllLists() {
     return get(listsStore).lists;
   }
-  
+
   /**
    * Create a new list
    * @param {string} name - Name for the new list
    */
-  createList(name = 'New List') {
+  createList(name = "New List") {
     listsStore.addList(name);
   }
-  
+
   /**
    * Add a predefined list (used for importing shared lists)
    * @param {Object} list - Complete list object to add
@@ -98,27 +99,27 @@ export class ListsService {
    */
   addList(list) {
     if (!list || !list.name) {
-      throw new Error('Invalid list object');
+      throw new Error("Invalid list object");
     }
-    
+
     // Create a new list with the properties from the shared list
     const name = list.name;
     listsStore.addList(name);
-    
+
     // Get the newly created list
     const state = get(listsStore);
     const newListId = state.activeListId;
-    
+
     // Add all the items
     if (list.items && list.items.length > 0) {
       // Format for adding multiple items
-      const itemTexts = list.items.map(item => item.text);
+      const itemTexts = list.items.map((item) => item.text);
       listsStore.addItems(itemTexts, newListId);
-      
+
       // Now toggle the checked items
       const updatedState = get(listsStore);
-      const updatedList = updatedState.lists.find(l => l.id === newListId);
-      
+      const updatedList = updatedState.lists.find((l) => l.id === newListId);
+
       if (updatedList) {
         list.items.forEach((sourceItem, index) => {
           if (sourceItem.checked && updatedList.items[index]) {
@@ -127,10 +128,10 @@ export class ListsService {
         });
       }
     }
-    
+
     return newListId;
   }
-  
+
   /**
    * Set a list as the active list
    * @param {string} listId - ID of the list to activate
@@ -138,7 +139,7 @@ export class ListsService {
   setActiveList(listId) {
     listsStore.setActiveList(listId);
   }
-  
+
   /**
    * Get the currently active list
    * @returns {Object|null} The active list object or null
@@ -146,7 +147,7 @@ export class ListsService {
   getActiveList() {
     return get(activeList);
   }
-  
+
   /**
    * Add multiple items to the active list
    * @param {Array<string>} items - Array of item text strings
@@ -155,7 +156,7 @@ export class ListsService {
   _addItemsToActiveList(items) {
     listsStore.addItems(items);
   }
-  
+
   /**
    * Add a single item to the active list
    * @param {string} text - Item text
@@ -164,7 +165,7 @@ export class ListsService {
     if (!text) return;
     listsStore.addItem(text);
   }
-  
+
   /**
    * Toggle the checked state of an item
    * @param {number|string} itemId - ID of the item to toggle
@@ -181,7 +182,7 @@ export class ListsService {
   editItem(itemId, newText) {
     listsStore.editItem(itemId, newText);
   }
-  
+
   /**
    * Remove an item from the active list
    * @param {number|string} itemId - ID of the item to remove
@@ -189,7 +190,7 @@ export class ListsService {
   removeItem(itemId) {
     listsStore.removeItem(itemId);
   }
-  
+
   /**
    * Remove the last item from the active list
    */
@@ -200,14 +201,14 @@ export class ListsService {
       listsStore.removeItem(lastItem.id);
     }
   }
-  
+
   /**
    * Clear all items from the active list
    */
   clearActiveList() {
     listsStore.clearList();
   }
-  
+
   /**
    * Delete a list by ID
    * @param {string} listId - ID of the list to delete
@@ -215,7 +216,7 @@ export class ListsService {
   deleteList(listId) {
     listsStore.deleteList(listId);
   }
-  
+
   /**
    * Rename the active list
    * @param {string} newName - New name for the list
@@ -223,7 +224,7 @@ export class ListsService {
   renameActiveList(newName) {
     listsStore.renameList(newName);
   }
-  
+
   /**
    * Reorder items in the active list
    * @param {Array} reorderedItems - Array of items in their new order
