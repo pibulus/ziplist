@@ -36,7 +36,9 @@ export interface Message {
     | "item_add"       // Add item
     | "item_update"    // Update item
     | "item_delete"    // Delete item
-    | "item_toggle";   // Toggle item checked state
+    | "item_toggle"    // Toggle item checked state
+    | "typing_start"   // User started typing/adding
+    | "typing_stop";   // User stopped typing
   data?: any;
   sender?: PresenceUser;
 }
@@ -132,6 +134,11 @@ export default class ListRoom implements Party.Server {
         const listData = await this.getListData();
         const updatedList = this.applyUpdate(listData, msg);
         await this.saveListData(updatedList);
+        break;
+
+      case 'typing_start':
+      case 'typing_stop':
+        // Just broadcast, no storage needed
         break;
     }
 

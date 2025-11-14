@@ -8,6 +8,7 @@
   import { flip } from 'svelte/animate';
   import * as liveListsService from '$lib/services/realtime/liveListsService';
   import { getPresenceStore } from '$lib/services/realtime/presenceStore';
+  import { getTypingStore } from '$lib/services/realtime/typingStore';
 
   // State variables
   let list = { name: '', items: [] };
@@ -21,6 +22,9 @@
   let isLive = false; // Track if this list is live
   let liveShareUrl = null; // Store the live share URL
   let presence = []; // Who's online
+  let typingUsers = []; // Who's typing
+  let recentlyEditedItems = new Set(); // Track items just edited by others
+  let typingTimeout = null; // Debounce typing broadcasts
   
   // Subscribe to the active list
   const unsubscribe = activeList.subscribe(activeListData => {
@@ -29,8 +33,9 @@
     }
   });
 
-  // Subscribe to presence for this list
+  // Subscribe to presence and typing for this list
   let presenceUnsubscribe = null;
+  let typingUnsubscribe = null;
 
   onMount(() => {
     // Initialize the lists store
@@ -42,10 +47,17 @@
       isLive = liveListsService.isLive(list.id);
       if (isLive) {
         liveShareUrl = liveListsService.getShareUrl(list.id);
+
         // Subscribe to presence
         const presenceStore = getPresenceStore(list.id);
         presenceUnsubscribe = presenceStore.subscribe(users => {
           presence = users;
+        });
+
+        // Subscribe to typing indicators
+        const typingStore = getTypingStore(list.id);
+        typingUnsubscribe = typingStore.subscribe(users => {
+          typingUsers = users;
         });
       }
     }
@@ -54,6 +66,8 @@
   onDestroy(() => {
     if (unsubscribe) unsubscribe();
     if (presenceUnsubscribe) presenceUnsubscribe();
+    if (typingUnsubscribe) typingUnsubscribe();
+    if (typingTimeout) clearTimeout(typingTimeout);
   });
   
   // Share list function (static share)
@@ -116,6 +130,12 @@
         presence = users;
       });
 
+      // Subscribe to typing indicators
+      const typingStore = getTypingStore(list.id);
+      typingUnsubscribe = typingStore.subscribe(users => {
+        typingUsers = users;
+      });
+
       // Track analytics
       postHogService.trackListShared(list.items.length, true);
     } catch (error) {
@@ -131,6 +151,28 @@
 
   // Sort items - active items first, completed items last
   $: sortedItems = [...activeItems, ...completedItems];
+
+  // Track previous item IDs to detect new items (from remote users)
+  let previousItemIds = new Set();
+  $: {
+    // Detect newly added items
+    const currentItemIds = new Set(list.items.map(item => item.id));
+    const newItemIds = [...currentItemIds].filter(id => !previousItemIds.has(id));
+
+    // Add glow effect to new items (only if we're in a live session)
+    if (isLive && newItemIds.length > 0 && previousItemIds.size > 0) {
+      newItemIds.forEach(id => {
+        recentlyEditedItems = recentlyEditedItems.add(id);
+        // Remove glow after 2 seconds
+        setTimeout(() => {
+          recentlyEditedItems.delete(id);
+          recentlyEditedItems = recentlyEditedItems; // Trigger reactivity
+        }, 2000);
+      });
+    }
+
+    previousItemIds = currentItemIds;
+  }
 
   // Format item text with first-letter capitalization of each word - with memoization
   const textCache = new Map();
@@ -375,11 +417,21 @@
       
       <!-- Share status notification -->
       {#if shareStatus}
-        <div 
-          class="zl-share-notification {shareStatus.success ? 'success' : 'error'}" 
+        <div
+          class="zl-share-notification {shareStatus.success ? 'success' : 'error'}"
           transition:fade={{duration: 200}}
         >
           {shareStatus.message}
+        </div>
+      {/if}
+
+      <!-- Typing indicator -->
+      {#if isLive && typingUsers.length > 0}
+        <div class="typing-indicator" in:fade={{ duration: 200 }}>
+          <span class="typing-avatar">{typingUsers[0].avatar}</span> is adding an item
+          <span class="typing-dots">
+            <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+          </span>
         </div>
       {/if}
     {/if}
@@ -393,6 +445,7 @@
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
+              class:just-edited={recentlyEditedItems.has(item.id)}
               draggable={!item.checked && editingItemId !== item.id}
               on:dragstart|passive={(e) => handleDragStart(e, item.id)}
               on:dragend|passive={handleDragEnd}
@@ -1650,5 +1703,81 @@
     background: linear-gradient(135deg, rgba(255, 240, 240, 1), rgba(255, 220, 220, 1));
     border: 1px solid rgba(200, 100, 100, 0.3);
     color: #7b2c2c;
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    background: linear-gradient(135deg, rgba(255, 235, 245, 1), rgba(255, 245, 250, 1));
+    border-radius: 16px;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: #9b59b6;
+    box-shadow: 0 3px 10px rgba(155, 89, 182, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .typing-avatar {
+    font-weight: 700;
+    color: #8e44ad;
+  }
+
+  .typing-dots {
+    display: inline-flex;
+    gap: 2px;
+    margin-left: 0.2rem;
+  }
+
+  .typing-dots .dot {
+    animation: typing-bounce 1.4s infinite ease-in-out;
+    opacity: 0.4;
+  }
+
+  .typing-dots .dot:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .typing-dots .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-dots .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes typing-bounce {
+    0%, 60%, 100% {
+      opacity: 0.4;
+      transform: translateY(0);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(-4px);
+    }
+  }
+
+  /* Item glow effect for remote edits */
+  .zl-item.just-edited {
+    animation: item-glow 2s ease-out;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 0 40px rgba(255, 107, 107, 0.3);
+  }
+
+  @keyframes item-glow {
+    0% {
+      box-shadow: 0 0 30px rgba(255, 107, 107, 0.8), 0 0 50px rgba(255, 107, 107, 0.5);
+      transform: scale(1.02);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 0 40px rgba(255, 107, 107, 0.3);
+    }
+    100% {
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      transform: scale(1);
+    }
   }
 </style>

@@ -14,6 +14,7 @@ import {
   generateShareUrl
 } from './partyService.js';
 import { getPresenceStore, cleanupPresenceStore } from './presenceStore.js';
+import { getTypingStore, cleanupTypingStore } from './typingStore.js';
 
 /**
  * Active PartySocket connections
@@ -71,8 +72,9 @@ export async function connectToLive(listId, roomId, password = null) {
     return;
   }
 
-  // Get presence store for this list
+  // Get presence and typing stores for this list
   const presenceStore = getPresenceStore(listId);
+  const typingStore = getTypingStore(listId);
 
   // Connect to PartyKit room
   const socket = connectToLiveList(
@@ -151,6 +153,18 @@ export async function connectToLive(listId, roomId, password = null) {
           case 'item_delete':
             listsStore.removeItem(message.data.id, listId);
             break;
+
+          case 'typing_start':
+            if (message.sender) {
+              typingStore.startTyping(message.sender);
+            }
+            break;
+
+          case 'typing_stop':
+            if (message.sender) {
+              typingStore.stopTyping(message.sender.id);
+            }
+            break;
         }
 
         listsStore.persistToStorage();
@@ -219,8 +233,9 @@ export function disconnectFromLive(listId) {
   // Disconnect from PartyKit
   disconnectFromLiveList(connection.socket);
 
-  // Clean up presence
+  // Clean up presence and typing
   cleanupPresenceStore(listId);
+  cleanupTypingStore(listId);
 
   // Clean up subscription
   if (connection.unsubscribe) {
@@ -231,6 +246,28 @@ export function disconnectFromLive(listId) {
   activeConnections.delete(listId);
 
   console.log('[LiveListsService] Disconnected from list', listId);
+}
+
+/**
+ * Broadcast typing start event
+ * @param {string} listId
+ */
+export function broadcastTypingStart(listId) {
+  const connection = activeConnections.get(listId);
+  if (!connection) return;
+
+  sendUpdate(connection.socket, 'typing_start', {});
+}
+
+/**
+ * Broadcast typing stop event
+ * @param {string} listId
+ */
+export function broadcastTypingStop(listId) {
+  const connection = activeConnections.get(listId);
+  if (!connection) return;
+
+  sendUpdate(connection.socket, 'typing_stop', {});
 }
 
 /**
