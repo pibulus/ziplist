@@ -27,16 +27,20 @@
 
     <div class="space-y-5 sm:space-y-6 md:space-y-7 animate-fadeIn">
       <h1 id="intro_modal_title" class="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-gray-900">
-        Ziplist's the best. <br> Organize the rest.
+        Even boring tasks <br> deserve a little magic
       </h1>
 
       <div class="space-y-3 sm:space-y-4">
         <p class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed">
-          Clean, sweet, and stupidly easy.
+          Tap the ghost, speak your thoughts — we turn your voice into organized lists.
         </p>
 
         <p class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed">
-          Tap the ghost to speak — we turn your voice into lists.
+          Making a grocery list? Planning your week? Just need to brain dump? We've got you.
+        </p>
+
+        <p class="text-sm sm:text-base md:text-lg font-medium text-pink-600 leading-relaxed">
+          And if you want? Share it. Watch your friend add milk while you're adding eggs. Little moments of connection in the mundane. ✨
         </p>
 
         <p class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed">
@@ -49,11 +53,11 @@
         class="w-full bg-gradient-to-r from-amber-100 to-amber-200 px-4 py-3 sm:px-5 sm:py-4 rounded-xl text-center text-sm sm:text-base md:text-lg text-gray-800 font-bold shadow-md border border-amber-300/50 hover:shadow-lg hover:bg-gradient-to-r hover:from-amber-200 hover:to-amber-300 hover:text-gray-900 active:scale-[0.98] transition-all duration-300 cursor-pointer relative"
         on:click={handleActionButton}
       >
-        Speak your list, we'll do the rest.
+        Speak your list, we'll handle the rest
       </button>
 
       <p class="text-center text-pink-600 font-bold text-base sm:text-lg md:text-xl py-2">
-        It's fast, it's fun, it's freaky good.
+        Clean, sweet, stupidly delightful.
       </p>
 
       <form method="dialog">

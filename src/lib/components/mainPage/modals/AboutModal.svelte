@@ -27,9 +27,13 @@
 
       <div class="bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 rounded-lg border border-pink-200/60 shadow-sm">
         <p class="text-sm leading-relaxed text-gray-700">
-          Ziplist is a minimalist voice-to-list tool that transforms your spoken thoughts into organized list cards.
-          Built with love by two friends who think tech should be <span class="text-pink-600 font-medium">simple</span>,
-          <span class="text-amber-600 font-medium">delightful</span>, and actually <span class="text-pink-600 font-medium">helpful</span>.
+          Ziplist does <span class="text-pink-600 font-bold">one thing</span>: todo lists. But we do it to the <span class="text-pink-600 font-bold">MAX</span>.
+        </p>
+        <p class="text-sm leading-relaxed text-gray-700 mt-2">
+          Minimalist maximalist. We took something boring — making lists — and made it
+          <span class="text-pink-600 font-medium">delightful</span>,
+          <span class="text-amber-600 font-medium">magical</span>, and way less
+          <span class="text-pink-600 font-medium">lonely</span>.
         </p>
       </div>
 
@@ -38,7 +42,7 @@
         <ul class="space-y-1.5 text-sm text-gray-600">
           <li class="flex items-start gap-2">
             <span class="text-pink-500 text-lg">⬩</span>
-            <span>We need a quick way to organize thoughts into lists</span>
+            <span>We needed a quick way to organize thoughts into lists</span>
           </li>
           <li class="flex items-start gap-2">
             <span class="text-pink-500 text-lg">⬩</span>
@@ -48,11 +52,15 @@
             <span class="text-pink-500 text-lg">⬩</span>
             <span>We wanted something beautiful that just works</span>
           </li>
+          <li class="flex items-start gap-2">
+            <span class="text-pink-500 text-lg">⬩</span>
+            <span>Even mundane tasks deserve to feel less lonely</span>
+          </li>
         </ul>
       </div>
 
       <div class="border-l-3 border-pink-300 py-1 pl-4 ml-1 my-2 italic text-gray-600">
-        "A little bit of soul, a hint of chaos, and a deep love for clarity."
+        "Making a grocery list with your roommate shouldn't feel like work. It should feel like you're co-piloting a spaceship to Trader Joe's."
       </div>
 
       <div class="flex justify-between items-end pt-2">
