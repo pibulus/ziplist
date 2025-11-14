@@ -1,11 +1,11 @@
 import { browser } from "$app/environment";
 import { StorageUtils } from "../infrastructure/storageUtils";
-import { STORAGE_KEYS } from "../../constants";
+import { STORAGE_KEYS, DEFAULT_THEME } from "../../constants";
 
 export class ThemeService {
   constructor() {
     this.storageKey = STORAGE_KEYS.THEME;
-    this.defaultTheme = "focus";
+    this.defaultTheme = DEFAULT_THEME;
     this.initialized = false;
   }
 
