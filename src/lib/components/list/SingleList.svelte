@@ -163,6 +163,16 @@
     if (isLive && newItemIds.length > 0 && previousItemIds.size > 0) {
       newItemIds.forEach(id => {
         recentlyEditedItems = recentlyEditedItems.add(id);
+
+        // Create particle burst at item location
+        tick().then(() => {
+          const itemElement = document.querySelector(`[data-item-id="${id}"]`);
+          if (itemElement) {
+            const rect = itemElement.getBoundingClientRect();
+            createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          }
+        });
+
         // Remove glow after 2 seconds
         setTimeout(() => {
           recentlyEditedItems.delete(id);
@@ -172,6 +182,34 @@
     }
 
     previousItemIds = currentItemIds;
+  }
+
+  /**
+   * Create a particle burst effect at the specified location
+   * @param {number} x - X coordinate (viewport relative)
+   * @param {number} y - Y coordinate (viewport relative)
+   */
+  function createParticleBurst(x, y) {
+    const container = document.querySelector('.zl-card');
+    if (!container) return;
+
+    const colors = ['#ff6b6b', '#ff8787', '#ffa5a5', '#ffc9c9'];
+    const particleCount = 8;
+
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${x}px`;
+      particle.style.top = `${y}px`;
+      particle.style.setProperty('--angle', `${(360 / particleCount) * i}deg`);
+      particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      particle.style.animationDelay = `${i * 30}ms`;
+
+      document.body.appendChild(particle);
+
+      // Remove particle after animation
+      setTimeout(() => particle.remove(), 800);
+    }
   }
 
   // Format item text with first-letter capitalization of each word - with memoization
@@ -330,8 +368,20 @@
     // Toggle the item state
     listsService.toggleItem(itemId);
 
-    // If checking the item (not unchecking), add sparkle animation
+    // If checking the item (not unchecking), add sparkle animation + particle burst
     if (!itemToToggle?.checked) {
+      // Particle burst at checkbox location
+      setTimeout(() => {
+        const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+        if (itemElement) {
+          const checkbox = itemElement.querySelector('.zl-checkbox-custom');
+          if (checkbox) {
+            const rect = checkbox.getBoundingClientRect();
+            createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          }
+        }
+      }, 50);
+
       // Add sparkle animation after a small delay
       setTimeout(() => {
         const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
@@ -442,6 +492,7 @@
         <ul class="zl-list" role="list" in:fade={{ duration: 200 }}>
           {#each sortedItems as item, index (item.id)}
             <li
+              data-item-id={item.id}
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
@@ -1778,6 +1829,32 @@
     100% {
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
       transform: scale(1);
+    }
+  }
+
+  /* Particle burst effect */
+  :global(.particle) {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: particle-burst 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  @keyframes particle-burst {
+    0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(
+        calc(cos(var(--angle)) * 60px),
+        calc(sin(var(--angle)) * 60px)
+      ) scale(0);
+      opacity: 0;
     }
   }
 </style>
