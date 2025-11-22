@@ -1,550 +1,391 @@
 /**
- * WhisperService - Client-side speech transcription using @xenova/transformers
- * Manages offline transcription for ZipList
+ * WhisperService - Simple offline speech transcription using @xenova/transformers
+ * Uses tiny model only - auto-downloads on first visit, falls back to Gemini if needed
  */
 
-import { get, writable } from "svelte/store";
-import { userPreferences } from "../../infrastructure/stores";
-import { pipeline, env } from "@xenova/transformers";
-import {
-  convertToWAV as convertToRawAudio,
-  needsConversion,
-} from "./audioConverter";
-import { getModelInfo } from "./modelRegistry";
+import { writable } from 'svelte/store';
+import { pipeline, env } from '@xenova/transformers';
 
-// Configure Transformers.js environment IMMEDIATELY for optimal performance
-env.allowRemoteModels = true;
-// Enable browser cache for models (this is the key setting!)
-env.useBrowserCache = true;
-// Use IndexedDB for persistent model storage across sessions
-env.useIndexedDB = true;
-// Don't check for local models - always use CDN (prevents 404 errors)
-env.allowLocalModels = false;
-// Don't set cacheDir - let it use default browser storage
+// ============================================================================
+// STEP 1: Configure Transformers.js Environment
+// ============================================================================
 
-// Check for WebGPU support (10-100x faster!)
-const checkWebGPUSupport = async () => {
-  if (typeof navigator !== "undefined" && "gpu" in navigator) {
-    try {
-      const adapter = await navigator.gpu.requestAdapter();
-      if (adapter) {
-        // Check for sufficient limits for transcription
-        const requiredFeatures = [];
-        const device = await adapter.requestDevice({
-          requiredFeatures,
-        });
+// Configure for maximum stability and offline capability
+env.allowRemoteModels = true;      // Allow CDN downloads
+env.useBrowserCache = true;        // Enable browser cache
+env.useIndexedDB = true;           // Persist models in IndexedDB
 
-        // Verify we can create compute pipelines
-        if (device && device.createComputePipeline) {
-          console.log(
-            "🚀 WebGPU fully functional! Transcription will be 10-100x faster",
-          );
-          device.destroy(); // Clean up test device
-          return true;
-        }
-      }
-    } catch (e) {
-      console.log("WebGPU check failed:", e.message);
-    }
-  }
-  console.log("WebGPU not available, using optimized WASM");
-  return false;
+// WASM backend configuration
+if (env.backends?.onnx?.wasm) {
+  const hwThreads = navigator.hardwareConcurrency || 2;
+  env.backends.onnx.wasm.numThreads = Math.min(4, hwThreads);
+  env.backends.onnx.wasm.simd = true;  // Enable SIMD for speed
+}
+
+// Disable WebGPU for now (experimental, can cause issues)
+if (env.backends?.onnx?.webgpu) {
+  env.backends.onnx.webgpu = undefined;
+}
+
+// ============================================================================
+// STEP 2: Tiny Model Configuration (Only Model We Use)
+// ============================================================================
+
+const WHISPER_TINY_MODEL = {
+  id: 'Xenova/whisper-tiny.en',
+  name: 'Whisper Tiny English',
+  size: 117 * 1024 * 1024,  // ~117MB
+  description: 'Fast, lightweight, perfect for list transcription'
 };
 
-// Service status store
+const SAMPLE_RATE = 16000;
+
+// ============================================================================
+// STEP 3: Audio Conversion Pipeline
+// ============================================================================
+
+async function convertAudioForWhisper(audioBlob) {
+  // Create AudioContext at 16kHz (Whisper requirement)
+  const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
+
+  try {
+    // Decode blob to AudioBuffer
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    // Convert to mono Float32Array
+    const monoAudio = convertToMono(audioBuffer);
+
+    // Trim silence from edges
+    const trimmed = trimSilence(monoAudio, SAMPLE_RATE);
+
+    // Normalize to optimal level
+    const normalized = normalizeAudio(trimmed);
+
+    return normalized;
+  } finally {
+    await audioContext.close();
+  }
+}
+
+function convertToMono(audioBuffer) {
+  const numChannels = audioBuffer.numberOfChannels;
+
+  if (numChannels === 1) {
+    return audioBuffer.getChannelData(0);
+  }
+
+  // Average all channels
+  const length = audioBuffer.length;
+  const monoData = new Float32Array(length);
+
+  for (let i = 0; i < length; i++) {
+    let sum = 0;
+    for (let channel = 0; channel < numChannels; channel++) {
+      sum += audioBuffer.getChannelData(channel)[i];
+    }
+    monoData[i] = sum / numChannels;
+  }
+
+  return monoData;
+}
+
+function trimSilence(audioData, sampleRate) {
+  const silenceThreshold = 0.01;  // Amplitude threshold
+  const padding = Math.floor(sampleRate * 0.02);  // 20ms padding
+
+  // Find first non-silent sample
+  let start = 0;
+  for (let i = 0; i < audioData.length; i++) {
+    if (Math.abs(audioData[i]) > silenceThreshold) {
+      start = Math.max(0, i - padding);
+      break;
+    }
+  }
+
+  // Find last non-silent sample
+  let end = audioData.length - 1;
+  for (let i = audioData.length - 1; i >= start; i--) {
+    if (Math.abs(audioData[i]) > silenceThreshold) {
+      end = Math.min(audioData.length - 1, i + padding);
+      break;
+    }
+  }
+
+  // Extract trimmed region
+  const trimmedLength = end - start + 1;
+  const trimmed = new Float32Array(trimmedLength);
+  for (let i = 0; i < trimmedLength; i++) {
+    trimmed[i] = audioData[start + i];
+  }
+
+  return trimmed;
+}
+
+function normalizeAudio(audioData) {
+  // Find peak amplitude
+  let maxAmplitude = 0;
+  for (let i = 0; i < audioData.length; i++) {
+    const amplitude = Math.abs(audioData[i]);
+    if (amplitude > maxAmplitude) {
+      maxAmplitude = amplitude;
+    }
+  }
+
+  // Skip normalization if too quiet
+  if (maxAmplitude < 0.001) {
+    return audioData;
+  }
+
+  // Normalize to 70% of full scale (prevents clipping)
+  const targetLevel = 0.7;
+  const factor = targetLevel / maxAmplitude;
+
+  const normalized = new Float32Array(audioData.length);
+  for (let i = 0; i < audioData.length; i++) {
+    normalized[i] = audioData[i] * factor;
+  }
+
+  return normalized;
+}
+
+// ============================================================================
+// STEP 4: WhisperTranscriber Class
+// ============================================================================
+
+class WhisperTranscriber {
+  constructor() {
+    this.transcriber = null;
+    this.isLoaded = false;
+    this.isLoading = false;
+  }
+
+  async loadModel(onProgress = null) {
+    if (this.transcriber) return this.transcriber;
+    if (this.isLoading) return null;
+
+    this.isLoading = true;
+
+    try {
+      console.log(`🎯 Loading ${WHISPER_TINY_MODEL.name} (${Math.round(WHISPER_TINY_MODEL.size / 1024 / 1024)}MB)...`);
+
+      // Create pipeline with progress tracking
+      this.transcriber = await pipeline(
+        'automatic-speech-recognition',
+        WHISPER_TINY_MODEL.id,
+        {
+          device: 'wasm',           // Force WASM backend
+          dtype: 'q8',              // 8-bit quantization (smaller, faster)
+          progress_callback: (progress) => {
+            if (progress.status === 'downloading') {
+              const percent = Math.round((progress.loaded / progress.total) * 100);
+              console.log(`📥 Downloading: ${percent}%`);
+              onProgress?.(percent);
+            }
+          }
+        }
+      );
+
+      // Warmup: Run silent audio to JIT-compile WASM kernels
+      await this.warmup();
+
+      this.isLoaded = true;
+      this.isLoading = false;
+
+      console.log(`✅ ${WHISPER_TINY_MODEL.name} loaded and ready`);
+      return this.transcriber;
+
+    } catch (error) {
+      this.isLoading = false;
+      console.error('Failed to load model:', error);
+      throw error;
+    }
+  }
+
+  async warmup() {
+    if (!this.transcriber) return;
+
+    // Create 0.25s of silence
+    const warmupSamples = Math.floor(SAMPLE_RATE * 0.25);
+    const silence = new Float32Array(warmupSamples);
+
+    try {
+      // Run inference to warm up WASM kernels
+      await this.transcriber(silence, {
+        task: 'transcribe',
+        return_timestamps: false,
+        temperature: 0,
+        do_sample: false
+      });
+      console.log('🔥 Model warmed up');
+    } catch (error) {
+      console.warn('Warmup failed (continuing):', error?.message);
+    }
+  }
+
+  async transcribe(audioBlob) {
+    // Ensure model is loaded
+    if (!this.isLoaded) {
+      await this.loadModel();
+    }
+
+    // Convert audio to proper format
+    const audioData = await convertAudioForWhisper(audioBlob);
+
+    // Validate audio has content
+    const hasSignal = audioData.some(sample => Math.abs(sample) > 0.001);
+    if (!hasSignal) {
+      throw new Error('No speech detected in audio');
+    }
+
+    console.log(`🎤 Transcribing ${audioData.length} samples...`);
+
+    // Run inference
+    const result = await this.transcriber(audioData, {
+      task: 'transcribe',          // 'transcribe' or 'translate'
+      return_timestamps: false,     // Set true for word-level timing
+      temperature: 0,               // Deterministic output
+      do_sample: false              // Greedy decoding (fastest)
+    });
+
+    // Extract text
+    const text = (typeof result === 'string' ? result : result?.text || '').trim();
+
+    if (!text) {
+      throw new Error('Whisper returned empty text');
+    }
+
+    // Clean repetitions (Whisper artifact)
+    const cleaned = this.cleanRepetitions(text);
+    console.log(`✨ Transcribed: "${cleaned}"`);
+    
+    return cleaned;
+  }
+
+  cleanRepetitions(text) {
+    // Remove stuttering repetitions like "the the the"
+    return text.replace(/(\b.+?\b)(\s+\1)+/gi, '$1').trim();
+  }
+
+  async unload() {
+    if (this.transcriber?.dispose) {
+      await this.transcriber.dispose();
+    }
+    this.transcriber = null;
+    this.isLoaded = false;
+    this.isLoading = false;
+  }
+}
+
+// ============================================================================
+// STEP 5: Persistent Storage
+// ============================================================================
+
+async function requestPersistentStorage() {
+  if (!navigator.storage?.persist) return false;
+
+  try {
+    const isPersisted = await navigator.storage.persisted();
+    if (!isPersisted) {
+      const granted = await navigator.storage.persist();
+      console.log('💾 Persistent storage:', granted ? 'granted' : 'denied');
+      return granted;
+    }
+    return true;
+  } catch (error) {
+    console.warn('Persistent storage failed:', error);
+    return false;
+  }
+}
+
+// ============================================================================
+// Service Instance & Store
+// ============================================================================
+
+// Service status store for reactive UI
 export const whisperStatus = writable({
   isLoaded: false,
   isLoading: false,
   progress: 0,
   error: null,
-  selectedModel: "tiny",
-  supportsWhisper: true,
+  supportsWhisper: typeof window !== 'undefined'
 });
 
-/**
- * WhisperService class for offline transcription
- */
-export class WhisperService {
+class WhisperService {
   constructor() {
-    this.transcriber = null;
+    this.transcriber = new WhisperTranscriber();
     this.modelLoadPromise = null;
-    this.isSupported = typeof window !== "undefined";
-
-    // Initialize status
-    this.updateStatus({
-      supportsWhisper: this.isSupported,
-    });
-  }
-
-  /**
-   * Update the status store with new values
-   */
-  updateStatus(updates) {
-    whisperStatus.update((current) => ({ ...current, ...updates }));
-  }
-
-  /**
-   * Preload the Whisper model
-   */
-  async preloadModel() {
-    // Don't reload if already loaded
-    if (this.transcriber) {
-      return { success: true, transcriber: this.transcriber };
+    
+    // Auto-start download on initialization (browser only)
+    if (typeof window !== 'undefined') {
+      // Request persistent storage
+      requestPersistentStorage();
+      
+      // Start downloading tiny model in background immediately
+      console.log('🚀 ZipList: Auto-starting Whisper Tiny model download...');
+      this.preloadModel();
     }
+  }
 
+  async preloadModel() {
     // Return existing promise if already loading
     if (this.modelLoadPromise) {
       return this.modelLoadPromise;
     }
 
-    // Check if running in browser environment
-    if (!this.isSupported) {
-      this.updateStatus({
-        error: "Transformers.js is not supported in this environment",
-        isLoading: false,
-      });
-      return { success: false, error: "Environment not supported" };
+    // Already loaded
+    if (this.transcriber.isLoaded) {
+      return { success: true };
     }
 
-    // Start the loading process
-    this.updateStatus({
-      isLoading: true,
-      progress: 0,
-      error: null,
-    });
+    whisperStatus.update(s => ({ ...s, isLoading: true, progress: 0, error: null }));
 
-    // Log model loading start
-    console.log("[WhisperService] Starting model load...");
+    this.modelLoadPromise = this.transcriber.loadModel((progress) => {
+      whisperStatus.update(s => ({ ...s, progress }));
+    })
+      .then(() => {
+        whisperStatus.update(s => ({ 
+          ...s, 
+          isLoaded: true, 
+          isLoading: false, 
+          progress: 100
+        }));
+        return { success: true };
+      })
+      .catch((error) => {
+        whisperStatus.update(s => ({ 
+          ...s, 
+          isLoading: false, 
+          error: error.message 
+        }));
+        this.modelLoadPromise = null;
+        return { success: false, error };
+      });
 
-    this.modelLoadPromise = this._loadModel();
     return this.modelLoadPromise;
   }
 
-  /**
-   * Internal method to load the model
-   */
-  async _loadModel() {
-    try {
-      // Check if running in browser environment
-      if (typeof window === "undefined") {
-        throw new Error(
-          "Whisper transcription only available in browser environment",
-        );
-      }
-
-      // Get selected model from preferences or default to tiny
-      const prefs = get(userPreferences);
-      const modelKey = prefs.whisperModel || "tiny";
-      const modelConfig = getModelInfo(modelKey);
-
-      if (!modelConfig) {
-        throw new Error(`Unknown model: ${modelKey}`);
-      }
-
-      this.updateStatus({
-        selectedModel: modelKey,
-        progress: 10,
-      });
-
-      console.log(
-        `🎯 Loading Whisper model: ${modelKey} (${modelConfig.name})`,
-      );
-
-      // Skip ONNX configuration - let Transformers.js handle it
-      // The ONNX runtime will be configured automatically by the library
-
-      // Temporarily suppress console.warn during model loading
-      const originalWarn = console.warn;
-      console.warn = () => {}; // Suppress warnings
-
-      // Track download start time for logging
-      const downloadStartTime = Date.now();
-
-      try {
-        // Transformers.js is already loaded at module level
-
-        // Check for WebGPU support (but avoid on iOS due to memory issues)
-        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const hasWebGPU = !isIOS && (await checkWebGPUSupport());
-
-        // Configure pipeline options based on device capabilities
-        const pipelineOptions = {
-          // Use WebGPU if available (10-100x faster!)
-          device: hasWebGPU ? "webgpu" : "wasm",
-
-          // Optimal dtype settings for WebGPU (based on research)
-          dtype: hasWebGPU
-            ? {
-                encoder_model: "fp32", // Encoder is sensitive, use fp32
-                decoder_model_merged: "q4", // Decoder can be quantized for speed
-              }
-            : "q8", // WASM default
-
-          // Configure model options to minimize warnings
-          onnx: {
-            logSeverityLevel: 4, // 0=Verbose, 1=Info, 2=Warning, 3=Error, 4=Fatal
-            logVerbosityLevel: 0,
-            enableCpuMemArena: false,
-            enableMemPattern: false,
-            executionMode: "sequential",
-            graphOptimizationLevel: hasWebGPU ? "all" : "basic",
-          },
-          progress_callback: (progress) => {
-            // Simple console logging instead of complex progress tracking
-            if (progress.status === "downloading") {
-              const percent = Math.round(
-                (progress.loaded / progress.total) * 100,
-              );
-              console.log(`[WhisperService] Downloading model: ${percent}%`);
-              this.updateStatus({ progress: percent });
-            } else if (progress.status === "loading") {
-              console.log("[WhisperService] Loading model into memory...");
-              this.updateStatus({ progress: 90 });
-            } else if (progress.status === "ready") {
-              console.log("[WhisperService] Model ready!");
-              this.updateStatus({ progress: 95 });
-            }
-          },
-        };
-
-        // Create transcription pipeline with optimized settings
-        this.transcriber = await pipeline(
-          "automatic-speech-recognition",
-          modelConfig.id,
-          pipelineOptions,
-        );
-      } finally {
-        // Restore console.warn
-        console.warn = originalWarn;
-      }
-
-      // Calculate total load time
-      const loadTimeSeconds = ((Date.now() - downloadStartTime) / 1000).toFixed(
-        1,
-      );
-
-      // Model is loaded
-      this.updateStatus({
-        isLoaded: true,
-        isLoading: false,
-        progress: 100,
-        error: null,
-      });
-
-      console.log(
-        `✨ Whisper model loaded successfully in ${loadTimeSeconds}s`,
-      );
-      return { success: true, transcriber: this.transcriber };
-    } catch (error) {
-      console.error("Failed to load Whisper model:", error);
-
-      this.updateStatus({
-        isLoaded: false,
-        isLoading: false,
-        progress: 0,
-        error: error.message || "Failed to load Whisper model",
-      });
-
-      this.modelLoadPromise = null;
-      return { success: false, error };
-    }
-  }
-
-  /**
-   * Transcribe audio using the loaded model
-   */
   async transcribeAudio(audioBlob) {
     try {
-      // Ensure model is loaded
-      if (!this.transcriber) {
-        const { success, error } = await this.preloadModel();
-        if (!success) {
-          throw error || new Error("Failed to load model");
-        }
-      }
-
-      // Check if audio blob has content
-      if (audioBlob.size === 0) {
-        throw new Error("Audio blob is empty - no audio recorded");
-      }
-
-      // Convert audio to Float32Array if needed for Whisper compatibility
-      let processedAudio = audioBlob;
-      if (needsConversion(audioBlob.type)) {
-        this.updateStatus({ isLoading: true, progress: 10 });
-
-        try {
-          processedAudio = await convertToRawAudio(audioBlob);
-        } catch (conversionError) {
-          console.warn(
-            "Audio conversion failed, using original format:",
-            conversionError.message,
-          );
-          processedAudio = audioBlob;
-        }
-      }
-
-      // Perform transcription
-      this.updateStatus({ isLoading: true, progress: 20 });
-
-      // Calculate audio duration based on actual processed audio data
-      let audioDuration;
-      if (processedAudio instanceof Float32Array) {
-        // Audio is now resampled to 16kHz by AudioContext
-        audioDuration = processedAudio.length / 16000;
-      } else {
-        // For Blob, estimate from size
-        audioDuration = processedAudio.size / (16000 * 2);
-      }
-
-      // Get current model info for language detection
-      const prefs = get(userPreferences);
-      const modelKey = prefs.whisperModel || "tiny";
-      const modelConfig = getModelInfo(modelKey);
-
-      // Configure transcription options for optimal speed/quality balance
-      const transcriptionOptions = {
-        // Use stable generation settings
-        temperature: 0,
-        do_sample: false,
-        return_timestamps: true,
-
-        // Speed optimizations with minimal accuracy loss
-        beam_size: 1, // Greedy search is 2-3x faster than beam search
-        patience: 1.0, // Standard patience for early stopping
-        length_penalty: 1.0, // No length penalty for natural output
-
-        // Language optimization (skip detection for English models)
-        language: modelConfig.id.includes(".en") ? "en" : null,
-        task: "transcribe", // Faster than 'translate'
-      };
-
-      // Smart chunking based on audio duration and device memory
-      const deviceMemory = navigator.deviceMemory || 4; // GB of RAM
-
-      if (audioDuration > 30) {
-        // Platform-specific chunking to prevent memory issues
-        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const isAndroid = /Android/i.test(navigator.userAgent);
-
-        if (isIOS) {
-          // iOS has strict memory limits - use conservative chunking
-          transcriptionOptions.chunk_length_s = 10;
-          transcriptionOptions.stride_length_s = 2;
-          console.log("[Whisper] iOS detected: using conservative chunking");
-        } else if (isAndroid) {
-          // Android: adapt based on available memory
-          if (deviceMemory >= 4) {
-            transcriptionOptions.chunk_length_s = 20;
-            transcriptionOptions.stride_length_s = 3;
-          } else {
-            transcriptionOptions.chunk_length_s = 10;
-            transcriptionOptions.stride_length_s = 2;
-          }
-          console.log(
-            `[Whisper] Android with ${deviceMemory}GB RAM: adaptive chunking`,
-          );
-        } else if (deviceMemory >= 8) {
-          // Desktop high-end: larger chunks for better context
-          transcriptionOptions.chunk_length_s = 30;
-          transcriptionOptions.stride_length_s = 5;
-        } else if (deviceMemory >= 4) {
-          // Desktop mid-range: balanced chunking
-          transcriptionOptions.chunk_length_s = 20;
-          transcriptionOptions.stride_length_s = 3;
-        } else {
-          // Low-end device: smaller chunks to prevent OOM
-          transcriptionOptions.chunk_length_s = 10;
-          transcriptionOptions.stride_length_s = 2;
-        }
-      }
-
-      console.log("[Whisper] Transcribing with options:", transcriptionOptions);
-      console.log("[Whisper] Audio duration:", audioDuration, "seconds");
-      console.log(
-        "[Whisper] Audio data type:",
-        processedAudio.constructor.name,
-        "length:",
-        processedAudio.length || processedAudio.size,
-      );
-
-      const result = await this.transcriber(
-        processedAudio,
-        transcriptionOptions,
-      );
-
-      console.log("[Whisper] Raw transcription result:", result);
-
-      this.updateStatus({ isLoading: false, progress: 100 });
-
-      // Extract text from result (handle both formats)
-      let text = "";
-      if (typeof result === "string") {
-        text = result;
-      } else if (result?.text) {
-        text = result.text;
-      } else if (Array.isArray(result) && result[0]?.text) {
-        // Handle array of chunks with timestamps
-        text = result.map((chunk) => chunk.text).join(" ");
-      }
-
-      // Clean up text to remove excessive repetitions
-      text = this.cleanRepetitions(text);
-
-      console.log("[Whisper] Final text:", text);
-
+      const text = await this.transcriber.transcribe(audioBlob);
       return text;
     } catch (error) {
-      console.error("Error transcribing with Whisper:", error);
-
-      this.updateStatus({
-        isLoading: false,
-        error: error.message || "Failed to transcribe audio with Whisper",
-      });
-
-      throw new Error(
-        `Failed to transcribe audio with Whisper: ${error.message}`,
-      );
+      console.error('Whisper transcription error:', error);
+      throw error;
     }
   }
 
-  /**
-   * Clean up repetitive text patterns from transcription
-   */
-  cleanRepetitions(text) {
-    if (!text) return "";
-
-    // Split into sentences or phrases
-    const phrases = text.split(/[.!?]/);
-    const cleanedPhrases = [];
-
-    for (const phrase of phrases) {
-      const trimmed = phrase.trim();
-      if (!trimmed) continue;
-
-      // Check if this phrase is repeating consecutively
-      const words = trimmed.split(" ");
-      const cleanedWords = [];
-      let lastPhrase = "";
-      let repeatCount = 0;
-
-      // Detect and remove phrase-level repetitions
-      for (let i = 0; i < words.length; i++) {
-        // Look for patterns of 3-10 words that repeat
-        for (let len = 3; len <= Math.min(10, words.length - i); len++) {
-          const currentPhrase = words.slice(i, i + len).join(" ");
-          let matches = 0;
-
-          // Check how many times this phrase repeats consecutively
-          for (let j = i + len; j <= words.length - len; j += len) {
-            const nextPhrase = words.slice(j, j + len).join(" ");
-            if (currentPhrase === nextPhrase) {
-              matches++;
-            } else {
-              break;
-            }
-          }
-
-          // If phrase repeats more than twice, skip the repetitions
-          if (matches >= 2) {
-            cleanedWords.push(...words.slice(i, i + len));
-            i += len * (matches + 1) - 1; // Skip all repetitions
-            break;
-          }
-        }
-
-        // If no repetition pattern found, add the word
-        if (i < words.length && !cleanedWords.includes(words[i])) {
-          cleanedWords.push(words[i]);
-        }
-      }
-
-      const cleanedPhrase = cleanedWords.join(" ");
-
-      // Don't add if it's exactly the same as the last phrase
-      if (
-        cleanedPhrase &&
-        cleanedPhrase !== cleanedPhrases[cleanedPhrases.length - 1]
-      ) {
-        cleanedPhrases.push(cleanedPhrase);
-      }
-    }
-
-    // Join with periods and clean up
-    let cleaned = cleanedPhrases.join(". ");
-    if (cleaned && !cleaned.endsWith(".")) {
-      cleaned += ".";
-    }
-
-    // Log if we removed repetitions
-    if (text.length > cleaned.length * 1.5) {
-      console.log(
-        "[Whisper] Removed repetitions. Original length:",
-        text.length,
-        "Cleaned length:",
-        cleaned.length,
-      );
-    }
-
-    return cleaned;
-  }
-
-  /**
-   * Check if the current device is likely capable of running Whisper
-   */
-  async checkDeviceCapability() {
-    // Basic capability check based on browser environment
-    if (!this.isSupported) {
-      return {
-        capable: false,
-        reason: "Browser environment not supported",
-      };
-    }
-
-    // Check device memory (if available)
-    if (navigator?.deviceMemory) {
-      if (navigator.deviceMemory < 2) {
-        return {
-          capable: true,
-          performant: false,
-          reason: "Low device memory - use tiny model for best performance",
-        };
-      } else if (navigator.deviceMemory < 4) {
-        return {
-          capable: true,
-          performant: true,
-          reason: "Medium device memory - base model recommended",
-        };
-      }
-    }
-
-    // Device seems capable
-    return {
-      capable: true,
-      performant: true,
-      reason: "Device appears to have sufficient resources",
-    };
-  }
-
-  /**
-   * Clear model from memory (useful to free up resources)
-   */
-  unloadModel() {
-    if (this.transcriber) {
-      // Transformers.js handles cleanup automatically
-      this.transcriber = null;
-      this.modelLoadPromise = null;
-
-      this.updateStatus({
-        isLoaded: false,
-        progress: 0,
-      });
-
-      return true;
-    }
-    return false;
+  async unloadModel() {
+    await this.transcriber.unload();
+    whisperStatus.update(s => ({ 
+      ...s, 
+      isLoaded: false, 
+      isLoading: false, 
+      progress: 0 
+    }));
+    this.modelLoadPromise = null;
   }
 }
 
-// Service instance
+// Export singleton instance
 export const whisperService = new WhisperService();

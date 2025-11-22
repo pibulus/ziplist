@@ -1,0 +1,375 @@
+/**
+ * List Component Styles
+ * Clean, minimal, theme-aware styling for list components
+ * Uses CSS variables from theme-variables.css
+ */
+
+/* ============================================================================
+   CARD CONTAINER
+   ============================================================================ */
+
+.zl-card {
+  /* Layout */
+  width: 100%;
+  max-width: 540px;
+  margin: 2rem auto 2.5rem;
+  padding: 2.5rem;
+  
+  /* Shape */
+  border-radius: var(--zl-card-border-radius);
+  border: var(--zl-card-border-width) solid var(--zl-card-border-color);
+  
+  /* Visual */
+  background: linear-gradient(
+    var(--zl-card-bg-gradient-angle),
+    var(--zl-card-bg-gradient-color-start),
+    var(--zl-card-bg-gradient-color-second),
+    var(--zl-card-bg-gradient-color-mid),
+    var(--zl-card-bg-gradient-color-fourth),
+    var(--zl-card-bg-gradient-color-end)
+  );
+  background-size: var(--zl-card-bg-gradient-size);
+  box-shadow: var(--zl-card-box-shadow);
+  
+  /* Animation */
+  animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease infinite;
+  transition: var(--zl-transition-standard);
+  
+  /* Typography */
+  font-family: 'Space Mono', monospace;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 0%; }
+  25% { background-position: 50% 50%; }
+  50% { background-position: 100% 100%; }
+  75% { background-position: 50% 50%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .zl-card {
+    padding: 2rem 1rem;
+    border-radius: 24px;
+    max-width: 100%;
+  }
+}
+
+/* ============================================================================
+   LIST HEADER
+   ============================================================================ */
+
+.zl-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--zl-spacing-m);
+}
+
+.zl-list-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--zl-text-color-primary);
+  margin: 0;
+}
+
+.zl-share-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--zl-item-bg);
+  border: 2px solid var(--zl-item-border-color);
+  border-radius: 12px;
+  color: var(--zl-text-color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--zl-transition-fast);
+}
+
+.zl-share-button:hover {
+  background: var(--zl-item-hover-bg);
+  border-color: var(--zl-item-border-hover-color);
+  transform: translateY(-2px);
+}
+
+/* ============================================================================
+   LIST CONTAINER
+   ============================================================================ */
+
+.zl-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--zl-spacing-m);
+}
+
+/* ============================================================================
+   LIST ITEMS
+   ============================================================================ */
+
+.zl-item {
+  /* Layout */
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: var(--zl-spacing-s);
+  min-height: 70px;
+  
+  /* Shape */
+  border-radius: var(--zl-item-border-radius);
+  border: 2px solid var(--zl-item-border-color);
+  border-left: 4px solid var(--zl-item-border-color);
+  
+  /* Visual */
+  background: var(--zl-item-bg);
+  box-shadow: var(--zl-item-box-shadow);
+  
+  /* Interaction */
+  cursor: grab;
+  transition: var(--zl-transition-standard);
+}
+
+.zl-item:hover {
+  background: var(--zl-item-hover-bg);
+  border-color: var(--zl-item-border-hover-color);
+  border-left-color: var(--zl-item-border-hover-color);
+  box-shadow: var(--zl-item-hover-box-shadow);
+  transform: translateY(-3px);
+}
+
+.zl-item.checked {
+  opacity: var(--zl-item-checked-opacity);
+  background: var(--zl-item-checked-bg);
+  border-color: var(--zl-item-checked-border-color);
+  border-left-color: var(--zl-item-checked-border-color);
+  transform: scale(0.98);
+  cursor: default;
+}
+
+.zl-item.dragging {
+  opacity: 0.5;
+  transform: scale(1.05);
+  cursor: grabbing;
+}
+
+.zl-item.drag-over {
+  background: var(--zl-item-dragover-bg);
+  border-color: var(--zl-item-dragover-border);
+}
+
+/* ============================================================================
+   CHECKBOX
+   ============================================================================ */
+
+.zl-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.zl-checkbox {
+  appearance: none;
+  width: var(--zl-checkbox-size);
+  height: var(--zl-checkbox-size);
+  border-radius: var(--zl-checkbox-border-radius);
+  border: var(--zl-checkbox-border);
+  background: var(--zl-checkbox-bg);
+  cursor: pointer;
+  transition: var(--zl-transition-fast);
+  position: relative;
+}
+
+.zl-checkbox:hover {
+  border: var(--zl-checkbox-hover-border);
+  background: var(--zl-checkbox-hover-bg);
+}
+
+.zl-checkbox:checked {
+  background: linear-gradient(
+    135deg,
+    var(--zl-checkbox-checked-gradient-start),
+    var(--zl-checkbox-checked-gradient-end)
+  );
+  border-color: var(--zl-checkbox-checked-gradient-end);
+  box-shadow: var(--zl-checkbox-checked-shadow);
+}
+
+.zl-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* ============================================================================
+   ITEM TEXT
+   ============================================================================ */
+
+.zl-item-text {
+  flex: 1;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--zl-text-color-primary);
+  line-height: 1.5;
+  word-break: break-word;
+  text-align: left;
+  padding: 0.5rem 0;
+}
+
+.zl-item-text.checked {
+  text-decoration: line-through;
+  color: var(--zl-text-color-disabled);
+}
+
+/* ============================================================================
+   EDIT INPUT
+   ============================================================================ */
+
+.zl-edit-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: 'Space Mono', monospace;
+  border: var(--zl-edit-input-border);
+  border-radius: 12px;
+  background: var(--zl-edit-input-bg);
+  color: var(--zl-text-color-primary);
+  transition: var(--zl-transition-fast);
+}
+
+.zl-edit-input:focus {
+  outline: none;
+  border-color: var(--zl-edit-input-focus-border);
+  box-shadow: var(--zl-edit-input-focus-shadow);
+}
+
+/* ============================================================================
+   DELETE BUTTON
+   ============================================================================ */
+
+.zl-delete-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--zl-delete-button-bg);
+  border: var(--zl-delete-button-border);
+  color: var(--zl-delete-button-text-color);
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: var(--zl-transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.zl-delete-button:hover {
+  background: var(--zl-delete-button-hover-bg);
+  border-color: var(--zl-delete-button-hover-border);
+  transform: scale(1.1);
+}
+
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+
+.zl-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 2rem;
+  background: var(--zl-empty-state-bg);
+  border: var(--zl-empty-state-border);
+  border-radius: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--zl-transition-standard);
+}
+
+.zl-empty-state:hover {
+  background: var(--zl-item-hover-bg);
+  transform: scale(1.02);
+}
+
+.zl-empty-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--zl-empty-title-color);
+  margin: 0 0 0.5rem 0;
+}
+
+.zl-empty-description {
+  font-size: 1.1rem;
+  color: var(--zl-text-color-secondary);
+  margin: 0 0 0.25rem 0;
+}
+
+.zl-empty-hint {
+  font-size: 0.9rem;
+  color: var(--zl-text-color-disabled);
+  margin: 0;
+}
+
+/* ============================================================================
+   DRAG HANDLE
+   ============================================================================ */
+
+.zl-drag-handle {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0.5rem;
+  cursor: grab;
+  opacity: var(--zl-grab-handle-opacity);
+  transition: var(--zl-transition-fast);
+  flex-shrink: 0;
+}
+
+.zl-drag-handle:hover {
+  opacity: var(--zl-grab-handle-hover-opacity);
+}
+
+.zl-drag-handle span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--zl-grab-handle-color);
+}
+
+/* ============================================================================
+   SHARE NOTIFICATION
+   ============================================================================ */
+
+.zl-share-notification {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.zl-share-notification.success {
+  background: rgba(76, 175, 80, 0.1);
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  color: #2e7d32;
+}
+
+.zl-share-notification.error {
+  background: rgba(244, 67, 54, 0.1);
+  border: 2px solid rgba(244, 67, 54, 0.3);
+  color: #c62828;
+}

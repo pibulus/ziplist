@@ -37,20 +37,20 @@
 	// Theme options
 	const vibeOptions = [
 		{
-			id: 'peach',
-			name: 'Peach'
+			id: 'focus',
+			name: 'Focus'
 		},
 		{
-			id: 'mint',
-			name: 'Mint'
+			id: 'chill',
+			name: 'Chill'
 		},
 		{
-			id: 'bubblegum',
-			name: 'Bubblegum'
+			id: 'zen',
+			name: 'Zen'
 		},
 		{
-			id: 'rainbow',
-			name: 'Rainbow'
+			id: 'nocturne',
+			name: 'Nocturne'
 		}
 	];
 
@@ -288,11 +288,6 @@
 				<div class="space-y-2 pt-1">
 					<!-- Toggle items -->
 					<div class="flex items-center justify-between">
-						<span class="text-xs font-medium text-gray-600">Privacy Mode (offline-only)</span>
-						<input type="checkbox" disabled class="toggle toggle-primary toggle-xs bg-gray-200" />
-					</div>
-
-					<div class="flex items-center justify-between">
 						<span class="text-xs font-medium text-gray-600">Export lists (CSV/JSON)</span>
 						<input type="checkbox" disabled class="toggle toggle-primary toggle-xs bg-gray-200" />
 					</div>
@@ -303,7 +298,7 @@
 					</div>
 
 					<div class="flex items-center justify-between">
-						<span class="text-xs font-medium text-gray-600">Whisper model selection</span>
+						<span class="text-xs font-medium text-gray-600">Recurring list templates</span>
 						<input type="checkbox" disabled class="toggle toggle-primary toggle-xs bg-gray-200" />
 					</div>
 				</div>
