@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from 'svelte';
   import { get } from 'svelte/store';
   import { browser } from '$app/environment';
-  import GhostContainer from './GhostContainer.svelte';
   import ContentContainer from './ContentContainer.svelte';
   import FooterComponent from './FooterComponent.svelte';
   import { geminiService } from '$lib/services/geminiService';

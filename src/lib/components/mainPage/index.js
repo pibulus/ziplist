@@ -1,5 +1,4 @@
 import MainContainer from "./MainContainer.svelte";
-import GhostContainer from "./GhostContainer.svelte";
 import ContentContainer from "./ContentContainer.svelte";
 import FooterComponent from "./FooterComponent.svelte";
 import AnimatedTitle from "./AnimatedTitle.svelte";
@@ -11,7 +10,6 @@ import { AboutModal, ExtensionModal, IntroModal } from "./modals";
 
 export {
   MainContainer,
-  GhostContainer,
   ContentContainer,
   FooterComponent,
   AnimatedTitle,
