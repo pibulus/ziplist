@@ -253,13 +253,12 @@
     const itemToToggle = list.items.find(item => item.id === itemId);
 
     // Apply haptic feedback
-    // Apply haptic feedback
     if (itemToToggle) {
       hapticService.impact(itemToToggle.checked ? 'light' : 'medium');
     }
 
     // Toggle the item state
-    listsService.toggleItem(itemId);
+    listsService.toggleItem(itemId, list.id);
 
     // If checking the item (not unchecking), add sparkle animation
     if (!itemToToggle?.checked) {

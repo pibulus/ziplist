@@ -24,6 +24,7 @@
   import { AudioStates } from '$lib/services/audio/audioStates.js';
   import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js';
   import { PageLayout } from '$lib/components/layout';
+  import { listsStore } from '$lib/services/lists/listsStore';
   import SwipeableLists from '../list/SwipeableLists.svelte';
   import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte';
   import { fade } from 'svelte/transition';
@@ -225,6 +226,9 @@
 
   // Lifecycle hooks
   onMount(() => {
+    // Initialize lists store from localStorage
+    listsStore.initialize();
+    
     // Preload speech model on mount
     preloadSpeechModel();
 

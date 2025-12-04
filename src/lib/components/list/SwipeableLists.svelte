@@ -1,8 +1,7 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { listsStore } from '$lib/services/lists/listsStore';
   import SingleList from './SingleList.svelte';
-  import { fade } from 'svelte/transition';
 
   // Subscribe to lists store
   let lists = [];
@@ -16,7 +15,6 @@
   // Swipe handling state
   let touchStartX = 0;
   let touchEndX = 0;
-  let containerRef;
   let isSwiping = false;
   let currentTranslateX = 0;
   let activeIndex = 0;
@@ -103,7 +101,6 @@
 >
   <div 
     class="lists-wrapper" 
-    bind:this={containerRef}
     style="transform: translateX({currentTranslateX}%); transition: {isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'};"
   >
     {#each lists as list (list.id)}
