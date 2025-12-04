@@ -98,6 +98,9 @@
   }
 
   // Helper function to calculate staggered delay for animations
+  function handleEmptyStateClick() {
+    isCreatingNewItem = true;
+  }
   function getStaggerDelay(index) {
     return index * 50; // 50ms between each item
   }

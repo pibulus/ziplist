@@ -29,8 +29,8 @@ export class EventBus {
       callbacks.splice(index, 1);
 
       if (this.debug) {
-        (
-          `[EventBus] Unsubscribed from event: ${event}, remaining listeners: ${callbacks.length}`,
+        console.log(
+          `[EventBus] Unsubscribed from event: ${event}, remaining listeners: ${callbacks.length}`
         );
       }
     }
@@ -39,13 +39,13 @@ export class EventBus {
   emit(event, data) {
     if (!this.listeners.has(event)) {
       if (this.debug) {
-        (`[EventBus] Event emitted with no listeners: ${event}`);
+        console.log(`[EventBus] Event emitted with no listeners: ${event}`);
       }
       return;
     }
 
     if (this.debug) {
-      (`[EventBus] Emitting event: ${event}`, data);
+      console.log(`[EventBus] Emitting event: ${event}`, data);
     }
 
     this.listeners.get(event).forEach((callback) => {
@@ -62,7 +62,7 @@ export class EventBus {
 
   setDebug(enabled) {
     this.debug = enabled;
-    (`[EventBus] Debug mode ${enabled ? "enabled" : "disabled"}`);
+    console.log(`[EventBus] Debug mode ${enabled ? "enabled" : "disabled"}`);
   }
 
   getRegisteredEvents() {
