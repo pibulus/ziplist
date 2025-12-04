@@ -104,7 +104,11 @@
     style="transform: translateX({currentTranslateX}%); transition: {isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'};"
   >
     {#each lists as list (list.id)}
-      <div class="list-slide" class:active={list.id === activeListId}>
+      <div 
+        class="list-slide" 
+        class:active={list.id === activeListId}
+        style="--list-primary: {list.primaryColor}; --list-accent: {list.accentColor}; --list-glow: {list.glowColor}"
+      >
         <div class="list-content-wrapper">
             <SingleList listId={list.id} />
         </div>
@@ -118,7 +122,7 @@
       <button 
         class="dot" 
         class:active={i === activeIndex}
-        style="--dot-color: var(--zl-color-{list.color}, #ccc)"
+        style="--dot-primary: {list.primaryColor}; --dot-accent: {list.accentColor}; --dot-glow: {list.glowColor}"
         on:click={() => setActiveList(i)}
         aria-label="Switch to {list.name}"
       ></button>
@@ -178,7 +182,8 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: #e5e7eb;
+    background-color: var(--dot-accent);
+    opacity: 0.4;
     border: none;
     padding: 0;
     cursor: pointer;
@@ -186,13 +191,14 @@
   }
 
   .dot.active {
-    transform: scale(1.4);
-    background-color: var(--dot-color);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transform: scale(1.5);
+    background-color: var(--dot-primary);
+    opacity: 1;
+    box-shadow: 0 2px 8px var(--dot-glow), 0 0 12px var(--dot-glow);
   }
   
-  /* Define dot colors matching the lists */
-  .dot[style*="blue"] { --dot-color: #4dd0e1; }
-  .dot[style*="pink"] { --dot-color: #ff82ca; }
-  .dot[style*="yellow"] { --dot-color: #ffd700; }
+  .dot:hover:not(.active) {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
 </style>

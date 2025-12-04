@@ -580,31 +580,40 @@
     /* Typography */
     font-family: 'Space Mono', monospace;
     
-    /* Transitions */
-    transition: var(--zl-transition-standard);
+    /* Animated gradient background */
+    background: linear-gradient(
+      var(--zl-card-bg-gradient-angle),
+      var(--zl-card-bg-gradient-color-start),
+      var(--zl-card-bg-gradient-color-second),
+      var(--zl-card-bg-gradient-color-mid),
+      var(--zl-card-bg-gradient-color-fourth),
+      var(--zl-card-bg-gradient-color-end)
+    );
+    background-size: var(--zl-card-bg-gradient-size);
+    animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease infinite;
     
-    /* Shadow for depth */
+    /* Depth and shadow */
     box-shadow: var(--zl-card-box-shadow);
     
-    /**
-     * ANIMATED GRADIENT BACKGROUND:
-     * 
-     * 1. The linear-gradient creates a smooth blend of three colors
-     *    at the angle specified by the custom property.
-     * 
-     * 2. The background-size is set to 300% 300%, making the gradient
-     *    much larger than the actual element. This is essential for
-     *    the animation effect, as it allows different portions of the
-     *    gradient to be visible as the background-position changes.
-     * 
-     * 3. The animation applies the gradient-shift keyframes over the
-     *    specified duration, using ease timing for smooth movement,
-     *    and repeating infinitely for a continuous effect.
-     */
-    /* Distinct background with jazzxy tones */
-    background: linear-gradient(135deg, #FFFDF5 0%, #fff5f7 100%);
-    border: 2px solid rgba(255, 176, 0, 0.15);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    /* Smooth transitions */
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    
+    /* List-specific colored border and glow (from parent CSS variables) */
+    border-color: var(--list-primary, var(--zl-card-border-color));
+    box-shadow: 
+      var(--zl-card-box-shadow),
+      0 0 20px var(--list-glow, transparent),
+      0 0 40px var(--list-glow, transparent);
+  }
+  
+  /* Enhanced hover state with list colors */
+  .zl-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 16px 40px rgba(0, 0, 0, 0.15),
+      0 0 25px var(--list-glow, transparent),
+      0 0 50px var(--list-glow, transparent);
+    border-color: var(--list-accent, var(--zl-card-border-color));
   }
   
   .zl-card:hover {
