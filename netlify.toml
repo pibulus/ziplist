@@ -9,6 +9,3 @@
   directory = ".netlify/functions-internal"
   node_bundler = "esbuild"
   external_node_modules = ["sharp", "@google/generative-ai"]
-
-[[plugins]]
-  package = "@sveltejs/adapter-netlify"
