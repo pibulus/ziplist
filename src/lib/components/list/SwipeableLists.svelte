@@ -1,6 +1,8 @@
 <script>
   import { onDestroy } from 'svelte';
+  import { spring } from 'svelte/motion';
   import { listsStore } from '$lib/services/lists/listsStore';
+  import { hapticService } from '$lib/services/infrastructure/hapticService';
   import SingleList from './SingleList.svelte';
 
   // Subscribe to lists store
@@ -16,16 +18,21 @@
   let touchStartX = 0;
   let touchEndX = 0;
   let isSwiping = false;
-  let currentTranslateX = 0;
   let activeIndex = 0;
+  
+  // Spring store for smooth physics-based movement
+  const coords = spring({ x: 0 }, {
+    stiffness: 0.15,
+    damping: 0.5
+  });
 
   $: if (lists.length > 0 && activeListId) {
     const index = lists.findIndex(l => l.id === activeListId);
     if (index !== -1 && index !== activeIndex) {
       activeIndex = index;
-      // Reset translation when active index changes externally
+      // Update spring target
       if (!isSwiping) {
-        currentTranslateX = -activeIndex * 100;
+        coords.set({ x: -activeIndex * 100 });
       }
     }
   }
@@ -33,6 +40,8 @@
   function handleTouchStart(e) {
     touchStartX = e.changedTouches[0].screenX;
     isSwiping = true;
+    // When dragging starts, we want immediate response, but spring handles it well too
+    // We can adjust stiffness/damping dynamically if needed, but default is usually fine
   }
 
   function handleTouchMove(e) {
@@ -41,16 +50,19 @@
     const diff = touchCurrentX - touchStartX;
     
     // Calculate percentage shift based on screen width
-    // Limit drag to prevent overscrolling too much
     const screenWidth = window.innerWidth;
     const percentShift = (diff / screenWidth) * 100;
     
+    let targetX = (-activeIndex * 100) + percentShift;
+    
     // Apply resistance at edges
     if ((activeIndex === 0 && diff > 0) || (activeIndex === lists.length - 1 && diff < 0)) {
-        currentTranslateX = (-activeIndex * 100) + (percentShift * 0.3);
-    } else {
-        currentTranslateX = (-activeIndex * 100) + percentShift;
+        targetX = (-activeIndex * 100) + (percentShift * 0.3);
     }
+    
+    // Set spring immediately (hard: false allows some springiness even while dragging, or true for direct 1:1)
+    // For "lush" feel, let the spring follow the finger with slight lag
+    coords.set({ x: targetX }, { hard: true }); 
   }
 
   function handleTouchEnd(e) {
@@ -72,19 +84,22 @@
         setActiveList(activeIndex + 1);
       } else {
         // Snap back
-        currentTranslateX = -activeIndex * 100;
+        coords.set({ x: -activeIndex * 100 });
       }
     } else {
       // Snap back if threshold not met
-      currentTranslateX = -activeIndex * 100;
+      coords.set({ x: -activeIndex * 100 });
     }
   }
 
   function setActiveList(index) {
     if (index >= 0 && index < lists.length) {
       activeIndex = index;
-      currentTranslateX = -index * 100;
+      coords.set({ x: -index * 100 });
       listsStore.setActiveList(lists[index].id);
+      
+      // Haptic feedback on successful switch
+      hapticService.impact('medium');
     }
   }
 
@@ -101,7 +116,7 @@
 >
   <div 
     class="lists-wrapper" 
-    style="transform: translateX({currentTranslateX}%); transition: {isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'};"
+    style="transform: translateX({$coords.x}%);"
   >
     {#each lists as list (list.id)}
       <div 

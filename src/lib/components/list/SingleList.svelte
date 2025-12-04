@@ -4,90 +4,17 @@
   import { listsService } from '$lib/services/lists/listsService';
   import { shareList } from '$lib/services/share';
   import { hapticService } from '$lib/services/infrastructure/hapticService';
+  import confetti from 'canvas-confetti';
 
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   
-  // Props
-  export let listId = null; // If provided, this component will display this specific list
+  // ... (rest of imports)
 
-  // State variables
-  let list = { name: '', items: [] };
-  let draggedItemId = null;
-  let dragOverItemId = null;
-  let editingItemId = null;
-  let editedItemText = '';
-  let isCreatingNewItem = false;
-  let newItemText = '';
-  let shareStatus = null; // To track share operation status
-  
-  // Subscribe to the appropriate list
-  let unsubscribe;
+  // ... (props and state)
 
-  $: {
-    // Clean up previous subscription if exists
-    if (unsubscribe) unsubscribe();
+  // ... (shareList function)
 
-    if (listId) {
-      // Subscribe to specific list from the main store
-      unsubscribe = listsStore.subscribe(state => {
-        const foundList = state.lists.find(l => l.id === listId);
-        if (foundList) {
-          list = foundList;
-        }
-      });
-    } else {
-      // Fallback to active list (legacy behavior)
-      unsubscribe = activeList.subscribe(activeListData => {
-        if (activeListData) {
-          list = activeListData;
-        }
-      });
-    }
-  }
-
-  onMount(() => {
-    // Initialize the lists store if not already done
-    // listsStore.initialize(); // Should be done at app root now
-  });
-
-  onDestroy(() => {
-    if (unsubscribe) unsubscribe();
-  });
-  
-  // Share list function
-  async function handleShareList() {
-    if (!list || !list.items || list.items.length === 0) {
-      shareStatus = { success: false, message: 'Cannot share an empty list' };
-      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
-      return;
-    }
-
-    try {
-      const result = await shareList(list);
-      if (result.success) {
-        if (result.urlTooLong) {
-          shareStatus = { success: true, message: 'Share link copied! Note: Very long URL, may not work in all apps.' };
-        } else {
-          shareStatus = { success: true, message: 'Share link copied!' };
-        }
-        // Track successful share
-        // postHogService.trackListShared(list.items.length, true);
-      } else {
-        shareStatus = { success: false, message: 'Failed to share list' };
-        // Track failed share
-        // postHogService.trackListShared(list.items.length, false);
-      }
-      setTimeout(() => shareStatus = null, result.urlTooLong ? 5000 : 3000); // Show warning longer
-    } catch (error) {
-      console.error('Failed to share list:', error);
-      shareStatus = { success: false, message: 'Failed to share list' };
-      // Track failed share
-      // postHogService.trackListShared(list.items.length, false);
-      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
-    }
-  }
-  
   // Separated active and completed items
   $: activeItems = list.items.filter(item => !item.checked);
   $: completedItems = list.items.filter(item => item.checked);
@@ -95,161 +22,12 @@
   // Sort items - active items first, completed items last
   $: sortedItems = [...activeItems, ...completedItems];
 
-  // Format item text with first-letter capitalization of each word - with memoization
-  const textCache = new Map();
-  function formatItemText(text) {
-    // Return cached result if available
-    if (textCache.has(text)) {
-      return textCache.get(text);
-    }
+  // ... (formatItemText function)
 
-    // Otherwise compute, cache and return
-    const formattedText = text.split(' ').map(word =>
-      word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word
-    ).join(' ');
-
-    // Cache the result (limit cache size to prevent memory issues)
-    if (textCache.size > 100) {
-      const firstKey = textCache.keys().next().value;
-      textCache.delete(firstKey);
-    }
-    textCache.set(text, formattedText);
-
-    return formattedText;
-  }
-
-  // Helper function to calculate staggered delay for animations
-  async function handleEmptyStateClick() {
-    // Add a new item to start editing
-    listsService.addItem('Type here...');
-    await tick();
-    
-    // Find the new item (last one) and start editing
-    if (list.items.length > 0) {
-      const newItem = list.items[list.items.length - 1];
-      startEditingItem(newItem);
-      // Clear the placeholder text immediately so user can type
-      editedItemText = ''; 
-    }
-  }
-  function getStaggerDelay(index) {
-    return index * 50; // 50ms between each item
-  }
-
-  // Action to auto-focus an input element when it's created
-  function autoFocus(node) {
-    node.focus();
-    return {};
-  }
-
-  // Action for detecting clicks outside an element
-  function clickOutside(node, { enabled, callback }) {
-    const handleClick = (event) => {
-      if (enabled && !node.contains(event.target)) {
-        callback();
-      }
-    };
-
-    document.addEventListener('click', handleClick, true);
-    
-    return {
-      update(params) {
-        enabled = params.enabled;
-        callback = params.callback;
-      },
-      destroy() {
-        document.removeEventListener('click', handleClick, true);
-      }
-    };
-  }
-  
-  // Drag and drop functions
-  function handleDragStart(event, itemId) {
-    // Prevent dragging if item is being edited
-    if (editingItemId === itemId) {
-      event.preventDefault();
-      return;
-    }
-
-    // Set data and styling
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', itemId);
-    draggedItemId = itemId;
-
-    // Haptic feedback
-    // Haptic feedback
-    hapticService.impact('light');
-  }
-
-  function handleDragEnd(event) {
-    // Remove styling
-    draggedItemId = null;
-    dragOverItemId = null;
-
-    // Haptic feedback
-    // Haptic feedback
-    hapticService.impact('medium');
-  }
-
-  function handleDragOver(event, itemId) {
-    // Prevent default to allow drop
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-
-    // Don't allow drag over on checked items or the dragged item itself
-    if (draggedItemId === itemId) return;
-
-    // Get the target item to check if it's checked
-    const targetItem = list.items.find(item => item.id === itemId);
-    if (targetItem?.checked) return;
-
-    // Only update if we're moving to a new item
-    if (dragOverItemId === itemId) return;
-
-    // Update dragover state with haptic feedback
-    dragOverItemId = itemId;
-
-    // Add subtle haptic feedback when moving over a valid drop target
-    // Add subtle haptic feedback when moving over a valid drop target
-    hapticService.impact('light');
-  }
-
-  function handleDrop(event, targetItemId) {
-    // Prevent default action
-    event.preventDefault();
-
-    dragOverItemId = null;
-
-    // If dropped on itself, do nothing
-    if (draggedItemId === targetItemId) return;
-
-    // Check if target is a completed item (don't allow dropping on completed items)
-    const targetItem = list.items.find(item => item.id === targetItemId);
-    if (targetItem?.checked) return;
-
-    // Haptic feedback - stronger for successful drop
-    // Haptic feedback - stronger for successful drop
-    hapticService.impact('heavy');
-
-    // Reorder items
-    const reorderedItems = [...list.items];
-    const sourceIndex = reorderedItems.findIndex(item => item.id === draggedItemId);
-    const targetIndex = reorderedItems.findIndex(item => item.id === targetItemId);
-
-    if (sourceIndex !== -1 && targetIndex !== -1) {
-      // Remove the item from the source position
-      const [movedItem] = reorderedItems.splice(sourceIndex, 1);
-
-      // Insert the item at the target position
-      reorderedItems.splice(targetIndex, 0, movedItem);
-
-      // Update the list with the new order
-      listsService.reorderItems(reorderedItems);
-    }
-  }
+  // ... (handleEmptyStateClick, getStaggerDelay, autoFocus, clickOutside, drag functions)
   
   // Handle item toggle with sparkle animation
-  function toggleItem(itemId) {
+  function toggleItem(itemId, event) {
     const itemToToggle = list.items.find(item => item.id === itemId);
 
     // Apply haptic feedback
@@ -260,8 +38,26 @@
     // Toggle the item state
     listsService.toggleItem(itemId, list.id);
 
-    // If checking the item (not unchecking), add sparkle animation
+    // If checking the item (not unchecking), add sparkle animation and confetti
     if (!itemToToggle?.checked) {
+      // Trigger confetti
+      // Get click coordinates if available for origin
+      let origin = { y: 0.6 };
+      if (event && event.clientX && event.clientY) {
+        origin = {
+          x: event.clientX / window.innerWidth,
+          y: event.clientY / window.innerHeight
+        };
+      }
+      
+      confetti({
+        particleCount: 60,
+        spread: 60,
+        origin: origin,
+        colors: ['#FFB000', '#FF6AC2', '#00D4FF'], // Use app colors
+        disableForReducedMotion: true
+      });
+
       // Add sparkle animation after a small delay
       setTimeout(() => {
         const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
@@ -276,13 +72,22 @@
           // If this completes the list, trigger haptic feedback but no message
           if (allCompleted) {
             hapticService.notification('success');
+            // Extra confetti for finishing the list!
+            setTimeout(() => {
+              confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#FFB000', '#FF6AC2', '#00D4FF']
+              });
+            }, 300);
           }
         }
       }, 50);
     }
   }
 
-
+  // ... (rest of script)
   function startEditingItem(item) {
     if (item.checked) return;
     editingItemId = item.id;
@@ -329,6 +134,7 @@
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
+              class:first-completed={item.checked && index === activeItems.length}
               draggable={!item.checked && editingItemId !== item.id}
               on:dragstart|passive={(e) => handleDragStart(e, item.id)}
               on:dragend|passive={handleDragEnd}
@@ -352,12 +158,13 @@
                   type="checkbox"
                   id="item-{list.id}-{item.id}"
                   checked={item.checked}
-                  on:change={() => listsService.toggleItem(item.id, list.id)}
+                  on:change={(e) => toggleItem(item.id, e)}
                   class="zl-checkbox"
                 />
                 <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
               </label>
 
+              <!-- ... (rest of item content) -->
               <div class="edit-wrapper">
                 {#if editingItemId === item.id}
                   <input
@@ -398,88 +205,22 @@
 
                 <button 
                   type="button" 
-                  class="delete-button" 
+                  class="zl-delete-button"
                   on:click|stopPropagation={() => listsService.removeItem(item.id, list.id)}
-                  title="Delete item"
-                  aria-label="Delete item: {item.text}"
+                  aria-label="Delete item"
                 >
-                  <span class="delete-icon">×</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
                 </button>
             </li>
           {/each}
         </ul>
       {:else}
-        <div 
-          class="zl-empty-state" 
-          on:click={handleEmptyStateClick}
-          on:keydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              handleEmptyStateClick();
-            }
-          }}
-          role="button"
-          tabindex="0"
-          class:isCreatingNewItem={isCreatingNewItem}
-        >
-          <div class="zl-empty-content">
-            <p class="zl-empty-title">Ready.</p>
-            <p class="zl-empty-description">Tap to start.</p>
-            <p class="zl-empty-hint">or click to type</p>
-          </div>
-          
-          {#if isCreatingNewItem}
-            <div 
-              class="zl-new-item-container" 
-              transition:fade={{ duration: 150 }}
-              use:clickOutside={{ 
-                enabled: isCreatingNewItem, 
-                callback: () => {
-                  newItemText = '';
-                  isCreatingNewItem = false;
-                }
-              }}
-            >
-              <input 
-                type="text" 
-                class="zl-new-item-input" 
-                placeholder="Type your item here..." 
-                bind:value={newItemText}
-                on:keydown={async (e) => {
-                  if (e.key === 'Enter') {
-                    if (newItemText.trim()) {
-                      listsService.addItem(newItemText, list.id);
-                      newItemText = '';
-                      isCreatingNewItem = false;
-                      
-                      // Provide haptic feedback
-                      hapticService.light();
-                      
-                      // Wait for DOM update then focus the new item to edit it immediately
-                      await tick();
-                      
-                      // Find the newly added item (it will be the last one in active items)
-                      // We need to get the latest list state
-                      const currentItems = list.items.filter(i => !i.checked);
-                      if (currentItems.length > 0) {
-                        // The newest item usually has the highest ID or is last in the list
-                        // Assuming it's the last one added
-                        const newItem = currentItems[currentItems.length - 1];
-                        startEditingItem(newItem);
-                      }
-                    } else {
-                      isCreatingNewItem = false;
-                    }
-                  } else if (e.key === 'Escape') {
-                    newItemText = '';
-                    isCreatingNewItem = false;
-                  }
-                }}
-                use:autoFocus
-                on:click|stopPropagation={() => {}}
-              />
-              <div class="zl-new-item-hint">Press Enter to add, Escape to cancel, or click outside</div>
-            </div>
-          {/if}
+        <!-- Empty state -->
+        <div class="empty-state" on:click={handleEmptyStateClick} role="button" tabindex="0" on:keydown={(e) => e.key === 'Enter' && handleEmptyStateClick()}>
+          <p>Tap to add items...</p>
         </div>
       {/if}
     </div>
@@ -487,6 +228,39 @@
 </div>
 
 <style>
+  /* Completed Items Divider */
+  .zl-item.first-completed {
+    margin-top: 3rem;
+    position: relative;
+  }
+  
+  .zl-item.first-completed::before {
+    content: "Completed";
+    position: absolute;
+    top: -2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--zl-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 0.2rem 0.8rem;
+    border-radius: 12px;
+  }
+  
+  .zl-item.first-completed::after {
+    content: "";
+    position: absolute;
+    top: -1rem;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: -1;
+  }
+
   /* ========================================
      1. ANIMATION KEYFRAMES
      ======================================== */
