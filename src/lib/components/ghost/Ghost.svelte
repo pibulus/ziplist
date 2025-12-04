@@ -72,7 +72,6 @@
 		unsubscribeTheme = themeStore.subscribe((value) => {
 			currentTheme = value;
 		});
-		});
 	}
 
 	// Sync state to store only when local props actually change
