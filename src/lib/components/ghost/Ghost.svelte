@@ -71,8 +71,7 @@
 		// Create new subscription
 		unsubscribeTheme = themeStore.subscribe((value) => {
 			currentTheme = value;
-			if (debug)
-
+		});
 		});
 	}
 
