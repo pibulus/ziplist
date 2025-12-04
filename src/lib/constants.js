@@ -80,7 +80,7 @@ export const ANIMATION = {
 
   // Recording time limits
   RECORDING: {
-    FREE_LIMIT: 60, // Maximum recording time in seconds for free users
+    FREE_LIMIT: 600, // Maximum recording time in seconds for free users
     PREMIUM_LIMIT: 600, // Maximum recording time in seconds for premium users
     WARNING_THRESHOLD: 15, // Seconds remaining when to start showing warning
     DANGER_THRESHOLD: 8, // Seconds remaining when to start showing danger state

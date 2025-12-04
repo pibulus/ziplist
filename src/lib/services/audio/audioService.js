@@ -25,8 +25,8 @@ export class AudioService {
 
     this.stateManager = new AudioStateManager();
 
-    this.stateManager.addListener(({ oldState, newState, error }) => {
-      console.log(`Audio state changed: ${oldState} -> ${newState}`);
+    this.stateManager.addListener(({ newState, error }) => {
+
 
       // Update the store instead of emitting event
       audioActions.updateState(newState, error);

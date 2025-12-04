@@ -63,7 +63,7 @@
 			platform = navigator.platform || 'desktop';
 		}
 		
-		console.log(`📱 Platform detected: ${platform}`);
+
 	}
 	
 	/**
@@ -92,7 +92,7 @@
 		if (installPromptEvent) {
 			try {
 				// Show the native browser install prompt
-				console.log('📱 Showing native PWA install prompt');
+
 				
 				// This is a built-in browser API, not our custom UI
 				const result = await installPromptEvent.prompt();

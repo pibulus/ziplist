@@ -15,9 +15,9 @@ export class FirstVisitService {
     this.debug = !!value;
   }
 
-  log(message) {
+  log() {
     if (this.debug) {
-      console.log(`[FirstVisitService] ${message}`);
+
     }
   }
 

@@ -16,8 +16,8 @@ export class HapticService {
     try {
       navigator.vibrate(pattern);
       return true;
-    } catch (e) {
-      console.log(`Vibration failed: ${e.message}`);
+    } catch {
+
       return false;
     }
   }

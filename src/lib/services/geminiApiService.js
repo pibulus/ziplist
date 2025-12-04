@@ -1,13 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAIKEY = import.meta.env.VITE_GEMINI_API_KEY;
-if (!genAIKEY) {
-  console.error("VITE_GEMINI_API_KEY is not set in the environment variables.");
-}
-const genAI = new GoogleGenerativeAI(genAIKEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-
-// Track model initialization state
+// Track model initialization state (conceptually, for the server)
 let modelInitialized = false;
 let initializationPromise = null;
 
@@ -19,28 +10,18 @@ function preloadModel() {
   }
 
   if (import.meta.env.DEV) {
-    console.log("🔍 Preloading speech model for faster response");
+
   }
 
   // We create a very small "ping" query to initialize the model
   // This warms up the Gemini API connection and loads necessary client-side resources
-  initializationPromise = model
-    .generateContent("hello")
-    .then((response) => {
-      if (import.meta.env.DEV) {
-        console.log("✅ Speech model preloaded successfully");
-      }
-      modelInitialized = true;
-      return response;
-    })
-    .catch((error) => {
-      console.error("❌ Error preloading speech model:", error);
-      // Reset the initialization state so we can try again
-      initializationPromise = null;
-      throw error;
-    });
-
-  return initializationPromise;
+  // For the server-side implementation, we'll just send a dummy request to the endpoint
+  // Note: This might fail if we don't send valid data, but it wakes up the function.
+  // Alternatively, we can just skip this or implement a specific 'warmup' param.
+  // For now, let's just mark it as initialized to avoid blocking.
+  
+  modelInitialized = true;
+  return Promise.resolve();
 }
 
 function blobToGenerativePart(blob) {
@@ -61,8 +42,36 @@ function blobToGenerativePart(blob) {
 
 async function generateContent(promptData) {
   try {
-    const result = await model.generateContent(promptData);
-    return result.response;
+    // promptData is [prompt, audioPart]
+    // audioPart is { inlineData: { data: ..., mimeType: ... } }
+    
+    const prompt = promptData[0];
+    const audioPart = promptData[1];
+    
+    const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: prompt,
+            audioData: audioPart.inlineData.data,
+            mimeType: audioPart.inlineData.mimeType
+        })
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to fetch from API');
+    }
+
+    const data = await response.json();
+    
+    // Mocking the response object structure expected by the caller
+    return {
+        text: () => data.text
+    };
+
   } catch (error) {
     console.error("❌ Error generating content:", error);
     throw new Error("Failed to generate content with Gemini");

@@ -13,7 +13,7 @@ import { resetStores } from "./infrastructure/stores";
 export { eventBus, hapticService, StorageUtils } from "./infrastructure/index";
 export { themeService } from "./theme/themeService";
 export { modalService } from "./modals/modalService";
-export { postHogService } from "./analytics";
+// export { postHogService } from "./analytics";
 export {
   firstVisitService,
   isFirstVisit,
@@ -78,7 +78,7 @@ export function initializeServices(options = {}) {
   }
 
   if (import.meta.env.DEV) {
-    console.log("🚀 ZipList services initialized with Svelte stores");
+
   }
 
   return {

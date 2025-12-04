@@ -3,7 +3,7 @@
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
   import { shareList } from '$lib/services/share';
-  import { postHogService } from '$lib/services/analytics/postHogService';
+
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   
@@ -51,18 +51,18 @@
           shareStatus = { success: true, message: 'Share link copied!' };
         }
         // Track successful share
-        postHogService.trackListShared(list.items.length, true);
+        // postHogService.trackListShared(list.items.length, true);
       } else {
         shareStatus = { success: false, message: 'Failed to share list' };
         // Track failed share
-        postHogService.trackListShared(list.items.length, false);
+        // postHogService.trackListShared(list.items.length, false);
       }
       setTimeout(() => shareStatus = null, result.urlTooLong ? 5000 : 3000); // Show warning longer
     } catch (error) {
       console.error('Failed to share list:', error);
       shareStatus = { success: false, message: 'Failed to share list' };
       // Track failed share
-      postHogService.trackListShared(list.items.length, false);
+      // postHogService.trackListShared(list.items.length, false);
       setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
     }
   }

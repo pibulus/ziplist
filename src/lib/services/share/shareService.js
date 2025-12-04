@@ -112,7 +112,7 @@ export async function shareList(list, baseUrl = window.location.origin) {
         // User cancelled, don't show error
         return { success: false, urlTooLong: false };
       }
-      console.log("Web Share API failed, falling back to clipboard", e);
+
     }
   }
 

@@ -31,11 +31,5 @@
   >
     Settings
   </button>
-  <button
-    class="btn btn-sm bg-gradient-to-r from-pink-50 to-purple-100 text-purple-600 border-none hover:bg-opacity-90 shadow-sm hover:shadow transition-all text-sm sm:text-base py-1 px-3 sm:px-4 h-auto min-h-0"
-    on:click={showExtension}
-    aria-label="Chrome Extension Information"
-  >
-    Chrome Extension
-  </button>
+
 </div>

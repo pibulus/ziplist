@@ -72,9 +72,7 @@
 		unsubscribeTheme = themeStore.subscribe((value) => {
 			currentTheme = value;
 			if (debug)
-				console.log(
-					`Ghost theme updated to: ${value} (using ${externalTheme ? 'external' : 'local'} store)`
-				);
+
 		});
 	}
 

@@ -71,9 +71,9 @@ export class PwaService {
     this.debug = !!value;
   }
 
-  log(message) {
+  log() {
     if (this.debug) {
-      console.log(`[PwaService] ${message}`);
+
     }
   }
 

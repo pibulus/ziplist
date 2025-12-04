@@ -185,7 +185,7 @@ export const audioActions = {
 
     // For reliable auto-stop, we also immediately update the recording state
     // so that subscribers can react to it
-    console.log("⏱️ Recording time limit reached, signaling automatic stop");
+
   },
 };
 
@@ -344,7 +344,7 @@ export const transcriptionCompletedEvent = (() => {
       currentState.text.trim() !== ""
     ) {
       // Condition: Was transcribing, now finished, and there's actual text.
-      console.log(
+      (
         "[Store DEBUG] transcriptionCompletedEvent: Firing with text -",
         currentState.text,
       );

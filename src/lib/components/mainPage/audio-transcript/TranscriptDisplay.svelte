@@ -44,7 +44,7 @@
       
       // We could also check if we're near the bottom to hide the indicator
       // but for simplicity, we'll just show it whenever there's overflow
-      console.log(`Transcript scrollable: ${isScrollable}, height: ${transcriptBoxRef.scrollHeight}, visible: ${transcriptBoxRef.clientHeight}`);
+
     }
   }
   

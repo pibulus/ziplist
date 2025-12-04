@@ -3,8 +3,7 @@
 	import { theme, autoRecord, showSettingsModal, applyTheme, promptStyle } from '$lib';
 	import { geminiService } from '$lib/services/geminiService';
 	import { PROMPT_STYLES } from '$lib/constants';
-	import DisplayGhost from '$lib/components/ghost/DisplayGhost.svelte';
-	import TranscriptionStyleSelector from './TranscriptionStyleSelector.svelte';
+
 	import { ModalCloseButton } from '../modals/index.js';
 
 	// Props for the modal
@@ -268,10 +267,11 @@
 			</div>
 
 			<!-- Prompt Style Selection Section -->
-			<TranscriptionStyleSelector {selectedPromptStyle} {changePromptStyle} />
+			<!-- Prompt Style Selection Section Removed as per user request -->
+			<!-- <TranscriptionStyleSelector {selectedPromptStyle} {changePromptStyle} /> -->
 
 			<!-- Advanced Features Section -->
-			<div
+			<!-- <div
 				class="space-y-2 rounded-lg border border-pink-100/60 bg-gradient-to-r from-pink-50/50 to-amber-50/50 p-3 shadow-sm"
 			>
 				<div class="flex items-center justify-between">
@@ -286,7 +286,6 @@
 				</div>
 
 				<div class="space-y-2 pt-1">
-					<!-- Toggle items -->
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-medium text-gray-600">Export lists (CSV/JSON)</span>
 						<input type="checkbox" disabled class="toggle toggle-primary toggle-xs bg-gray-200" />
@@ -306,10 +305,10 @@
 				<div class="flex justify-end">
 					<span class="text-xs italic text-gray-500">Building these for you!</span>
 				</div>
-			</div>
+			</div> -->
 
 			<div class="border-t border-pink-100 pt-2 text-center">
-				<p class="text-xs text-gray-500">ZipList • Made with 💜 by Dennis & Pablo</p>
+				<!-- <p class="text-xs text-gray-500">ZipList • Made with 💜 by Dennis & Pablo</p> -->
 			</div>
 		</div>
 	</div>

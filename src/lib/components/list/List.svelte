@@ -3,7 +3,7 @@
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
   import { shareList } from '$lib/services/share';
-  import { postHogService } from '$lib/services/analytics/postHogService';
+
   import { fade } from 'svelte/transition';
   import ListItem from './ListItem.svelte';
   import './list.css';
@@ -51,16 +51,16 @@
           success: true, 
           message: result.urlTooLong ? 'Share link copied! (Very long URL)' : 'Share link copied!' 
         };
-        postHogService.trackListShared(list.items.length, true);
+        // postHogService.trackListShared(list.items.length, true);
       } else {
         shareStatus = { success: false, message: 'Failed to share list' };
-        postHogService.trackListShared(list.items.length, false);
+        // postHogService.trackListShared(list.items.length, false);
       }
       setTimeout(() => shareStatus = null, 3000);
     } catch (error) {
       console.error('Share error:', error);
       shareStatus = { success: false, message: 'Failed to share list' };
-      postHogService.trackListShared(list.items.length, false);
+      // postHogService.trackListShared(list.items.length, false);
       setTimeout(() => shareStatus = null, 3000);
     }
   }

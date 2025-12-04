@@ -28,17 +28,11 @@
 			class="container mx-auto flex flex-col flex-wrap items-center justify-between gap-2 sm:flex-row sm:gap-3"
 		>
 			<div class="copyright ml-4 flex flex-wrap items-center justify-center sm:ml-6 md:ml-8">
-				<span class="mr-1 text-sm text-xs font-medium tracking-tight sm:text-sm">
+				<span class="hidden text-xs font-medium tracking-tight text-gray-500 sm:inline-block sm:text-sm">
 					© {footerYear} ZipList
 				</span>
-				<span class="mx-1 text-pink-300 sm:mx-2">•</span>
-				<span class="text-xs font-light text-gray-600 sm:text-sm"
-					>Made with
-					<span
-						class="mx-0.5 inline-block transform animate-pulse text-pink-500 transition-transform duration-300 hover:scale-110"
-						aria-label="love">❤️</span
-					>
-					by Dennis & Pablo
+				<span class="hidden mx-1 text-pink-300 sm:inline-block sm:mx-2">•</span>
+				<span class="text-xs font-light text-gray-600 sm:text-sm">
 				</span>
 			</div>
 			<div class="mr-4 flex items-center sm:mr-6 md:mr-8">
@@ -64,8 +58,8 @@
 	/* Media queries for mobile optimization */
 	@media (max-width: 640px) {
 		section {
-			padding-top: 12vh !important;
-			padding-bottom: 14vh !important;
+			padding-top: 8vh !important;
+			padding-bottom: 10vh !important;
 			min-height: 100vh;
 			display: flex;
 			flex-direction: column;

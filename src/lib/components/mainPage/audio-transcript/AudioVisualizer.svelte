@@ -82,7 +82,7 @@
 			startVisualizer();
 		} catch (error) {
 			console.error('Error accessing microphone for visualizer:', error);
-			console.log('Falling back to simulated visualizer...');
+
 			recording = false;
 
 			// Fallback to the simulated visualizer if standard fails

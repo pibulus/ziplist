@@ -1,13 +1,14 @@
 [build]
   command = "npm run build"
-  publish = ".svelte-kit/netlify"
+  publish = "build"
 
 [build.environment]
   NODE_VERSION = "20"
 
 [functions]
+  directory = ".netlify/functions-internal"
   node_bundler = "esbuild"
-  external_node_modules = ["sharp"]
+  external_node_modules = ["sharp", "@google/generative-ai"]
 
 [[plugins]]
   package = "@sveltejs/adapter-netlify"

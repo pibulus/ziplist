@@ -26,9 +26,9 @@ export class ListParser {
     };
   }
 
-  log(message) {
+  log() {
     if (this.config.debug) {
-      console.log(`[ListParser] ${message}`);
+
     }
   }
 

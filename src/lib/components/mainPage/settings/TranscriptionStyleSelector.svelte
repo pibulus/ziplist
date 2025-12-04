@@ -11,7 +11,9 @@
     PROMPT_STYLES.STANDARD, // Keep standard/refined as a selectable option
     PROMPT_STYLES.SURLY_PIRATE,
     PROMPT_STYLES.CODE_WHISPERER,
-    PROMPT_STYLES.QUILL_AND_INK
+    PROMPT_STYLES.QUILL_AND_INK,
+    PROMPT_STYLES.LEET_SPEAK,
+    PROMPT_STYLES.SPARKLE_POP
   ];
 
   // Define style icons with nicer SVG icons in more distinct colors
@@ -121,13 +123,13 @@
   }
   
   /* SVG icon styling */
-  svg {
+  :global(svg) {
     transition: all 0.3s ease;
     height: 28px;
     width: 28px;
   }
   
-  .style-option:hover svg {
+  .vibe-option:hover :global(svg) {
     filter: drop-shadow(0 0 3px rgba(249, 168, 212, 0.5));
   }
   
