@@ -1558,6 +1558,12 @@
   }
   
   @media (max-width: 480px) {
+    .zl-card {
+      padding: 1.5rem; /* Reduce padding on mobile for more content space */
+      margin-top: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
     .zl-list-title {
       font-size: 1.3rem;
     }

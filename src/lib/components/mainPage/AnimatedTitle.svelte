@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   import { AppSuffix } from '$lib/components/ui';
+  import { hapticService } from '$lib/services/haptics';
 
   const dispatch = createEventDispatcher();
   
@@ -13,6 +14,7 @@
   export let showAppSuffix = true;
   
   function handleDudeClick() {
+    hapticService.medium(); // Tactile feedback
     dispatch('toggleRecording');
   }
   
