@@ -27,6 +27,7 @@
 <AnimatedTitle 
   on:titleAnimationComplete={handleTitleAnimationComplete}
   on:subtitleAnimationComplete={handleSubtitleAnimationComplete}
+  on:toggleRecording
 />
 
 <!-- The AudioToText component has been removed. -->

@@ -11,8 +11,10 @@
   
   // AppSuffix configuration
   export let showAppSuffix = true;
-  export let suffixColor = "inherit"; // Inherit color from parent title
-  export let suffixSize = "40%"; // Smaller suffix (40% of parent size)
+  
+  function handleDudeClick() {
+    dispatch('toggleRecording');
+  }
   
   onMount(() => {
     // Set up animation sequence timing (for title/subtitle)
@@ -28,6 +30,18 @@
 
 <!-- Typography with improved kerning and weight using font-variation-settings -->
 <div class="relative title-container">
+  <!-- The Floating Dude -->
+  <button 
+    class="floating-dude" 
+    on:click={handleDudeClick}
+    aria-label="Start Recording"
+  >
+    <div class="dude-wrapper">
+      <img src="/assets/ziplist-icon-base.svg" alt="" class="dude-base" />
+      <img src="/assets/ziplist-icon-eyes.svg" alt="" class="dude-eyes" />
+    </div>
+  </button>
+
   <h1
     class="mb-1 text-5xl font-black tracking-tight text-center cursor-default select-none staggered-text sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
     style="font-weight: 900; letter-spacing: -0.02em; font-feature-settings: 'kern' 1; font-kerning: normal; font-variation-settings: 'wght' 900, 'opsz' 32;"
@@ -70,6 +84,63 @@
 </p>
 
 <style>
+  /* Floating Dude Styles */
+  .floating-dude {
+    position: absolute;
+    top: -100px; /* Adjust based on size */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 100px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 20;
+    padding: 0;
+    outline: none;
+  }
+
+  .dude-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    animation: float 6s ease-in-out infinite;
+    transition: filter 0.3s ease;
+  }
+
+  .floating-dude:hover .dude-wrapper {
+    filter: drop-shadow(0 0 15px rgba(255, 176, 0, 0.6));
+  }
+
+  .dude-base {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .dude-eyes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    animation: blink 4s infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  @keyframes blink {
+    0%, 48%, 52%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.1); }
+  }
+
   /* Staggered text animation for title - more reliable approach */
   .staggered-text {
     opacity: 1;
@@ -142,6 +213,7 @@
     flex-direction: column;
     align-items: center;
     position: relative;
+    margin-top: 110px; /* Space for the floating dude (100px + buffer) */
   }
   
   /* Container to visually center the main "Ziplist" word */
@@ -192,6 +264,12 @@
       font-size: 1rem; /* 16px on mobile as requested */
       line-height: 1.6;
       text-wrap: balance;
+    }
+    
+    .floating-dude {
+      width: 80px;
+      height: 80px;
+      top: -80px;
     }
   }
   

@@ -175,6 +175,8 @@
 
           try {
             await transcriptionService.transcribeAudio(audioBlob);
+            // Auto-scroll to lists after successful transcription to show new items
+            setTimeout(scrollToLists, 100);
           } catch (transcriptionError) {
             console.error('Transcription failed in onstop:', transcriptionError);
           } finally {
@@ -218,6 +220,16 @@
   function triggerGhostClick() {
     // Forward to the toggle recording handler
     handleToggleRecording();
+  }
+  
+  // Scroll to lists container
+  function scrollToLists() {
+    if (browser) {
+      const listsContainer = document.getElementById('lists-container');
+      if (listsContainer) {
+        listsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
 
   function closePwaInstallPrompt() {
@@ -294,7 +306,7 @@
 </script>
 
 <PageLayout>
-  <ContentContainer />
+  <ContentContainer on:toggleRecording={handleToggleRecording} />
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->
   <div class="flex justify-center my-4">
@@ -311,7 +323,7 @@
   </div>
 
   <!-- Swipeable lists container -->
-  <div class="mt-2">
+  <div class="mt-2" id="lists-container">
     <SwipeableLists />
   </div>
 
