@@ -185,7 +185,7 @@ import { fade } from 'svelte/transition';
         class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-rose-300"
         style="width: {progress}%;"
       >
-        <span class="text-white font-bold z-10 relative">Processing...</span>
+        <span class="text-white font-bold z-10 relative">Ziplisting...</span>
       </div>
     </div>
   {:else}
