@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   import { AppSuffix } from '$lib/components/ui';
-  import { hapticService } from '$lib/services/haptics';
+  import { hapticService } from '$lib/services/infrastructure/hapticService';
 
   const dispatch = createEventDispatcher();
   
