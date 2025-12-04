@@ -7,14 +7,13 @@
 
 import { listsStore } from '../lists/listsStore.js';
 import {
-  createLiveList,
   connectToLiveList,
   sendUpdate,
-  disconnectFromLiveList,
-  generateShareUrl
+  disconnectFromLiveList
 } from './partyService.js';
 import { getPresenceStore, cleanupPresenceStore } from './presenceStore.js';
 import { getTypingStore, cleanupTypingStore } from './typingStore.js';
+import { get } from 'svelte/store';
 
 /**
  * Active PartySocket connections
@@ -28,34 +27,29 @@ const activeConnections = new Map();
 let isSyncingRemoteChange = false;
 
 /**
- * Make a list "live" by creating a PartyKit room and connecting to it
- * @param {string} listId - The list ID to make live
- * @param {string} [password] - Optional password for the room
- * @returns {Promise<{roomId: string, shareUrl: string}>}
+ * Initialize Live Mode by Default
+ * Subscribes to the listsStore and automatically connects to the active list.
  */
-export async function makeLive(listId, password = null) {
-  // Get the list data from the store
-  const state = listsStore;
-  let listData = null;
+export function initLiveMode() {
+  let currentListId = null;
 
-  state.subscribe(s => {
-    listData = s.lists.find(l => l.id === listId);
-  })();
+  listsStore.subscribe(state => {
+    const newListId = state.activeListId;
 
-  if (!listData) {
-    throw new Error(`List ${listId} not found`);
-  }
+    // If the active list has changed
+    if (newListId && newListId !== currentListId) {
+      // Disconnect from previous list if exists
+      if (currentListId) {
+        disconnectFromLive(currentListId);
+      }
 
-  // Create the PartyKit room
-  const { roomId } = await createLiveList(listData, password);
+      currentListId = newListId;
 
-  // Connect to the room
-  await connectToLive(listId, roomId, password);
-
-  // Generate share URL
-  const shareUrl = generateShareUrl(roomId, password);
-
-  return { roomId, shareUrl };
+      // Connect to the new list
+      // We use the listId as the roomId for simplicity in "Live by Default" mode
+      connectToLive(newListId, newListId);
+    }
+  });
 }
 
 /**
@@ -68,9 +62,11 @@ export async function makeLive(listId, password = null) {
 export async function connectToLive(listId, roomId, password = null) {
   // Don't connect twice to the same room
   if (activeConnections.has(listId)) {
-    console.warn(`[LiveListsService] Already connected to list ${listId}`);
+    // console.warn(`[LiveListsService] Already connected to list ${listId}`);
     return;
   }
+
+  console.log(`[LiveListsService] Connecting to list ${listId} (Room: ${roomId})`);
 
   // Get presence and typing stores for this list
   const presenceStore = getPresenceStore(listId);
@@ -86,35 +82,46 @@ export async function connectToLive(listId, roomId, password = null) {
       onInit: (serverListData) => {
         console.log('[LiveListsService] Received initial state from server', serverListData);
 
-        // Apply server state to local store (merge strategy: server wins)
-        isSyncingRemoteChange = true;
+        if (serverListData) {
+          // Server has data -> Server Wins (Update local)
+          isSyncingRemoteChange = true;
 
-        // Update the list in the store
-        listsStore.update(state => {
-          return {
-            ...state,
-            lists: state.lists.map(list => {
-              if (list.id === listId) {
-                return {
-                  ...list,
-                  ...serverListData,
-                  id: listId // Keep local ID
-                };
-              }
-              return list;
-            })
-          };
-        });
+          listsStore.update(state => {
+            return {
+              ...state,
+              lists: state.lists.map(list => {
+                if (list.id === listId) {
+                  return {
+                    ...list,
+                    ...serverListData,
+                    id: listId // Keep local ID
+                  };
+                }
+                return list;
+              })
+            };
+          });
 
-        listsStore.persistToStorage();
-        isSyncingRemoteChange = false;
+          listsStore.persistToStorage();
+          isSyncingRemoteChange = false;
+        } else {
+          // Server has NO data -> Client Wins (Upload local)
+          console.log('[LiveListsService] Server is empty, uploading local data');
+          const state = get(listsStore);
+          const localList = state.lists.find(l => l.id === listId);
+          
+          if (localList) {
+            // Send full update to initialize server
+            sendUpdate(socket, 'list_update', localList);
+          }
+        }
       },
 
       /**
        * Called when remote changes arrive
        */
       onUpdate: (message) => {
-        console.log('[LiveListsService] Received update from', message.sender?.avatar, message.type);
+        // console.log('[LiveListsService] Received update from', message.sender?.avatar, message.type);
 
         isSyncingRemoteChange = true;
 
@@ -175,7 +182,7 @@ export async function connectToLive(listId, roomId, password = null) {
        * Called when presence updates
        */
       onPresence: (users) => {
-        console.log('[LiveListsService] Presence update:', users.map(u => u.avatar).join(', '));
+        // console.log('[LiveListsService] Presence update:', users.map(u => u.avatar).join(', '));
         presenceStore.setUsers(users);
       },
 
@@ -185,6 +192,7 @@ export async function connectToLive(listId, roomId, password = null) {
 
       onDisconnect: () => {
         console.log('[LiveListsService] Disconnected from room', roomId);
+        presenceStore.setUsers([]); // Clear presence on disconnect
       }
     },
     password
@@ -212,6 +220,17 @@ function setupLocalChangeSync(listId, socket) {
 
     // Broadcast the full list state
     // In a production app, you'd want to send only diffs, but for simplicity we send everything
+    // Optimization: Only send if something actually changed? 
+    // For now, listsStore updates trigger this.
+    
+    // NOTE: Ideally we would intercept specific actions (addItem, etc) to send granular updates.
+    // But since we are observing the store, we only have the new state.
+    // Sending 'list_update' is the safest fallback.
+    // To send granular updates ('item_add', etc), we would need to hook into the store actions directly
+    // or diff the state here.
+    
+    // For this prototype, we will send 'list_update' which overwrites server state.
+    // This is "Last Write Wins" at the list level.
     sendUpdate(socket, 'list_update', list);
   });
 
@@ -296,7 +315,17 @@ export function getRoomId(listId) {
  * @returns {string | null}
  */
 export function getShareUrl(listId, password = null) {
-  const roomId = getRoomId(listId);
-  if (!roomId) return null;
-  return generateShareUrl(roomId, password);
+  // For Live by Default, the room ID is the list ID
+  // And the share URL is just the app URL with the list ID (if we had routing)
+  // Or we can stick to the /live/ route for sharing specifically?
+  // User said "remove /live route".
+  // So share URL should probably just be the main app URL?
+  // But how do we open a specific list?
+  // We probably need a query param like ?list=ID
+  
+  if (typeof window === 'undefined') return '';
+  
+  // New Share URL format: /?list=listId
+  const baseUrl = `${window.location.origin}/?list=${listId}`;
+  return password ? `${baseUrl}&pwd=${encodeURIComponent(password)}` : baseUrl;
 }

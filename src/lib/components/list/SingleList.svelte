@@ -42,24 +42,22 @@
     listsStore.initialize();
     listsService.getAllLists();
 
-    // Check if this list is already live
+    // Live by Default: Always subscribe to presence/typing
     if (list && list.id) {
-      isLive = liveListsService.isLive(list.id);
-      if (isLive) {
-        liveShareUrl = liveListsService.getShareUrl(list.id);
+      isLive = true; // Assume live by default
+      liveShareUrl = liveListsService.getShareUrl(list.id);
 
-        // Subscribe to presence
-        const presenceStore = getPresenceStore(list.id);
-        presenceUnsubscribe = presenceStore.subscribe(users => {
-          presence = users;
-        });
+      // Subscribe to presence
+      const presenceStore = getPresenceStore(list.id);
+      presenceUnsubscribe = presenceStore.subscribe(users => {
+        presence = users;
+      });
 
-        // Subscribe to typing indicators
-        const typingStore = getTypingStore(list.id);
-        typingUnsubscribe = typingStore.subscribe(users => {
-          typingUsers = users;
-        });
-      }
+      // Subscribe to typing indicators
+      const typingStore = getTypingStore(list.id);
+      typingUnsubscribe = typingStore.subscribe(users => {
+        typingUsers = users;
+      });
     }
   });
 
@@ -79,69 +77,28 @@
     }
 
     try {
-      const result = await shareList(list);
-      if (result.success) {
-        if (result.urlTooLong) {
-          shareStatus = { success: true, message: 'Share link copied! Note: Very long URL, may not work in all apps.' };
-        } else {
-          shareStatus = { success: true, message: 'Share link copied!' };
-        }
-        // Track successful share
-        postHogService.trackListShared(list.items.length, true);
+      // Use the live share URL by default
+      const url = liveListsService.getShareUrl(list.id);
+      
+      if (navigator.share && navigator.canShare && navigator.canShare({ url })) {
+        await navigator.share({
+          title: `ZipList: ${list.name}`,
+          text: `Check out my list: ${list.name}`,
+          url
+        });
+        shareStatus = { success: true, message: 'Shared successfully!' };
       } else {
-        shareStatus = { success: false, message: 'Failed to share list' };
-        // Track failed share
-        postHogService.trackListShared(list.items.length, false);
+        await navigator.clipboard.writeText(url);
+        shareStatus = { success: true, message: 'Link copied to clipboard!' };
       }
-      setTimeout(() => shareStatus = null, result.urlTooLong ? 5000 : 3000); // Show warning longer
+      
+      // Track successful share
+      postHogService.trackListShared(list.items.length, true);
+      setTimeout(() => shareStatus = null, 3000);
     } catch (error) {
       console.error('Failed to share list:', error);
       shareStatus = { success: false, message: 'Failed to share list' };
-      // Track failed share
-      postHogService.trackListShared(list.items.length, false);
-      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
-    }
-  }
-
-  // Make list live (real-time collaboration)
-  async function handleMakeLive() {
-    if (!list || !list.id) {
-      shareStatus = { success: false, message: 'Cannot make list live' };
       setTimeout(() => shareStatus = null, 3000);
-      return;
-    }
-
-    try {
-      const { roomId, shareUrl } = await liveListsService.makeLive(list.id);
-      isLive = true;
-      liveShareUrl = shareUrl;
-
-      // Copy to clipboard
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-      }
-
-      shareStatus = { success: true, message: '🔴 List is now LIVE! Link copied!' };
-      setTimeout(() => shareStatus = null, 3000);
-
-      // Subscribe to presence
-      const presenceStore = getPresenceStore(list.id);
-      presenceUnsubscribe = presenceStore.subscribe(users => {
-        presence = users;
-      });
-
-      // Subscribe to typing indicators
-      const typingStore = getTypingStore(list.id);
-      typingUnsubscribe = typingStore.subscribe(users => {
-        typingUsers = users;
-      });
-
-      // Track analytics
-      postHogService.trackListShared(list.items.length, true);
-    } catch (error) {
-      console.error('Failed to make list live:', error);
-      shareStatus = { success: false, message: 'Failed to make list live: ' + error.message };
-      setTimeout(() => shareStatus = null, 5000);
     }
   }
   
@@ -437,22 +394,12 @@
       <div class="zl-list-header">
         <h2 class="zl-list-title">{list.name}</h2>
         <div class="zl-list-actions">
-          {#if !isLive}
-            <button
-              class="zl-live-button"
-              on:click={handleMakeLive}
-              title="Make this list live (real-time collaboration)"
-              aria-label="Make list live: {list.name}"
-            >
-              <span class="live-icon">🔴</span>
-              <span class="live-text">Make Live</span>
-            </button>
-          {:else}
-            <div class="zl-live-indicator" title="{presence.length} online">
-              <span class="live-pulse">🔴</span>
-              <span class="live-count">{presence.length}</span>
-            </div>
-          {/if}
+          <!-- Always show online indicator -->
+          <div class="zl-live-indicator" title="{presence.length} online">
+            <span class="live-pulse">🔴</span>
+            <span class="live-count">{presence.length}</span>
+          </div>
+          
           <button
             class="zl-share-button"
             on:click={handleShareList}
@@ -1613,43 +1560,6 @@
     gap: 0.5rem;
   }
   
-  /* Live button (for making list real-time) */
-  .zl-live-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    border: none;
-    border-radius: 16px;
-    padding: 0.5rem 1rem;
-    color: white;
-    font-family: 'Space Mono', monospace;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
-  }
-
-  .zl-live-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  }
-
-  .zl-live-button:active {
-    transform: translateY(1px);
-  }
-
-  .live-icon {
-    font-size: 1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .live-text {
-    font-size: 0.9rem;
-  }
-
   /* Live indicator (when list is already live) */
   .zl-live-indicator {
     display: flex;

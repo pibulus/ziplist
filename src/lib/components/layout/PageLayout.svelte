@@ -1,9 +1,15 @@
 <script>
 	import { onMount } from 'svelte';
+	import { initLiveMode } from '$lib/services/realtime/liveListsService';
+
 	export let title = 'ZipList | Zip up a list lickety-split';
 	export let description =
 		'ZipList turns your voice into organized lists. Clean, simple, and freaky fast list creation. Free forever. Tap the ghost and start talking!';
 	export let footerYear = new Date().getFullYear();
+
+	onMount(() => {
+		initLiveMode();
+	});
 </script>
 
 <svelte:head>
