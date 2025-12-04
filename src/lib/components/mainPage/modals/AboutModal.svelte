@@ -65,7 +65,14 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop bg-black/40" on:click={closeModal}></div>
+  <div 
+    class="modal-backdrop bg-black/40" 
+    on:click={closeModal}
+    on:keydown={(e) => e.key === 'Enter' && closeModal()}
+    role="button"
+    tabindex="0"
+    aria-label="Close modal"
+  ></div>
 </dialog>
 
 <style>

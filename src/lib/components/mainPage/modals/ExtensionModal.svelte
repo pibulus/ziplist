@@ -3,7 +3,7 @@
   export let closeModal;
 </script>
 
-<dialog id="extension_modal" class="modal modal-bottom sm:modal-middle overflow-hidden fixed z-50" style="overflow-y: hidden!important;" role="dialog" aria-labelledby="extension_modal_title" aria-modal="true">
+<dialog id="extension_modal" class="modal modal-bottom sm:modal-middle overflow-hidden fixed z-50" style="overflow-y: hidden!important;" aria-labelledby="extension_modal_title" aria-modal="true">
   <div class="modal-box bg-gradient-to-br from-[#fffaef] to-[#fff6e6] shadow-xl border border-pink-200 rounded-2xl overflow-y-auto max-h-[80vh]">
     <form method="dialog">
       <ModalCloseButton {closeModal} label="Close extension modal" modalId="extension_modal" />
@@ -29,8 +29,9 @@
         <ol class="mt-2 list-decimal space-y-2 pl-5 text-left text-sm text-gray-700">
           <li class="pb-1">
             Download the extension files <a
-              href="#"
+              href="javascript:void(0)"
               class="text-pink-600 transition-colors hover:text-pink-700 hover:underline font-medium"
+              aria-disabled="true"
               >here</a
             >
           </li>

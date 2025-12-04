@@ -13,7 +13,9 @@
 <div
   class="flex justify-center w-full permission-error-container"
   on:click={closeModal}
+  on:keydown={(e) => e.key === 'Enter' && closeModal()}
   role="alertdialog"
+  tabindex="0"
   aria-labelledby="permission_error_title"
   aria-describedby="permission_error_description"
   aria-live="assertive"

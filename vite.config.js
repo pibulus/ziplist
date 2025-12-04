@@ -8,4 +8,7 @@ export default defineConfig({
     host: true, // allows access from other devices on the network
     strictPort: true, // exits if port is already taken (no fallback)
   },
+  esbuild: {
+    drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
+  },
 });
