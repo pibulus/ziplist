@@ -1,5 +1,4 @@
 import { listsStore, activeList, activeListItems } from "./listsStore";
-import { listParser } from "$lib/services/listParser";
 import { get } from "svelte/store";
 
 /**
@@ -51,7 +50,7 @@ export class ListsService {
     if (!command || !command.command) return;
 
     switch (command.command) {
-      case "CREATE_LIST":
+      case "CREATE_LIST": {
         // Extract list name from parameters or use default
         const listName =
           command.params && command.params.length > 0
@@ -59,6 +58,7 @@ export class ListsService {
             : "New List";
         this.createList(listName);
         break;
+      }
 
       case "CLEAR_LIST":
         this.clearActiveList();
@@ -160,35 +160,39 @@ export class ListsService {
   /**
    * Add a single item to the active list
    * @param {string} text - Item text
+   * @param {string} [listId] - Optional list ID
    */
-  addItem(text) {
+  addItem(text, listId = null) {
     if (!text) return;
-    listsStore.addItem(text);
+    listsStore.addItem(text, listId);
   }
 
   /**
    * Toggle the checked state of an item
    * @param {number|string} itemId - ID of the item to toggle
+   * @param {string} [listId] - Optional list ID
    */
-  toggleItem(itemId) {
-    listsStore.toggleItem(itemId);
+  toggleItem(itemId, listId = null) {
+    listsStore.toggleItem(itemId, listId);
   }
 
   /**
    * Edit an item's text
    * @param {number|string} itemId - ID of the item to edit
    * @param {string} newText - New text for the item
+   * @param {string} [listId] - Optional list ID
    */
-  editItem(itemId, newText) {
-    listsStore.editItem(itemId, newText);
+  editItem(itemId, newText, listId = null) {
+    listsStore.editItem(itemId, newText, listId);
   }
 
   /**
    * Remove an item from the active list
    * @param {number|string} itemId - ID of the item to remove
+   * @param {string} [listId] - Optional list ID
    */
-  removeItem(itemId) {
-    listsStore.removeItem(itemId);
+  removeItem(itemId, listId = null) {
+    listsStore.removeItem(itemId, listId);
   }
 
   /**
@@ -198,15 +202,18 @@ export class ListsService {
     const items = get(activeListItems);
     if (items.length > 0) {
       const lastItem = items[items.length - 1];
+      // Note: removeLastItem currently only works on active list via activeListItems store
+      // If needed for specific lists, we'd need to fetch that list first
       listsStore.removeItem(lastItem.id);
     }
   }
 
   /**
    * Clear all items from the active list
+   * @param {string} [listId] - Optional list ID
    */
-  clearActiveList() {
-    listsStore.clearList();
+  clearActiveList(listId = null) {
+    listsStore.clearList(listId);
   }
 
   /**

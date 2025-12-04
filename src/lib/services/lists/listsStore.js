@@ -3,17 +3,36 @@ import { browser } from "$app/environment";
 import { StorageUtils } from "../infrastructure/storageUtils";
 import { STORAGE_KEYS } from "$lib/constants";
 
-// Default list structure
-const DEFAULT_LIST = {
-  id: "default",
-  name: "My List",
-  items: [],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
+// Default lists configuration
+const DEFAULT_LISTS = [
+  {
+    id: "list-blue",
+    name: "Blue List",
+    color: "blue",
+    items: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "list-pink",
+    name: "Pink List",
+    color: "pink",
+    items: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "list-yellow",
+    name: "Yellow List",
+    color: "yellow",
+    items: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+];
 
 // Current schema version
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 // Initialize the lists store
 function createListsStore() {
@@ -43,34 +62,46 @@ function createListsStore() {
       const storedActiveListId = localStorage.getItem(
         STORAGE_KEYS.ACTIVE_LIST_ID,
       );
-      const storedVersionRaw = localStorage.getItem(STORAGE_KEYS.LISTS_VERSION);
-      const storedVersion = storedVersionRaw
-        ? parseInt(storedVersionRaw, 10)
-        : 0;
-
+      
       // Initialize with stored data or defaults
       if (storedLists && storedLists.length > 0) {
-        // Handle version migration if needed
-        if (storedVersion < CURRENT_VERSION) {
-          // Future migration logic would go here
-          StorageUtils.setNumberItem(
-            STORAGE_KEYS.LISTS_VERSION,
-            CURRENT_VERSION,
-          );
+        // Migration logic: If we have old lists but not the 3 fixed ones
+        // We map the first old list to "Blue List" and create the others
+        let finalLists = [...DEFAULT_LISTS];
+        
+        // Check if we need to migrate from single list
+        const isOldSchema = !storedLists.some(l => l.id === 'list-blue');
+        
+        if (isOldSchema) {
+            // Take items from the first stored list and put them in Blue List
+            if (storedLists[0] && storedLists[0].items) {
+                finalLists[0].items = storedLists[0].items;
+                finalLists[0].updatedAt = storedLists[0].updatedAt || new Date().toISOString();
+            }
+        } else {
+            // Already migrated, just use stored lists but ensure all 3 exist
+            finalLists = DEFAULT_LISTS.map(defaultList => {
+                const found = storedLists.find(l => l.id === defaultList.id);
+                return found ? found : defaultList;
+            });
         }
 
-        // Set the store with stored lists
+        // Set the store with lists
         set({
-          lists: storedLists,
-          activeListId: storedActiveListId || storedLists[0].id,
+          lists: finalLists,
+          activeListId: storedActiveListId || finalLists[0].id,
           version: CURRENT_VERSION,
         });
+        
+        // Save immediately if we migrated
+        if (isOldSchema) {
+            persistToStorage();
+        }
       } else {
-        // Initialize with a default list
-        const defaultList = { ...DEFAULT_LIST };
+        // Initialize with defaults
         set({
-          lists: [defaultList],
-          activeListId: defaultList.id,
+          lists: DEFAULT_LISTS,
+          activeListId: DEFAULT_LISTS[0].id,
           version: CURRENT_VERSION,
         });
 
@@ -83,10 +114,9 @@ function createListsStore() {
     } catch (error) {
       console.error("Error initializing lists from storage:", error);
       // Fallback to defaults on error
-      const defaultList = { ...DEFAULT_LIST };
       set({
-        lists: [defaultList],
-        activeListId: defaultList.id,
+        lists: DEFAULT_LISTS,
+        activeListId: DEFAULT_LISTS[0].id,
         version: CURRENT_VERSION,
       });
     }

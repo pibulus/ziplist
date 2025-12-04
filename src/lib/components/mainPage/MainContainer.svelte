@@ -24,7 +24,7 @@
   import { AudioStates } from '$lib/services/audio/audioStates.js';
   import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js';
   import { PageLayout } from '$lib/components/layout';
-  import SingleList from '../list/SingleList.svelte';
+  import SwipeableLists from '../list/SwipeableLists.svelte';
   import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte';
   import { fade } from 'svelte/transition';
   import { StorageUtils } from '$lib/services/infrastructure/storageUtils';
@@ -306,9 +306,9 @@
     />
   </div>
 
-  <!-- Single list instead of carousel with minimal top margin -->
+  <!-- Swipeable lists container -->
   <div class="mt-2">
-    <SingleList />
+    <SwipeableLists />
   </div>
 
   <svelte:fragment slot="footer-buttons">

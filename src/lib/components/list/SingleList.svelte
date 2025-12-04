@@ -8,6 +8,9 @@
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   
+  // Props
+  export let listId = null; // If provided, this component will display this specific list
+
   // State variables
   let list = { name: '', items: [] };
   let draggedItemId = null;
@@ -18,17 +21,34 @@
   let newItemText = '';
   let shareStatus = null; // To track share operation status
   
-  // Subscribe to the active list
-  const unsubscribe = activeList.subscribe(activeListData => {
-    if (activeListData) {
-      list = activeListData;
+  // Subscribe to the appropriate list
+  let unsubscribe;
+
+  $: {
+    // Clean up previous subscription if exists
+    if (unsubscribe) unsubscribe();
+
+    if (listId) {
+      // Subscribe to specific list from the main store
+      unsubscribe = listsStore.subscribe(state => {
+        const foundList = state.lists.find(l => l.id === listId);
+        if (foundList) {
+          list = foundList;
+        }
+      });
+    } else {
+      // Fallback to active list (legacy behavior)
+      unsubscribe = activeList.subscribe(activeListData => {
+        if (activeListData) {
+          list = activeListData;
+        }
+      });
     }
-  });
+  }
 
   onMount(() => {
-    // Initialize the lists store
-    listsStore.initialize();
-    listsService.getAllLists();
+    // Initialize the lists store if not already done
+    // listsStore.initialize(); // Should be done at app root now
   });
 
   onDestroy(() => {
@@ -271,9 +291,14 @@
   }
 
   function saveItemEdit() {
-    if (editedItemText.trim() && editingItemId !== null) {
-      listsService.editItem(editingItemId, editedItemText.trim());
-      cancelItemEdit();
+    if (editingItemId !== null && editedItemText.trim() !== '') {
+      listsService.editItem(editingItemId, editedItemText, list.id);
+      editingItemId = null;
+      editedItemText = '';
+    } else if (editedItemText.trim() === '') {
+      // If empty, remove the item
+      listsService.removeItem(editingItemId, list.id);
+      editingItemId = null;
     }
   }
 
@@ -328,7 +353,7 @@
                   type="checkbox"
                   id="item-{list.id}-{item.id}"
                   checked={item.checked}
-                  on:change={() => toggleItem(item.id)}
+                  on:change={() => listsService.toggleItem(item.id, list.id)}
                   class="zl-checkbox"
                 />
                 <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
@@ -375,7 +400,7 @@
                 <button 
                   type="button" 
                   class="delete-button" 
-                  on:click|stopPropagation={() => listsService.removeItem(item.id)}
+                  on:click|stopPropagation={() => listsService.removeItem(item.id, list.id)}
                   title="Delete item"
                   aria-label="Delete item: {item.text}"
                 >
@@ -420,11 +445,31 @@
                 class="zl-new-item-input" 
                 placeholder="Type your item here..." 
                 bind:value={newItemText}
-                on:keydown={(e) => {
-                  if (e.key === 'Enter' && newItemText.trim()) {
-                    listsService.addItem(newItemText.trim());
-                    newItemText = '';
-                    isCreatingNewItem = false;
+                on:keydown={async (e) => {
+                  if (e.key === 'Enter') {
+                    if (newItemText.trim()) {
+                      listsService.addItem(newItemText, list.id);
+                      newItemText = '';
+                      isCreatingNewItem = false;
+                      
+                      // Provide haptic feedback
+                      hapticService.light();
+                      
+                      // Wait for DOM update then focus the new item to edit it immediately
+                      await tick();
+                      
+                      // Find the newly added item (it will be the last one in active items)
+                      // We need to get the latest list state
+                      const currentItems = list.items.filter(i => !i.checked);
+                      if (currentItems.length > 0) {
+                        // The newest item usually has the highest ID or is last in the list
+                        // Assuming it's the last one added
+                        const newItem = currentItems[currentItems.length - 1];
+                        startEditingItem(newItem);
+                      }
+                    } else {
+                      isCreatingNewItem = false;
+                    }
                   } else if (e.key === 'Escape') {
                     newItemText = '';
                     isCreatingNewItem = false;
