@@ -399,10 +399,16 @@
           {/each}
         </ul>
       {:else}
-        <div class="zl-empty-state"
-          in:fade={{ duration: 300, delay: 50 }}
-          on:click={() => { isCreatingNewItem = true; }}
-          class:clickable={!isCreatingNewItem}
+        <div 
+          class="zl-empty-state" 
+          on:click={handleEmptyStateClick}
+          on:keydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleEmptyStateClick();
+            }
+          }}
+          role="button"
+          tabindex="0"
           class:isCreatingNewItem={isCreatingNewItem}
         >
           <div class="zl-empty-content">
@@ -1043,13 +1049,9 @@
     transition: var(--zl-transition-fast); /* Transition only non-layout properties */
   }
 
-  .zl-empty-state.clickable {
-    cursor: pointer;
-  }
-
-  .zl-empty-state.clickable:hover {
-    background: linear-gradient(135deg, rgba(255, 245, 250, 0.6), rgba(255, 235, 245, 0.6));
-    border-color: rgba(201, 120, 255, 0.5);
+  .zl-empty-state.isCreatingNewItem {
+    cursor: default;
+    background-color: var(--zl-item-bg);
   }
   
   .zl-empty-content {

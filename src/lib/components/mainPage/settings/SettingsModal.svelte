@@ -193,7 +193,6 @@
 	id="settings_modal"
 	class="modal fixed z-50"
 	style="overflow: hidden !important; z-index: 999;"
-	role="dialog"
 	aria-labelledby="settings_modal_title"
 	aria-modal="true"
 >
@@ -375,6 +374,18 @@
 				setTimeout(handleModalClose, 50);
 			}
 		}}
+		on:keydown={(e) => {
+			if (e.key === 'Escape') {
+				const modal = document.getElementById('settings_modal');
+				if (modal) {
+					modal.close();
+					setTimeout(handleModalClose, 50);
+				}
+			}
+		}}
+		role="button"
+		tabindex="0"
+		aria-label="Close modal"
 	></div>
 </dialog>
 
@@ -480,6 +491,10 @@
 
 	/* Each theme preview has a slightly different blink timing 
 	   to create an organic, non-synchronized effect */
+	/* Note: These selectors were unused in the current implementation of DisplayGhost
+	   but kept here if we want to re-enable specific eye animations later.
+	   Commenting out to silence linter. */
+	/*
 	.vibe-option:nth-child(1) .preview-eyes {
 		animation-duration: 6.7s;
 		animation-delay: 0.4s;
@@ -499,6 +514,7 @@
 		animation-duration: 8.2s;
 		animation-delay: 0.7s;
 	}
+	*/
 
 	@keyframes preview-blink {
 		0%,
