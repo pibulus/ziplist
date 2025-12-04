@@ -3,6 +3,7 @@
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
   import { shareList } from '$lib/services/share';
+  import { hapticService } from '$lib/services/infrastructure/hapticService';
 
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
@@ -98,8 +99,18 @@
   }
 
   // Helper function to calculate staggered delay for animations
-  function handleEmptyStateClick() {
-    isCreatingNewItem = true;
+  async function handleEmptyStateClick() {
+    // Add a new item to start editing
+    listsService.addItem('Type here...');
+    await tick();
+    
+    // Find the new item (last one) and start editing
+    if (list.items.length > 0) {
+      const newItem = list.items[list.items.length - 1];
+      startEditingItem(newItem);
+      // Clear the placeholder text immediately so user can type
+      editedItemText = ''; 
+    }
   }
   function getStaggerDelay(index) {
     return index * 50; // 50ms between each item
@@ -146,9 +157,8 @@
     draggedItemId = itemId;
 
     // Haptic feedback
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
+    // Haptic feedback
+    hapticService.impact('light');
   }
 
   function handleDragEnd(event) {
@@ -157,9 +167,8 @@
     dragOverItemId = null;
 
     // Haptic feedback
-    if (navigator.vibrate) {
-      navigator.vibrate([20, 30, 20]);
-    }
+    // Haptic feedback
+    hapticService.impact('medium');
   }
 
   function handleDragOver(event, itemId) {
@@ -181,9 +190,8 @@
     dragOverItemId = itemId;
 
     // Add subtle haptic feedback when moving over a valid drop target
-    if (navigator.vibrate) {
-      navigator.vibrate(15); // Very subtle pulse
-    }
+    // Add subtle haptic feedback when moving over a valid drop target
+    hapticService.impact('light');
   }
 
   function handleDrop(event, targetItemId) {
@@ -200,9 +208,8 @@
     if (targetItem?.checked) return;
 
     // Haptic feedback - stronger for successful drop
-    if (navigator.vibrate) {
-      navigator.vibrate(80);
-    }
+    // Haptic feedback - stronger for successful drop
+    hapticService.impact('heavy');
 
     // Reorder items
     const reorderedItems = [...list.items];
@@ -226,8 +233,9 @@
     const itemToToggle = list.items.find(item => item.id === itemId);
 
     // Apply haptic feedback
-    if (itemToToggle && navigator.vibrate) {
-      navigator.vibrate(itemToToggle.checked ? 20 : [20, 30, 20]);
+    // Apply haptic feedback
+    if (itemToToggle) {
+      hapticService.impact(itemToToggle.checked ? 'light' : 'medium');
     }
 
     // Toggle the item state
@@ -247,8 +255,8 @@
             list.items.filter(i => i.id !== itemId).every(i => i.checked);
 
           // If this completes the list, trigger haptic feedback but no message
-          if (allCompleted && navigator.vibrate) {
-            navigator.vibrate([30, 50, 30, 50, 30]);
+          if (allCompleted) {
+            hapticService.notification('success');
           }
         }
       }, 50);
@@ -286,32 +294,7 @@
 <div class="zl-card">
   <div class="card-content">
     <!-- List header with share button -->
-    {#if list.name}
-      <div class="zl-list-header">
-        <h2 class="zl-list-title">{list.name}</h2>
-        <div class="zl-list-actions">
-          <button
-            class="zl-share-button"
-            on:click={handleShareList}
-            title="Share this list"
-            aria-label="Share list: {list.name}"
-          >
-            <span class="share-icon">↑</span>
-            <span class="share-text">Share</span>
-          </button>
-        </div>
-      </div>
-      
-      <!-- Share status notification -->
-      {#if shareStatus}
-        <div 
-          class="zl-share-notification {shareStatus.success ? 'success' : 'error'}" 
-          transition:fade={{duration: 200}}
-        >
-          {shareStatus.message}
-        </div>
-      {/if}
-    {/if}
+    <!-- Header removed as per request -->
     
     <!-- List Items -->
     <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? 100 + (list.items.length * 90) : 320}px;">
@@ -544,7 +527,7 @@
     
     /* Size and positioning */
     width: 100%;
-    max-width: 540px; /* Optimized for text wrapping */
+    max-width: 600px; /* Balanced width for desktop */
     margin: 0 auto;
     margin-top: 2rem;
     margin-bottom: 2.5rem;
@@ -574,16 +557,17 @@
      *    specified duration, using ease timing for smooth movement,
      *    and repeating infinitely for a continuous effect.
      */
-    background: linear-gradient(
-      var(--zl-card-bg-gradient-angle),
-      var(--zl-card-bg-gradient-color-start),
-      var(--zl-card-bg-gradient-color-second),
-      var(--zl-card-bg-gradient-color-mid),
-      var(--zl-card-bg-gradient-color-fourth),
-      var(--zl-card-bg-gradient-color-end)
-    );
-    background-size: var(--zl-card-bg-gradient-size);
-    animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease infinite;
+    /* Distinct background with jazzxy tones */
+    background: linear-gradient(135deg, #FFFDF5 0%, #fff5f7 100%);
+    border: 2px solid rgba(255, 176, 0, 0.15);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .zl-card:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #ffffff 60%, #ffe4e6 100%); /* White to Rose */
+    border-color: #fda4af; /* Rose-300 */
   }
 
   /* Media query for mobile responsiveness */
@@ -1045,11 +1029,24 @@
     height: 320px; /* Fixed height instead of min-height */
     width: 100%;
     box-sizing: border-box;
-    background: var(--zl-empty-state-bg);
-    border: var(--zl-empty-state-border);
+    background: #f9fafb; /* Light gray background */
+    border: 4px dashed #d1d5db; /* Thicker dashed border */
     border-radius: 24px;
     margin: 1.5rem 0;
-    transition: var(--zl-transition-fast); /* Transition only non-layout properties */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
+  }
+  
+  .zl-empty-state:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
+
+
+  .zl-empty-state:active {
+    transform: scale(0.98);
   }
 
   .zl-empty-state.isCreatingNewItem {
@@ -1111,7 +1108,7 @@
   
   .zl-empty-title {
     font-weight: 800;
-    color: var(--zl-empty-title-color);
+    color: #333; /* Dark color for better contrast */
     margin-bottom: 1.5rem;
     font-size: 2.2rem;
     font-family: 'Space Mono', monospace;
@@ -1141,13 +1138,13 @@
   .edit-wrapper {
     flex: 1;
     position: relative;
-    min-height: 44px;
+    min-height: 60px; /* Match input height */
     margin-right: auto;
     display: flex;
-    align-items: flex-start; /* Align at the top for multi-line content */
-    padding-top: 4px; /* Add a little padding at the top for vertical alignment */
-    align-self: stretch; /* Stretch to fill the height of the parent */
-    width: calc(100% - 32px - 32px - 2rem); /* Full width minus checkbox, handle, and padding */
+    align-items: center;
+    padding-top: 0;
+    align-self: stretch;
+    width: auto; /* Let flex handle width */
   }
 
   /* Input fields - enhanced for "chonky" feel to match list items */
@@ -1176,12 +1173,12 @@
   
   /* Specific edit input styling */
   .zl-edit-input {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    width: calc(100% - var(--zl-spacing-s)); /* Full width within container minus small margin */
-    max-width: none; /* Ensure it doesn't collapse to text width */
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    max-width: none;
   }
 
   .zl-edit-input::placeholder {

@@ -294,14 +294,7 @@
 							data-vibe-type={vibe.id}
 							on:click={() => changeVibe(vibe.id)}
 						>
-							<div class="preview-container mb-2">
-								<!-- Use the original DisplayGhost component with masking -->
-								<div class="preview-ghost-wrapper relative h-12 w-12">
-									<div class="ghost-mask-wrapper">
-										<DisplayGhost theme={vibe.id} size="48px" seed={index * 1000 + 12345} />
-									</div>
-								</div>
-							</div>
+							<!-- Ghost preview removed as per request -->
 
 							<span class="text-xs font-medium text-gray-700">{vibe.name}</span>
 

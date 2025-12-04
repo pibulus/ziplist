@@ -278,6 +278,15 @@ import { fade } from 'svelte/transition';
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 
+  /* Spring Bounce Animation */
+  @keyframes springBounce {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.25); }
+    50% { transform: scale(0.9); }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
   /* Neo-brutalist button override */
   :global(html.mode-neo-brutalist) .record-button {
     background-image: none;
@@ -286,17 +295,20 @@ import { fade } from 'svelte/transition';
     box-shadow: 6px 6px 0px 0px #000000;
     border-radius: 16px; /* Less rounded */
     color: #000000;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
   }
   
   :global(html.mode-neo-brutalist) .record-button:hover:not(:disabled) {
-    transform: translate(-2px, -2px);
+    transform: translate(-2px, -2px) scale(1.05);
     box-shadow: 8px 8px 0px 0px #000000;
     background-image: none;
     background-color: #FFC107; /* Slightly lighter amber */
+    filter: brightness(1.1);
   }
 
   :global(html.mode-neo-brutalist) .record-button:active:not(:disabled) {
-    transform: translate(2px, 2px);
+    animation: springBounce 0.4s linear;
+    transform: translate(2px, 2px) scale(0.95);
     box-shadow: 2px 2px 0px 0px #000000;
   }
   

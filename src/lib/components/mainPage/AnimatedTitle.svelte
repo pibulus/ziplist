@@ -46,7 +46,7 @@
       <span class="app-suffix-container stagger-letter" style="animation-delay: 0.45s; position: relative;">
         <span class="suffix-wrapper">
           <AppSuffix 
-            color="inherit"
+            color="#FFB000"
             size="35%"
             offsetX="-0.6em" 
             offsetY="8px"

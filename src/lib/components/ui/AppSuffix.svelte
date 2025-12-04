@@ -98,11 +98,19 @@
     background-image: linear-gradient(to bottom right, #9f8fff, #8183f4);
   }
 
-  :global(html.mode-neo-brutalist) .app-text {
-    background-image: none;
-    color: #000000 !important;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
-    -webkit-text-stroke: 0.5px #000;
+  .theme-neo .app-text {
+    background-image: linear-gradient(to right, #FFD700, #FF6B6B, #4ECDC4); /* Miami Gradient */
+    -webkit-text-stroke: 0.5px rgba(0,0,0,0.1);
+    filter: drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3));
+  }
+  
+  .theme-neo {
+    border: 2px solid #FF6B6B !important; /* Miami Pink border */
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 10px rgba(255, 107, 107, 0.2);
+    padding: 0.1em 0.3em;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
   }
 
   .theme-nocturne .app-text {
@@ -115,11 +123,17 @@
     0% { background-position: 0% center; }
     100% { background-position: 200% center; }
   }
-  
+
   /* Playful hover effects */
+  .app-suffix:hover {
+    box-shadow: 0 0 15px var(--suffix-color, rgba(255, 107, 107, 0.4));
+    transform: translateY(calc(var(--offset-y, 0) - 2px)) rotate(-2deg);
+    border-color: var(--suffix-color, #FF6B6B);
+  }
+
   .app-suffix:hover .app-text {
-    filter: brightness(1.08) saturate(1.1);
-    transform: rotate(-2deg) scale(1.05);
+    filter: brightness(1.1) saturate(1.2);
+    transform: scale(1.05);
     transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   }
   

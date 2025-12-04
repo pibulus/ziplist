@@ -11,9 +11,10 @@ export const THEMES = {
   MINT: "mint",
   BUBBLEGUM: "bubblegum",
   RAINBOW: "rainbow",
+  NEO: "neo",
 };
 
-export const DEFAULT_THEME = THEMES.PEACH;
+export const DEFAULT_THEME = THEMES.NEO;
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
@@ -153,10 +154,6 @@ export const CTA_PHRASES = [
 
 // ZipList specific phrases for different button contexts
 export const ZIPLIST_START_PHRASES = [
-  "Talk It, List It",
-  "Click, Speak, List",
-  "Speak Your List",
-  "Say It, List It",
   "Talk That List",
 ];
 
