@@ -345,7 +345,7 @@
                   on:change={() => toggleItem(item.id)}
                   class="zl-checkbox"
                 />
-                <span class="zl-checkbox-custom"></span>
+                <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
               </label>
 
               <div class="edit-wrapper">
@@ -406,9 +406,9 @@
           class:isCreatingNewItem={isCreatingNewItem}
         >
           <div class="zl-empty-content">
-            <p class="zl-empty-title">Your list awaits</p>
-            <p class="zl-empty-description">Hit that yellow button</p>
-            <p class="zl-empty-hint">or click here to type</p>
+            <p class="zl-empty-title">Ready.</p>
+            <p class="zl-empty-description">Tap to start.</p>
+            <p class="zl-empty-hint">or click to type</p>
           </div>
           
           {#if isCreatingNewItem}
@@ -457,6 +457,16 @@
   @keyframes sparkle {
     0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  @keyframes check-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  .animate-pop {
+    animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   
   @keyframes soft-pulse {
@@ -639,6 +649,16 @@
     pointer-events: none;
     animation: soft-pulse 8s infinite alternate ease-in-out;
   }
+
+  /* Hide soft glow for neo-brutalist mode */
+  :global(html.mode-neo-brutalist) .zl-card::after {
+    display: none;
+  }
+  
+  /* Hide inner border for neo-brutalist mode */
+  :global(html.mode-neo-brutalist) .zl-card::before {
+    display: none;
+  }
   
   /* Card content container */
   .card-content {
@@ -740,6 +760,19 @@
     box-shadow: var(--zl-item-hover-box-shadow, 0 8px 20px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.2));
     border-left: 4px solid var(--zl-item-border-hover-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.7));
     border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
+  }
+
+  /* Neo-brutalist specific hover */
+  :global(html.mode-neo-brutalist) .zl-item:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 8px 8px 0px 0px #000000;
+  }
+
+  /* Neo-brutalist active state (click) */
+  :global(html.mode-neo-brutalist) .zl-item:active {
+    transform: translate(0px, 0px);
+    box-shadow: 4px 4px 0px 0px #000000;
+    transition: all 0.1s;
   }
   
   .zl-item::after {

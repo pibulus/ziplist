@@ -277,6 +277,28 @@ import { fade } from 'svelte/transition';
       0 2px 4px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
+
+  /* Neo-brutalist button override */
+  :global(html.mode-neo-brutalist) .record-button {
+    background-image: none;
+    background-color: var(--zl-primary-color);
+    border: 3px solid #000000;
+    box-shadow: 6px 6px 0px 0px #000000;
+    border-radius: 16px; /* Less rounded */
+    color: #000000;
+  }
+  
+  :global(html.mode-neo-brutalist) .record-button:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px 0px #000000;
+    background-image: none;
+    background-color: #FFC107; /* Slightly lighter amber */
+  }
+
+  :global(html.mode-neo-brutalist) .record-button:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
   
   /* Focus state */
   .record-button:focus {

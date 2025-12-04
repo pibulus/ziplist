@@ -159,10 +159,18 @@
 
       // Apply theme using storage helpers
       const THEME_KEY = "ziplist-vibe";
-      const DEFAULT_THEME = "focus";
+      const DEFAULT_THEME = "neo";
 
       const savedTheme = getStorageItem(THEME_KEY, DEFAULT_THEME);
       document.documentElement.setAttribute("data-theme", savedTheme);
+      
+      // Check for chunky mode preference, default to true for pop-punk
+      const CHUNKY_MODE_KEY = "ziplist-chunky-mode";
+      const savedChunkyMode = getStorageItem(CHUNKY_MODE_KEY, "true");
+      
+      if (savedChunkyMode === "true") {
+        document.documentElement.classList.add("mode-neo-brutalist");
+      }
 
       if (savedTheme === DEFAULT_THEME) {
         setStorageItem(THEME_KEY, DEFAULT_THEME);

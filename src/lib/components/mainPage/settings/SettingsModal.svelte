@@ -13,6 +13,7 @@
 	let selectedVibe;
 	let scrollPosition = 0;
 	let autoRecordValue = false;
+	let chunkyModeValue = false;
 
 	// Prompt style selection
 	let promptStyles = [];
@@ -50,6 +51,10 @@
 		{
 			id: 'nocturne',
 			name: 'Nocturne'
+		},
+		{
+			id: 'neo',
+			name: 'Neo'
 		}
 	];
 
@@ -82,6 +87,11 @@
 			});
 		}
 
+		// Check for chunky mode
+		if (typeof document !== 'undefined') {
+			chunkyModeValue = document.documentElement.classList.contains('mode-neo-brutalist');
+		}
+
 		// Clean up subscriptions on component destroy
 		return () => {
 			unsubscribeTheme();
@@ -89,6 +99,19 @@
 			unsubscribePromptStyle();
 		};
 	});
+
+	// Handle chunky mode toggle
+	function toggleChunkyMode() {
+		chunkyModeValue = !chunkyModeValue;
+		
+		if (chunkyModeValue) {
+			document.documentElement.classList.add('mode-neo-brutalist');
+			localStorage.setItem('ziplist-chunky-mode', 'true');
+		} else {
+			document.documentElement.classList.remove('mode-neo-brutalist');
+			localStorage.setItem('ziplist-chunky-mode', 'false');
+		}
+	}
 
 	// Handle vibe change
 	function changeVibe(vibeId) {
@@ -222,6 +245,36 @@
 							></div>
 							<div
 								class={`absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white transition-all duration-200 ${autoRecordValue ? 'translate-x-5' : ''}`}
+							></div>
+						</div>
+					</label>
+				</div>
+
+				<div
+					class="mb-2 flex items-center justify-between rounded-xl border border-pink-100 bg-[#fffdf5] p-2 shadow-sm transition-all duration-200 hover:border-pink-200"
+				>
+					<div>
+						<span class="text-sm font-medium text-gray-700">Chunky Mode</span>
+						<p class="mt-0.5 text-xs text-gray-500">
+							Thick borders & hard shadows
+						</p>
+					</div>
+					<label class="flex cursor-pointer items-center">
+						<span class="sr-only"
+							>Chunky Mode Toggle {chunkyModeValue ? 'Enabled' : 'Disabled'}</span
+						>
+						<div class="relative">
+							<input
+								type="checkbox"
+								class="sr-only"
+								checked={chunkyModeValue}
+								on:change={toggleChunkyMode}
+							/>
+							<div
+								class={`h-5 w-10 rounded-full ${chunkyModeValue ? 'bg-pink-400' : 'bg-gray-200'} transition-all duration-200`}
+							></div>
+							<div
+								class={`absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white transition-all duration-200 ${chunkyModeValue ? 'translate-x-5' : ''}`}
 							></div>
 						</div>
 					</label>

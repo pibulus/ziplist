@@ -558,6 +558,137 @@ html[data-theme="nocturne"] {
   --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(196, 135, 210, 0.2);
 }
 
+
+/**
+ * Theme: Neo
+ *
+ * A high-contrast, bold aesthetic with pastel colors.
+ * Best used with "Chunky Mode" enabled.
+ */
+html[data-theme="neo"] {
+  /* Card gradient */
+  --zl-card-bg-gradient-angle: 180deg;
+  --zl-card-bg-gradient-color-start: #fff9f0;
+  --zl-card-bg-gradient-color-second: #fff9f0;
+  --zl-card-bg-gradient-color-mid: #fff9f0;
+  --zl-card-bg-gradient-color-fourth: #fff9f0;
+  --zl-card-bg-gradient-color-end: #fff9f0;
+  
+  /* Base theme colors */
+  --zl-primary-color: #FFB000; /* Amber/Egg Yolk */
+  --zl-primary-color-rgb: 255, 176, 0;
+  --zl-secondary-color: #FFD1DC; /* Pastel Pink */
+  --zl-accent-color: #000000; /* Black */
+  --zl-accent-color-rgb: 0, 0, 0;
+  --zl-highlight-color: #A0E7E5; /* Tiffany Blue / Mint */
+  --zl-text-hover-color: #000000;
+
+  /* Text colors */
+  --zl-text-color-primary: #000000;
+  --zl-text-color-secondary: #333333;
+  --zl-text-color-disabled: #777777;
+
+  /* List item styling */
+  --zl-item-bg: #FFFFFF;
+  --zl-item-hover-bg: #FFF8E1;
+  --zl-item-border-color: #000000;
+  --zl-item-border-hover-color: #000000;
+  
+  /* Checked item styling */
+  --zl-item-checked-opacity: 1;
+  --zl-item-checked-bg: #E0E0E0;
+  --zl-item-checked-border-color: #555555;
+  
+  /* Drag and drop styling */
+  --zl-item-dragging-bg: #FFD1DC;
+  --zl-item-dragover-bg: #E6F7FF;
+
+  /* Checkbox styling */
+  --zl-checkbox-bg: #FFFFFF;
+  --zl-checkbox-hover-bg: #A0E7E5;
+  --zl-checkbox-checked-gradient-start: #000000;
+  --zl-checkbox-checked-gradient-end: #000000;
+  --zl-checkbox-sparkle-color: #FFB000;
+
+  /* Text button styling */
+  --zl-text-button-hover-bg: #FFD1DC;
+
+  /* Grab handle styling */
+  --zl-grab-handle-color: #000000;
+  --zl-grab-handle-opacity: 0.3;
+  --zl-grab-handle-hover-opacity: 1;
+
+  /* Delete button styling */
+  --zl-delete-button-bg: #FF6B6B;
+  --zl-delete-button-hover-bg: #FF4757;
+  --zl-delete-button-text-color: #000000;
+
+  /* Drop indicator styling */
+  --zl-drop-indicator-color: #000000;
+  --zl-drop-arrow-bg: #000000;
+  --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
+
+  /* Edit input styling */
+  --zl-edit-input-bg: #FFFFFF;
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #A0E7E5;
+
+  /* New item input styling */
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #FFB000;
+  
+  /* Empty state styling */
+  --zl-empty-state-bg: #fff0f5;
+  --zl-empty-title-color: #000000;
+}
+
+/**
+ * Mode: Neo-Brutalist / Chunky
+ *
+ * Applies the structural "Neo-Brutalist" look (thick borders, hard shadows)
+ * to ANY active color theme.
+ */
+html.mode-neo-brutalist {
+  /* Borders and Shadows */
+  --zl-card-border-color: #000000;
+  --zl-card-border-width: 3px;
+  --zl-card-border-radius: 12px;
+  --zl-card-box-shadow: 8px 8px 0px 0px #000000;
+  --zl-card-inner-border-gradient: none;
+
+  /* Empty state */
+  --zl-empty-state-border: 3px dashed #000000;
+
+  /* List items */
+  --zl-item-border-radius: 8px;
+  --zl-item-box-shadow: 4px 4px 0px 0px #000000;
+  --zl-item-hover-box-shadow: 6px 6px 0px 0px #000000;
+  
+  /* Dragging */
+  --zl-item-dragging-border: 3px solid #000000;
+  --zl-item-dragging-shadow: 10px 10px 0px 0px #000000;
+  --zl-item-dragover-border: 3px dashed #000000;
+  --zl-item-dragover-shadow: 4px 4px 0px 0px #000000;
+
+  /* Checkbox */
+  --zl-checkbox-border: 3px solid #000000;
+  --zl-checkbox-hover-border: 3px solid #000000;
+  --zl-checkbox-checked-shadow: 2px 2px 0px 0px rgba(0,0,0,0.2);
+  --zl-checkbox-size: 28px;
+  --zl-checkbox-border-radius: 6px;
+
+  /* Text Button */
+  --zl-text-button-focus-shadow: 4px 4px 0px 0px #000000;
+
+  /* Delete Button */
+  --zl-delete-button-border: 2px solid #000000;
+  --zl-delete-button-hover-border: #000000;
+
+  /* Inputs */
+  --zl-edit-input-border: 3px solid #000000;
+  --zl-edit-input-focus-border: #000000;
+  --zl-new-item-input-border: 3px solid #000000;
+  --zl-new-item-input-focus-border: #000000;
+}
+
 /* Optional: Add smooth transitions between themes */
 html[data-theme],
 html[data-theme] * {

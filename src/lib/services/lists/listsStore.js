@@ -6,7 +6,7 @@ import { STORAGE_KEYS } from "$lib/constants";
 // Default list structure
 const DEFAULT_LIST = {
   id: "default",
-  name: "Default List",
+  name: "My List",
   items: [],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),

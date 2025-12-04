@@ -98,6 +98,13 @@
     background-image: linear-gradient(to bottom right, #9f8fff, #8183f4);
   }
 
+  :global(html.mode-neo-brutalist) .app-text {
+    background-image: none;
+    color: #000000 !important;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    -webkit-text-stroke: 0.5px #000;
+  }
+
   .theme-nocturne .app-text {
     background-image: linear-gradient(to right, #ff0080, #ff8c00, #ffed00, #00ff80, #00bfff);
     background-size: 200% auto;
