@@ -4,7 +4,7 @@
   import { listsService } from '$lib/services/lists/listsService';
   import { shareList } from '$lib/services/share';
   import { hapticService } from '$lib/services/infrastructure/hapticService';
-  import confetti from 'canvas-confetti';
+  // Dynamic import for confetti to avoid SSR issues
 
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
@@ -145,7 +145,7 @@
     }
   }
   
-  function toggleItem(itemId, event) {
+  async function toggleItem(itemId, event) {
     const itemToToggle = list.items.find(item => item.id === itemId);
     if (itemToToggle) hapticService.impact(itemToToggle.checked ? 'light' : 'medium');
     listsService.toggleItem(itemId, list.id);
@@ -154,6 +154,8 @@
       if (event && event.clientX && event.clientY) {
         origin = { x: event.clientX / window.innerWidth, y: event.clientY / window.innerHeight };
       }
+      
+      const confetti = (await import('canvas-confetti')).default;
       confetti({ particleCount: 60, spread: 60, origin: origin, colors: ['#FFB000', '#FF6AC2', '#00D4FF'], disableForReducedMotion: true });
       setTimeout(() => {
         const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
