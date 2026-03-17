@@ -123,6 +123,18 @@
     }
   }
 
+  function handleSettingChanged(event) {
+    if (event.detail && event.detail.setting === 'promptStyle') {
+      geminiService.setPromptStyle(event.detail.value);
+    }
+  }
+
+  onDestroy(() => {
+    if (browser) {
+      window.removeEventListener('ziplist-setting-changed', handleSettingChanged);
+    }
+  });
+
   // Handle toggle recording from ghost
   async function handleToggleRecording() {
 
@@ -273,16 +285,7 @@
 
     // Listen for settings changes
     if (browser) {
-      window.addEventListener('ziplist-setting-changed', (event) => {
-        if (event.detail && event.detail.setting === 'autoRecord') {
-          // No immediate action needed, setting will apply on next page load/refresh
-        }
-
-        if (event.detail && event.detail.setting === 'promptStyle') {
-          // Update the prompt style in the service
-          geminiService.setPromptStyle(event.detail.value);
-        }
-      });
+      window.addEventListener('ziplist-setting-changed', handleSettingChanged);
     }
 
     // Check if first visit to show intro
@@ -347,8 +350,7 @@
 
 <!-- Settings Modal - lazy loaded -->
 {#if SettingsModal}
-  <!-- Pass the close function down to the component -->
-  <svelte:component this={SettingsModal} on:close={closeSettingsModal} />
+  <svelte:component this={SettingsModal} closeModal={closeSettingsModal} on:close={closeSettingsModal} />
 {/if}
 
 <!-- PWA Install Prompt -->

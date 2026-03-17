@@ -191,7 +191,7 @@ function createListsStore() {
       // Ensure we have at least one list
       let activeListId = state.activeListId;
       if (newLists.length === 0) {
-        const defaultList = { ...DEFAULT_LIST };
+        const defaultList = { ...DEFAULT_LISTS[0], items: [] };
         newLists.push(defaultList);
         activeListId = defaultList.id;
       } else if (state.activeListId === listId) {
@@ -237,7 +237,7 @@ function createListsStore() {
           if (list.id === targetListId) {
             return {
               ...list,
-              items: [...list.items, { id: Date.now(), text, checked: false }],
+              items: [...list.items, { id: crypto.randomUUID(), text, checked: false }],
               updatedAt: new Date().toISOString(),
             };
           }
@@ -261,7 +261,7 @@ function createListsStore() {
           if (list.id === targetListId) {
             // Map text strings to item objects
             const newItems = items.map((text, index) => ({
-              id: Date.now() + Math.floor(Math.random() * 1000) + index,
+              id: crypto.randomUUID(),
               text,
               checked: false,
               order: list.items.length + index, // Add order field to maintain sort order

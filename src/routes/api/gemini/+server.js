@@ -2,18 +2,26 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from '$env/dynamic/private';
 import { json } from '@sveltejs/kit';
 
-const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+let genAI = null;
+let model = null;
+
+function getModel() {
+    if (!model) {
+        genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+        model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    }
+    return model;
+}
 
 export async function POST({ request }) {
     try {
-        const { prompt, audioData, mimeType } = await request.json();
-
         if (!env.GEMINI_API_KEY) {
             return json({ error: 'GEMINI_API_KEY is not set' }, { status: 500 });
         }
 
-        const result = await model.generateContent([
+        const { prompt, audioData, mimeType } = await request.json();
+
+        const result = await getModel().generateContent([
             prompt,
             {
                 inlineData: {

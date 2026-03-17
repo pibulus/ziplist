@@ -315,16 +315,13 @@ class WhisperService {
   constructor() {
     this.transcriber = new WhisperTranscriber();
     this.modelLoadPromise = null;
-    
-    // Auto-start download on initialization (browser only)
+
+    // Request persistent storage on init (browser only)
     if (typeof window !== 'undefined') {
-      // Request persistent storage
       requestPersistentStorage();
-      
-      // Start downloading tiny model in background immediately
-      console.log('🚀 ZipList: Auto-starting Whisper Tiny model download...');
-      this.preloadModel();
     }
+    // Whisper model download is deferred until startBackgroundLoad() is called
+    // (triggered after first successful Gemini transcription via simpleHybridService)
   }
 
   async preloadModel() {

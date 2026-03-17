@@ -1,26 +1,8 @@
-// Track model initialization state (conceptually, for the server)
-let modelInitialized = false;
-let initializationPromise = null;
-
-// Function to preload/initialize the model for faster response
+/**
+ * No-op preload. The Gemini model runs server-side and is initialized lazily
+ * on first request. This function exists for API compatibility.
+ */
 function preloadModel() {
-  // Only initialize once
-  if (modelInitialized || initializationPromise) {
-    return initializationPromise;
-  }
-
-  if (import.meta.env.DEV) {
-
-  }
-
-  // We create a very small "ping" query to initialize the model
-  // This warms up the Gemini API connection and loads necessary client-side resources
-  // For the server-side implementation, we'll just send a dummy request to the endpoint
-  // Note: This might fail if we don't send valid data, but it wakes up the function.
-  // Alternatively, we can just skip this or implement a specific 'warmup' param.
-  // For now, let's just mark it as initialized to avoid blocking.
-  
-  modelInitialized = true;
   return Promise.resolve();
 }
 
@@ -40,14 +22,20 @@ function blobToGenerativePart(blob) {
   });
 }
 
+/** @type {number} API timeout in milliseconds (default 30s) */
+const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10);
+
 async function generateContent(promptData) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
   try {
     // promptData is [prompt, audioPart]
     // audioPart is { inlineData: { data: ..., mimeType: ... } }
-    
+
     const prompt = promptData[0];
     const audioPart = promptData[1];
-    
+
     const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: {
@@ -57,7 +45,8 @@ async function generateContent(promptData) {
             prompt: prompt,
             audioData: audioPart.inlineData.data,
             mimeType: audioPart.inlineData.mimeType
-        })
+        }),
+        signal: controller.signal
     });
 
     if (!response.ok) {
@@ -66,15 +55,20 @@ async function generateContent(promptData) {
     }
 
     const data = await response.json();
-    
+
     // Mocking the response object structure expected by the caller
     return {
         text: () => data.text
     };
 
   } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error("Transcription timed out. Check your connection and try again.");
+    }
     console.error("❌ Error generating content:", error);
     throw new Error("Failed to generate content with Gemini");
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -83,11 +77,8 @@ export const geminiApiService = {
   blobToGenerativePart,
   generateContent,
 
-  // Method to get model status
+  /** @returns {{ initialized: boolean, initializing: boolean }} */
   getModelStatus() {
-    return {
-      initialized: modelInitialized,
-      initializing: !!initializationPromise && !modelInitialized,
-    };
+    return { initialized: true, initializing: false };
   },
 };
