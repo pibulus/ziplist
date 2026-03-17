@@ -5,16 +5,24 @@
  * and make future adjustments easier.
  */
 
-// Theme/Vibe Configuration
+// Ghost Theme Configuration (ghost component gradient palettes)
 export const THEMES = {
   PEACH: "peach",
   MINT: "mint",
   BUBBLEGUM: "bubblegum",
   RAINBOW: "rainbow",
+};
+
+// App Vibe Configuration (overall app visual style, set in Settings)
+export const VIBES = {
+  FOCUS: "focus",
+  CHILL: "chill",
+  ZEN: "zen",
+  NOCTURNE: "nocturne",
   NEO: "neo",
 };
 
-export const DEFAULT_THEME = THEMES.NEO;
+export const DEFAULT_THEME = VIBES.NEO;
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
