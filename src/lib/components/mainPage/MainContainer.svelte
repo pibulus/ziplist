@@ -22,7 +22,6 @@
     userPreferences
   } from '$lib/services/infrastructure/stores.js';
   import { AudioStates } from '$lib/services/audio/audioStates.js';
-  import { ghostStateStore } from '$lib/components/ghost/stores/ghostStateStore.js';
   import { PageLayout } from '$lib/components/layout';
   import { listsStore } from '$lib/services/lists/listsStore';
   import SwipeableLists from '../list/SwipeableLists.svelte';
@@ -140,7 +139,6 @@
 
     if ($isRecording) {
       // Currently recording, so stop
-      ghostStateStore.setRecording(false); // Visually stop ghost recording animations
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop(); // This will trigger onstop handler
         // audioActions.updateState will be called in onstop
@@ -150,13 +148,11 @@
       }
     } else {
       // Not recording, so start
-      ghostStateStore.setRecording(true); // Visually start ghost recording animations
       audioChunks = []; // Clear previous chunks
 
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.error('getUserMedia not supported on this browser!');
-          ghostStateStore.setRecording(false);
           audioActions.updateState(AudioStates.ERROR, 'getUserMedia is not supported.');
           uiActions.setErrorMessage('Audio recording is not supported on this browser.');
           return;
@@ -201,7 +197,6 @@
         
         mediaRecorder.onerror = (event) => {
           console.error('MediaRecorder error:', event.error);
-          ghostStateStore.setRecording(false);
           audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
           uiActions.setErrorMessage(`Recording error: ${event.error.name}`);
           stream.getTracks().forEach(track => track.stop());
@@ -211,7 +206,6 @@
 
       } catch (err) {
         console.error('Error starting recording (getUserMedia or MediaRecorder setup):', err);
-        ghostStateStore.setRecording(false); // Revert visual state
         let errorMessage = 'Could not start recording.';
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           audioActions.updateState(AudioStates.PERMISSION_DENIED);

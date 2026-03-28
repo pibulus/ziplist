@@ -1,5 +1,4 @@
 <script>
-  import Ghost from '$lib/components/ghost/Ghost.svelte';
   import { theme } from '$lib';
   import { ModalCloseButton } from './index.js';
   export let closeModal;
@@ -14,13 +13,7 @@
     <div class="animate-fadeUp space-y-4">
       <div class="flex items-center gap-3 mb-1">
         <div class="w-9 h-9 bg-gradient-to-br from-white to-pink-50 rounded-full flex items-center justify-center shadow-sm border border-pink-200/60">
-          <Ghost 
-            width="28px" 
-            height="28px" 
-            externalTheme={theme}
-            clickable={false}
-            seed={12345}
-          />
+          <span class="text-xl">👻</span>
         </div>
         <h3 id="about_modal_title" class="font-black text-xl text-gray-800 tracking-tight">About Ziplist</h3>
       </div>
@@ -53,6 +46,17 @@
 
       <div class="border-l-3 border-pink-300 py-1 pl-4 ml-1 my-2 italic text-gray-600">
         "A little bit of soul, a hint of chaos, and a deep love for clarity."
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <a href="https://ko-fi.com/madebypablo" target="_blank" rel="noopener noreferrer"
+          class="text-xs text-pink-500 hover:text-pink-600 font-medium transition-colors">
+          ☕ Buy us a coffee
+        </a>
+        <a href="https://github.com/pibulus/ziplist" target="_blank" rel="noopener noreferrer"
+          class="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors">
+          GitHub
+        </a>
       </div>
 
       <div class="flex justify-between items-end pt-2">

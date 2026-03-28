@@ -13,7 +13,6 @@ import { resetStores } from "./infrastructure/stores";
 export { eventBus, hapticService, StorageUtils } from "./infrastructure/index";
 export { themeService } from "./theme/themeService";
 export { modalService } from "./modals/modalService";
-// export { postHogService } from "./analytics";
 export {
   firstVisitService,
   isFirstVisit,

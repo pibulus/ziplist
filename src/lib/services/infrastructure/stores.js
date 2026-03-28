@@ -1,7 +1,6 @@
 import { writable, derived, get } from "svelte/store";
 import { AudioStates } from "../audio/audioStates";
 import { ANIMATION } from "$lib/constants";
-import { ghostStateStore } from "$lib/components/ghost/stores/ghostStateStore.js";
 
 // Core audio state store
 export const audioState = writable({
@@ -220,17 +219,6 @@ export const transcriptionActions = {
       timestamp: Date.now(),
     }));
 
-    // Trigger ghost feedback for relevant commands
-    const hasAddItemCommand =
-      data.commands && data.commands.some((cmd) => cmd.command === "ADD_ITEM");
-    const hasClearListCommand =
-      data.commands &&
-      data.commands.some((cmd) => cmd.command === "CLEAR_LIST");
-    const hasItems = data.items && data.items.length > 0;
-
-    if ((hasAddItemCommand && hasItems) || hasClearListCommand) {
-      ghostStateStore.triggerReaction();
-    }
   },
 
   setTranscriptionError(error) {

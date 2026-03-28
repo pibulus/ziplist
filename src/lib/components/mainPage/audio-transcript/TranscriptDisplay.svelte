@@ -1,7 +1,6 @@
 <script>
   import { ANIMATION, ATTRIBUTION } from '$lib/constants';
   import { createEventDispatcher, onMount } from 'svelte';
-  import Ghost from '$lib/components/ghost/Ghost.svelte';
   
   // Props
   export let transcript = '';
@@ -99,14 +98,7 @@
         aria-label="Copy transcript to clipboard"
         bind:this={copyButtonRef}
       >
-        <div class="w-full h-full">
-          <Ghost 
-            size="100%" 
-            clickable={false} 
-            class="copy-ghost"
-            seed={42} 
-          />
-        </div>
+        <div class="w-full h-full flex items-center justify-center text-lg">📋</div>
 
         <!-- Smart tooltip - only shows for first few hovers -->
         {#if showCopyTooltip}
