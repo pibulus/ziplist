@@ -70,6 +70,9 @@
     opacity: 0.9;
     z-index: 1;
     filter: drop-shadow(0 0 2px rgba(0,0,0,0.12));
+    background: transparent;
+    border: none;
+    padding: 0;
   }
   
   .app-text {
