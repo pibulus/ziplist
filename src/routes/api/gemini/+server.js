@@ -37,6 +37,6 @@ export async function POST({ request }) {
         return json({ text });
     } catch (error) {
         console.error("Error in Gemini API route:", error);
-        return json({ error: error.message }, { status: 500 });
+        return json({ error: 'Transcription failed. Please try again.' }, { status: 500 });
     }
 }

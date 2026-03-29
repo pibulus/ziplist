@@ -43,6 +43,7 @@
   let speechModelPreloaded = false;
   let mediaRecorder = null;
   let audioChunks = [];
+  let isStartingRecording = false;
 
   // Modal functions
   function showAboutModal() {
@@ -134,20 +135,21 @@
     }
   });
 
-  // Handle toggle recording from ghost
+  // Handle toggle recording
   async function handleToggleRecording() {
 
     if ($isRecording) {
       // Currently recording, so stop
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop(); // This will trigger onstop handler
-        // audioActions.updateState will be called in onstop
       } else {
-        // Fallback if mediaRecorder state is inconsistent
         audioActions.updateState(AudioStates.IDLE);
       }
     } else {
-      // Not recording, so start
+      // Guard against rapid double-taps spawning multiple streams
+      if (isStartingRecording) return;
+      isStartingRecording = true;
+
       audioChunks = []; // Clear previous chunks
 
       try {
@@ -161,6 +163,7 @@
         mediaRecorder = new MediaRecorder(stream);
 
         mediaRecorder.onstart = () => {
+          isStartingRecording = false;
           audioActions.updateState(AudioStates.RECORDING);
         };
 
@@ -196,6 +199,7 @@
         };
         
         mediaRecorder.onerror = (event) => {
+          isStartingRecording = false;
           console.error('MediaRecorder error:', event.error);
           audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
           uiActions.setErrorMessage(`Recording error: ${event.error.name}`);
@@ -205,6 +209,7 @@
         mediaRecorder.start();
 
       } catch (err) {
+        isStartingRecording = false;
         console.error('Error starting recording (getUserMedia or MediaRecorder setup):', err);
         let errorMessage = 'Could not start recording.';
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {

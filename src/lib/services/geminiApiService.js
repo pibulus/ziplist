@@ -7,7 +7,7 @@ function preloadModel() {
 }
 
 function blobToGenerativePart(blob) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = reader.result.split(",")[1];
@@ -18,6 +18,8 @@ function blobToGenerativePart(blob) {
         },
       });
     };
+    reader.onerror = () => reject(new Error('Failed to read audio data'));
+    reader.onabort = () => reject(new Error('Audio read was aborted'));
     reader.readAsDataURL(blob);
   });
 }
