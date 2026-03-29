@@ -70,6 +70,7 @@
     opacity: 0.9;
     z-index: 1;
     filter: drop-shadow(0 0 2px rgba(0,0,0,0.12));
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     background: transparent;
     border: none;
     padding: 0;
@@ -125,6 +126,12 @@
   @keyframes rainbow-shift {
     0% { background-position: 0% center; }
     100% { background-position: 200% center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-nocturne .app-text {
+      animation: none;
+    }
   }
 
   /* Playful hover effects */

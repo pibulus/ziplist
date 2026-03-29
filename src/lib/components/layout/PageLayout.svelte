@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	export let title = 'ZipList | Zip up a list lickety-split';
 	export let description =
-		'ZipList turns your voice into organized lists. Clean, simple, and freaky fast list creation. Free forever. Tap the ghost and start talking!';
+		'ZipList turns your voice into organized lists. Clean, simple, and freaky fast list creation. Free forever. Tap the mic and start talking!';
 	export let footerYear = new Date().getFullYear();
 </script>
 
@@ -12,7 +12,7 @@
 </svelte:head>
 
 <section
-	class="bg-gradient-mesh main center hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-16 pt-[clamp(4rem,12vh,8rem)] font-sans text-black antialiased sm:px-6 md:px-10 lg:pb-16"
+	class="bg-gradient-mesh main center hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-16 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10 lg:pb-16"
 >
 	<div
 		class="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg md:max-w-2xl lg:max-w-3xl"
@@ -48,9 +48,9 @@
 		background-image: radial-gradient(
 			circle at center,
 			#fff6e6 0%,
-			#fff6e6 50%,
-			#fff3df 85%,
-			#ffefda 100%
+			#fff6e6 40%,
+			#fff0d4 70%,
+			#ffe8c8 100%
 		);
 		background-attachment: fixed;
 	}
