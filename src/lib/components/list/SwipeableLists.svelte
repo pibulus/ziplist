@@ -199,8 +199,8 @@
     border-radius: 50%;
     background-color: var(--dot-accent);
     opacity: 0.4;
-    border: none;
-    padding: 0;
+    border: 12px solid transparent;
+    background-clip: padding-box;
     cursor: pointer;
     transition: all 0.3s ease;
   }

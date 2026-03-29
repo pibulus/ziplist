@@ -528,6 +528,9 @@
     transition: opacity 0.2s;
   }
   .grab-indicator:hover { opacity: 0.7; }
+  @media (hover: none) {
+    .grab-indicator { display: none; }
+  }
   .grab-indicator span {
     width: 4px;
     height: 4px;
@@ -551,6 +554,10 @@
     opacity: 1 !important;
     background-color: rgba(255, 0, 0, 0.1);
     color: #ff4444;
+  }
+  /* Show delete button on touch devices since hover isn't available */
+  @media (hover: none) {
+    .zl-delete-button { opacity: 0.35; }
   }
 
   .drop-indicator {

@@ -1,7 +1,8 @@
 {
-  "name": "Ziplist",
-  "short_name": "Ziplist",
-  "description": "Create stacked list cards with your voice. Quick, simple, spooky.",
+  "id": "/",
+  "name": "ZipList",
+  "short_name": "ZipList",
+  "description": "Create stacked list cards with your voice. Quick, simple, zippy.",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#FFF6E6",
@@ -78,22 +79,6 @@
       "type": "image/png",
       "form_factor": "narrow",
       "label": "ZipList on mobile"
-    }
-  ],
-  "theme_icons": [
-    {
-      "src": "/icons/icon-maskable-light-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable monochrome",
-      "media": "(prefers-color-scheme: light)"
-    },
-    {
-      "src": "/icons/icon-maskable-dark-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable monochrome",
-      "media": "(prefers-color-scheme: dark)"
     }
   ],
   "shortcuts": [

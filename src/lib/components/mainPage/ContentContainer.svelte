@@ -30,8 +30,3 @@
   on:toggleRecording
 />
 
-<!-- The AudioToText component has been removed. -->
-<!-- The container div below is now empty and can also be removed if not needed for other content. -->
-<div class="w-full max-w-xl sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
-  <!-- Content that was previously AudioToText is now gone. -->
-</div>

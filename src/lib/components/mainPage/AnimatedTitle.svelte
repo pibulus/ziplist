@@ -290,4 +290,20 @@
       right: 0.05em;
     }
   }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .stagger-letter,
+    .slide-in-subtitle {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+    .dude-wrapper {
+      animation: none;
+    }
+    .dude-eyes {
+      animation: none;
+    }
+  }
 </style>

@@ -4,10 +4,9 @@
 @import "./lib/styles/typography.css";
 @import "./lib/styles/theme-variables.css";
 
-/* Remove outlines globally */
-*:focus {
-  outline: none !important;
-  box-shadow: none !important;
+/* Remove outlines only when not using keyboard navigation */
+*:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Remove tap highlight on mobile */
