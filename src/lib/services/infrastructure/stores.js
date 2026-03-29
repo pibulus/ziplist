@@ -176,15 +176,12 @@ export const audioActions = {
   },
 
   recordingTimeLimitReached() {
-    // This function can be subscribed to for stopping recording
+    this.stopRecordingTimer();
     audioState.update((current) => ({
       ...current,
       timeLimit: true,
+      state: AudioStates.IDLE,
     }));
-
-    // For reliable auto-stop, we also immediately update the recording state
-    // so that subscribers can react to it
-
   },
 };
 

@@ -147,6 +147,13 @@ function createListsStore() {
       localStorage.setItem(STORAGE_KEYS.LISTS_VERSION, String(state.version));
     } catch (error) {
       console.error("Error persisting lists to storage:", error);
+      if (error.name === 'QuotaExceededError' || error.code === 22) {
+        if (browser && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('ziplist-storage-error', {
+            detail: { message: 'Storage is full! Please delete some items to keep saving.' }
+          }));
+        }
+      }
     }
   }
 

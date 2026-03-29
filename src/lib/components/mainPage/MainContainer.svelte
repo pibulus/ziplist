@@ -129,9 +129,14 @@
     }
   }
 
+  function handleStorageError(event) {
+    uiActions.setErrorMessage(event.detail.message);
+  }
+
   onDestroy(() => {
     if (browser) {
       window.removeEventListener('ziplist-setting-changed', handleSettingChanged);
+      window.removeEventListener('ziplist-storage-error', handleStorageError);
     }
   });
 
@@ -285,11 +290,17 @@
     // Listen for settings changes
     if (browser) {
       window.addEventListener('ziplist-setting-changed', handleSettingChanged);
+      window.addEventListener('ziplist-storage-error', handleStorageError);
     }
 
     // Check if first visit to show intro
     firstVisitService.showIntroModal();
   });
+
+  // Auto-stop recording when time limit is reached
+  $: if ($audioState.timeLimit && mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
 
   // Reactive statement for lazy loading PWA Install Prompt
   $: if (browser && $showPwaInstallPrompt && !PwaInstallPrompt && !loadingPwaPrompt) {
