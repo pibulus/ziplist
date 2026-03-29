@@ -43,12 +43,7 @@ export const theme = createLocalStorageStore(
   CONSTANTS.DEFAULT_THEME,
 );
 
-// Create centralized store for recording state
-export const isRecording = writable(false);
-
-// Create centralized stores for modal visibility
-export const showAboutInfo = writable(false);
-export const showExtensionInfo = writable(false);
+// Create centralized store for modal visibility
 export const showSettingsModal = writable(false);
 
 // Store for first visit tracking

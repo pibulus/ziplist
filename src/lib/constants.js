@@ -13,16 +13,7 @@ export const THEMES = {
   RAINBOW: "rainbow",
 };
 
-// App Vibe Configuration (overall app visual style, set in Settings)
-export const VIBES = {
-  FOCUS: "focus",
-  CHILL: "chill",
-  ZEN: "zen",
-  NOCTURNE: "nocturne",
-  NEO: "neo",
-};
-
-export const DEFAULT_THEME = VIBES.NEO;
+export const DEFAULT_THEME = "neo";
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
@@ -57,14 +48,6 @@ export const PROMPT_STYLES = {
 };
 
 export const DEFAULT_PROMPT_STYLE = PROMPT_STYLES.STANDARD;
-
-// App Configuration
-export const APP_CONFIG = {
-  NAME: "Ziplist",
-  VERSION: "0.1.0",
-  DESCRIPTION: "Create stacked list cards with your voice",
-  AUTHORS: "Dennis & Pablo",
-};
 
 // Animation Timing (in ms)
 export const ANIMATION = {
@@ -112,36 +95,6 @@ export const ANIMATION = {
     MAX_SIZE: 16, // Maximum confetti size in px
     ANIMATION_DURATION: 2500, // Duration of entire confetti animation
     COLORS: ["#ff9cef", "#fde68a", "#a78bfa", "#f472b6", "#60a5fa"], // Confetti colors
-  },
-};
-
-// Service Events - shared event types for services
-export const SERVICE_EVENTS = {
-  // Audio Service Events
-  AUDIO: {
-    RECORDING_STARTED: "audio:recordingStarted",
-    RECORDING_STOPPED: "audio:recordingStopped",
-    RECORDING_ERROR: "audio:recordingError",
-    STATE_CHANGED: "audio:stateChanged",
-    WAVEFORM_DATA: "audio:waveformData",
-  },
-
-  // Transcription Service Events
-  TRANSCRIPTION: {
-    STARTED: "transcription:started",
-    PROGRESS: "transcription:progress",
-    COMPLETED: "transcription:completed",
-    ERROR: "transcription:error",
-    COPIED: "transcription:copied",
-    SHARED: "transcription:shared",
-  },
-
-  // UI Component Events
-  UI: {
-    BUTTON_CLICKED: "ui:buttonClicked",
-    TRANSCRIPT_EDITED: "ui:transcriptEdited",
-    COPY_REQUESTED: "ui:copyRequested",
-    SHARE_REQUESTED: "ui:shareRequested",
   },
 };
 
@@ -197,34 +150,6 @@ export const ATTRIBUTION = {
   SHARE_POSTFIX: "\n\n𝘊𝘳𝘦𝘢𝘵𝘦𝘥 𝘸𝘪𝘵𝘩 𝘡𝘪𝘱𝘭𝘪𝘴𝘵 👻",
   FOCUS_RECOVERY_MESSAGE: "Click in window first, then copy again! 🔍",
 };
-
-// Offline Haikus
-export const OFFLINE_HAIKUS = [
-  `Connection is lost
-Words float in digital void
-Try again, speak soon`,
-
-  `Microphone silent
-No network to hear your words
-Waiting for signals`,
-
-  `Ghostly transcription
-Cannot find your voice today
-Internet missing`,
-
-  `Voice lost in the waves
-Digital silence prevails
-Connect and try again`,
-
-  `Whispers unheard now
-The ghost waits patiently
-Until we're online`,
-];
-
-// Random haiku picker
-export function getRandomHaiku() {
-  return OFFLINE_HAIKUS[Math.floor(Math.random() * OFFLINE_HAIKUS.length)];
-}
 
 // Get a random element from any array
 export function getRandomFromArray(array) {

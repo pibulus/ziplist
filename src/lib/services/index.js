@@ -35,8 +35,6 @@ export {
   transcriptionService,
   TranscriptionEvents,
 } from "./transcription/transcriptionService";
-export { simpleHybridService } from "./transcription/simpleHybridService";
-export { whisperStatus } from "./transcription/whisper/whisperService";
 
 // Store exports
 export {
@@ -74,10 +72,6 @@ export function initializeServices(options = {}) {
   // Configure haptic feedback
   if (!haptic) {
     hapticServiceInstance.disable();
-  }
-
-  if (import.meta.env.DEV) {
-
   }
 
   return {
