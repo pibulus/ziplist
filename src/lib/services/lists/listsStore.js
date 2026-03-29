@@ -52,9 +52,12 @@ function createListsStore() {
     version: CURRENT_VERSION,
   });
 
+  let _initialized = false;
+
   // Initialize from localStorage or with defaults
   function initialize() {
-    if (!browser) return;
+    if (!browser || _initialized) return;
+    _initialized = true;
 
     try {
       const rawListsJSON = localStorage.getItem(STORAGE_KEYS.LISTS);
@@ -131,10 +134,16 @@ function createListsStore() {
     }
   }
 
-  // Persist current state to localStorage
+  // Persist current state to localStorage (debounced)
+  let _persistTimer = null;
+
   function persistToStorage() {
     if (!browser) return;
+    if (_persistTimer) clearTimeout(_persistTimer);
+    _persistTimer = setTimeout(_flushToStorage, 300);
+  }
 
+  function _flushToStorage() {
     try {
       const state = get({ subscribe });
       const listsJSON = JSON.stringify(state.lists);
@@ -157,9 +166,8 @@ function createListsStore() {
     }
   }
 
-  // Generate a new unique ID for a list
   function generateListId() {
-    return `list_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    return crypto.randomUUID();
   }
 
   // Add a new list
@@ -483,21 +491,20 @@ function createListsStore() {
   }
 
   // Set up periodic cleanup of completed items (every hour)
+  let _cleanupInterval = null;
+
   function setupAutoCleanup() {
     if (!browser) return;
+    if (_cleanupInterval) clearInterval(_cleanupInterval);
 
     cleanupCompletedItems();
 
-    const cleanupInterval = setInterval(
+    _cleanupInterval = setInterval(
       () => {
         cleanupCompletedItems();
       },
       60 * 60 * 1000,
-    ); // Every hour
-
-    window.addEventListener("beforeunload", () => {
-      clearInterval(cleanupInterval);
-    });
+    );
   }
 
   // Initialize when created

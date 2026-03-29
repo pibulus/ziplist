@@ -106,9 +106,6 @@
         geminiService.setPromptStyle(savedStyle);
       }
 
-      // Log available prompt styles
-      const availableStyles = geminiService.getAvailableStyles();
-
       geminiService
         .preloadModel()
         .then(() => {
@@ -232,11 +229,6 @@
     }
   }
 
-  // Function to trigger ghost click
-  function triggerGhostClick() {
-    // Forward to the toggle recording handler
-    handleToggleRecording();
-  }
   
   // Scroll to lists container
   function scrollToLists() {
@@ -355,7 +347,7 @@
 <IntroModal
   {closeModal}
   markIntroAsSeen={() => firstVisitService.markIntroAsSeen()}
-  {triggerGhostClick}
+  triggerGhostClick={handleToggleRecording}
 />
 
 <!-- Settings Modal - lazy loaded -->

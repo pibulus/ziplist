@@ -102,6 +102,12 @@
     outline: none;
   }
 
+  .floating-dude:focus-visible {
+    outline: 3px solid #FFB000;
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+
   .dude-wrapper {
     position: relative;
     width: 100%;

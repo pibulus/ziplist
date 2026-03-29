@@ -3,23 +3,27 @@
  * Uses Gemini API for instant results while Whisper loads in background
  */
 
-import { get } from "svelte/store";
-import { whisperService, whisperStatus } from "./whisper/whisperService";
-import { userPreferences } from "../infrastructure/stores";
 import { geminiService } from "../geminiService";
 import { browser } from "$app/environment";
+
+// Lazy-loaded whisper modules — avoids bundling @xenova/transformers in main chunk
+let whisperService = null;
+let whisperStatus = null;
+
+async function loadWhisper() {
+  if (!whisperService) {
+    const mod = await import("./whisper/whisperService");
+    whisperService = mod.whisperService;
+    whisperStatus = mod.whisperStatus;
+  }
+  return { whisperService, whisperStatus };
+}
 
 class SimpleHybridService {
   constructor() {
     this.whisperReady = false;
     this.whisperLoadPromise = null;
-
-    // Subscribe to whisper status
-    if (browser) {
-      whisperStatus.subscribe((status) => {
-        this.whisperReady = status.isLoaded;
-      });
-    }
+    this._statusUnsubscribe = null;
   }
 
   /**
@@ -30,19 +34,32 @@ class SimpleHybridService {
       return; // Already loading or loaded
     }
 
-    console.log("🔄 Starting background Whisper model download...");
-    this.whisperLoadPromise = whisperService
-      .preloadModel()
-      .then((result) => {
-        if (result.success) {
-          console.log("✅ Whisper model ready for offline use!");
-        }
-        return result;
-      })
-      .catch((err) => {
-        console.warn("Whisper load failed, will continue with API:", err);
-        return { success: false, error: err };
-      });
+    try {
+      const { whisperService: ws, whisperStatus: status } = await loadWhisper();
+
+      // Subscribe to whisper status once loaded
+      if (browser && !this._statusUnsubscribe) {
+        this._statusUnsubscribe = status.subscribe((s) => {
+          this.whisperReady = s.isLoaded;
+        });
+      }
+
+      this.whisperLoadPromise = ws
+        .preloadModel()
+        .then((result) => {
+          if (result.success) {
+            console.log("Whisper model ready for offline use");
+          }
+          return result;
+        })
+        .catch((err) => {
+          console.warn("Whisper load failed, will continue with API:", err);
+          return { success: false, error: err };
+        });
+    } catch (err) {
+      console.warn("Failed to load whisper module:", err);
+      this.whisperLoadPromise = Promise.resolve({ success: false, error: err });
+    }
   }
 
   /**
@@ -57,14 +74,12 @@ class SimpleHybridService {
 
     // If privacy mode is on, wait for Whisper or fail
     if (privacyMode) {
-      if (this.whisperReady) {
-        console.log("🔒 Privacy Mode: Using offline Whisper");
+      if (this.whisperReady && whisperService) {
         localStorage.setItem("last_transcription_method", "whisper");
         return await whisperService.transcribeAudio(audioBlob);
       } else if (this.whisperLoadPromise) {
-        console.log("🔒 Privacy Mode: Waiting for Whisper to load...");
         const result = await this.whisperLoadPromise;
-        if (result.success) {
+        if (result.success && whisperService) {
           localStorage.setItem("last_transcription_method", "whisper");
           return await whisperService.transcribeAudio(audioBlob);
         }
@@ -77,14 +92,12 @@ class SimpleHybridService {
     }
 
     // Normal mode: If Whisper is ready, use it (offline, fast, free)
-    if (this.whisperReady) {
-      console.log("🎯 Using offline Whisper transcription");
+    if (this.whisperReady && whisperService) {
       localStorage.setItem("last_transcription_method", "whisper");
       return await whisperService.transcribeAudio(audioBlob);
     }
 
     // Otherwise use Gemini API for instant results
-    console.log("☁️ Using Gemini API while Whisper loads...");
     localStorage.setItem("last_transcription_method", "gemini");
     return await this.transcribeWithGemini(audioBlob);
   }
@@ -94,23 +107,15 @@ class SimpleHybridService {
    */
   async transcribeWithGemini(audioBlob) {
     try {
-      // Use ZipList's geminiService which handles blob conversion internally
       const transcription = await geminiService.transcribeAudio(audioBlob);
-
-      // Check if Whisper finished loading while we were transcribing
-      if (this.whisperReady) {
-        console.log("💡 Whisper is now ready for next transcription!");
-      }
-
       return transcription;
     } catch (error) {
       console.error("Gemini transcription error:", error);
 
       // If Gemini fails and Whisper is still loading, wait for it
       if (this.whisperLoadPromise && !this.whisperReady) {
-        console.log("⏳ Gemini failed, waiting for Whisper to load...");
         const result = await this.whisperLoadPromise;
-        if (result.success) {
+        if (result.success && whisperService) {
           return await whisperService.transcribeAudio(audioBlob);
         }
       }

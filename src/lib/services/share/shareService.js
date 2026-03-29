@@ -27,18 +27,35 @@ export function encodeListForSharing(list) {
  * @param {string} encodedData - Base64 encoded list data
  * @return {Object|null} The decoded list or null if decoding failed
  */
+const MAX_IMPORT_ITEMS = 500;
+const MAX_NAME_LENGTH = 200;
+
 export function decodeSharedList(encodedData) {
   try {
     const listData = JSON.parse(atob(encodedData));
 
-    // Generate new IDs for the list and items
+    // Validate structure
+    if (!listData || typeof listData !== 'object') return null;
+    if (!Array.isArray(listData.items)) return null;
+
+    const name = typeof listData.name === 'string'
+      ? listData.name.slice(0, MAX_NAME_LENGTH)
+      : 'Imported List';
+
+    // Cap item count and validate each item
+    const validItems = listData.items
+      .slice(0, MAX_IMPORT_ITEMS)
+      .filter((item) => item && typeof item.text === 'string' && item.text.trim().length > 0);
+
+    if (validItems.length === 0) return null;
+
     const newList = {
-      id: `list_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      name: listData.name,
-      items: listData.items.map((item, index) => ({
-        id: `item_${Date.now()}_${Math.floor(Math.random() * 1000)}_${index}`,
-        text: item.text,
-        checked: item.checked,
+      id: crypto.randomUUID(),
+      name,
+      items: validItems.map((item, index) => ({
+        id: crypto.randomUUID(),
+        text: item.text.trim(),
+        checked: !!item.checked,
         completedAt: item.checked ? new Date().toISOString() : null,
         order: index,
       })),
