@@ -20,6 +20,16 @@ export async function POST({ request }) {
         }
 
         const { prompt, audioData, mimeType } = await request.json();
+        if (
+            typeof prompt !== 'string' ||
+            typeof audioData !== 'string' ||
+            typeof mimeType !== 'string' ||
+            !prompt.trim() ||
+            !audioData.trim() ||
+            !mimeType.trim()
+        ) {
+            return json({ error: 'Invalid transcription payload' }, { status: 400 });
+        }
 
         const result = await getModel().generateContent([
             prompt,

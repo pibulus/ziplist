@@ -53,6 +53,16 @@ npm run build
 - `npm run lint` - Catch the rough edges (ESLint)
 - `npm run lighthouse` - Performance check
 
+## Environment
+
+Ziplist now uses a server-side Gemini route. Set:
+
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Do not use `VITE_GEMINI_API_KEY` for the main app runtime. `VITE_*` vars are exposed to the browser.
+
 ## How It's Built
 
 ```

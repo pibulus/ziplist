@@ -42,7 +42,6 @@ export const uiState = writable({
 
 // User options
 export const userPreferences = writable({
-  isPremiumUser: false,
   promptStyle: "standard",
 });
 
@@ -156,10 +155,7 @@ export const audioActions = {
       }));
 
       // Check if we've reached the time limit (still use integer for the limit check)
-      const isPremium = get(userPreferences).isPremiumUser;
-      const timeLimit = isPremium
-        ? ANIMATION.RECORDING.PREMIUM_LIMIT
-        : ANIMATION.RECORDING.FREE_LIMIT;
+      const timeLimit = ANIMATION.RECORDING.LIMIT;
 
       if (Math.floor(duration) >= timeLimit) {
         // Signal that recording should stop due to time limit

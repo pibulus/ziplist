@@ -10,7 +10,6 @@ import { fade } from 'svelte/transition';
   export let transcribing = false;
   export let clipboardSuccess = false;
   export let recordingDuration = 0;
-  export let isPremiumUser = false;
   export let buttonLabel = '';
   export let progress = 0;
 
@@ -123,10 +122,7 @@ import { fade } from 'svelte/transition';
   }
 
   function getTimeRemaining() {
-    const timeLimit = isPremiumUser
-      ? ANIMATION.RECORDING.PREMIUM_LIMIT
-      : ANIMATION.RECORDING.FREE_LIMIT;
-    return timeLimit - recordingDuration;
+    return ANIMATION.RECORDING.LIMIT - recordingDuration;
   }
   $: timeRemaining = getTimeRemaining();
   $: isWarning = timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
@@ -163,7 +159,7 @@ import { fade } from 'svelte/transition';
   $: clipboardSuccessClasses = clipboardSuccess ? "notification-pulse border border-purple-200 bg-purple-50" : "";
 
   $: progressStyle = recording
-    ? `--progress: ${Math.min(recordingDuration / (isPremiumUser ? ANIMATION.RECORDING.PREMIUM_LIMIT : ANIMATION.RECORDING.FREE_LIMIT) * 100, 100)}%`
+    ? `--progress: ${Math.min(recordingDuration / ANIMATION.RECORDING.LIMIT * 100, 100)}%`
     : '';
 
   $: baseStyle = `min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; ${progressStyle}`;
@@ -238,7 +234,7 @@ import { fade } from 'svelte/transition';
             </span>
             <span class="sr-only">
               {#if recording}
-                {formatTime(recordingDuration)} of {formatTime(ANIMATION.RECORDING.FREE_LIMIT)}
+                {formatTime(recordingDuration)} of {formatTime(ANIMATION.RECORDING.LIMIT)}
               {/if}
             </span>
           </span>

@@ -320,7 +320,6 @@
       transcribing={$isTranscribing}
       clipboardSuccess={$uiState.clipboardSuccess}
       recordingDuration={$recordingDuration}
-      isPremiumUser={$userPreferences.isPremiumUser}
       progress={$transcriptionProgress}
       on:click={handleToggleRecording}
       on:preload={preloadSpeechModel}
