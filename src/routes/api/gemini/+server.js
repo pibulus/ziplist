@@ -34,7 +34,7 @@ function getModel() {
   if (!model) {
     genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
     model = genAI.getGenerativeModel({
-      model: env.GEMINI_MODEL ?? "gemini-2.0-flash",
+      model: env.GEMINI_MODEL ?? "gemini-3.1-flash-lite-preview",
     });
   }
   return model;
