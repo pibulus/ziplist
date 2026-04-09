@@ -42,6 +42,7 @@ export class ListParser {
     this.log(`Parsing text: "${transcribedText}"`);
     const items = [];
     const commands = [];
+    const seenItems = new Set();
 
     if (!transcribedText || transcribedText.trim() === "") {
       return { items, commands };
@@ -72,14 +73,16 @@ export class ListParser {
           line,
           command,
         );
-        if (potentialItem) {
+        if (potentialItem && !seenItems.has(potentialItem.toLowerCase())) {
+          seenItems.add(potentialItem.toLowerCase());
           items.push(potentialItem);
         }
       } else {
         // If not a command, treat as a potential list item.
         // Further cleaning/validation might be needed.
         const item = this._cleanItemText(line);
-        if (item) {
+        if (item && !seenItems.has(item.toLowerCase())) {
+          seenItems.add(item.toLowerCase());
           items.push(item);
         }
       }
@@ -98,7 +101,7 @@ export class ListParser {
    * @private
    */
   _cleanItemText(text) {
-    let cleanedText = text;
+    let cleanedText = text.replace(/\s+/g, " ").trim();
 
     // Basic cleaning: if "add item" or similar keywords are still at the start of a line
     // that wasn't parsed as a command, remove them.
@@ -134,7 +137,7 @@ export class ListParser {
       for (const keyword of this.config.addItemKeywords) {
         if (line.toLowerCase().startsWith(keyword + " ")) {
           const itemText = line.substring(keyword.length + 1).trim();
-          return itemText || null;
+          return this._cleanItemText(itemText) || null;
         }
       }
     }

@@ -43,6 +43,12 @@ const DEFAULT_LISTS = [
 // Current schema version
 const CURRENT_VERSION = 2;
 
+function normalizeItemText(text) {
+  const normalized = String(text || "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
 // Initialize the lists store
 function createListsStore() {
   // Create the main store with default empty state
@@ -242,7 +248,8 @@ function createListsStore() {
 
   // Add an item to a specific list (or active list by default)
   function addItem(text, listId = null) {
-    if (!text.trim()) return;
+    const normalizedText = normalizeItemText(text);
+    if (!normalizedText) return;
 
     update((state) => {
       const targetListId = listId || state.activeListId;
@@ -250,9 +257,18 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
+            const alreadyExists = list.items.some(
+              (item) => item.text.toLowerCase() === normalizedText.toLowerCase(),
+            );
+            if (alreadyExists) {
+              return list;
+            }
             return {
               ...list,
-              items: [...list.items, { id: crypto.randomUUID(), text, checked: false }],
+              items: [
+                ...list.items,
+                { id: crypto.randomUUID(), text: normalizedText, checked: false },
+              ],
               updatedAt: new Date().toISOString(),
             };
           }
@@ -274,13 +290,32 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
+            const existingTexts = new Set(
+              list.items.map((item) => item.text.toLowerCase()),
+            );
             // Map text strings to item objects
-            const newItems = items.map((text, index) => ({
+            const dedupedTexts = items
+              .map((text) => normalizeItemText(text))
+              .filter((text) => text.length > 0)
+              .filter((text) => {
+                const key = text.toLowerCase();
+                if (existingTexts.has(key)) {
+                  return false;
+                }
+                existingTexts.add(key);
+                return true;
+              });
+
+            const newItems = dedupedTexts.map((text, index) => ({
               id: crypto.randomUUID(),
               text,
               checked: false,
               order: list.items.length + index, // Add order field to maintain sort order
             }));
+
+            if (newItems.length === 0) {
+              return list;
+            }
 
             return {
               ...list,
@@ -334,7 +369,8 @@ function createListsStore() {
 
   // Edit an item's text
   function editItem(itemId, newText, listId = null) {
-    if (!newText || !newText.trim()) return;
+    const normalizedText = normalizeItemText(newText);
+    if (!normalizedText) return;
 
     update((state) => {
       const targetListId = listId || state.activeListId;
@@ -345,7 +381,7 @@ function createListsStore() {
             return {
               ...list,
               items: list.items.map((item) =>
-                item.id === itemId ? { ...item, text: newText.trim() } : item,
+                item.id === itemId ? { ...item, text: normalizedText } : item,
               ),
               updatedAt: new Date().toISOString(),
             };
