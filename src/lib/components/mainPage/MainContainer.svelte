@@ -29,6 +29,7 @@
   import { fade } from 'svelte/transition';
   import { StorageUtils } from '$lib/services/infrastructure/storageUtils';
   import { STORAGE_KEYS } from '$lib/constants';
+  import { simpleHybridService } from '$lib/services/transcription/simpleHybridService';
 
   import { AboutModal, ExtensionModal, IntroModal } from './modals';
 
@@ -44,6 +45,7 @@
   let mediaRecorder = null;
   let audioChunks = [];
   let isStartingRecording = false;
+  let preloadCleanup = null;
 
   // Modal functions
   function showAboutModal() {
@@ -108,6 +110,7 @@
 
       geminiService
         .preloadModel()
+        .then(() => simpleHybridService.startBackgroundLoad())
         .then(() => {
         })
         .catch((err) => {
@@ -131,6 +134,10 @@
   }
 
   onDestroy(() => {
+    if (typeof preloadCleanup === 'function') {
+      preloadCleanup();
+    }
+
     if (browser) {
       window.removeEventListener('ziplist-setting-changed', handleSettingChanged);
       window.removeEventListener('ziplist-storage-error', handleStorageError);
@@ -248,9 +255,25 @@
   onMount(() => {
     // Initialize lists store from localStorage
     listsStore.initialize();
-    
-    // Preload speech model on mount
-    preloadSpeechModel();
+
+    if (browser) {
+      const preloadOnInteraction = () => {
+        preloadSpeechModel();
+        window.removeEventListener('pointerdown', preloadOnInteraction);
+        window.removeEventListener('keydown', preloadOnInteraction);
+      };
+
+      window.addEventListener('pointerdown', preloadOnInteraction, { once: true });
+      window.addEventListener('keydown', preloadOnInteraction, { once: true });
+
+      const preloadTimeout = window.setTimeout(preloadSpeechModel, 1500);
+
+      preloadCleanup = () => {
+        window.clearTimeout(preloadTimeout);
+        window.removeEventListener('pointerdown', preloadOnInteraction);
+        window.removeEventListener('keydown', preloadOnInteraction);
+      };
+    }
 
     // Pre-load the SettingsModal component after a short delay
     setTimeout(async () => {

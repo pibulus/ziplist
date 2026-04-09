@@ -80,7 +80,9 @@ export const geminiService = {
       }
     } catch (error) {
       console.error("❌ Error transcribing audio:", error);
-      throw new Error("Failed to transcribe audio with Gemini");
+      throw new Error(
+        error.message || "Failed to transcribe audio with Gemini",
+      );
     }
   },
 };

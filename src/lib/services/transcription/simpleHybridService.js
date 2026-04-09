@@ -26,6 +26,16 @@ class SimpleHybridService {
     this._statusUnsubscribe = null;
   }
 
+  getLocalFlag(key) {
+    if (!browser) return null;
+    return localStorage.getItem(key);
+  }
+
+  setLocalFlag(key, value) {
+    if (!browser) return;
+    localStorage.setItem(key, value);
+  }
+
   /**
    * Start loading Whisper in the background
    */
@@ -67,7 +77,7 @@ class SimpleHybridService {
    */
   async transcribeAudio(audioBlob) {
     // Check privacy mode preference
-    const privacyMode = localStorage.getItem("ziplist_privacy_mode") === "true";
+    const privacyMode = this.getLocalFlag("ziplist_privacy_mode") === "true";
 
     // Start loading Whisper in background if not already
     this.startBackgroundLoad();
@@ -75,12 +85,12 @@ class SimpleHybridService {
     // If privacy mode is on, wait for Whisper or fail
     if (privacyMode) {
       if (this.whisperReady && whisperService) {
-        localStorage.setItem("last_transcription_method", "whisper");
+        this.setLocalFlag("last_transcription_method", "whisper");
         return await whisperService.transcribeAudio(audioBlob);
       } else if (this.whisperLoadPromise) {
         const result = await this.whisperLoadPromise;
         if (result.success && whisperService) {
-          localStorage.setItem("last_transcription_method", "whisper");
+          this.setLocalFlag("last_transcription_method", "whisper");
           return await whisperService.transcribeAudio(audioBlob);
         }
         throw new Error(
@@ -93,12 +103,12 @@ class SimpleHybridService {
 
     // Normal mode: If Whisper is ready, use it (offline, fast, free)
     if (this.whisperReady && whisperService) {
-      localStorage.setItem("last_transcription_method", "whisper");
+      this.setLocalFlag("last_transcription_method", "whisper");
       return await whisperService.transcribeAudio(audioBlob);
     }
 
     // Otherwise use Gemini API for instant results
-    localStorage.setItem("last_transcription_method", "gemini");
+    this.setLocalFlag("last_transcription_method", "gemini");
     return await this.transcribeWithGemini(audioBlob);
   }
 

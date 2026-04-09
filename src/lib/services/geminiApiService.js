@@ -18,14 +18,14 @@ function blobToGenerativePart(blob) {
         },
       });
     };
-    reader.onerror = () => reject(new Error('Failed to read audio data'));
-    reader.onabort = () => reject(new Error('Audio read was aborted'));
+    reader.onerror = () => reject(new Error("Failed to read audio data"));
+    reader.onabort = () => reject(new Error("Audio read was aborted"));
     reader.readAsDataURL(blob);
   });
 }
 
 /** @type {number} API timeout in milliseconds (default 30s) */
-const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10);
+const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "30000", 10);
 
 async function generateContent(promptData) {
   const controller = new AbortController();
@@ -38,37 +38,38 @@ async function generateContent(promptData) {
     const prompt = promptData[0];
     const audioPart = promptData[1];
 
-    const response = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            prompt: prompt,
-            audioData: audioPart.inlineData.data,
-            mimeType: audioPart.inlineData.mimeType
-        }),
-        signal: controller.signal
+    const response = await fetch("/api/gemini", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        audioData: audioPart.inlineData.data,
+        mimeType: audioPart.inlineData.mimeType,
+      }),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Failed to fetch from API');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to fetch from API");
     }
 
     const data = await response.json();
 
     // Mocking the response object structure expected by the caller
     return {
-        text: () => data.text
+      text: () => data.text,
     };
-
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error("Transcription timed out. Check your connection and try again.");
+    if (error.name === "AbortError") {
+      throw new Error(
+        "Transcription timed out. Check your connection and try again.",
+      );
     }
     console.error("❌ Error generating content:", error);
-    throw new Error("Failed to generate content with Gemini");
+    throw new Error(error.message || "Failed to generate content with Gemini");
   } finally {
     clearTimeout(timeoutId);
   }

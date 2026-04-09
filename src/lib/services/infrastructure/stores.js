@@ -10,6 +10,7 @@ export const audioState = writable({
   timestamp: Date.now(),
   mimeType: null,
   waveformData: [],
+  timeLimit: false,
 });
 
 // Recording state
@@ -102,6 +103,7 @@ export const audioActions = {
       state,
       error,
       timestamp: Date.now(),
+      timeLimit: state === AudioStates.RECORDING ? false : current.timeLimit,
     }));
 
     // Update recording state when audio state changes
@@ -176,7 +178,6 @@ export const audioActions = {
     audioState.update((current) => ({
       ...current,
       timeLimit: true,
-      state: AudioStates.IDLE,
     }));
   },
 };
@@ -211,7 +212,6 @@ export const transcriptionActions = {
       error: null, // Clear any previous error on successful completion
       timestamp: Date.now(),
     }));
-
   },
 
   setTranscriptionError(error) {
@@ -327,7 +327,7 @@ export const transcriptionCompletedEvent = (() => {
       // Condition: Was transcribing, now finished, and there's actual text.
       console.log(
         "[Store DEBUG] transcriptionCompletedEvent: Firing with text -",
-        currentState.text
+        currentState.text,
       );
       set(currentState.text); // Emit the text value
       // Reset to null in a microtask to ensure current subscribers process the text value first
