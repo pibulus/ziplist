@@ -40,9 +40,21 @@
 			chunkyModeValue = document.documentElement.classList.contains('mode-neo-brutalist');
 		}
 
+		// Handle native dialog close (Escape key, form method="dialog")
+		const dialog = document.getElementById('settings_modal');
+		function onDialogClose() {
+			closeModal();
+		}
+		if (dialog) {
+			dialog.addEventListener('close', onDialogClose);
+		}
+
 		return () => {
 			unsubscribeTheme();
 			unsubscribeAutoRecord();
+			if (dialog) {
+				dialog.removeEventListener('close', onDialogClose);
+			}
 		};
 	});
 
@@ -160,7 +172,7 @@
 
 <style>
 	:global(dialog.zl-settings-dialog) {
-		display: flex !important;
+		display: none;
 		align-items: center;
 		justify-content: center;
 		background: transparent;
@@ -174,6 +186,10 @@
 		position: fixed;
 		inset: 0;
 		z-index: 1000;
+	}
+
+	:global(dialog.zl-settings-dialog[open]) {
+		display: flex;
 	}
 
 	.zl-settings-card {
