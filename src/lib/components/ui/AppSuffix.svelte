@@ -108,15 +108,6 @@
     filter: drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3));
   }
   
-  .theme-neo {
-    border: 2px solid #FF6B6B !important; /* Miami Pink border */
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 10px rgba(255, 107, 107, 0.2);
-    padding: 0.1em 0.3em;
-    border-radius: 6px;
-    backdrop-filter: blur(4px);
-  }
-
   .theme-nocturne .app-text {
     background-image: linear-gradient(to right, #ff0080, #ff8c00, #ffed00, #00ff80, #00bfff);
     background-size: 200% auto;

@@ -3,15 +3,13 @@
   import { listsStore, activeList } from '$lib/services/lists/listsStore';
   import { listsService } from '$lib/services/lists/listsService';
   import { shareList } from '$lib/services/share';
-  import { hapticService } from '$lib/services/infrastructure/hapticService';
-  // Dynamic import for confetti to avoid SSR issues
-
   import { fade, fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';
+  import { hapticService } from '$lib/services/infrastructure/hapticService';
+  import * as liveListsService from '$lib/services/realtime/liveListsService';
+  import { getPresenceStore } from '$lib/services/realtime/presenceStore';
+  import { getTypingStore } from '$lib/services/realtime/typingStore';
   
-  // Props
-  export let listId = null;
-
   // State variables
   let list = { name: '', items: [] };
   let draggedItemId = null;
@@ -20,8 +18,17 @@
   let editedItemText = '';
   let isCreatingNewItem = false;
   let newItemText = '';
-  let shareStatus = null;
+  let shareStatus = null; // To track share operation status
+  let isLive = false; // Track if this list is live
+  let liveShareUrl = null; // Store the live share URL
+  let presence = []; // Who's online
+  let typingUsers = []; // Who's typing
+  let recentlyEditedItems = new Set(); // Track items just edited by others
+  let typingTimeout = null; // Debounce typing broadcasts
   
+  // Props
+  export let listId = null;
+
   // Subscribe to the appropriate list
   let unsubscribe;
 
@@ -39,16 +46,51 @@
     }
   }
 
+  // Subscribe to presence and typing for this list
+  let presenceUnsubscribe = null;
+  let typingUnsubscribe = null;
+
+  onMount(() => {
+    // Initialize the lists store
+    listsStore.initialize();
+    listsService.getAllLists();
+
+    // Check if this list is already live
+    if (list && list.id) {
+      isLive = liveListsService.isLive(list.id);
+      if (isLive) {
+        liveShareUrl = liveListsService.getShareUrl(list.id);
+
+        // Subscribe to presence
+        const presenceStore = getPresenceStore(list.id);
+        presenceUnsubscribe = presenceStore.subscribe(users => {
+          presence = users;
+        });
+
+        // Subscribe to typing indicators
+        const typingStore = getTypingStore(list.id);
+        typingUnsubscribe = typingStore.subscribe(users => {
+          typingUsers = users;
+        });
+      }
+    }
+  });
+
   onDestroy(() => {
     if (unsubscribe) unsubscribe();
+    if (presenceUnsubscribe) presenceUnsubscribe();
+    if (typingUnsubscribe) typingUnsubscribe();
+    if (typingTimeout) clearTimeout(typingTimeout);
   });
   
+  // Share list function
   async function handleShareList() {
     if (!list || !list.items || list.items.length === 0) {
       shareStatus = { success: false, message: 'Cannot share an empty list' };
-      setTimeout(() => shareStatus = null, 3000);
+      setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
       return;
     }
+    
     try {
       const result = await shareList(list);
       if (result.success) {
@@ -63,109 +105,283 @@
       setTimeout(() => shareStatus = null, 3000);
     }
   }
+
+  // Make list live (real-time collaboration)
+  async function handleMakeLive() {
+    if (!list || !list.id) {
+      shareStatus = { success: false, message: 'Cannot make list live' };
+      setTimeout(() => shareStatus = null, 3000);
+      return;
+    }
+
+    try {
+      const { roomId, shareUrl } = await liveListsService.makeLive(list.id);
+      isLive = true;
+      liveShareUrl = shareUrl;
+
+      // Copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      }
+
+      shareStatus = { success: true, message: '🔴 List is now LIVE! Link copied!' };
+      setTimeout(() => shareStatus = null, 3000);
+
+      // Subscribe to presence
+      const presenceStore = getPresenceStore(list.id);
+      presenceUnsubscribe = presenceStore.subscribe(users => {
+        presence = users;
+      });
+
+      // Subscribe to typing indicators
+      const typingStore = getTypingStore(list.id);
+      typingUnsubscribe = typingStore.subscribe(users => {
+        typingUsers = users;
+      });
+    } catch (error) {
+      console.error('Failed to make list live:', error);
+      shareStatus = { success: false, message: 'Failed to make list live: ' + error.message };
+      setTimeout(() => shareStatus = null, 5000);
+    }
+  }
   
+  // Separated active and completed items
   $: activeItems = list.items.filter(item => !item.checked);
   $: completedItems = list.items.filter(item => item.checked);
+
+  // Sort items - active items first, completed items last
   $: sortedItems = [...activeItems, ...completedItems];
 
+  // Track previous item IDs to detect new items (from remote users)
+  let previousItemIds = new Set();
+  $: {
+    // Detect newly added items
+    const currentItemIds = new Set(list.items.map(item => item.id));
+    const newItemIds = [...currentItemIds].filter(id => !previousItemIds.has(id));
+
+    // Add glow effect to new items (only if we're in a live session)
+    if (isLive && newItemIds.length > 0 && previousItemIds.size > 0) {
+      newItemIds.forEach(id => {
+        recentlyEditedItems.add(id);
+        // Remove glow after 2 seconds
+        setTimeout(() => {
+          recentlyEditedItems.delete(id);
+          recentlyEditedItems = recentlyEditedItems; // Trigger reactivity
+        }, 2000);
+      });
+      recentlyEditedItems = recentlyEditedItems; // Trigger reactivity
+    }
+
+    previousItemIds = currentItemIds;
+  }
+
+  // Handle typing broadcast
+  function handleTyping() {
+    if (!isLive) return;
+
+    // Broadcast typing start
+    liveListsService.broadcastTypingStart(list.id);
+
+    // Debounce typing stop
+    if (typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      liveListsService.broadcastTypingStop(list.id);
+      typingTimeout = null;
+    }, 2000);
+  }
+
+
+  // Format item text with first-letter capitalization of each word - with memoization
   const textCache = new Map();
   function formatItemText(text) {
-    if (textCache.has(text)) return textCache.get(text);
+    // Return cached result if available
+    if (textCache.has(text)) {
+      return textCache.get(text);
+    }
+
+    // Otherwise compute, cache and return
     const formattedText = text.split(' ').map(word =>
       word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word
     ).join(' ');
-    if (textCache.size > 100) textCache.delete(textCache.keys().next().value);
+
+    // Cache the result (limit cache size to prevent memory issues)
+    if (textCache.size > 100) {
+      const firstKey = textCache.keys().next().value;
+      textCache.delete(firstKey);
+    }
     textCache.set(text, formattedText);
+
     return formattedText;
   }
 
-  async function handleEmptyStateClick() {
-    listsService.addItem('Type here...', list.id);
-    await tick();
-    if (list.items.length > 0) {
-      const newItem = list.items[list.items.length - 1];
-      startEditingItem(newItem);
-      editedItemText = ''; 
-    }
+  // Helper function to calculate staggered delay for animations
+  function getStaggerDelay(index) {
+    return index * 50; // 50ms between each item
   }
-  function getStaggerDelay(index) { return index * 50; }
 
-  function autoFocus(node) { node.focus(); return {}; }
+  // Action to auto-focus an input element when it's created
+  function autoFocus(node) {
+    node.focus();
+    return {};
+  }
 
+  // Action for detecting clicks outside an element
   function clickOutside(node, { enabled, callback }) {
     const handleClick = (event) => {
-      if (enabled && !node.contains(event.target)) callback();
+      if (enabled && !node.contains(event.target)) {
+        callback();
+      }
     };
+
     document.addEventListener('click', handleClick, true);
+    
     return {
-      update(params) { enabled = params.enabled; callback = params.callback; },
-      destroy() { document.removeEventListener('click', handleClick, true); }
+      update(params) {
+        enabled = params.enabled;
+        callback = params.callback;
+      },
+      destroy() {
+        document.removeEventListener('click', handleClick, true);
+      }
     };
   }
   
+  // Drag and drop functions
   function handleDragStart(event, itemId) {
-    if (editingItemId === itemId) { event.preventDefault(); return; }
+    // Prevent dragging if item is being edited
+    if (editingItemId === itemId) {
+      event.preventDefault();
+      return;
+    }
+
+    // Set data and styling
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', itemId);
     draggedItemId = itemId;
+
+    // Haptic feedback
     hapticService.impact('light');
   }
 
   function handleDragEnd(event) {
+    // Remove styling
     draggedItemId = null;
     dragOverItemId = null;
+
+    // Haptic feedback
     hapticService.impact('medium');
   }
 
   function handleDragOver(event, itemId) {
+    // Prevent default to allow drop
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
+
+    // Don't allow drag over on checked items or the dragged item itself
     if (draggedItemId === itemId) return;
+
+    // Get the target item to check if it's checked
     const targetItem = list.items.find(item => item.id === itemId);
     if (targetItem?.checked) return;
+
+    // Only update if we're moving to a new item
     if (dragOverItemId === itemId) return;
+
+    // Update dragover state
     dragOverItemId = itemId;
+    
+    // Haptic feedback
     hapticService.impact('light');
   }
 
   function handleDrop(event, targetItemId) {
+    // Prevent default action
     event.preventDefault();
+
     dragOverItemId = null;
+
+    // If dropped on itself, do nothing
     if (draggedItemId === targetItemId) return;
+
+    // Check if target is a completed item (don't allow dropping on completed items)
     const targetItem = list.items.find(item => item.id === targetItemId);
     if (targetItem?.checked) return;
+
+    // Haptic feedback - stronger for successful drop
     hapticService.impact('heavy');
+
+    // Reorder items
     const reorderedItems = [...list.items];
     const sourceIndex = reorderedItems.findIndex(item => item.id === draggedItemId);
     const targetIndex = reorderedItems.findIndex(item => item.id === targetItemId);
+
     if (sourceIndex !== -1 && targetIndex !== -1) {
+      // Remove the item from the source position
       const [movedItem] = reorderedItems.splice(sourceIndex, 1);
+
+      // Insert the item at the target position
       reorderedItems.splice(targetIndex, 0, movedItem);
-      listsService.reorderItems(reorderedItems);
+
+      // Update the list with the new order
+      listsService.reorderItems(reorderedItems, list.id);
     }
   }
   
+  // Handle item toggle with sparkle animation
   async function toggleItem(itemId, event) {
     const itemToToggle = list.items.find(item => item.id === itemId);
-    if (itemToToggle) hapticService.impact(itemToToggle.checked ? 'light' : 'medium');
+
+    // Apply haptic feedback
+    if (itemToToggle) {
+      hapticService.impact(itemToToggle.checked ? 'light' : 'medium');
+    }
+
+    // Toggle the item state
     listsService.toggleItem(itemId, list.id);
+
+    // If checking the item (not unchecking), add sparkle animation
     if (!itemToToggle?.checked) {
+      // Get click coordinates if available for origin
       let origin = { y: 0.6 };
       if (event && event.clientX && event.clientY) {
-        origin = { x: event.clientX / window.innerWidth, y: event.clientY / window.innerHeight };
+        origin = {
+          x: event.clientX / window.innerWidth,
+          y: event.clientY / window.innerHeight
+        };
       }
       
       const confetti = (await import('canvas-confetti')).default;
-      confetti({ particleCount: 60, spread: 60, origin: origin, colors: ['#FFB000', '#FF6AC2', '#00D4FF'], disableForReducedMotion: true });
+      confetti({
+        particleCount: 60,
+        spread: 60,
+        origin: origin,
+        colors: ['#FFB000', '#FF6AC2', '#00D4FF'], // Use app colors
+        disableForReducedMotion: true
+      });
+
+      // Add sparkle animation after a small delay
       setTimeout(() => {
         const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
         if (checkbox) {
+          // Force reflow to restart animation
           void checkbox.offsetWidth;
-          const allCompleted = list.items.length > 1 && list.items.filter(i => i.id !== itemId).every(i => i.checked);
+
+          // Check if we've completed all items
+          const allCompleted = list.items.length > 1 &&
+            list.items.filter(i => i.id !== itemId).every(i => i.checked);
+
+          // If this completes the list, trigger haptic feedback but no message
           if (allCompleted) {
             hapticService.notification('success');
+            
+            // Extra confetti for finishing the list!
             setTimeout(() => {
-              confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 }, colors: ['#FFB000', '#FF6AC2', '#00D4FF'] });
+              confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#FFB000', '#FF6AC2', '#00D4FF']
+              });
             }, 300);
           }
         }
@@ -181,10 +397,11 @@
 
   function saveItemEdit() {
     if (editingItemId !== null && editedItemText.trim() !== '') {
-      listsService.editItem(editingItemId, editedItemText, list.id);
+      listsService.editItem(editingItemId, editedItemText.trim(), list.id);
       editingItemId = null;
       editedItemText = '';
     } else if (editedItemText.trim() === '') {
+      // If text is cleared, remove the item
       listsService.removeItem(editingItemId, list.id);
       editingItemId = null;
     }
@@ -196,14 +413,101 @@
   }
 
   function handleEditItemKeyDown(event) {
-    if (event.key === 'Enter') saveItemEdit();
-    else if (event.key === 'Escape') cancelItemEdit();
+    if (event.key === 'Enter') {
+      saveItemEdit();
+    } else if (event.key === 'Escape') {
+      cancelItemEdit();
+    }
+  }
+
+  async function handleEmptyStateClick() {
+    // Add a new item and start editing it
+    listsService.addItem('Type here...', list.id);
+    
+    // Wait for DOM update
+    await tick();
+    
+    if (list.items.length > 0) {
+      const newItem = list.items[list.items.length - 1];
+      startEditingItem(newItem);
+      editedItemText = ''; // Clear the placeholder text so user can just start typing
+    }
   }
 </script>
 
 <div class="zl-card">
   <div class="card-content">
-    <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? 100 + (list.items.length * 90) : 320}px;">
+    
+    <!-- List Header with Live Collaboration Toggle -->
+    <div class="zl-list-header">
+      <div class="flex flex-col">
+        <h2 class="zl-list-title">{list.name || 'Your List'}</h2>
+        {#if isLive}
+          <div class="flex items-center gap-2 mt-1">
+            <div class="zl-presence-dots">
+              {#each presence as user (user.id)}
+                <div 
+                  class="zl-presence-dot" 
+                  title={user.avatar}
+                  style="background-color: {user.avatar.includes('Fox') ? '#ff6b6b' : user.avatar.includes('Frog') ? '#51cf66' : '#4dabf7'}"
+                ></div>
+              {/each}
+            </div>
+            <span class="text-xs font-bold text-red-500 animate-pulse">LIVE</span>
+          </div>
+        {/if}
+      </div>
+
+      <div class="zl-list-actions">
+        {#if !isLive}
+          <button 
+            class="zl-live-button" 
+            on:click={handleMakeLive}
+            title="Enable real-time collaboration"
+          >
+            <span class="live-icon">🔴</span>
+            <span class="live-text">Make Live</span>
+          </button>
+        {:else}
+          <div class="zl-live-indicator">
+            <span class="live-pulse">🔴</span>
+            <span class="live-count">{presence.length}</span>
+          </div>
+        {/if}
+        
+        <button 
+          class="zl-share-button" 
+          on:click={handleShareList}
+          title="Share list link"
+        >
+          <span class="share-icon">🔗</span>
+          <span class="share-text">Share</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Share status notification -->
+    {#if shareStatus}
+      <div 
+        class="zl-share-notification {shareStatus.success ? 'success' : 'error'}" 
+        transition:fade={{duration: 200}}
+      >
+        {shareStatus.message}
+      </div>
+    {/if}
+
+    <!-- Typing indicator -->
+    {#if isLive && typingUsers.length > 0}
+      <div class="typing-indicator" in:fade={{ duration: 200 }}>
+        <span class="typing-avatar">{typingUsers[0].avatar}</span> is adding an item
+        <span class="typing-dots">
+          <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+        </span>
+      </div>
+    {/if}
+    
+    <!-- List Items -->
+    <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? (100 + (list.items.length * 90)) : 320}px;">
       {#if list.items.length > 0}
         <ul class="zl-list" role="list" in:fade={{ duration: 200 }}>
           {#each sortedItems as item, index (item.id)}
@@ -211,7 +515,7 @@
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
-              class:first-completed={item.checked && index === activeItems.length}
+              class:just-edited={recentlyEditedItems.has(item.id)}
               draggable={!item.checked && editingItemId !== item.id}
               on:dragstart|passive={(e) => handleDragStart(e, item.id)}
               on:dragend|passive={handleDragEnd}
@@ -225,7 +529,9 @@
               role="listitem"
             >
               {#if dragOverItemId === item.id}
-                <div class="drop-indicator"><div class="drop-arrow"></div></div>
+                <div class="drop-indicator">
+                  <div class="drop-arrow"></div>
+                </div>
               {/if}
 
               <label class="zl-checkbox-wrapper">
@@ -238,36 +544,43 @@
                 />
                 <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
               </label>
-
+              
               <div class="edit-wrapper">
                 {#if editingItemId === item.id}
-                  <input
+                  <input 
                     id="edit-item-{list.id}-{item.id}"
                     class="zl-edit-input"
                     placeholder="Enter item text..."
                     bind:value={editedItemText}
                     on:blur={saveItemEdit}
                     on:keydown={handleEditItemKeyDown}
+                    on:input={handleTyping}
                     transition:fade={{ duration: 150 }}
                     use:autoFocus
                   />
                 {:else}
-                  <button
+                  <button 
                     type="button"
                     class="zl-item-text-button {item.checked ? 'checked' : ''}"
-                    on:click|stopPropagation={() => { if (!item.checked) startEditingItem(item); }}
+                    on:click|stopPropagation={() => {
+                      if (!item.checked) startEditingItem(item);
+                    }}
                     on:keydown={(e) => e.key === 'Enter' && !item.checked && startEditingItem(item)}
                     disabled={item.checked}
                     aria-label="Edit item: {item.text}"
                   >
-                    <span class="zl-item-text {item.checked ? 'checked' : ''}">{formatItemText(item.text)}</span>
+                    <span class="zl-item-text {item.checked ? 'checked' : ''}">
+                      {formatItemText(item.text)}
+                    </span>
                   </button>
                 {/if}
               </div>
 
               {#if !item.checked && editingItemId !== item.id}
                 <div class="grab-indicator" aria-hidden="true" title="Drag to reorder">
-                  <span></span><span></span><span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
               {/if}
 
@@ -286,8 +599,20 @@
           {/each}
         </ul>
       {:else}
-        <div class="empty-state" on:click={handleEmptyStateClick} role="button" tabindex="0" on:keydown={(e) => e.key === 'Enter' && handleEmptyStateClick()}>
-          <p>Tap to add items...</p>
+        <!-- Empty state - Minimalist and friendly -->
+        <div 
+          class="zl-empty-state clickable" 
+          on:click={handleEmptyStateClick}
+          role="button"
+          tabindex="0"
+          on:keydown={(e) => e.key === 'Enter' && handleEmptyStateClick()}
+          transition:fade={{ duration: 300 }}
+        >
+          <div class="zl-empty-content">
+            <h3 class="zl-empty-title">Your list awaits</h3>
+            <p class="zl-empty-description">Hit that yellow button</p>
+            <p class="zl-empty-hint">to start adding items</p>
+          </div>
         </div>
       {/if}
     </div>
@@ -295,49 +620,30 @@
 </div>
 
 <style>
-  /* Completed Items Divider */
-  .zl-item.first-completed {
-    margin-top: 3rem;
-    position: relative;
-  }
-  .zl-item.first-completed::before {
-    content: "Completed";
-    position: absolute;
-    top: -2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--zl-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: rgba(255, 255, 255, 0.5);
-    padding: 0.2rem 0.8rem;
-    border-radius: 12px;
-  }
-  .zl-item.first-completed::after {
-    content: "";
-    position: absolute;
-    top: -1rem;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: rgba(0, 0, 0, 0.1);
-    z-index: -1;
-  }
-
-  /* Animation Keyframes */
+  /* Animation keyframes */
   @keyframes sparkle {
     0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
+  
+  @keyframes soft-pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  
   @keyframes check-pop {
     0% { transform: scale(1); }
     50% { transform: scale(1.3); }
     100% { transform: scale(1); }
   }
-  .animate-pop { animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+  .animate-pop {
+    animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
   
+  /**
+   * Keyframes for the `gradient-shift` animation.
+   */
   @keyframes gradient-shift {
     0% { background-position: 0% 0%; }
     25% { background-position: 50% 50%; }
@@ -345,20 +651,35 @@
     75% { background-position: 50% 50%; }
     100% { background-position: 0% 0%; }
   }
-
+  
+  /**
+   * Card styling with animated gradient background.
+   */
   .zl-card {
-    border-radius: var(--zl-card-border-radius);
+    /* Core shape and structure */
+    border-radius: var(--zl-card-border-radius); /* Pillowy, rounded corners */
     border: var(--zl-card-border-width) solid var(--zl-card-border-color);
-    padding: 2.5rem;
+    padding: 2.5rem; /* Generous padding for content */
     position: relative;
     overflow: hidden;
+    
+    /* Size and positioning */
     width: 100%;
-    max-width: 600px;
+    max-width: 540px; /* Optimized for text wrapping */
     margin: 0 auto;
     margin-top: 2rem;
     margin-bottom: 2.5rem;
     height: auto;
+    
+    /* Typography */
     font-family: 'Space Mono', monospace;
+    
+    /* Transitions */
+    transition: var(--zl-transition-standard);
+    
+    /* Shadow for depth */
+    box-shadow: var(--zl-card-box-shadow);
+    
     background: linear-gradient(
       var(--zl-card-bg-gradient-angle),
       var(--zl-card-bg-gradient-color-start),
@@ -369,77 +690,260 @@
     );
     background-size: var(--zl-card-bg-gradient-size);
     animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease infinite;
-    box-shadow: var(--zl-card-box-shadow);
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    border-color: var(--list-primary, var(--zl-card-border-color));
-    box-shadow: 
-      var(--zl-card-box-shadow),
-      0 0 20px var(--list-glow, transparent),
-      0 0 40px var(--list-glow, transparent);
-  }
-  
-  .zl-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-      0 16px 40px rgba(0, 0, 0, 0.15),
-      0 0 25px var(--list-glow, transparent),
-      0 0 50px var(--list-glow, transparent);
-    border-color: var(--list-accent, var(--zl-card-border-color));
   }
 
-  .zl-list-container {
-    position: relative;
-    z-index: 1;
+  @media (max-width: 480px) {
+    .zl-card {
+      padding: 2rem 1rem; /* Reduced side padding on mobile */
+      border-radius: 24px; /* Slightly smaller radius on mobile */
+      max-width: 100%; /* Full width on mobile */
+    }
+
+    .zl-item {
+      border-radius: 16px; /* Slightly smaller radius on mobile */
+      padding: 16px 14px; /* Slightly reduced padding for mobile to optimize space */
+    }
+
+    .zl-list {
+      gap: 20px; /* Maintain or slightly increase gap for touch on mobile */
+    }
+
+    .zl-item-text {
+      font-size: 1.1rem; /* Slightly larger text on mobile for readability */
+    }
+
+    .edit-wrapper {
+      width: calc(100% - 32px - 32px - 1.75rem); /* Adjusted calculation for mobile padding */
+    }
+
+    .zl-edit-input {
+      padding: 0.75rem 1rem; /* Slightly reduced padding on mobile */
+    }
   }
+  
+  /* Subtle inner border effect */
+  .zl-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 28px;
+    padding: 2px;
+    background: var(--zl-card-inner-border-gradient);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.7;
+  }
+  
+  /* Subtle light effect in the corner */
+  .zl-card::after {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0.3) 0%, rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0) 70%);
+    border-radius: 50%;
+    opacity: 0.5;
+    pointer-events: none;
+    animation: soft-pulse 8s infinite alternate ease-in-out;
+  }
+  
+  /* Card content container */
+  .card-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+    overflow: hidden;
+  }
+  
+  /* List container */
+  .zl-list-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
   .zl-list {
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-  .zl-item {
     display: flex;
-    align-items: center;
-    padding: 1rem;
-    background: white;
-    border-radius: 16px;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-    transition: all 0.2s ease;
+    flex-direction: column;
+    gap: var(--zl-spacing-m); 
+    margin-bottom: var(--zl-spacing-m);
     position: relative;
-    border: 1px solid transparent;
-  }
-  .zl-item:hover {
-    transform: scale(1.01);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
-    z-index: 1;
-  }
-  .zl-item:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  }
-  .zl-item.checked {
-    background: rgba(255, 255, 255, 0.6);
-    box-shadow: none;
-    border: 1px solid transparent;
-  }
-  .zl-item.dragging {
-    opacity: 0.5;
-    transform: scale(1.02);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-  }
-  .zl-item.drag-over {
-    transform: translateY(10px);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 400px;
   }
   
+  .zl-item {
+    border-radius: var(--zl-item-border-radius, 20px);
+    background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
+    padding: var(--zl-spacing-s) var(--zl-spacing-s); 
+    
+    display: flex;
+    align-items: flex-start; 
+    gap: 1.25rem; 
+    justify-content: space-between;
+    
+    min-height: 80px; 
+    height: auto; 
+    max-height: none; 
+    
+    box-shadow: var(--zl-item-box-shadow, 0 4px 10px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.1));
+    border: 2px solid var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
+    border-left: 4px solid var(--zl-item-border-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.3));
+    
+    position: relative;
+    cursor: grab;
+    transition: var(--zl-transition-standard);
+  }
+
+  .zl-item:not(.checked):not(.editing) {
+    will-change: transform, opacity;
+  }
+  
+  .zl-item:hover {
+    background: var(--zl-item-hover-bg, rgba(255, 255, 255, 0.8));
+    transform: translateY(-3px);
+    box-shadow: var(--zl-item-hover-box-shadow, 0 8px 20px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.2));
+    border-left: 4px solid var(--zl-item-border-hover-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.7));
+    border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
+  }
+  
+  .zl-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 235, 246, 0.3) 100%);
+    border-radius: 0 18px 18px 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .zl-item:hover::after {
+    opacity: 1;
+  }
+  
+  .zl-item.checked {
+    opacity: var(--zl-item-checked-opacity, 0.75);
+    background: var(--zl-item-checked-bg, rgba(245, 240, 250, 0.4));
+    border-left: 4px solid var(--zl-item-checked-border-color, rgba(201, 120, 255, 0.2));
+    transform: scale(0.98);
+    box-shadow: 0 2px 6px rgba(0, 151, 167, 0.05);
+    border-color: var(--zl-item-checked-border-color, rgba(255, 212, 218, 0.4));
+  }
+
+  /* Item glow effect for remote edits */
+  .zl-item.just-edited {
+    animation: item-glow 2s ease-out;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 0 40px rgba(255, 107, 107, 0.3);
+  }
+
+  @keyframes item-glow {
+    0% {
+      box-shadow: 0 0 30px rgba(255, 107, 107, 0.8), 0 0 50px rgba(255, 107, 107, 0.5);
+      transform: scale(1.02);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 0 40px rgba(255, 107, 107, 0.3);
+    }
+    100% {
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      transform: scale(1);
+    }
+  }
+  
+  .zl-item-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.5;
+    color: var(--zl-text-color-primary);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.8px;
+    
+    box-sizing: border-box;
+    display: inline-block;
+    width: 100%;
+    text-align: left;
+    position: relative;
+    vertical-align: middle;
+    padding: 6px 0; 
+    min-height: 32px; 
+    
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto; 
+    
+    transition: var(--zl-transition-fast);
+    will-change: transform, color;
+  }
+
+  .zl-item-text-button:hover .zl-item-text:not(.checked) {
+    color: var(--zl-text-hover-color, #c978ff);
+    text-shadow: 0 0 8px rgba(0, 151, 167, 0.3);
+    transform: translateY(-1px) scale(1.01);
+  }
+
+  .zl-item-text.checked {
+    text-decoration: line-through var(--zl-primary-color, rgba(201, 120, 255, 0.5)) 1.5px;
+    color: var(--zl-text-color-disabled, #9d9d9d);
+  }
+
+  .zl-item-text-button {
+    background: transparent;
+    border: none;
+    padding: 5px 8px; 
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: flex-start; 
+    width: 100%; 
+    border-radius: 8px; 
+    transition: all 0.2s ease;
+    margin-right: auto;
+    position: relative;
+    min-height: 36px; 
+    height: auto; 
+    align-self: stretch; 
+    flex-wrap: wrap; 
+  }
+
+  .zl-item-text-button:hover:not(:disabled),
+  .zl-item-text-button:focus-visible:not(:disabled) {
+    background: var(--zl-text-button-hover-bg, linear-gradient(135deg, rgba(252, 235, 246, 0.7), rgba(255, 242, 253, 0.9)));
+    outline: none;
+    border-radius: 12px;
+    box-shadow: var(--zl-text-button-focus-shadow, 0 3px 8px rgba(201, 120, 255, 0.2));
+    transform: translateY(-1px);
+  }
+
   .zl-checkbox-wrapper {
     position: relative;
-    width: 24px;
-    height: 24px;
-    margin-right: 1rem;
-    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    padding: 4px; 
+    align-self: center; 
   }
+
   .zl-checkbox {
     position: absolute;
     opacity: 0;
@@ -447,167 +951,379 @@
     height: 0;
     width: 0;
   }
+
   .zl-checkbox-custom {
+    position: relative;
+    display: inline-block;
+    width: var(--zl-checkbox-size, 32px);
+    height: var(--zl-checkbox-size, 32px);
+    border: var(--zl-checkbox-border, 2px solid rgba(201, 120, 255, 0.5));
+    border-radius: var(--zl-checkbox-border-radius, 12px);
+    background-color: var(--zl-checkbox-bg, rgba(255, 255, 255, 0.8));
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: var(--zl-checkbox-shadow, 0 3px 7px rgba(0, 151, 167, 0.15));
+  }
+  
+  .zl-checkbox-wrapper:hover .zl-checkbox-custom {
+    border: var(--zl-checkbox-hover-border, 2px solid rgba(0, 188, 212, 0.7));
+    background-color: var(--zl-checkbox-hover-bg, rgba(255, 245, 250, 0.8));
+    transform: scale(1.1);
+    box-shadow: var(--zl-checkbox-hover-shadow, 0 3px 8px rgba(0, 151, 167, 0.15));
+  }
+  
+  .zl-checkbox:checked + .zl-checkbox-custom {
+    background: linear-gradient(145deg, 
+      var(--zl-checkbox-checked-gradient-start, #4dd0e1) 0%, 
+      var(--zl-checkbox-checked-gradient-end, #0097a7) 100%);
+    border-color: transparent;
+    box-shadow: var(--zl-checkbox-checked-shadow, 0 3px 8px rgba(0, 151, 167, 0.2));
+  }
+  
+  .zl-checkbox:checked + .zl-checkbox-custom::after {
+    content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    height: 24px;
-    width: 24px;
-    background-color: transparent;
-    border: 2px solid var(--zl-text-secondary);
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    transition: all 0.2s ease;
+    background: radial-gradient(circle, 
+      var(--zl-checkbox-sparkle-color, rgba(255, 255, 255, 0.8)) 0%, 
+      rgba(255, 255, 255, 0) 70%);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    animation: sparkle 0.5s var(--zl-transition-easing-bounce) forwards;
+    z-index: 5;
   }
-  .zl-checkbox:checked ~ .zl-checkbox-custom {
-    background-color: var(--zl-primary-color);
-    border-color: var(--zl-primary-color);
+  
+  .zl-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 5rem 1.5rem;
+    height: 320px; 
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--zl-empty-state-bg);
+    border: var(--zl-empty-state-border);
+    border-radius: 24px;
+    margin: 1.5rem 0;
+    transition: var(--zl-transition-fast); 
   }
-  .zl-checkbox-custom:after {
-    content: "";
-    position: absolute;
-    display: none;
-    left: 7px;
-    top: 3px;
-    width: 6px;
-    height: 12px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
+
+  .zl-empty-state.clickable {
+    cursor: pointer;
   }
-  .zl-checkbox:checked ~ .zl-checkbox-custom:after {
-    display: block;
+
+  .zl-empty-state.clickable:hover {
+    background: linear-gradient(135deg, rgba(255, 245, 250, 0.6), rgba(255, 235, 245, 0.6));
+    border-color: rgba(201, 120, 255, 0.5);
+  }
+  
+  .zl-empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+  }
+  
+  .zl-empty-title {
+    font-weight: 800;
+    color: var(--zl-empty-title-color);
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.8px;
+  }
+  
+  .zl-empty-description {
+    color: var(--zl-text-color-secondary);
+    font-size: 1.3rem;
+    font-family: 'Space Mono', monospace;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  
+  .zl-empty-hint {
+    color: var(--zl-text-color-secondary);
+    font-size: 1.1rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 400;
+    letter-spacing: 0.4px;
   }
   
   .edit-wrapper {
-    flex-grow: 1;
-    margin-right: 1rem;
-    min-width: 0;
-  }
-  .zl-item-text-button {
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-    color: inherit;
-  }
-  .zl-item-text {
-    font-size: 1.1rem;
-    color: var(--zl-text-primary);
-    word-break: break-word;
-    line-height: 1.4;
-    display: block;
-  }
-  .zl-item-text.checked {
-    text-decoration: line-through;
-    color: var(--zl-text-secondary);
-    opacity: 0.7;
-  }
-  .zl-edit-input {
-    width: 100%;
-    font-size: 1.1rem;
-    font-family: inherit;
-    border: none;
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    color: var(--zl-text-primary);
-    outline: none;
-    border-bottom: 2px solid var(--zl-primary-color);
-  }
-  
-  .grab-indicator {
+    flex: 1;
+    position: relative;
+    min-height: 44px;
+    margin-right: auto;
     display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 0.5rem;
-    cursor: grab;
-    opacity: 0.3;
-    transition: opacity 0.2s;
+    align-items: flex-start; 
+    padding-top: 4px; 
+    align-self: stretch; 
+    width: calc(100% - 32px - 32px - 2rem); 
   }
-  .grab-indicator:hover { opacity: 0.7; }
-  @media (hover: none) {
-    .grab-indicator { display: none; }
-  }
-  .grab-indicator span {
-    width: 4px;
-    height: 4px;
-    background-color: var(--zl-text-secondary);
-    border-radius: 50%;
+
+  .zl-edit-input {
+    font-family: 'Space Mono', monospace;
+    font-weight: 800;
+    border: var(--zl-edit-input-border, 2px solid rgba(201, 120, 255, 0.3));
+    background-color: var(--zl-edit-input-bg, rgba(255, 255, 255, 0.8));
+    border-radius: 16px; 
+    padding: 0.75rem 1.25rem; 
+    outline: none;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    color: #444444;
+    width: 100%;
+    font-size: 1.1rem;
+    letter-spacing: 0.8px;
+    box-sizing: border-box;
+    line-height: 1.5;
+    margin: 0;
+    min-height: 60px; 
+    height: 60px; 
+    text-align: left;
+    display: flex;
+    align-items: center;
   }
   
-  .zl-delete-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--zl-text-secondary);
-    opacity: 0;
-    transition: all 0.2s;
-    padding: 0.5rem;
-    margin-left: 0.5rem;
-    border-radius: 50%;
+  .zl-edit-input {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: calc(100% - var(--zl-spacing-s)); 
+    max-width: none; 
   }
-  .zl-item:hover .zl-delete-button { opacity: 0.5; }
-  .zl-delete-button:hover {
-    opacity: 1 !important;
-    background-color: rgba(255, 0, 0, 0.1);
-    color: #ff4444;
+
+  .zl-edit-input::placeholder {
+    color: #aaaaaa;
   }
-  /* Show delete button on touch devices since hover isn't available */
-  @media (hover: none) {
-    .zl-delete-button { opacity: 0.35; }
+
+  .zl-edit-input:focus {
+    border-color: var(--zl-edit-input-focus-border, rgba(201, 120, 255, 0.6));
+    box-shadow: var(--zl-edit-input-focus-shadow, 0 0 0 3px rgba(201, 120, 255, 0.1));
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(var(--float-y-min, 0)) rotate(var(--float-rotate-min, -0.5deg)); 
+    }
+    50% { 
+      transform: translateY(var(--float-y-max, -3px)) rotate(var(--float-rotate-max, 0.5deg)); 
+    }
+  }
+
+  .zl-item.dragging {
+    opacity: 1; 
+    background-color: var(--zl-item-dragging-bg, rgba(255, 255, 255, 1));
+    transform: scale(1.03);
+    box-shadow: var(--zl-item-dragging-shadow, 0 15px 30px rgba(0, 151, 167, 0.4));
+    z-index: 10;
+    border: var(--zl-item-dragging-border, 3px solid rgba(0, 188, 212, 0.85));
+    --float-y-min: 0;
+    --float-y-max: -3px;
+    --float-rotate-min: -0.5deg;
+    --float-rotate-max: 0.5deg;
+    animation: float 2s infinite ease-in-out;
+    cursor: grabbing;
+    will-change: transform, opacity, border;
+  }
+
+  .zl-item.drag-over {
+    position: relative;
+    margin-top: 20px; 
+    background-color: var(--zl-item-dragover-bg, rgba(252, 242, 255, 0.9));
+    border: var(--zl-item-dragover-border, 2px solid rgba(0, 188, 212, 0.8));
+    box-shadow: var(--zl-item-dragover-shadow, 0 8px 20px rgba(0, 151, 167, 0.3));
+    transform: translateY(2px); 
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
   }
 
   .drop-indicator {
     position: absolute;
-    top: -10px;
+    top: -12px;
     left: 0;
     right: 0;
-    height: 2px;
-    background: var(--zl-primary-color);
-    z-index: 20;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--zl-drop-indicator-color, rgba(0, 188, 212, 0.7)), transparent);
+    border-radius: 2px;
+    animation: pulse-opacity 1.5s infinite ease-in-out;
+    z-index: 5;
     pointer-events: none;
   }
+
   .drop-arrow {
     position: absolute;
     top: -6px;
     left: 50%;
     width: 14px;
     height: 14px;
-    background-color: var(--zl-primary-color);
+    background-color: var(--zl-drop-arrow-bg, rgba(0, 188, 212, 0.9));
     border-radius: 50%;
     transform: translateX(-50%);
+    box-shadow: var(--zl-drop-arrow-shadow, 0 0 8px rgba(0, 151, 167, 0.4));
   }
 
-  .empty-state {
+  .drop-arrow::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 3px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg);
+  }
+
+  @keyframes pulse-opacity {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .grab-indicator {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    text-align: center;
-    color: var(--zl-text-secondary);
-    cursor: pointer;
-    border: 2px dashed rgba(0,0,0,0.1);
-    border-radius: 16px;
-    transition: all 0.2s;
-  }
-  .empty-state:hover {
-    background: rgba(255,255,255,0.5);
-    border-color: var(--zl-primary-color);
-    color: var(--zl-primary-color);
+    gap: 4px; 
+    margin-right: 12px; 
+    opacity: var(--zl-grab-handle-opacity, 0.6);
+    transition: all 0.25s ease;
+    padding: 8px 8px; 
+    min-width: 32px; 
+    min-height: 32px; 
+    justify-content: center; 
+    align-self: center; 
+    cursor: grab; 
+    position: relative;
   }
 
-  @media (max-width: 480px) {
-    .zl-card {
-      padding: 1.5rem;
-      margin-top: 1rem;
-      margin-bottom: 1.5rem;
+  .grab-indicator span {
+    width: 16px; 
+    height: 2.5px; 
+    background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 0.8));
+    border-radius: 2px;
+    transition: transform 0.2s ease, width 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .zl-item:hover .grab-indicator {
+    opacity: var(--zl-grab-handle-hover-opacity, 1);
+    transform: scale(1.1); 
+  }
+
+  .zl-item:hover .grab-indicator span {
+    background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1)); 
+    box-shadow: 0 1px 3px rgba(0, 151, 167, 0.3); 
+  }
+  
+  .zl-delete-button {
+    background: var(--zl-delete-button-bg, rgba(255, 255, 255, 0.8));
+    border: var(--zl-delete-button-border, 1px solid rgba(0, 188, 212, 0.4));
+    cursor: pointer;
+    color: var(--zl-delete-button-text-color, rgba(0, 188, 212, 0.9));
+    opacity: 0;
+    transition: all 0.2s;
+    padding: 0.5rem;
+    margin-left: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zl-item:hover .zl-delete-button { 
+    opacity: 1; 
+  }
+  .zl-delete-button:hover {
+    background-color: var(--zl-delete-button-hover-bg, rgba(255, 0, 0, 0.1));
+    border-color: var(--zl-delete-button-hover-border, #ff4444);
+    color: #ff4444;
+  }
+  
+  @media (hover: none) {
+    .zl-delete-button { opacity: 0.35; }
+    .grab-indicator { display: none; }
+  }
+
+  /* Presence Dots */
+  .zl-presence-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .zl-presence-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    background: linear-gradient(135deg, rgba(255, 235, 245, 1), rgba(255, 245, 250, 1));
+    border-radius: 16px;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: #9b59b6;
+    box-shadow: 0 3px 10px rgba(155, 89, 182, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .typing-avatar {
+    font-weight: 700;
+    color: #8e44ad;
+  }
+
+  .typing-dots {
+    display: inline-flex;
+    gap: 2px;
+    margin-left: 0.2rem;
+  }
+
+  .typing-dots .dot {
+    animation: typing-bounce 1.4s infinite ease-in-out;
+    opacity: 0.4;
+    width: 4px;
+    height: 4px;
+    background-color: currentColor;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .typing-dots .dot:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .typing-dots .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-dots .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes typing-bounce {
+    0%, 60%, 100% {
+      opacity: 0.4;
+      transform: translateY(0);
     }
-    .zl-item {
-      padding: 0.8rem;
+    30% {
+      opacity: 1;
+      transform: translateY(-4px);
     }
   }
 </style>

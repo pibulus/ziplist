@@ -15,10 +15,6 @@
 	let autoRecordValue = false;
 	let chunkyModeValue = false;
 
-	// Prompt style selection
-	let promptStyles = [];
-	let selectedPromptStyle = 'standard';
-
 	// Subscribe to theme store
 	const unsubscribeTheme = theme.subscribe((value) => {
 		selectedVibe = value;
@@ -29,74 +25,24 @@
 		autoRecordValue = value === 'true';
 	});
 
-	// Subscribe to promptStyle store
-	const unsubscribePromptStyle = promptStyle.subscribe((value) => {
-		selectedPromptStyle = value;
-	});
-
 	// Theme options
 	const vibeOptions = [
-		{
-			id: 'focus',
-			name: 'Focus'
-		},
-		{
-			id: 'chill',
-			name: 'Chill'
-		},
-		{
-			id: 'zen',
-			name: 'Zen'
-		},
-		{
-			id: 'nocturne',
-			name: 'Nocturne'
-		},
-		{
-			id: 'neo',
-			name: 'Neo'
-		}
+		{ id: 'focus', name: 'Focus' },
+		{ id: 'chill', name: 'Chill' },
+		{ id: 'zen', name: 'Zen' },
+		{ id: 'nocturne', name: 'Nocturne' },
+		{ id: 'neo', name: 'Neo' }
 	];
 
-	// Prompt styles are now directly defined in the UI components below
-
-	// Set up event listeners for the modal on component mount
 	onMount(() => {
-		// Get available prompt styles from the service
-		promptStyles = geminiService.getAvailableStyles();
-
-		// Get currently selected prompt style
-		selectedPromptStyle = geminiService.getPromptStyle();
-
-		// Set up event listeners for the modal
-		const modal = document.getElementById('settings_modal');
-		if (modal) {
-			// Listen for custom beforeshow event
-			modal.addEventListener('beforeshow', () => {
-				// Just update the selected value, don't apply theme
-				// The main app already has the theme applied
-				// This fixes the double flash issue
-			});
-
-			// Also listen for the standard dialog open event
-			modal.addEventListener('open', () => {
-				// No need to apply theme here - we just want settings to reflect current state
-
-				// Update prompt style selection in case it was changed elsewhere
-				selectedPromptStyle = geminiService.getPromptStyle();
-			});
-		}
-
 		// Check for chunky mode
 		if (typeof document !== 'undefined') {
 			chunkyModeValue = document.documentElement.classList.contains('mode-neo-brutalist');
 		}
 
-		// Clean up subscriptions on component destroy
 		return () => {
 			unsubscribeTheme();
 			unsubscribeAutoRecord();
-			unsubscribePromptStyle();
 		};
 	});
 
@@ -126,28 +72,11 @@
 		);
 	}
 
-	// Handle prompt style change
-	function changePromptStyle(style) {
-		selectedPromptStyle = style;
-		geminiService.setPromptStyle(style);
-
-		// Update the store (this will also save to localStorage)
-		promptStyle.set(style);
-
-		// Dispatch a custom event that the main page can listen for
-		window.dispatchEvent(
-			new CustomEvent('ziplist-setting-changed', {
-				detail: { setting: 'promptStyle', value: style }
-			})
-		);
-	}
-
 	// Handle auto-record toggle
 	function toggleAutoRecord() {
 		autoRecordValue = !autoRecordValue;
 		autoRecord.set(autoRecordValue.toString());
 
-		// Dispatch a custom event that the main page can listen for (for backward compatibility)
 		window.dispatchEvent(
 			new CustomEvent('ziplist-setting-changed', {
 				detail: { setting: 'autoRecord', value: autoRecordValue }
@@ -155,461 +84,281 @@
 		);
 	}
 
-	// Handle modal opening - called when the modal is opened
-	function handleModalOpen() {
-		if (typeof window === 'undefined') return;
-
-		// Get current scroll position
-		scrollPosition = window.scrollY;
-		const width = document.body.clientWidth;
-
-		// Lock the body in place exactly where it was
-		document.body.style.position = 'fixed';
-		document.body.style.top = `-${scrollPosition}px`;
-		document.body.style.width = `${width}px`;
-		document.body.style.overflow = 'hidden';
-	}
-
-	// Handle modal closure - called when the modal is closed
 	function handleModalClose() {
-		// Restore body styles
-		document.body.style.position = '';
-		document.body.style.top = '';
-		document.body.style.width = '';
-		document.body.style.overflow = '';
-
-		// Restore scroll position
-		window.scrollTo(0, scrollPosition);
-
-		// Call the passed closeModal function
 		closeModal();
 	}
-
-	// No need to watch for changes since we'll use direct DOM methods
-	// When this component is initialized, we just make sure the modal exists
 </script>
 
 <dialog
 	id="settings_modal"
-	class="modal fixed z-50"
-	style="overflow: hidden !important; z-index: 999;"
+	class="zl-settings-dialog"
 	aria-labelledby="settings_modal_title"
 	aria-modal="true"
 >
-	<div
-		class="animate-modal-enter modal-box relative max-h-[80vh] w-[95%] max-w-md overflow-y-auto rounded-2xl border border-pink-200 bg-gradient-to-br from-[#fffaef] to-[#fff6e6] shadow-xl md:max-w-lg"
-	>
-		<form method="dialog">
-			<ModalCloseButton 
-				closeModal={handleModalClose} 
-				label="Close settings" 
-				position="right-2 top-2"
-				modalId="settings_modal"
-			/>
-		</form>
-
-		<div class="animate-fadeUp space-y-4">
-			<div class="mb-1 flex items-center gap-2">
-				<h3 id="settings_modal_title" class="text-xl font-black tracking-tight text-gray-800">
-					⚙️ Settings
-				</h3>
+	<div class="zl-settings-card">
+		<div class="zl-settings-content">
+			<div class="zl-settings-header">
+				<h3 id="settings_modal_title" class="zl-settings-title">⚙️ Settings</h3>
+				<form method="dialog">
+					<button class="zl-settings-close" on:click={handleModalClose} aria-label="Close settings">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+							<line x1="18" y1="6" x2="6" y2="18"></line>
+							<line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</button>
+				</form>
 			</div>
 
-			<!-- Settings Section -->
-			<div class="mb-2 space-y-2">
-				<h4 class="text-sm font-bold text-gray-700">Settings</h4>
-
-				<div
-					class="mb-2 flex items-center justify-between rounded-xl border border-pink-100 bg-[#fffdf5] p-2 shadow-sm transition-all duration-200 hover:border-pink-200"
-				>
-					<div>
-						<span class="text-sm font-medium text-gray-700">Auto-Record on Start</span>
-						<p class="mt-0.5 text-xs text-gray-500">
-							Start recording immediately when you open ZipList
-						</p>
+			<div class="zl-settings-section">
+				<h4 class="zl-section-label">General</h4>
+				
+				<div class="zl-setting-row">
+					<div class="zl-setting-info">
+						<span class="zl-setting-name">Auto-Record on Start</span>
+						<p class="zl-setting-desc">Start recording immediately when you open ZipList</p>
 					</div>
-					<label class="flex cursor-pointer items-center">
-						<span class="sr-only"
-							>Auto-Record Toggle {autoRecordValue ? 'Enabled' : 'Disabled'}</span
-						>
-						<div class="relative">
-							<input
-								type="checkbox"
-								class="sr-only"
-								checked={autoRecordValue}
-								on:change={toggleAutoRecord}
-							/>
-							<div
-								class={`h-5 w-10 rounded-full ${autoRecordValue ? 'bg-pink-400' : 'bg-gray-200'} transition-all duration-200`}
-							></div>
-							<div
-								class={`absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white transition-all duration-200 ${autoRecordValue ? 'translate-x-5' : ''}`}
-							></div>
-						</div>
+					<label class="zl-toggle">
+						<input type="checkbox" checked={autoRecordValue} on:change={toggleAutoRecord} />
+						<span class="zl-toggle-slider"></span>
 					</label>
 				</div>
 
-				<div
-					class="mb-2 flex items-center justify-between rounded-xl border border-pink-100 bg-[#fffdf5] p-2 shadow-sm transition-all duration-200 hover:border-pink-200"
-				>
-					<div>
-						<span class="text-sm font-medium text-gray-700">Chunky Mode</span>
-						<p class="mt-0.5 text-xs text-gray-500">
-							Thick borders & hard shadows
-						</p>
+				<div class="zl-setting-row">
+					<div class="zl-setting-info">
+						<span class="zl-setting-name">Chunky Mode</span>
+						<p class="zl-setting-desc">Thick borders & hard shadows</p>
 					</div>
-					<label class="flex cursor-pointer items-center">
-						<span class="sr-only"
-							>Chunky Mode Toggle {chunkyModeValue ? 'Enabled' : 'Disabled'}</span
-						>
-						<div class="relative">
-							<input
-								type="checkbox"
-								class="sr-only"
-								checked={chunkyModeValue}
-								on:change={toggleChunkyMode}
-							/>
-							<div
-								class={`h-5 w-10 rounded-full ${chunkyModeValue ? 'bg-pink-400' : 'bg-gray-200'} transition-all duration-200`}
-							></div>
-							<div
-								class={`absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white transition-all duration-200 ${chunkyModeValue ? 'translate-x-5' : ''}`}
-							></div>
-						</div>
+					<label class="zl-toggle">
+						<input type="checkbox" checked={chunkyModeValue} on:change={toggleChunkyMode} />
+						<span class="zl-toggle-slider"></span>
 					</label>
 				</div>
 			</div>
 
-			<!-- Vibe Selector Section -->
-			<div class="space-y-2">
-				<h4 class="text-sm font-bold text-gray-700">Choose Your Vibe</h4>
-
-				<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-					{#each vibeOptions as vibe, index}
+			<div class="zl-settings-section">
+				<h4 class="zl-section-label">Choose Your Vibe</h4>
+				<div class="zl-vibe-grid">
+					{#each vibeOptions as vibe}
 						<button
-							class="vibe-option relative flex flex-col items-center rounded-xl border border-pink-100 bg-[#fffdf5] p-2 shadow-sm transition-all duration-300 hover:border-pink-200 hover:shadow-md {selectedVibe ===
-							vibe.id
-								? 'selected-vibe border-pink-300 ring-2 ring-pink-200 ring-opacity-60'
-								: ''}"
-							data-vibe-type={vibe.id}
+							class="zl-vibe-option"
+							class:active={selectedVibe === vibe.id}
 							on:click={() => changeVibe(vibe.id)}
 						>
-							<!-- Ghost preview removed as per request -->
-
-							<span class="text-xs font-medium text-gray-700">{vibe.name}</span>
-
+							<span class="zl-vibe-name">{vibe.name}</span>
 							{#if selectedVibe === vibe.id}
-								<div
-									class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-pink-400 text-xs text-white shadow-sm"
-								>
-									✓
-								</div>
+								<span class="zl-vibe-check">✓</span>
 							{/if}
 						</button>
 					{/each}
 				</div>
-
-			</div>
-
-			<!-- Prompt Style Selection Section -->
-			<!-- Prompt Style Selection Section Removed as per user request -->
-			<!-- <TranscriptionStyleSelector {selectedPromptStyle} {changePromptStyle} /> -->
-
-			<!-- Advanced Features Section -->
-			<!-- <div
-				class="space-y-2 rounded-lg border border-pink-100/60 bg-gradient-to-r from-pink-50/50 to-amber-50/50 p-3 shadow-sm"
-			>
-				<div class="flex items-center justify-between">
-					<h4 class="text-sm font-bold text-gray-700">
-						Advanced Features <span class="text-xs font-normal text-pink-500">(Coming Soon)</span>
-					</h4>
-					<span
-						class="badge badge-sm gap-1 border-amber-200 bg-amber-100 font-medium text-amber-700"
-					>
-						<span class="text-[10px]">✧</span> Pro
-					</span>
-				</div>
-
-				<div class="space-y-2 pt-1">
-					<div class="flex items-center justify-between">
-						<span class="text-xs font-medium text-gray-600">Export lists (CSV/JSON)</span>
-						<input type="checkbox" disabled class="toggle toggle-primary toggle-xs bg-gray-200" />
-					</div>
-
-					<div class="flex items-center justify-between">
-						<span class="text-xs font-medium text-gray-600">Multi-list management</span>
-						<input type="checkbox" disabled class="toggle toggle-primary toggle-xs bg-gray-200" />
-					</div>
-
-					<div class="flex items-center justify-between">
-						<span class="text-xs font-medium text-gray-600">Recurring list templates</span>
-						<input type="checkbox" disabled class="toggle toggle-primary toggle-xs bg-gray-200" />
-					</div>
-				</div>
-
-				<div class="flex justify-end">
-					<span class="text-xs italic text-gray-500">Building these for you!</span>
-				</div>
-			</div> -->
-
-			<div class="border-t border-pink-100 pt-2 text-center">
-				<!-- <p class="text-xs text-gray-500">ZipList • Made with 💜 by Dennis & Pablo</p> -->
 			</div>
 		</div>
 	</div>
 
-	<div
-		class="modal-backdrop bg-black/40"
-		on:click|self|preventDefault|stopPropagation={() => {
-			const modal = document.getElementById('settings_modal');
-			if (modal) {
-				modal.close();
-				setTimeout(handleModalClose, 50);
-			}
-		}}
-		on:keydown={(e) => {
-			if (e.key === 'Escape') {
-				const modal = document.getElementById('settings_modal');
-				if (modal) {
-					modal.close();
-					setTimeout(handleModalClose, 50);
-				}
-			}
-		}}
-		role="button"
-		tabindex="0"
-		aria-label="Close modal"
-	></div>
+	<div class="zl-modal-backdrop" on:click|self={handleModalClose}></div>
 </dialog>
 
 <style>
-	/* Improve close button */
-	.close-btn {
-		-webkit-tap-highlight-color: transparent;
-		outline: none;
-		cursor: pointer;
-		user-select: none;
+	:global(dialog.zl-settings-dialog) {
+		display: flex !important;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		border: none;
+		padding: 0;
+		margin: 0;
+		width: 100vw;
+		height: 100vh;
+		max-width: none;
+		max-height: none;
+		position: fixed;
+		inset: 0;
 		z-index: 1000;
 	}
 
-	.close-btn:hover {
-		transform: scale(1.1);
-	}
-
-	.close-btn:active {
-		transform: scale(0.95);
-	}
-
-	.animate-fadeUp {
-		animation: fadeUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-	}
-
-	@keyframes fadeUp {
-		0% {
-			opacity: 0;
-			transform: translateY(8px);
-		}
-		100% {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	.selected-vibe {
-		box-shadow:
-			0 0 0 2px rgba(249, 168, 212, 0.4),
-			0 4px 8px rgba(249, 168, 212, 0.2);
-	}
-
-	/* Ghost preview styling */
-	.preview-ghost-wrapper {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: transform 0.3s ease;
-	}
-	
-	.vibe-option:hover .preview-ghost-wrapper {
-		transform: scale(1.05);
-	}
-	
-	/* Container for masking the ghost - hides the background */
-	.ghost-mask-wrapper {
+	.zl-settings-card {
 		position: relative;
-		width: 100%;
-		height: 100%;
+		z-index: 1001;
+		width: 90%;
+		max-width: 480px;
+		background: var(--zl-card-bg-gradient-color-start, #fff);
+		border: var(--zl-card-border-width, 4px) solid var(--zl-card-border-color, #000);
+		border-radius: var(--zl-card-border-radius, 32px);
+		box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(0,0,0,0.1));
+		padding: 2rem;
+		animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+	}
+
+	@keyframes modal-pop {
+		from { opacity: 0; transform: scale(0.9) translateY(20px); }
+		to { opacity: 1; transform: scale(1) translateY(0); }
+	}
+
+	.zl-settings-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 2rem;
+	}
+
+	.zl-settings-title {
+		font-family: 'Space Mono', monospace;
+		font-size: 1.5rem;
+		font-weight: 900;
+		color: var(--zl-text-color-primary, #000);
+		margin: 0;
+	}
+
+	.zl-settings-close {
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		color: var(--zl-text-color-secondary, #666);
+		padding: 0.5rem;
+		border-radius: 50%;
+		transition: all 0.2s;
+	}
+
+	.zl-settings-close:hover {
+		background: rgba(0,0,0,0.05);
+		transform: rotate(90deg);
+	}
+
+	.zl-settings-section {
+		margin-bottom: 2rem;
+	}
+
+	.zl-section-label {
+		font-family: 'Space Mono', monospace;
+		font-size: 0.85rem;
+		font-weight: 800;
+		text-transform: uppercase;
+		color: var(--zl-text-color-disabled, #999);
+		margin-bottom: 1rem;
+		letter-spacing: 1px;
+	}
+
+	.zl-setting-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1rem;
+		background: rgba(255,255,255,0.5);
+		border: 2px solid var(--zl-item-border-color, rgba(0,0,0,0.1));
+		border-radius: 16px;
+		margin-bottom: 0.75rem;
+		transition: all 0.2s;
+	}
+
+	.zl-setting-row:hover {
+		border-color: var(--zl-primary-color);
+		background: white;
+	}
+
+	.zl-setting-name {
+		font-weight: 800;
+		color: var(--zl-text-color-primary, #000);
+		display: block;
+	}
+
+	.zl-setting-desc {
+		font-size: 0.75rem;
+		color: var(--zl-text-color-secondary, #666);
+		margin: 0.25rem 0 0 0;
+	}
+
+	/* Toggle Switch */
+	.zl-toggle {
+		position: relative;
+		display: inline-block;
+		width: 48px;
+		height: 24px;
+		flex-shrink: 0;
+	}
+
+	.zl-toggle input { opacity: 0; width: 0; height: 0; }
+
+	.zl-toggle-slider {
+		position: absolute;
+		cursor: pointer;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background-color: var(--zl-text-color-disabled, #ccc);
+		transition: .4s;
+		border-radius: 24px;
+		border: 2px solid transparent;
+	}
+
+	.zl-toggle-slider:before {
+		position: absolute;
+		content: "";
+		height: 16px; width: 16px;
+		left: 2px; bottom: 2px;
+		background-color: white;
+		transition: .4s;
+		border-radius: 50%;
+	}
+
+	input:checked + .zl-toggle-slider {
+		background-color: var(--zl-primary-color, #ffcc33);
+	}
+
+	input:checked + .zl-toggle-slider:before {
+		transform: translateX(24px);
+	}
+
+	/* Vibe Grid */
+	.zl-vibe-grid {
+		display: grid;
+		grid-template-cols: repeat(auto-fill, minmax(100px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.zl-vibe-option {
+		position: relative;
+		padding: 1rem 0.5rem;
+		background: white;
+		border: 2px solid var(--zl-item-border-color, rgba(0,0,0,0.1));
+		border-radius: 16px;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-family: 'Space Mono', monospace;
+		font-weight: 700;
+		font-size: 0.8rem;
+	}
+
+	.zl-vibe-option:hover {
+		border-color: var(--zl-primary-color);
+		transform: translateY(-2px);
+	}
+
+	.zl-vibe-option.active {
+		border-color: var(--zl-primary-color);
+		background: var(--zl-highlight-color, #fff9f5);
+		box-shadow: 0 4px 12px rgba(var(--zl-primary-color-rgb, 0,0,0), 0.1);
+	}
+
+	.zl-vibe-check {
+		position: absolute;
+		top: -5px;
+		right: -5px;
+		background: var(--zl-primary-color);
+		color: white;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		overflow: visible;
-	}
-	
-	/* Apply masking to remove background from DisplayGhost */
-	.ghost-mask-wrapper :global(.display-ghost) {
-		overflow: visible !important; 
-	}
-	
-	/* Target only the ghost SVG, not its container */
-	.ghost-mask-wrapper :global(.ghost-svg) {
-		overflow: visible !important;
-	}
-	
-	/* Hide the ghost background rectangle */
-	.ghost-mask-wrapper :global(.ghost-container) {
-		background: transparent !important;
-	}
-	
-	.ghost-mask-wrapper :global(.ghost-bg) {
-		/* Ensure the ghost background doesn't show */
-		opacity: 1 !important;
+		font-size: 0.7rem;
+		font-weight: bold;
+		border: 2px solid white;
 	}
 
-	.vibe-option {
-		transition: all 0.2s ease-in-out;
-	}
-
-	.vibe-option:hover {
-		transform: translateY(-1px);
-	}
-
-	.vibe-option:active {
-		transform: translateY(0px);
-	}
-
-	/* Connect the preview eyes to the main app's Brian Eno-inspired ambient blinking system */
-	.preview-eyes {
-		animation: preview-blink 6s infinite;
-		transform-origin: center center;
-	}
-
-	/* Each theme preview has a slightly different blink timing 
-	   to create an organic, non-synchronized effect */
-	/* Note: These selectors were unused in the current implementation of DisplayGhost
-	   but kept here if we want to re-enable specific eye animations later.
-	   Commenting out to silence linter. */
-	/*
-	.vibe-option:nth-child(1) .preview-eyes {
-		animation-duration: 6.7s;
-		animation-delay: 0.4s;
-	}
-
-	.vibe-option:nth-child(2) .preview-eyes {
-		animation-duration: 7.3s;
-		animation-delay: 1.2s;
-	}
-
-	.vibe-option:nth-child(3) .preview-eyes {
-		animation-duration: 5.9s;
-		animation-delay: 2.3s;
-	}
-
-	.vibe-option:nth-child(4) .preview-eyes {
-		animation-duration: 8.2s;
-		animation-delay: 0.7s;
-	}
-	*/
-
-	@keyframes preview-blink {
-		0%,
-		96.5%,
-		100% {
-			transform: scaleY(1);
-		}
-		97.5% {
-			transform: scaleY(0); /* Closed eyes */
-		}
-		98.5% {
-			transform: scaleY(1); /* Open eyes */
-		}
-	}
-
-	@keyframes hueShift {
-		0% {
-			background-position: 0% 0%;
-			filter: saturate(1.3) brightness(1.1);
-		}
-		25% {
-			background-position: 0% 33%;
-			filter: saturate(1.4) brightness(1.15);
-		}
-		50% {
-			background-position: 0% 66%;
-			filter: saturate(1.5) brightness(1.2);
-		}
-		75% {
-			background-position: 0% 100%;
-			filter: saturate(1.4) brightness(1.15);
-		}
-		100% {
-			background-position: 0% 0%;
-			filter: saturate(1.3) brightness(1.1);
-		}
-	}
-
-	/* Modal centering and animation styles */
-	:global(dialog.modal) {
-		display: flex !important;
-		align-items: center !important;
-		justify-content: center !important;
-		overflow: hidden !important;
-		max-height: 100vh !important;
-		max-width: 100vw !important;
-		padding: 0 !important;
-		margin: 0 !important;
-		background: transparent !important;
-		border: none !important;
-		inset: 0 !important;
-	}
-
-	/* Ensure modal box is centered and properly styled */
-	:global(.modal-box) {
-		position: relative !important;
-		margin: 1.5rem auto !important;
-		transform: none !important;
-		transition:
-			transform 0.3s ease-out,
-			opacity 0.3s ease-out !important;
-	}
-
-	/* Modal entrance animation */
-	.animate-modal-enter {
-		animation: modalEnter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-		will-change: transform, opacity;
-	}
-
-	@keyframes modalEnter {
-		0% {
-			opacity: 0;
-			transform: scale(0.95) translateY(10px);
-		}
-		60% {
-			opacity: 1;
-			transform: scale(1.02) translateY(-5px);
-		}
-		100% {
-			opacity: 1;
-			transform: scale(1) translateY(0);
-		}
-	}
-
-	/* Fix modal backdrop with animation */
-	:global(.modal-backdrop) {
-		animation: backdropFadeIn 0.3s ease forwards !important;
-		background-color: rgba(0, 0, 0, 0.4) !important;
-		bottom: 0 !important;
-		left: 0 !important;
-		position: fixed !important;
-		right: 0 !important;
-		top: 0 !important;
-		z-index: -1 !important;
-	}
-
-	@keyframes backdropFadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
+	.zl-modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0,0,0,0.4);
+		backdrop-filter: blur(4px);
+		z-index: 1000;
 	}
 </style>

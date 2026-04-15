@@ -1,18 +1,24 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
+	import { appActive, waveformData } from '$lib/services/infrastructure';
+	import { createAnimationController } from '$lib/utils/performanceUtils';
 
 	// Audio visualization configuration
-	let audioDataArray;
-	let animationFrameId;
 	let audioLevel = 0;
 	let history = []; // Array to store audio level history
 	const historyLength = 30; // Number of bars to display in history
-	let analyser;
-	let audioContext;
+	let animationFrameId;
+	let fallbackTimeoutId; // Separate ID for setTimeout to avoid mixing with RAF
 	let recording = false; // Track recording state within the component
 
-	// Safari/iOS detection
-	const userAgent = navigator.userAgent;
+	// Reactive animation state
+	$: animationsEnabled = $appActive;
+
+	// CSS class to control animation state
+	$: animationClass = animationsEnabled ? 'animations-enabled' : 'animations-paused';
+
+	// Safari/iOS detection (guard against SSR where navigator is undefined)
+	const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 	const isAndroid = /Android/i.test(userAgent);
 	const isiPhone = /iPhone|iPad/i.test(userAgent);
 	const isMac = /Macintosh/i.test(userAgent);
@@ -47,47 +53,20 @@
 		exponent = 0.5;
 		detectedDevice = 'Mac';
 	} else {
-		// Default settings for other platforms
-		scalingFactor = 2000;
+		// Default settings for other platforms (Windows/Linux)
+		// Reduced from 2000 to 80 for much better sensitivity
+		scalingFactor = 80;
 		offset = 80;
 		exponent = 0.5;
 		detectedDevice = 'PC';
 	}
 
-	// ===== STANDARD AUDIO VISUALIZER =====
-	async function initStandardVisualizer() {
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-			// Explicitly handle user gesture for Safari
-			if (typeof window !== 'undefined' && window.document) {
-				window.document.addEventListener(
-					'click',
-					() => {
-						if (audioContext && audioContext.state === 'suspended') {
-							audioContext.resume();
-						}
-					},
-					{ once: true }
-				);
-			}
-
-			audioContext = new (window.AudioContext || window.webkitAudioContext)();
-			analyser = audioContext.createAnalyser();
-			const source = audioContext.createMediaStreamSource(stream);
-			source.connect(analyser);
-			analyser.fftSize = 256;
-
-			recording = true;
-			startVisualizer();
-		} catch (error) {
-			console.error('Error accessing microphone for visualizer:', error);
-
-			recording = false;
-
-			// Fallback to the simulated visualizer if standard fails
-			initFallbackVisualizer();
-		}
+	// ===== STANDARD AUDIO VISUALIZER (using waveformData from audioService) =====
+	function initStandardVisualizer() {
+		// No need to create separate stream - audioService already provides waveformData!
+		recording = true;
+		history = Array(historyLength).fill(0);
+		startVisualizer();
 	}
 
 	// ===== FALLBACK VISUALIZER FOR SAFARI/IOS =====
@@ -100,7 +79,7 @@
 	let silenceCountdown = 0;
 
 	function initFallbackVisualizer() {
-		console.log('Using fallback visualizer for Safari/iOS');
+		// console.log('Using fallback visualizer for Safari/iOS');
 		history = Array(historyLength).fill(0);
 		fallbackAnimating = true;
 		recording = true;
@@ -114,6 +93,15 @@
 
 	function updateFallbackVisualizer() {
 		if (!fallbackAnimating) return;
+
+		if (!$appActive) {
+			// If app is inactive, schedule less frequent updates with reactive store value
+			// Use separate timeout ID to avoid mixing setTimeout/RAF IDs
+			fallbackTimeoutId = setTimeout(() => {
+				animationFrameId = requestAnimationFrame(updateFallbackVisualizer);
+			}, 1000); // Check back in 1 second when inactive
+			return;
+		}
 
 		// Only animate when recording is true
 		if (recording) {
@@ -198,33 +186,42 @@
 		animationFrameId = requestAnimationFrame(updateFallbackVisualizer);
 	}
 
-	// ===== STANDARD VISUALIZER UPDATE LOGIC =====
+	// ===== STANDARD VISUALIZER UPDATE LOGIC (using waveformData from store) =====
 	let frameSkipCounter = 0;
 	const frameSkipRate = 2; // Adjust this value to control the speed (higher value = slower animation)
 
-	function updateVisualizer() {
-		if (!recording || !analyser) return;
+	// Create optimized animation controller that auto-pauses when tab is hidden
+	const visualizerAnimation = createAnimationController(() => {
+		if (!recording) return;
 
 		// Skip frames to slow down the animation
 		if (frameSkipCounter < frameSkipRate) {
 			frameSkipCounter++;
-			animationFrameId = requestAnimationFrame(updateVisualizer);
 			return;
 		}
 		frameSkipCounter = 0;
 
-		const bufferLength = analyser.frequencyBinCount;
-		audioDataArray = new Float32Array(bufferLength);
-		analyser.getFloatFrequencyData(audioDataArray);
-		let sum = 0;
-		for (let i = 0; i < bufferLength; i++) {
-			sum += audioDataArray[i];
+		// Use waveformData from audioService store (no need for separate analyser!)
+		const dataArray = $waveformData;
+		if (!dataArray || dataArray.length === 0) {
+			// console.log('[AudioVisualizer] No waveform data');
+			return;
 		}
-		let linearLevel = Math.max(0, sum / bufferLength + offset); // Calculate linear level first
-		let nonLinearLevel = Math.pow(linearLevel, exponent); // Apply power function for non-linear scaling
+		// console.log('[AudioVisualizer] Got data:', dataArray[0], dataArray[10]);
+
+		// Calculate average level from waveformData (Uint8Array with 0-255 values)
+		let sum = 0;
+		for (let i = 0; i < dataArray.length; i++) {
+			sum += dataArray[i];
+		}
+		let averageLevel = sum / dataArray.length;
+
+		// Apply scaling for visualization (dataArray values are 0-255)
+		let linearLevel = Math.max(0, averageLevel - (255 - offset));
+		let nonLinearLevel = Math.pow(linearLevel, exponent);
 		audioLevel = Math.max(
 			0,
-			Math.min(100, nonLinearLevel * (100 / Math.pow(scalingFactor, exponent))) // Rescale non-linear level
+			Math.min(100, nonLinearLevel * (100 / Math.pow(scalingFactor, exponent)))
 		);
 
 		// Update history - add new level to the start, remove oldest if history is too long
@@ -232,9 +229,7 @@
 		if (history.length > historyLength) {
 			history.pop();
 		}
-
-		animationFrameId = requestAnimationFrame(updateVisualizer);
-	}
+	});
 
 	// ===== COMMON CONTROL FUNCTIONS =====
 	function startVisualizer() {
@@ -244,11 +239,14 @@
 				fallbackAnimating = true;
 				updateFallbackVisualizer();
 			}
-		} else if (recording && analyser) {
-			// Start standard visualizer
+		} else if (recording) {
+			// Start optimized visualizer with auto-pause
 			history = Array(historyLength).fill(0);
-			updateVisualizer();
+			visualizerAnimation.start();
 		}
+
+		// Animation state is now managed through reactive variables
+		// No need to manually manipulate DOM classes
 	}
 
 	function stopVisualizer() {
@@ -258,21 +256,25 @@
 			// Let the visualization fade out naturally
 			// The fadeout and stop is handled in updateFallbackVisualizer
 		} else {
-			// Standard cleanup
-			cancelAnimationFrame(animationFrameId);
+			// Stop optimized animation controller
+			visualizerAnimation.stop();
+			// Clean up animation frame and any pending timeout separately
+			if (typeof animationFrameId === 'number') {
+				cancelAnimationFrame(animationFrameId);
+				animationFrameId = null;
+			}
+			if (typeof fallbackTimeoutId === 'number') {
+				clearTimeout(fallbackTimeoutId);
+				fallbackTimeoutId = null;
+			}
 			audioLevel = 0;
 			history = [];
-			if (audioContext) {
-				audioContext.close();
-				audioContext = null;
-				analyser = null;
-			}
+			// No audioContext to clean up - we're using audioService's stream!
 		}
 	}
 
 	// ===== LIFECYCLE HOOKS =====
 	onMount(() => {
-
 		// Initialize visualizer
 		if (useFallbackVisualizer) {
 			initFallbackVisualizer();
@@ -288,7 +290,7 @@
 				if (!fallbackAnimating) {
 					startVisualizer();
 				}
-			} else if (analyser) {
+			} else {
 				startVisualizer();
 			}
 		} else if (!recording) {
@@ -299,10 +301,24 @@
 	onDestroy(() => {
 		fallbackAnimating = false;
 		stopVisualizer();
+
+		// Clean up the animation controller's visibilitychange listener
+		visualizerAnimation.destroy();
+
+		// Extra cleanup for any potential timeout/animation frame
+		if (typeof animationFrameId === 'number') {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
+		}
+		if (typeof fallbackTimeoutId === 'number') {
+			clearTimeout(fallbackTimeoutId);
+			fallbackTimeoutId = null;
+		}
+		// No media stream to release - audioService manages its own stream
 	});
 </script>
 
-<div class="history-container standard-container">
+<div class="history-container standard-container {animationClass}">
 	{#each history as level, index (index)}
 		<div
 			class="history-bar"
@@ -323,6 +339,7 @@
 		overflow: hidden;
 		box-shadow: inset 0 0 15px rgba(249, 168, 212, 0.15);
 		background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), rgba(255, 242, 248, 0.2));
+		contain: content;
 	}
 	.history-bar {
 		position: absolute;
@@ -334,42 +351,90 @@
 		margin-right: 1px; /* Add slight margin to prevent white line gaps */
 		box-shadow: 0 0 8px rgba(249, 168, 212, 0.2); /* Subtle glow on bars */
 		opacity: 0.95;
+		will-change: transform;
+		transform: translateZ(0);
+		backface-visibility: hidden;
 	}
-	
+
 	/* Theme-specific gradient styles - directly applied based on data-theme */
-	:global([data-theme="peach"] .history-bar) {
+	:global([data-theme='peach'] .history-bar) {
 		background: linear-gradient(to top, #ffa573, #ff9f9a, #ff7fcd, #ffb6f3);
 	}
-	
-	:global([data-theme="mint"] .history-bar) {
+
+	:global([data-theme='mint'] .history-bar) {
 		background: linear-gradient(to top, #86efac, #5eead4, #67e8f9);
 	}
-	
-	:global([data-theme="bubblegum"] .history-bar) {
+
+	:global([data-theme='bubblegum'] .history-bar) {
 		background: linear-gradient(to top, #20c5ff, #4d7bff, #c85aff, #ee45f0, #ff3ba0, #ff1a8d);
 	}
 
-	:global([data-theme="rainbow"] .history-bar) {
-		animation: hueShift 9.1s linear infinite, rainbowBars 3s ease-in-out infinite;
-		background-image: linear-gradient(to top, #FF3D7F, #FF8D3C, #FFF949, #4DFF60, #35DEFF, #9F7AFF, #FF3D7F);
+	:global([data-theme='rainbow'] .history-bar) {
+		animation:
+			hueShift 9.1s linear infinite,
+			rainbowBars 3s ease-in-out infinite;
+		background-image: linear-gradient(
+			to top,
+			#ff3d7f,
+			#ff8d3c,
+			#fff949,
+			#4dff60,
+			#35deff,
+			#9f7aff,
+			#ff3d7f
+		);
 		background-size: 100% 600%;
-		box-shadow: 0 0 10px rgba(255, 255, 255, 0.15), 0 0 20px rgba(255, 156, 227, 0.1);
+		box-shadow:
+			0 0 8px rgba(255, 255, 255, 0.15),
+			0 0 10px rgba(255, 156, 227, 0.1);
+		will-change: transform, opacity;
+		transform: translateZ(0);
+		backface-visibility: hidden;
+		background-position: 0% 0%;
 	}
-	
+
+	/* Svelte-controlled animation states */
+	:global(.animations-enabled [data-theme='rainbow'] .history-bar) {
+		animation-play-state: running;
+	}
+
+	:global(.animations-paused [data-theme='rainbow'] .history-bar) {
+		animation-play-state: paused;
+	}
+
 	/* Special animation for rainbow theme bars */
 	@keyframes rainbowBars {
-		0%, 100% { filter: drop-shadow(0 0 2px rgba(255, 156, 227, 0.3)); }
-		25% { filter: drop-shadow(0 0 3px rgba(169, 255, 156, 0.3)); }
-		50% { filter: drop-shadow(0 0 3px rgba(156, 221, 255, 0.3)); }
-		75% { filter: drop-shadow(0 0 2px rgba(255, 234, 138, 0.3)); }
+		0%,
+		100% {
+			filter: drop-shadow(0 0 2px rgba(255, 156, 227, 0.2));
+			transform: scale(1);
+		}
+		25% {
+			filter: drop-shadow(0 0 3px rgba(169, 255, 156, 0.2));
+			transform: scale(1.01);
+		}
+		50% {
+			filter: drop-shadow(0 0 3px rgba(156, 221, 255, 0.2));
+			transform: scale(1.02);
+		}
+		75% {
+			filter: drop-shadow(0 0 2px rgba(255, 234, 138, 0.2));
+			transform: scale(1.01);
+		}
 	}
 
 	@keyframes hueShift {
-		0% { 
-			filter: hue-rotate(0deg) saturate(1.4) brightness(1.15); 
+		0% {
+			filter: hue-rotate(0deg) saturate(1.3) brightness(1.1);
+			background-position: 0% 0%;
 		}
-		100% { 
-			filter: hue-rotate(360deg) saturate(1.5) brightness(1.2); 
+		50% {
+			filter: hue-rotate(180deg) saturate(1.35) brightness(1.125);
+			background-position: 0% 300%;
+		}
+		100% {
+			filter: hue-rotate(360deg) saturate(1.4) brightness(1.15);
+			background-position: 0% 600%;
 		}
 	}
 </style>
