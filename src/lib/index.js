@@ -73,34 +73,7 @@ export function applyTheme(vibeId) {
   theme.set(vibeId);
 
   if (browser) {
-    // Apply theme to document root for consistent CSS targeting
+    // Apply theme to document root — CSS variables handle the rest
     document.documentElement.setAttribute("data-theme", vibeId);
-
-    // Update ghost icon by swapping the SVG file
-    const ghostBg = document.querySelector(".icon-bg");
-    if (ghostBg) {
-      // Set the appropriate gradient SVG based on theme
-      switch (vibeId) {
-        case CONSTANTS.THEMES.MINT:
-          ghostBg.src = "/ziplist-icon-bg-gradient-mint.svg";
-          ghostBg.classList.remove("rainbow-animated");
-          break;
-        case CONSTANTS.THEMES.BUBBLEGUM:
-          ghostBg.src = "/ziplist-icon-bg-gradient-bubblegum.svg";
-          ghostBg.classList.remove("rainbow-animated");
-          break;
-        case CONSTANTS.THEMES.RAINBOW:
-          ghostBg.src = "/ziplist-icon-bg-gradient-rainbow.svg";
-          ghostBg.classList.add("rainbow-animated");
-          break;
-        default: // Default to peach
-          ghostBg.src = "/ziplist-icon-bg-gradient.svg";
-          ghostBg.classList.remove("rainbow-animated");
-          break;
-      }
-
-      // Force a reflow to ensure the gradient is visible
-      void ghostBg.offsetWidth;
-    }
   }
 }

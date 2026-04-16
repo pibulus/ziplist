@@ -5,15 +5,16 @@
  * and make future adjustments easier.
  */
 
-// Ghost Theme Configuration (ghost component gradient palettes)
+// Theme Configuration — matches CSS in src/lib/styles/theme-variables.css
 export const THEMES = {
-  PEACH: "peach",
-  MINT: "mint",
-  BUBBLEGUM: "bubblegum",
-  RAINBOW: "rainbow",
+  FOCUS: "focus",
+  CHILL: "chill",
+  ZEN: "zen",
+  NOCTURNE: "nocturne",
+  NEO: "neo",
 };
 
-export const DEFAULT_THEME = "neo";
+export const DEFAULT_THEME = THEMES.NEO;
 
 // Local Storage Keys
 export const STORAGE_KEYS = {

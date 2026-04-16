@@ -14,12 +14,16 @@ ZipList is a minimal voice-to-list todo app. Core features:
 
 - Voice recording → Gemini API transcription → list items
 - Full CRUD operations (add, toggle, edit, delete items)
-- Local storage persistence
+- Drag-and-drop reorder with haptic feedback
+- Local storage persistence (3 default lists: Blue, Pink, Yellow)
 - PWA support with offline capability
-- Theme system (peach/pink variants)
+- Theme system (focus/chill/zen/nocturne/neo) with animated gradients
+- Neo-Brutalist "Chunky Mode" style overlay
 - Responsive design with mobile-first approach
+- PartyKit real-time collaboration (optional — works without server)
+- Canvas confetti celebrations, particle effects
 
-**Current State**: 65% complete. Core functionality works, needs polish and export features.
+**Current State**: ~80% complete. Core functionality solid, deployed to Pi. Needs: real screenshots, touch-based drag reorder polish, PartyKit production deploy.
 
 ## Code Style Guidelines
 
@@ -43,15 +47,22 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - **geminiApiService.js**: Low-level Gemini API calls (REQUIRED - do not delete)
 - **transcriptionService.js**: Manages transcription flow with progress animation
 - **listsService.js**: Processes transcription results into list items
-- **listsStore.js**: Svelte store for list state and local storage
+- **listsStore.js**: Svelte store for list state and local storage (3 default lists)
 - **themeService.js**: Theme switching and persistence
+- **infrastructure/stores.js**: Central reactive state (audio, recording, transcription, UI)
+- **infrastructure/hapticService.js**: Haptic feedback for touch interactions
+- **realtime/**: PartyKit live collaboration (liveListsService, partyService, presenceStore, typingStore, avatarService)
 
 ### Component Structure
 
-- **MainContainer.svelte**: Top-level container, handles recording state
-- **GhostContainer.svelte**: SVG ghost character (linked to recording state)
-- **SingleList.svelte**: Individual list component with full CRUD
-- **RecordButtonWithTimer.svelte**: Voice recording button with visual feedback
+- **MainContainer.svelte**: Top-level orchestrator, handles recording state and lifecycle
+- **ContentContainer.svelte**: Thin wrapper for AnimatedTitle (32 lines)
+- **AnimatedTitle.svelte**: Title with staggered animation + floating "Dude" record button
+- **SingleList.svelte**: Rich list component (1300 lines) — CRUD, drag/drop, particles, live collab
+- **RecordButtonWithTimer.svelte**: Voice recording button with waveform visualization
+- **SwipeableLists.svelte**: Horizontal list navigation with touch/swipe
+- **Ghost.svelte**: Lightweight themed SVG icon (used in copy button)
+- **PageLayout.svelte**: App shell with responsive layout and fixed footer
 
 ## Text Animation System
 
@@ -115,39 +126,17 @@ The Ziplist app uses subtle text animations for improved user experience:
 - **Implementation**: Applied through dedicated CSS classes (.title-hover, .subtitle-hover)
 - **Note**: Hover effects should be subtle and not interfere with entrance animations
 
-## Ghost Component System
+## Theme System
 
-The Ghost component is a central UI element in ZipList that uses an SVG-based approach with reactive theming.
+Five themes defined in `src/lib/styles/theme-variables.css` with 50+ CSS variables each:
+- **focus** (warm tangerine), **chill** (cool mint), **zen** (lavender), **nocturne** (moonlight), **neo** (high-contrast, default)
+- Applied via `data-theme` attribute on `<html>` root
+- "Chunky Mode" (Neo-Brutalist) is an orthogonal style overlay
+- Theme constants in `src/lib/constants.js`, application in `src/lib/index.js:applyTheme()`
 
-For detailed documentation of the Ghost component, including its architecture, animation system, and theme implementation, refer to:
+## Ghost Component
 
-```
-/src/lib/components/ghost/README.md
-```
-
-### Key Architecture Principles
-
-1. **Unified SVG with Layered Elements**: Uses a single SVG with multiple layers (background, outline, eyes)
-2. **Hybrid State Management**:
-   - Global theme state managed by Svelte stores in `themeStore.js`
-   - Local animation states managed in component
-3. **Direct Element Targeting**: Animations target SVG elements directly via ID selectors
-4. **Theme System**: Centralized theme definitions with reactive updates
-
-### Critical Implementation Guidelines
-
-- Apply animations directly to SVG elements via ID (#ghost-shape)
-- Never apply animations to container groups (.ghost-bg, .ghost-layer)
-- Force browser reflow between animation changes with `void element.offsetWidth`
-- Clear all timeouts properly to prevent animation conflicts
-- Use high specificity selectors for theme-specific animations
-
-For implementing new themes or modifying existing ones, use the themeStore:
-
-```javascript
-import { setTheme } from "./ghost/themeStore";
-setTheme("peach"); // Change to peach theme
-```
+Lightweight SVG icon (~50 lines) at `src/lib/components/ghost/Ghost.svelte`. Accepts `externalTheme` prop to tint fill color. Used as decorative copy-button icon in TranscriptDisplay. The original 20-file ghost animation system was removed in the cleanup arc.
 
 ## Editor Configuration
 
