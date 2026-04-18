@@ -11,21 +11,18 @@
     dispatch('showSettings');
   }
   
-  function showExtension() {
-    dispatch('showExtension');
-  }
 </script>
 
 <div class="flex items-center space-x-1 sm:space-x-2">
   <button
-    class="btn btn-sm btn-ghost text-gray-600 hover:text-pink-500 shadow-none hover:bg-pink-50/50 transition-all text-sm sm:text-base py-1 px-2 sm:px-3 h-auto min-h-0"
+    class="btn btn-sm btn-ghost min-h-[44px] min-w-[44px] text-gray-600 hover:text-pink-500 shadow-none hover:bg-pink-50/50 transition-all text-sm sm:text-base py-1 px-2 sm:px-3"
     on:click={showAbout}
     aria-label="About Ziplist"
   >
     About
   </button>
   <button
-    class="btn btn-sm btn-ghost text-gray-600 hover:text-pink-500 shadow-none hover:bg-pink-50/50 transition-all text-sm sm:text-base py-1 px-2 sm:px-3 h-auto min-h-0"
+    class="btn btn-sm btn-ghost min-h-[44px] min-w-[44px] text-gray-600 hover:text-pink-500 shadow-none hover:bg-pink-50/50 transition-all text-sm sm:text-base py-1 px-2 sm:px-3"
     on:click={showSettings}
     aria-label="Open Settings"
   >

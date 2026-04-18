@@ -55,7 +55,7 @@ export class ListsService {
         const listName =
           command.params && command.params.length > 0
             ? command.params[0]
-            : "New List";
+            : "";
         this.createList(listName);
         break;
       }
@@ -88,7 +88,7 @@ export class ListsService {
    * Create a new list
    * @param {string} name - Name for the new list
    */
-  createList(name = "New List") {
+  createList(name = "") {
     listsStore.addList(name);
   }
 
@@ -235,9 +235,10 @@ export class ListsService {
   /**
    * Reorder items in the active list
    * @param {Array} reorderedItems - Array of items in their new order
+   * @param {string} [listId] - Optional list ID
    */
-  reorderItems(reorderedItems) {
-    listsStore.reorderItems(reorderedItems);
+  reorderItems(reorderedItems, listId = null) {
+    listsStore.reorderItems(reorderedItems, listId);
   }
 }
 

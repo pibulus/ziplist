@@ -15,7 +15,7 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - Voice recording → Gemini API transcription → list items
 - Full CRUD operations (add, toggle, edit, delete items)
 - Drag-and-drop reorder with haptic feedback
-- Local storage persistence (3 default lists: Blue, Pink, Yellow)
+- Local storage persistence with multiple color-coded lists (Blue, Pink, Yellow defaults + more)
 - PWA support with offline capability
 - Theme system (focus/chill/zen/nocturne/neo) with animated gradients
 - Neo-Brutalist "Chunky Mode" style overlay
@@ -23,7 +23,7 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - PartyKit real-time collaboration (optional — works without server)
 - Canvas confetti celebrations, particle effects
 
-**Current State**: ~80% complete. Core functionality solid, deployed to Pi. Needs: real screenshots, touch-based drag reorder polish, PartyKit production deploy.
+**Current State**: ~85% complete. Core functionality solid, deployed to Pi. Needs: real screenshots, PartyKit production deploy.
 
 ## Code Style Guidelines
 
@@ -47,7 +47,7 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - **geminiApiService.js**: Low-level Gemini API calls (REQUIRED - do not delete)
 - **transcriptionService.js**: Manages transcription flow with progress animation
 - **listsService.js**: Processes transcription results into list items
-- **listsStore.js**: Svelte store for list state and local storage (3 default lists)
+- **listsStore.js**: Svelte store for list state and local storage (default lists + palette-safe list creation)
 - **themeService.js**: Theme switching and persistence
 - **infrastructure/stores.js**: Central reactive state (audio, recording, transcription, UI)
 - **infrastructure/hapticService.js**: Haptic feedback for touch interactions
@@ -58,7 +58,7 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - **MainContainer.svelte**: Top-level orchestrator, handles recording state and lifecycle
 - **ContentContainer.svelte**: Thin wrapper for AnimatedTitle (32 lines)
 - **AnimatedTitle.svelte**: Title with staggered animation + floating "Dude" record button
-- **SingleList.svelte**: Rich list component (1300 lines) — CRUD, drag/drop, particles, live collab
+- **SingleList.svelte**: Rich list component (1300+ lines) — CRUD, rename/add-list header controls, drag/drop, particles, live collab
 - **RecordButtonWithTimer.svelte**: Voice recording button with waveform visualization
 - **SwipeableLists.svelte**: Horizontal list navigation with touch/swipe
 - **Ghost.svelte**: Lightweight themed SVG icon (used in copy button)

@@ -1,17 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
-	import { theme, autoRecord, showSettingsModal, applyTheme, promptStyle } from '$lib';
-	import { geminiService } from '$lib/services/geminiService';
-	import { PROMPT_STYLES } from '$lib/constants';
-
-	import { ModalCloseButton } from '../modals/index.js';
+	import { theme, autoRecord, applyTheme } from '$lib';
 
 	// Props for the modal
 	export let closeModal = () => {};
 
 	// Theme/vibe selection
 	let selectedVibe;
-	let scrollPosition = 0;
 	let autoRecordValue = false;
 	let chunkyModeValue = false;
 
@@ -167,8 +162,13 @@
 		</div>
 	</div>
 
-	<div class="zl-modal-backdrop" on:click|self={handleModalClose}></div>
-</dialog>
+		<button
+			type="button"
+			class="zl-modal-backdrop"
+			aria-label="Close settings modal"
+			on:click={handleModalClose}
+		></button>
+	</dialog>
 
 <style>
 	:global(dialog.zl-settings-dialog) {
@@ -177,7 +177,11 @@
 		justify-content: center;
 		background: transparent;
 		border: none;
-		padding: 0;
+		padding:
+			max(12px, env(safe-area-inset-top))
+			max(12px, env(safe-area-inset-right))
+			max(16px, env(safe-area-inset-bottom))
+			max(12px, env(safe-area-inset-left));
 		margin: 0;
 		width: 100vw;
 		height: 100vh;
@@ -186,6 +190,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 1000;
+		box-sizing: border-box;
 	}
 
 	:global(dialog.zl-settings-dialog[open]) {
@@ -195,14 +200,22 @@
 	.zl-settings-card {
 		position: relative;
 		z-index: 1001;
-		width: 90%;
-		max-width: 480px;
+		width: min(92vw, 480px);
+		max-height: min(85dvh, 42rem);
 		background: var(--zl-card-bg-gradient-color-start, #fff);
 		border: var(--zl-card-border-width, 4px) solid var(--zl-card-border-color, #000);
 		border-radius: var(--zl-card-border-radius, 32px);
 		box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(0,0,0,0.1));
 		padding: 2rem;
+		overflow: hidden;
 		animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+	}
+
+	.zl-settings-content {
+		max-height: calc(min(85dvh, 42rem) - 4rem);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding-right: 0.125rem;
 	}
 
 	@keyframes modal-pop {
@@ -231,8 +244,13 @@
 		cursor: pointer;
 		color: var(--zl-text-color-secondary, #666);
 		padding: 0.5rem;
+		min-width: 44px;
+		min-height: 44px;
 		border-radius: 50%;
 		transition: all 0.2s;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.zl-settings-close:hover {
@@ -258,6 +276,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 0.75rem;
 		padding: 1rem;
 		background: rgba(255,255,255,0.5);
 		border: 2px solid var(--zl-item-border-color, rgba(0,0,0,0.1));
@@ -332,6 +351,7 @@
 	.zl-vibe-option {
 		position: relative;
 		padding: 1rem 0.5rem;
+		min-height: 44px;
 		background: white;
 		border: 2px solid var(--zl-item-border-color, rgba(0,0,0,0.1));
 		border-radius: 16px;
@@ -340,6 +360,9 @@
 		font-family: 'Space Mono', monospace;
 		font-weight: 700;
 		font-size: 0.8rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.zl-vibe-option:hover {
@@ -376,5 +399,35 @@
 		background: rgba(0,0,0,0.4);
 		backdrop-filter: blur(4px);
 		z-index: 1000;
+	}
+
+	@media (max-width: 480px) {
+		.zl-settings-card {
+			width: min(94vw, 30rem);
+			max-height: min(88dvh, 42rem);
+			padding: 1rem;
+			border-radius: 24px;
+		}
+
+		.zl-settings-content {
+			max-height: calc(min(88dvh, 42rem) - 2rem);
+		}
+
+		.zl-settings-header {
+			margin-bottom: 1rem;
+		}
+
+		.zl-setting-row {
+			align-items: flex-start;
+		}
+
+		.zl-setting-info {
+			min-width: 0;
+			flex: 1;
+		}
+
+		.zl-vibe-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 	}
 </style>

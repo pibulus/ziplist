@@ -16,18 +16,38 @@
   let dragOverItemId = null;
   let editingItemId = null;
   let editedItemText = '';
-  let isCreatingNewItem = false;
-  let newItemText = '';
+  let editingListName = false;
+  let editedListName = '';
   let shareStatus = null; // To track share operation status
   let isLive = false; // Track if this list is live
-  let liveShareUrl = null; // Store the live share URL
+  let liveFeatureAvailable = false;
   let presence = []; // Who's online
   let typingUsers = []; // Who's typing
   let recentlyEditedItems = new Set(); // Track items just edited by others
   let typingTimeout = null; // Debounce typing broadcasts
+  let listContainerNode = null;
+  const itemNodes = new Map();
+  const MOBILE_REORDER_LONG_PRESS_MS = 160;
+  const MOBILE_REORDER_CANCEL_DISTANCE_PX = 10;
+  const MOBILE_REORDER_AUTO_SCROLL_EDGE_PX = 88;
+  let touchDragPreviewItems = null;
+  let touchDragItemId = null;
+  let touchDragPendingItemId = null;
+  let touchDragPendingTouchId = null;
+  let touchDragStartX = 0;
+  let touchDragStartY = 0;
+  let touchDragCurrentY = 0;
+  let touchDragGhostRect = null;
+  let touchDragPointerOffsetY = 0;
+  let touchDragTargetIndex = -1;
+  let touchDragLongPressTimer = null;
+  let touchDragAutoScrollDelta = 0;
+  let touchDragAutoScrollFrame = null;
+  let touchDragListenersAttached = false;
   
   // Props
   export let listId = null;
+  export let showListManagement = true;
 
   // Subscribe to the appropriate list
   let unsubscribe;
@@ -46,6 +66,11 @@
     }
   }
 
+  $: liveFeatureAvailable = liveListsService.isLiveCollaborationAvailable();
+  $: if (!editingListName) {
+    editedListName = list.name || '';
+  }
+
   // Subscribe to presence and typing for this list
   let presenceUnsubscribe = null;
   let typingUnsubscribe = null;
@@ -59,8 +84,6 @@
     if (list && list.id) {
       isLive = liveListsService.isLive(list.id);
       if (isLive) {
-        liveShareUrl = liveListsService.getShareUrl(list.id);
-
         // Subscribe to presence
         const presenceStore = getPresenceStore(list.id);
         presenceUnsubscribe = presenceStore.subscribe(users => {
@@ -81,6 +104,12 @@
     if (presenceUnsubscribe) presenceUnsubscribe();
     if (typingUnsubscribe) typingUnsubscribe();
     if (typingTimeout) clearTimeout(typingTimeout);
+    clearTouchDragLongPressTimer();
+    stopTouchDragAutoScroll();
+    removeTouchDragListeners();
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('zl-touch-dragging');
+    }
   });
   
   // Share list function
@@ -108,6 +137,15 @@
 
   // Make list live (real-time collaboration)
   async function handleMakeLive() {
+    if (!liveFeatureAvailable) {
+      shareStatus = {
+        success: false,
+        message: 'Live collaboration is not configured on this deployment yet'
+      };
+      setTimeout(() => shareStatus = null, 4000);
+      return;
+    }
+
     if (!list || !list.id) {
       shareStatus = { success: false, message: 'Cannot make list live' };
       setTimeout(() => shareStatus = null, 3000);
@@ -115,9 +153,8 @@
     }
 
     try {
-      const { roomId, shareUrl } = await liveListsService.makeLive(list.id);
+      const { shareUrl } = await liveListsService.makeLive(list.id);
       isLive = true;
-      liveShareUrl = shareUrl;
 
       // Copy to clipboard
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -144,13 +181,61 @@
       setTimeout(() => shareStatus = null, 5000);
     }
   }
+
+  function handleCreateList() {
+    listsService.createList();
+    hapticService.notification('success');
+  }
+
+  function startEditingListName() {
+    if (!showListManagement || !list?.id) return;
+    editingListName = true;
+    editedListName = list.name || '';
+    hapticService.selection();
+  }
+
+  function saveListName() {
+    if (!editingListName) return;
+
+    const nextName = editedListName.trim();
+    editingListName = false;
+
+    if (!nextName || nextName === list.name) {
+      editedListName = list.name || '';
+      return;
+    }
+
+    listsStore.renameList(nextName, list.id);
+    hapticService.impact('light');
+  }
+
+  function cancelListNameEdit() {
+    editingListName = false;
+    editedListName = list.name || '';
+  }
+
+  function handleListNameKeyDown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveListName();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelListNameEdit();
+    }
+  }
   
   // Separated active and completed items
   $: activeItems = list.items.filter(item => !item.checked);
   $: completedItems = list.items.filter(item => item.checked);
 
   // Sort items - active items first, completed items last
-  $: sortedItems = [...activeItems, ...completedItems];
+  $: sortedItems = touchDragPreviewItems || [...activeItems, ...completedItems];
+  $: touchDraggedItem = touchDragItemId
+    ? list.items.find(item => item.id === touchDragItemId) || null
+    : null;
+  $: touchGhostStyle = touchDraggedItem && touchDragGhostRect
+    ? `top: ${touchDragCurrentY - touchDragPointerOffsetY}px; left: ${touchDragGhostRect.left}px; width: ${touchDragGhostRect.width}px;`
+    : '';
 
   // Track previous item IDs to detect new items (from remote users)
   let previousItemIds = new Set();
@@ -225,27 +310,320 @@
     return {};
   }
 
-  // Action for detecting clicks outside an element
-  function clickOutside(node, { enabled, callback }) {
-    const handleClick = (event) => {
-      if (enabled && !node.contains(event.target)) {
-        callback();
-      }
-    };
+  function registerItemNode(node, itemId) {
+    itemNodes.set(itemId, node);
 
-    document.addEventListener('click', handleClick, true);
-    
     return {
-      update(params) {
-        enabled = params.enabled;
-        callback = params.callback;
+      update(nextItemId) {
+        if (nextItemId === itemId) return;
+        itemNodes.delete(itemId);
+        itemId = nextItemId;
+        itemNodes.set(itemId, node);
       },
       destroy() {
-        document.removeEventListener('click', handleClick, true);
+        itemNodes.delete(itemId);
       }
     };
   }
-  
+
+  function clearTouchDragLongPressTimer() {
+    if (touchDragLongPressTimer) {
+      clearTimeout(touchDragLongPressTimer);
+      touchDragLongPressTimer = null;
+    }
+  }
+
+  function stopTouchDragAutoScroll() {
+    if (touchDragAutoScrollFrame) {
+      cancelAnimationFrame(touchDragAutoScrollFrame);
+      touchDragAutoScrollFrame = null;
+    }
+    touchDragAutoScrollDelta = 0;
+  }
+
+  function addTouchDragListeners() {
+    if (touchDragListenersAttached || typeof window === 'undefined') {
+      return;
+    }
+
+    window.addEventListener('touchmove', handleTouchGrabMove, { passive: false });
+    window.addEventListener('touchend', handleTouchGrabEnd, { passive: false });
+    window.addEventListener('touchcancel', handleTouchGrabCancel, { passive: false });
+    touchDragListenersAttached = true;
+  }
+
+  function removeTouchDragListeners() {
+    if (!touchDragListenersAttached || typeof window === 'undefined') {
+      return;
+    }
+
+    window.removeEventListener('touchmove', handleTouchGrabMove);
+    window.removeEventListener('touchend', handleTouchGrabEnd);
+    window.removeEventListener('touchcancel', handleTouchGrabCancel);
+    touchDragListenersAttached = false;
+  }
+
+  function getTrackedTouch(event) {
+    if (touchDragPendingTouchId === null) return null;
+
+    return [...event.changedTouches, ...event.touches].find(
+      (touch) => touch.identifier === touchDragPendingTouchId
+    ) || null;
+  }
+
+  function getTouchDragScrollContainer() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return null;
+    }
+
+    let currentNode = listContainerNode;
+
+    while (currentNode && currentNode !== document.body) {
+      if (currentNode instanceof HTMLElement) {
+        const styles = window.getComputedStyle(currentNode);
+        const overflowY = styles.overflowY;
+        const isScrollable =
+          /(auto|scroll|overlay)/.test(overflowY) &&
+          currentNode.scrollHeight > currentNode.clientHeight;
+
+        if (isScrollable) {
+          return currentNode;
+        }
+      }
+
+      currentNode = currentNode.parentElement;
+    }
+
+    return window;
+  }
+
+  function resetTouchDragState() {
+    clearTouchDragLongPressTimer();
+    stopTouchDragAutoScroll();
+    removeTouchDragListeners();
+
+    touchDragPreviewItems = null;
+    touchDragItemId = null;
+    touchDragPendingItemId = null;
+    touchDragPendingTouchId = null;
+    touchDragGhostRect = null;
+    touchDragPointerOffsetY = 0;
+    touchDragTargetIndex = -1;
+
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('zl-touch-dragging');
+    }
+  }
+
+  function buildTouchPreviewItems(targetIndex) {
+    const draggedItem = activeItems.find(item => item.id === touchDragItemId);
+    if (!draggedItem) return null;
+
+    const movableItems = activeItems.filter(item => item.id !== touchDragItemId);
+    const clampedIndex = Math.max(0, Math.min(targetIndex, movableItems.length));
+    const reorderedActiveItems = [...movableItems];
+
+    reorderedActiveItems.splice(clampedIndex, 0, draggedItem);
+
+    return [...reorderedActiveItems, ...completedItems];
+  }
+
+  function updateTouchDragPreview(clientY) {
+    if (!touchDragItemId) return;
+
+    const movableItems = activeItems.filter(item => item.id !== touchDragItemId);
+    let nextTargetIndex = movableItems.length;
+
+    for (let i = 0; i < movableItems.length; i += 1) {
+      const node = itemNodes.get(movableItems[i].id);
+      if (!node) continue;
+
+      const rect = node.getBoundingClientRect();
+      const midpointY = rect.top + rect.height / 2;
+
+      if (clientY < midpointY) {
+        nextTargetIndex = i;
+        break;
+      }
+    }
+
+    if (nextTargetIndex === touchDragTargetIndex) return;
+
+    touchDragTargetIndex = nextTargetIndex;
+    touchDragPreviewItems = buildTouchPreviewItems(nextTargetIndex);
+    hapticService.dragMove();
+  }
+
+  function runTouchDragAutoScroll() {
+    const scrollContainer = getTouchDragScrollContainer();
+
+    if (!touchDragItemId || !touchDragAutoScrollDelta || !scrollContainer) {
+      touchDragAutoScrollFrame = null;
+      return;
+    }
+
+    if (scrollContainer === window) {
+      window.scrollBy({
+        top: touchDragAutoScrollDelta,
+        behavior: 'auto'
+      });
+    } else {
+      scrollContainer.scrollTop += touchDragAutoScrollDelta;
+    }
+
+    updateTouchDragPreview(touchDragCurrentY);
+    touchDragAutoScrollFrame = requestAnimationFrame(runTouchDragAutoScroll);
+  }
+
+  function updateTouchDragAutoScroll(clientY) {
+    const scrollContainer = getTouchDragScrollContainer();
+    if (!scrollContainer || typeof window === 'undefined') return;
+
+    const scrollBounds = scrollContainer === window
+      ? { top: 0, bottom: window.innerHeight }
+      : scrollContainer.getBoundingClientRect();
+    const topEdgeDistance = clientY - scrollBounds.top;
+    const bottomEdgeDistance = scrollBounds.bottom - clientY;
+    let nextDelta = 0;
+
+    if (topEdgeDistance < MOBILE_REORDER_AUTO_SCROLL_EDGE_PX) {
+      nextDelta = -Math.max(4, Math.round((MOBILE_REORDER_AUTO_SCROLL_EDGE_PX - topEdgeDistance) / 10));
+    } else if (bottomEdgeDistance < MOBILE_REORDER_AUTO_SCROLL_EDGE_PX) {
+      nextDelta = Math.max(4, Math.round((MOBILE_REORDER_AUTO_SCROLL_EDGE_PX - bottomEdgeDistance) / 10));
+    }
+
+    touchDragAutoScrollDelta = nextDelta;
+
+    if (nextDelta !== 0 && !touchDragAutoScrollFrame) {
+      touchDragAutoScrollFrame = requestAnimationFrame(runTouchDragAutoScroll);
+      return;
+    }
+
+    if (nextDelta === 0) {
+      stopTouchDragAutoScroll();
+    }
+  }
+
+  function startTouchDrag() {
+    clearTouchDragLongPressTimer();
+
+    const draggedNode = itemNodes.get(touchDragPendingItemId);
+    if (!draggedNode) {
+      resetTouchDragState();
+      return;
+    }
+
+    const activeIndex = activeItems.findIndex(item => item.id === touchDragPendingItemId);
+    if (activeIndex === -1) {
+      resetTouchDragState();
+      return;
+    }
+
+    const rect = draggedNode.getBoundingClientRect();
+    touchDragItemId = touchDragPendingItemId;
+    touchDragPointerOffsetY = touchDragStartY - rect.top;
+    touchDragGhostRect = {
+      left: rect.left,
+      width: rect.width,
+      height: rect.height
+    };
+    touchDragTargetIndex = activeIndex;
+    touchDragPreviewItems = [...activeItems, ...completedItems];
+
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('zl-touch-dragging');
+    }
+
+    hapticService.dragStart();
+  }
+
+  function handleTouchGrabStart(event, itemId) {
+    if (
+      event.touches.length !== 1 ||
+      editingItemId === itemId ||
+      activeItems.length < 2
+    ) {
+      return;
+    }
+
+    clearTouchDragLongPressTimer();
+    stopTouchDragAutoScroll();
+    addTouchDragListeners();
+
+    const touch = event.changedTouches[0];
+    touchDragPendingItemId = itemId;
+    touchDragPendingTouchId = touch.identifier;
+    touchDragStartX = touch.clientX;
+    touchDragStartY = touch.clientY;
+    touchDragCurrentY = touch.clientY;
+    touchDragLongPressTimer = setTimeout(startTouchDrag, MOBILE_REORDER_LONG_PRESS_MS);
+  }
+
+  function handleTouchGrabMove(event) {
+    const touch = getTrackedTouch(event);
+    if (!touch) return;
+
+    const diffX = touch.clientX - touchDragStartX;
+    const diffY = touch.clientY - touchDragStartY;
+
+    if (!touchDragItemId) {
+      if (
+        Math.abs(diffX) > MOBILE_REORDER_CANCEL_DISTANCE_PX ||
+        Math.abs(diffY) > MOBILE_REORDER_CANCEL_DISTANCE_PX
+      ) {
+        resetTouchDragState();
+      }
+      return;
+    }
+
+    event.preventDefault();
+    touchDragCurrentY = touch.clientY;
+    updateTouchDragPreview(touch.clientY);
+    updateTouchDragAutoScroll(touch.clientY);
+  }
+
+  function finishTouchDrag(commitChange) {
+    if (!touchDragItemId) {
+      resetTouchDragState();
+      return;
+    }
+
+    const currentOrder = [...activeItems, ...completedItems].map(item => item.id);
+    const nextOrder = (touchDragPreviewItems || [...activeItems, ...completedItems]).map(item => item.id);
+    const didMove = currentOrder.join('|') !== nextOrder.join('|');
+
+    if (commitChange && didMove && touchDragPreviewItems) {
+      listsService.reorderItems(touchDragPreviewItems, list.id);
+      hapticService.dragEnd();
+    } else {
+      hapticService.selection();
+    }
+
+    resetTouchDragState();
+  }
+
+  function handleTouchGrabEnd(event) {
+    const touch = getTrackedTouch(event);
+    if (!touch) return;
+
+    if (touchDragItemId) {
+      event.preventDefault();
+    }
+
+    finishTouchDrag(true);
+  }
+
+  function handleTouchGrabCancel(event) {
+    const touch = getTrackedTouch(event);
+    if (!touch) return;
+
+    if (touchDragItemId) {
+      event.preventDefault();
+    }
+
+    resetTouchDragState();
+  }
+
   // Drag and drop functions
   function handleDragStart(event, itemId) {
     // Prevent dragging if item is being edited
@@ -263,7 +641,7 @@
     hapticService.impact('light');
   }
 
-  function handleDragEnd(event) {
+  function handleDragEnd() {
     // Remove styling
     draggedItemId = null;
     dragOverItemId = null;
@@ -440,8 +818,41 @@
     
     <!-- List Header with Live Collaboration Toggle -->
     <div class="zl-list-header">
-      <div class="flex flex-col">
-        <h2 class="zl-list-title">{list.name || 'Your List'}</h2>
+      <div class="zl-list-header-main">
+        {#if showListManagement && editingListName}
+          <input
+            class="zl-list-title-input"
+            bind:value={editedListName}
+            on:blur={saveListName}
+            on:keydown={handleListNameKeyDown}
+            on:focus={(event) => event.currentTarget.select()}
+            aria-label="List name"
+            maxlength="40"
+            use:autoFocus
+          />
+        {:else}
+          <div class="zl-list-title-row">
+            {#if showListManagement}
+              <button
+                type="button"
+                class="zl-list-title-trigger"
+                on:click={startEditingListName}
+                aria-label="Rename list"
+              >
+                <span class="zl-list-title">{list.name || 'Your List'}</span>
+              </button>
+              <button
+                type="button"
+                class="zl-title-edit-button"
+                on:click={startEditingListName}
+              >
+                Rename
+              </button>
+            {:else}
+              <h2 class="zl-list-title">{list.name || 'Your List'}</h2>
+            {/if}
+          </div>
+        {/if}
         {#if isLive}
           <div class="flex items-center gap-2 mt-1">
             <div class="zl-presence-dots">
@@ -459,20 +870,32 @@
       </div>
 
       <div class="zl-list-actions">
-        {#if !isLive}
-          <button 
-            class="zl-live-button" 
-            on:click={handleMakeLive}
-            title="Enable real-time collaboration"
+        {#if showListManagement}
+          <button
+            class="zl-add-list-button"
+            on:click={handleCreateList}
+            title="Create a new list"
           >
-            <span class="live-icon">🔴</span>
-            <span class="live-text">Make Live</span>
+            <span class="add-icon">+</span>
+            <span class="add-text">New List</span>
           </button>
-        {:else}
-          <div class="zl-live-indicator">
-            <span class="live-pulse">🔴</span>
-            <span class="live-count">{presence.length}</span>
-          </div>
+        {/if}
+        {#if liveFeatureAvailable}
+          {#if !isLive}
+            <button
+              class="zl-live-button"
+              on:click={handleMakeLive}
+              title="Enable real-time collaboration"
+            >
+              <span class="live-icon">🔴</span>
+              <span class="live-text">Make Live</span>
+            </button>
+          {:else}
+            <div class="zl-live-indicator">
+              <span class="live-pulse">🔴</span>
+              <span class="live-count">{presence.length}</span>
+            </div>
+          {/if}
         {/if}
         
         <button 
@@ -507,7 +930,11 @@
     {/if}
     
     <!-- List Items -->
-    <div class="zl-list-container" style="position: relative; min-height: {list.items.length > 0 ? (100 + (list.items.length * 90)) : 320}px;">
+    <div
+      class="zl-list-container"
+      bind:this={listContainerNode}
+      style="position: relative; min-height: {list.items.length > 0 ? (100 + (list.items.length * 90)) : 320}px;"
+    >
       {#if list.items.length > 0}
         <ul class="zl-list" role="list" in:fade={{ duration: 200 }}>
           {#each sortedItems as item, index (item.id)}
@@ -516,17 +943,19 @@
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
               class:just-edited={recentlyEditedItems.has(item.id)}
-              draggable={!item.checked && editingItemId !== item.id}
+              class:touch-placeholder={touchDragItemId === item.id}
+              draggable={!item.checked && editingItemId !== item.id && !touchDragItemId}
               on:dragstart|passive={(e) => handleDragStart(e, item.id)}
               on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
-              animate:flip={{ duration: 300 }}
+              animate:flip={{ duration: touchDragItemId ? 180 : 300 }}
               in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
               out:fly={{ y: -20, duration: 300 }}
-              aria-grabbed={draggedItemId === item.id ? 'true' : 'false'}
+              aria-grabbed={draggedItemId === item.id || touchDragItemId === item.id ? 'true' : 'false'}
               aria-dropeffect="move"
               role="listitem"
+              use:registerItemNode={item.id}
             >
               {#if dragOverItemId === item.id}
                 <div class="drop-indicator">
@@ -576,8 +1005,15 @@
                 {/if}
               </div>
 
-              {#if !item.checked && editingItemId !== item.id}
-                <div class="grab-indicator" aria-hidden="true" title="Drag to reorder">
+              {#if !item.checked && editingItemId !== item.id && activeItems.length > 1}
+                <div
+                  class="grab-indicator"
+                  class:touch-active={touchDragItemId === item.id}
+                  data-swipe-ignore="true"
+                  aria-hidden="true"
+                  title="Press and hold to reorder"
+                  on:touchstart={(event) => handleTouchGrabStart(event, item.id)}
+                >
                   <span></span>
                   <span></span>
                   <span></span>
@@ -618,6 +1054,30 @@
     </div>
   </div>
 </div>
+
+{#if touchDraggedItem && touchDragGhostRect}
+  <div
+    class="zl-touch-ghost"
+    style={touchGhostStyle}
+    aria-hidden="true"
+  >
+    <div class="zl-item zl-touch-ghost-item">
+      <div class="zl-checkbox-wrapper ghost-checkbox">
+        <span class="zl-checkbox-custom"></span>
+      </div>
+
+      <div class="edit-wrapper ghost-edit-wrapper">
+        <span class="zl-item-text">{formatItemText(touchDraggedItem.text)}</span>
+      </div>
+
+      <div class="grab-indicator touch-active">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   /* Animation keyframes */
@@ -699,6 +1159,23 @@
       max-width: 100%; /* Full width on mobile */
     }
 
+    .zl-list-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .zl-list-title-row {
+      align-items: flex-start;
+    }
+
+    .zl-list-title-input {
+      width: 100%;
+    }
+
+    .zl-list-actions {
+      justify-content: flex-start;
+    }
+
     .zl-item {
       border-radius: 16px; /* Slightly smaller radius on mobile */
       padding: 16px 14px; /* Slightly reduced padding for mobile to optimize space */
@@ -765,6 +1242,181 @@
     min-height: 320px;
     overflow: hidden;
   }
+
+  .zl-list-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .zl-list-header-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .zl-list-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .zl-list-title-trigger {
+    min-height: 44px;
+    max-width: 100%;
+    border: none;
+    border-radius: 16px;
+    background: transparent;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.35rem;
+    margin: -0.2rem -0.35rem;
+    transition: var(--zl-transition-fast);
+  }
+
+  .zl-list-title-trigger:hover,
+  .zl-list-title-trigger:focus-visible {
+    background: rgba(255, 255, 255, 0.38);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    outline: none;
+  }
+
+  .zl-list-title {
+    margin: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: var(--zl-text-color-primary);
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .zl-list-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+  }
+
+  .zl-list-title-input {
+    width: min(100%, 22rem);
+    min-height: 48px;
+    border-radius: 18px;
+    border: var(--zl-edit-input-border, 2px solid rgba(201, 120, 255, 0.3));
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--zl-text-color-primary);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: var(--zl-transition-fast);
+  }
+
+  .zl-list-title-input:focus {
+    border-color: var(--zl-edit-input-focus-border, rgba(201, 120, 255, 0.6));
+    box-shadow: var(--zl-edit-input-focus-shadow, 0 0 0 3px rgba(201, 120, 255, 0.1));
+    background: rgba(255, 255, 255, 0.98);
+  }
+
+  .zl-title-edit-button {
+    min-height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    background: rgba(255, 255, 255, 0.52);
+    color: var(--zl-text-color-secondary);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    transition: var(--zl-transition-fast);
+  }
+
+  .zl-title-edit-button:hover,
+  .zl-title-edit-button:focus-visible {
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--zl-text-color-primary);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    outline: none;
+  }
+
+  .zl-live-button,
+  .zl-add-list-button,
+  .zl-share-button,
+  .zl-live-indicator {
+    min-height: 44px;
+    border-radius: 999px;
+    padding: 0.65rem 0.9rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+  }
+
+  .zl-add-list-button,
+  .zl-live-button,
+  .zl-share-button {
+    border: 1px solid rgba(0, 188, 212, 0.2);
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--zl-text-color-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transition: var(--zl-transition-fast);
+  }
+
+  .zl-add-list-button {
+    border-color: rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0.24);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.92),
+      rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0.18)
+    );
+  }
+
+  .zl-add-list-button .add-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .zl-add-list-button:hover,
+  .zl-add-list-button:focus-visible,
+  .zl-live-button:hover,
+  .zl-share-button:hover,
+  .zl-live-button:focus-visible,
+  .zl-share-button:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 188, 212, 0.35);
+    outline: none;
+  }
+
+  .zl-live-indicator {
+    background: rgba(255, 244, 244, 0.9);
+    color: #d9485f;
+    border: 1px solid rgba(217, 72, 95, 0.16);
+  }
+
+  .live-count {
+    min-width: 1.25rem;
+    text-align: center;
+  }
   
   /* List container */
   .zl-list-container {
@@ -807,6 +1459,7 @@
     
     position: relative;
     cursor: grab;
+    touch-action: manipulation;
     transition: var(--zl-transition-standard);
   }
 
@@ -919,7 +1572,7 @@
     transition: all 0.2s ease;
     margin-right: auto;
     position: relative;
-    min-height: 36px; 
+    min-height: 44px;
     height: auto; 
     align-self: stretch; 
     flex-wrap: wrap; 
@@ -940,7 +1593,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    padding: 4px; 
+    padding: 6px;
     align-self: center; 
   }
 
@@ -1148,6 +1801,22 @@
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
   }
 
+  .zl-item.touch-placeholder {
+    opacity: 0.22;
+    border-style: dashed;
+    box-shadow: none;
+    transform: none;
+    background: rgba(255, 255, 255, 0.28);
+  }
+
+  .zl-item.touch-placeholder::after {
+    opacity: 0;
+  }
+
+  .zl-item.touch-placeholder > :not(.drop-indicator) {
+    opacity: 0;
+  }
+
   .drop-indicator {
     position: absolute;
     top: -12px;
@@ -1204,6 +1873,10 @@
     align-self: center; 
     cursor: grab; 
     position: relative;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .grab-indicator span {
@@ -1223,6 +1896,16 @@
     background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1)); 
     box-shadow: 0 1px 3px rgba(0, 151, 167, 0.3); 
   }
+
+  .grab-indicator.touch-active {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+
+  .grab-indicator.touch-active span {
+    background-color: rgba(0, 188, 212, 1);
+    box-shadow: 0 2px 6px rgba(0, 151, 167, 0.35);
+  }
   
   .zl-delete-button {
     background: var(--zl-delete-button-bg, rgba(255, 255, 255, 0.8));
@@ -1231,12 +1914,15 @@
     color: var(--zl-delete-button-text-color, rgba(0, 188, 212, 0.9));
     opacity: 0;
     transition: all 0.2s;
-    padding: 0.5rem;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     margin-left: 0.5rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
   .zl-item:hover .zl-delete-button { 
     opacity: 1; 
@@ -1246,10 +1932,53 @@
     border-color: var(--zl-delete-button-hover-border, #ff4444);
     color: #ff4444;
   }
-  
+
+  .zl-touch-ghost {
+    position: fixed;
+    z-index: 999;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+
+  .zl-touch-ghost-item {
+    margin: 0;
+    opacity: 0.98;
+    transform: rotate(1.1deg) scale(1.02);
+    box-shadow: 0 16px 34px rgba(0, 151, 167, 0.24);
+    border-color: rgba(0, 188, 212, 0.7);
+    background: rgba(255, 255, 255, 0.96);
+    animation: none;
+  }
+
+  .ghost-checkbox {
+    padding: 0 6px 0 0;
+  }
+
+  .ghost-edit-wrapper {
+    width: auto;
+    min-height: auto;
+    margin-right: 0;
+    padding-top: 0;
+    align-items: center;
+  }
+
+  .ghost-edit-wrapper .zl-item-text {
+    padding: 0.45rem 0;
+  }
+
   @media (hover: none) {
     .zl-delete-button { opacity: 0.35; }
-    .grab-indicator { display: none; }
+    .grab-indicator {
+      opacity: 0.85;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px;
+    }
+  }
+
+  :global(body.zl-touch-dragging) {
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   /* Presence Dots */

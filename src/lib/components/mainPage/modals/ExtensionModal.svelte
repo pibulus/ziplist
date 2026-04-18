@@ -28,11 +28,10 @@
         <h4 class="font-bold text-sm text-gray-800 mb-2">Installation in 5 easy steps:</h4>
         <ol class="mt-2 list-decimal space-y-2 pl-5 text-left text-sm text-gray-700">
           <li class="pb-1">
-            Download the extension files <a
-              href="javascript:void(0)"
-              class="text-pink-600 transition-colors hover:text-pink-700 hover:underline font-medium"
+            Download the extension files <span
+              class="text-pink-600 font-medium"
               aria-disabled="true"
-              >here</a
+              >here</span
             >
           </li>
           <li class="pb-1">

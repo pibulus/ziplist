@@ -5,10 +5,9 @@
   import ContentContainer from './ContentContainer.svelte';
   import FooterComponent from './FooterComponent.svelte';
   import { geminiService } from '$lib/services/geminiService';
-  import { themeService } from '$lib/services/theme';
   import { modalService } from '$lib/services/modals';
   import { transcriptionService } from '$lib/services/transcription/transcriptionService.js';
-  import { firstVisitService, isFirstVisit } from '$lib/services/first-visit';
+  import { firstVisitService } from '$lib/services/first-visit';
   import { pwaService, deferredInstallPrompt, showPwaInstallPrompt } from '$lib/services/pwa';
   import {
     isRecording,
@@ -18,8 +17,7 @@
     audioState,
     audioActions,
     uiState,
-    uiActions,
-    userPreferences
+    uiActions
   } from '$lib/services/infrastructure/stores.js';
   import { AudioStates } from '$lib/services/audio/audioStates.js';
   import { PageLayout } from '$lib/components/layout';
@@ -43,9 +41,28 @@
 
   let speechModelPreloaded = false;
   let mediaRecorder = null;
+  let activeStream = null;
   let audioChunks = [];
   let isStartingRecording = false;
   let preloadCleanup = null;
+  let visualizerAudioContext = null;
+  let visualizerAnalyser = null;
+  let visualizerFrameId = null;
+  let settingsModalPreloadTimeout = null;
+  let autoRecordTimeout = null;
+
+  function stopStream(stream) {
+    stream?.getTracks().forEach((track) => track.stop());
+  }
+
+  function resetRecordingSession() {
+    stopWaveformMonitoring();
+    stopStream(activeStream);
+    activeStream = null;
+    mediaRecorder = null;
+    audioChunks = [];
+    isStartingRecording = false;
+  }
 
   // Modal functions
   function showAboutModal() {
@@ -111,15 +128,12 @@
       geminiService
         .preloadModel()
         .then(() => simpleHybridService.startBackgroundLoad())
-        .then(() => {
-        })
         .catch((err) => {
           // Just log the error, don't block UI
           console.error('Error preloading speech model:', err);
           // Reset so we can try again
           speechModelPreloaded = false;
         });
-    } else if (speechModelPreloaded) {
     }
   }
 
@@ -133,10 +147,87 @@
     uiActions.setErrorMessage(event.detail.message);
   }
 
+  function stopWaveformMonitoring() {
+    if (visualizerFrameId) {
+      cancelAnimationFrame(visualizerFrameId);
+      visualizerFrameId = null;
+    }
+
+    visualizerAnalyser = null;
+    audioActions.setWaveformData([]);
+
+    if (visualizerAudioContext) {
+      visualizerAudioContext.close().catch(() => {});
+      visualizerAudioContext = null;
+    }
+  }
+
+  async function startWaveformMonitoring(stream) {
+    stopWaveformMonitoring();
+
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return;
+
+    try {
+      visualizerAudioContext = new AudioContextCtor();
+
+      if (visualizerAudioContext.state === 'suspended') {
+        await visualizerAudioContext.resume();
+      }
+
+      const source = visualizerAudioContext.createMediaStreamSource(stream);
+      visualizerAnalyser = visualizerAudioContext.createAnalyser();
+      visualizerAnalyser.fftSize = 128;
+      source.connect(visualizerAnalyser);
+
+      const waveformBuffer = new Uint8Array(visualizerAnalyser.frequencyBinCount);
+
+      const pumpWaveform = () => {
+        if (!visualizerAnalyser) return;
+
+        visualizerAnalyser.getByteFrequencyData(waveformBuffer);
+        audioActions.setWaveformData(Array.from(waveformBuffer));
+        visualizerFrameId = requestAnimationFrame(pumpWaveform);
+      };
+
+      pumpWaveform();
+    } catch (error) {
+      console.warn('Waveform monitoring unavailable:', error);
+      stopWaveformMonitoring();
+    }
+  }
+
   onDestroy(() => {
     if (typeof preloadCleanup === 'function') {
       preloadCleanup();
     }
+
+    if (settingsModalPreloadTimeout) {
+      clearTimeout(settingsModalPreloadTimeout);
+      settingsModalPreloadTimeout = null;
+    }
+
+    if (autoRecordTimeout) {
+      clearTimeout(autoRecordTimeout);
+      autoRecordTimeout = null;
+    }
+
+    if (mediaRecorder) {
+      mediaRecorder.onstart = null;
+      mediaRecorder.ondataavailable = null;
+      mediaRecorder.onstop = null;
+      mediaRecorder.onerror = null;
+
+      if (mediaRecorder.state !== 'inactive') {
+        try {
+          mediaRecorder.stop();
+        } catch (error) {
+          console.warn('Error stopping recorder during teardown:', error);
+        }
+      }
+    }
+
+    resetRecordingSession();
 
     if (browser) {
       window.removeEventListener('ziplist-setting-changed', handleSettingChanged);
@@ -152,6 +243,7 @@
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop(); // This will trigger onstop handler
       } else {
+        resetRecordingSession();
         audioActions.updateState(AudioStates.IDLE);
       }
     } else {
@@ -161,6 +253,8 @@
 
       audioChunks = []; // Clear previous chunks
 
+      let stream = null;
+
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.error('getUserMedia not supported on this browser!');
@@ -168,8 +262,10 @@
           uiActions.setErrorMessage('Audio recording is not supported on this browser.');
           return;
         }
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        activeStream = stream;
         mediaRecorder = new MediaRecorder(stream);
+        await startWaveformMonitoring(stream);
 
         mediaRecorder.onstart = () => {
           isStartingRecording = false;
@@ -184,23 +280,25 @@
 
         mediaRecorder.onstop = async () => {
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
-          
-          const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+
+          const audioBlob = new Blob(audioChunks, {
+            type: mediaRecorder.mimeType || 'audio/webm'
+          });
           audioChunks = [];
 
-          if (audioBlob.size === 0) {
-            audioActions.updateState(AudioStates.IDLE);
-            return;
-          }
-
           try {
+            if (audioBlob.size === 0) {
+              audioActions.updateState(AudioStates.IDLE);
+              return;
+            }
+
             await transcriptionService.transcribeAudio(audioBlob);
             // Auto-scroll to lists after successful transcription to show new items
             setTimeout(scrollToLists, 100);
           } catch (transcriptionError) {
             console.error('Transcription failed in onstop:', transcriptionError);
           } finally {
-            stream.getTracks().forEach(track => track.stop());
+            resetRecordingSession();
             if (get(audioState).state === AudioStates.PROCESSING) {
               audioActions.updateState(AudioStates.IDLE);
             }
@@ -212,13 +310,20 @@
           console.error('MediaRecorder error:', event.error);
           audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
           uiActions.setErrorMessage(`Recording error: ${event.error.name}`);
-          stream.getTracks().forEach(track => track.stop());
+          resetRecordingSession();
         };
 
         mediaRecorder.start();
 
       } catch (err) {
         isStartingRecording = false;
+        stopWaveformMonitoring();
+        stopStream(stream);
+        if (activeStream === stream) {
+          activeStream = null;
+        }
+        mediaRecorder = null;
+        audioChunks = [];
         console.error('Error starting recording (getUserMedia or MediaRecorder setup):', err);
         let errorMessage = 'Could not start recording.';
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -276,7 +381,7 @@
     }
 
     // Pre-load the SettingsModal component after a short delay
-    setTimeout(async () => {
+    settingsModalPreloadTimeout = window.setTimeout(async () => {
       if (!SettingsModal && !loadingSettingsModal) {
         try {
           loadingSettingsModal = true;
@@ -288,18 +393,18 @@
           loadingSettingsModal = false;
         }
       }
+      settingsModalPreloadTimeout = null;
     }, 1000);
 
     // Check for auto-record setting and start recording if enabled
     if (browser && StorageUtils.getBooleanItem(STORAGE_KEYS.AUTO_RECORD, false)) {
       // Wait minimal time for component initialization
-      setTimeout(() => {
+      autoRecordTimeout = window.setTimeout(() => {
         if (!$isRecording) { // Check store directly
           handleToggleRecording(); // Use the main toggle function
-        } else {
         }
+        autoRecordTimeout = null;
       }, 500);
-    } else {
     }
 
     // Listen for settings changes

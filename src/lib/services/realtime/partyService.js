@@ -4,24 +4,51 @@
  * Handles WebSocket connections to PartyKit rooms for live collaboration.
  */
 
-import PartySocket from 'partysocket';
-import { getOrCreateAvatar } from './avatarService.js';
+import PartySocket from "partysocket";
+import { getOrCreateAvatar } from "./avatarService.js";
+
+const PARTYKIT_PLACEHOLDER_HOST = "ziplist.your-username.partykit.dev";
+
+function getConfiguredPartyKitHost() {
+  const host = import.meta.env.VITE_PARTYKIT_HOST?.trim();
+  if (!host || host === PARTYKIT_PLACEHOLDER_HOST) {
+    return "";
+  }
+  return host;
+}
 
 /**
  * Get the PartyKit host based on environment
  * @returns {string} PartyKit host URL
  */
 function getPartyKitHost() {
-  if (typeof window === 'undefined') return '';
-
-  // Development: use localhost
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'localhost:1999';
+  if (typeof window === "undefined") {
+    return getConfiguredPartyKitHost();
   }
 
-  // Production: use your deployed PartyKit host
-  // TODO: Replace with your actual PartyKit domain after deployment
-  return 'ziplist.your-username.partykit.dev';
+  // Development: use localhost
+  if (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  ) {
+    return "localhost:1999";
+  }
+
+  return getConfiguredPartyKitHost();
+}
+
+export function isLiveCollaborationAvailable() {
+  return Boolean(getPartyKitHost());
+}
+
+function requirePartyKitHost() {
+  const host = getPartyKitHost();
+  if (!host) {
+    throw new Error(
+      "Live collaboration is not configured for this deployment yet.",
+    );
+  }
+  return host;
 }
 
 /**
@@ -31,15 +58,15 @@ function getPartyKitHost() {
  * @returns {Promise<{roomId: string, listId: string}>}
  */
 export async function createLiveList(listData, password = null) {
-  const host = getPartyKitHost();
-  const url = `http${host.includes('localhost') ? '' : 's'}://${host}/party/listRoom?${password ? `pwd=${encodeURIComponent(password)}` : ''}`;
+  const host = requirePartyKitHost();
+  const url = `http${host.includes("localhost") ? "" : "s"}://${host}/party/listRoom?${password ? `pwd=${encodeURIComponent(password)}` : ""}`;
 
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(listData)
+    body: JSON.stringify(listData),
   });
 
   if (!response.ok) {
@@ -63,10 +90,10 @@ export async function createLiveList(listData, password = null) {
  */
 export function connectToLiveList(roomId, callbacks = {}, password = null) {
   const avatar = getOrCreateAvatar();
-  const host = getPartyKitHost();
+  const host = requirePartyKitHost();
 
   const query = {
-    avatar
+    avatar,
   };
 
   if (password) {
@@ -76,52 +103,54 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
   const socket = new PartySocket({
     host,
     room: roomId,
-    query
+    query,
   });
 
   // Handle incoming messages
-  socket.addEventListener('message', (event) => {
+  socket.addEventListener("message", (event) => {
     try {
       const message = JSON.parse(event.data);
 
       switch (message.type) {
-        case 'init':
+        case "init":
           callbacks.onInit?.(message.data);
           break;
 
-        case 'presence':
+        case "presence":
           callbacks.onPresence?.(message.data);
           break;
 
-        case 'list_update':
-        case 'item_add':
-        case 'item_update':
-        case 'item_delete':
-        case 'item_toggle':
+        case "list_update":
+        case "item_add":
+        case "item_update":
+        case "item_delete":
+        case "item_toggle":
+        case "typing_start":
+        case "typing_stop":
           callbacks.onUpdate?.(message);
           break;
 
         default:
-          console.warn('[PartyService] Unknown message type:', message.type);
+          console.warn("[PartyService] Unknown message type:", message.type);
       }
     } catch (error) {
-      console.error('[PartyService] Failed to parse message:', error);
+      console.error("[PartyService] Failed to parse message:", error);
     }
   });
 
   // Handle connection events
-  socket.addEventListener('open', () => {
-    console.log('[PartyService] Connected to room:', roomId);
+  socket.addEventListener("open", () => {
+    console.log("[PartyService] Connected to room:", roomId);
     callbacks.onConnect?.();
   });
 
-  socket.addEventListener('close', () => {
-    console.log('[PartyService] Disconnected from room:', roomId);
+  socket.addEventListener("close", () => {
+    console.log("[PartyService] Disconnected from room:", roomId);
     callbacks.onDisconnect?.();
   });
 
-  socket.addEventListener('error', (error) => {
-    console.error('[PartyService] WebSocket error:', error);
+  socket.addEventListener("error", (error) => {
+    console.error("[PartyService] WebSocket error:", error);
   });
 
   return socket;
@@ -135,14 +164,16 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
  */
 export function sendUpdate(socket, type, data) {
   if (socket.readyState !== PartySocket.OPEN) {
-    console.warn('[PartyService] Cannot send update, socket not open');
+    console.warn("[PartyService] Cannot send update, socket not open");
     return;
   }
 
-  socket.send(JSON.stringify({
-    type,
-    data
-  }));
+  socket.send(
+    JSON.stringify({
+      type,
+      data,
+    }),
+  );
 }
 
 /**
@@ -162,7 +193,7 @@ export function disconnectFromLiveList(socket) {
  * @returns {string} Shareable URL
  */
 export function generateShareUrl(roomId, password = null) {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === "undefined") return "";
 
   const baseUrl = `${window.location.origin}/live/${roomId}`;
   return password ? `${baseUrl}?pwd=${encodeURIComponent(password)}` : baseUrl;

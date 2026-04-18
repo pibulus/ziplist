@@ -51,6 +51,8 @@
     outline: none;
     cursor: pointer;
     user-select: none;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .modal-close-btn:hover {

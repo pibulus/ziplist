@@ -1,52 +1,143 @@
 import { writable, derived, get } from "svelte/store";
 import { browser } from "$app/environment";
-import { StorageUtils } from "../infrastructure/storageUtils";
 import { STORAGE_KEYS } from "$lib/constants";
 
-// Default lists configuration
-const DEFAULT_LISTS = [
+const LIST_COLOR_PRESETS = [
   {
     id: "list-blue",
-    name: "Blue List",
+    defaultName: "Blue List",
     color: "blue",
     primaryColor: "#00d4ff",
     accentColor: "#4dd0e1",
     glowColor: "rgba(0, 212, 255, 0.3)",
-    items: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   },
   {
     id: "list-pink",
-    name: "Pink List",
+    defaultName: "Pink List",
     color: "pink",
     primaryColor: "#ff6ac2",
     accentColor: "#ff82ca",
     glowColor: "rgba(255, 106, 194, 0.3)",
-    items: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   },
   {
     id: "list-yellow",
-    name: "Yellow List",
+    defaultName: "Yellow List",
     color: "yellow",
     primaryColor: "#ffb000",
     accentColor: "#ffd700",
     glowColor: "rgba(255, 176, 0, 0.3)",
-    items: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
+  },
+  {
+    defaultName: "Mint List",
+    color: "mint",
+    primaryColor: "#4fd1c5",
+    accentColor: "#80e8de",
+    glowColor: "rgba(79, 209, 197, 0.28)",
+  },
+  {
+    defaultName: "Lavender List",
+    color: "lavender",
+    primaryColor: "#9b8cff",
+    accentColor: "#c4b5fd",
+    glowColor: "rgba(155, 140, 255, 0.28)",
+  },
+  {
+    defaultName: "Coral List",
+    color: "coral",
+    primaryColor: "#ff8a7a",
+    accentColor: "#ffb7ae",
+    glowColor: "rgba(255, 138, 122, 0.28)",
+  },
 ];
+
+// Default lists configuration
+const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 3).map((palette) => ({
+  id: palette.id,
+  name: palette.defaultName,
+  color: palette.color,
+  primaryColor: palette.primaryColor,
+  accentColor: palette.accentColor,
+  glowColor: palette.glowColor,
+  items: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+}));
 
 // Current schema version
 const CURRENT_VERSION = 2;
 
 function normalizeItemText(text) {
-  const normalized = String(text || "").replace(/\s+/g, " ").trim();
+  const normalized = String(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!normalized) return "";
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function getListPaletteForIndex(index = 0) {
+  return LIST_COLOR_PRESETS[index % LIST_COLOR_PRESETS.length];
+}
+
+function getListPaletteForRecord(list, index = 0) {
+  if (list?.id) {
+    const defaultList = DEFAULT_LISTS.find(
+      (defaultRecord) => defaultRecord.id === list.id,
+    );
+    if (defaultList) {
+      const defaultPalette = LIST_COLOR_PRESETS.find(
+        (palette) => palette.color === defaultList.color,
+      );
+      if (defaultPalette) return defaultPalette;
+    }
+  }
+
+  if (list?.color) {
+    const matchingPalette = LIST_COLOR_PRESETS.find(
+      (palette) => palette.color === list.color,
+    );
+    if (matchingPalette) return matchingPalette;
+  }
+
+  return getListPaletteForIndex(index);
+}
+
+function normalizeListRecord(list, index = 0) {
+  const timestamp = new Date().toISOString();
+  const palette = getListPaletteForRecord(list, index);
+  const name =
+    typeof list?.name === "string" && list.name.trim()
+      ? list.name.trim()
+      : palette.defaultName;
+
+  return {
+    ...list,
+    name,
+    color: list?.color || palette.color,
+    primaryColor: list?.primaryColor || palette.primaryColor,
+    accentColor: list?.accentColor || palette.accentColor,
+    glowColor: list?.glowColor || palette.glowColor,
+    items: Array.isArray(list?.items) ? list.items : [],
+    createdAt: list?.createdAt || timestamp,
+    updatedAt: list?.updatedAt || list?.createdAt || timestamp,
+  };
+}
+
+function getUniqueListName(baseName, existingLists = []) {
+  const normalizedBaseName = String(baseName || "").trim() || "New List";
+  const existingNames = new Set(
+    existingLists.map((list) => String(list.name || "").trim().toLowerCase()),
+  );
+
+  if (!existingNames.has(normalizedBaseName.toLowerCase())) {
+    return normalizedBaseName;
+  }
+
+  let suffix = 2;
+  while (existingNames.has(`${normalizedBaseName} ${suffix}`.toLowerCase())) {
+    suffix += 1;
+  }
+
+  return `${normalizedBaseName} ${suffix}`;
 }
 
 // Initialize the lists store
@@ -80,46 +171,77 @@ function createListsStore() {
       const storedActiveListId = localStorage.getItem(
         STORAGE_KEYS.ACTIVE_LIST_ID,
       );
-      
+
       // Initialize with stored data or defaults
       if (storedLists && storedLists.length > 0) {
         // Migration logic: If we have old lists but not the 3 fixed ones
         // We map the first old list to "Blue List" and create the others
         let finalLists = [...DEFAULT_LISTS];
-        
+
         // Check if we need to migrate from single list
-        const isOldSchema = !storedLists.some(l => l.id === 'list-blue');
-        
+        const isOldSchema = !storedLists.some((l) => l.id === "list-blue");
+
         if (isOldSchema) {
-            // Take items from the first stored list and put them in Blue List
-            if (storedLists[0] && storedLists[0].items) {
-                finalLists[0].items = storedLists[0].items;
-                finalLists[0].updatedAt = storedLists[0].updatedAt || new Date().toISOString();
-            }
+          // Take items from the first stored list and put them in Blue List
+          finalLists = DEFAULT_LISTS.map((defaultList, index) =>
+            normalizeListRecord(defaultList, index),
+          );
+          if (storedLists[0] && storedLists[0].items) {
+            finalLists[0] = normalizeListRecord(
+              {
+                ...finalLists[0],
+                items: storedLists[0].items,
+                updatedAt: storedLists[0].updatedAt || new Date().toISOString(),
+              },
+              0,
+            );
+          }
         } else {
-            // Already migrated, just use stored lists but ensure all 3 exist
-            finalLists = DEFAULT_LISTS.map(defaultList => {
-                const found = storedLists.find(l => l.id === defaultList.id);
-                return found ? found : defaultList;
-            });
+          // Already migrated, preserve stored lists and ensure defaults exist
+          const defaultIds = new Set(DEFAULT_LISTS.map((list) => list.id));
+          const baseLists = DEFAULT_LISTS.map((defaultList, index) => {
+            const found = storedLists.find((l) => l.id === defaultList.id);
+            return normalizeListRecord(found || defaultList, index);
+          });
+          const extraLists = storedLists
+            .filter((list) => !defaultIds.has(list.id))
+            .map((list, index) =>
+              normalizeListRecord(list, baseLists.length + index),
+            );
+
+          finalLists = [...baseLists, ...extraLists];
         }
+
+        const resolvedActiveListId = finalLists.some(
+          (list) => list.id === storedActiveListId,
+        )
+          ? storedActiveListId
+          : finalLists[0].id;
 
         // Set the store with lists
         set({
           lists: finalLists,
-          activeListId: storedActiveListId || finalLists[0].id,
+          activeListId: resolvedActiveListId,
           version: CURRENT_VERSION,
         });
-        
-        // Save immediately if we migrated
-        if (isOldSchema) {
-            persistToStorage();
+
+        const finalListsJSON = JSON.stringify(finalLists);
+        const needsPersistence =
+          isOldSchema ||
+          finalListsJSON !== rawListsJSON ||
+          resolvedActiveListId !== storedActiveListId;
+
+        if (needsPersistence) {
+          persistToStorage();
         }
       } else {
+        const defaultLists = DEFAULT_LISTS.map((list, index) =>
+          normalizeListRecord(list, index),
+        );
         // Initialize with defaults
         set({
-          lists: DEFAULT_LISTS,
-          activeListId: DEFAULT_LISTS[0].id,
+          lists: defaultLists,
+          activeListId: defaultLists[0].id,
           version: CURRENT_VERSION,
         });
 
@@ -131,10 +253,13 @@ function createListsStore() {
       setupAutoCleanup();
     } catch (error) {
       console.error("Error initializing lists from storage:", error);
+      const fallbackLists = DEFAULT_LISTS.map((list, index) =>
+        normalizeListRecord(list, index),
+      );
       // Fallback to defaults on error
       set({
-        lists: DEFAULT_LISTS,
-        activeListId: DEFAULT_LISTS[0].id,
+        lists: fallbackLists,
+        activeListId: fallbackLists[0].id,
         version: CURRENT_VERSION,
       });
     }
@@ -162,11 +287,16 @@ function createListsStore() {
       localStorage.setItem(STORAGE_KEYS.LISTS_VERSION, String(state.version));
     } catch (error) {
       console.error("Error persisting lists to storage:", error);
-      if (error.name === 'QuotaExceededError' || error.code === 22) {
-        if (browser && typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('ziplist-storage-error', {
-            detail: { message: 'Storage is full! Please delete some items to keep saving.' }
-          }));
+      if (error.name === "QuotaExceededError" || error.code === 22) {
+        if (browser && typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("ziplist-storage-error", {
+              detail: {
+                message:
+                  "Storage is full! Please delete some items to keep saving.",
+              },
+            }),
+          );
         }
       }
     }
@@ -177,14 +307,24 @@ function createListsStore() {
   }
 
   // Add a new list
-  function addList(name = "New List") {
+  function addList(name = "") {
     update((state) => {
+      const palette = getListPaletteForIndex(state.lists.length);
+      const resolvedName = getUniqueListName(
+        name?.trim() ? name : palette.defaultName,
+        state.lists,
+      );
+      const timestamp = new Date().toISOString();
       const newList = {
         id: generateListId(),
-        name: name,
+        name: resolvedName,
+        color: palette.color,
+        primaryColor: palette.primaryColor,
+        accentColor: palette.accentColor,
+        glowColor: palette.glowColor,
         items: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: timestamp,
+        updatedAt: timestamp,
       };
 
       const newState = {
@@ -212,7 +352,10 @@ function createListsStore() {
       // Ensure we have at least one list
       let activeListId = state.activeListId;
       if (newLists.length === 0) {
-        const defaultList = { ...DEFAULT_LISTS[0], items: [] };
+        const defaultList = normalizeListRecord(
+          { ...DEFAULT_LISTS[0], items: [] },
+          0,
+        );
         newLists.push(defaultList);
         activeListId = defaultList.id;
       } else if (state.activeListId === listId) {
@@ -258,7 +401,8 @@ function createListsStore() {
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
             const alreadyExists = list.items.some(
-              (item) => item.text.toLowerCase() === normalizedText.toLowerCase(),
+              (item) =>
+                item.text.toLowerCase() === normalizedText.toLowerCase(),
             );
             if (alreadyExists) {
               return list;
@@ -267,7 +411,11 @@ function createListsStore() {
               ...list,
               items: [
                 ...list.items,
-                { id: crypto.randomUUID(), text: normalizedText, checked: false },
+                {
+                  id: crypto.randomUUID(),
+                  text: normalizedText,
+                  checked: false,
+                },
               ],
               updatedAt: new Date().toISOString(),
             };
@@ -462,6 +610,47 @@ function createListsStore() {
     persistToStorage();
   }
 
+  // Insert or replace a list record while preserving the target ID
+  function upsertList(listData, listId = null) {
+    if (!listData) return;
+
+    update((state) => {
+      const targetListId = listId || listData.id || state.activeListId;
+      if (!targetListId) return state;
+
+      const existingIndex = state.lists.findIndex(
+        (list) => list.id === targetListId,
+      );
+      const normalizedList = normalizeListRecord(
+        {
+          ...listData,
+          id: targetListId,
+          items: Array.isArray(listData.items) ? listData.items : [],
+          updatedAt: listData.updatedAt || new Date().toISOString(),
+        },
+        existingIndex === -1 ? state.lists.length : existingIndex,
+      );
+
+      if (existingIndex === -1) {
+        return {
+          ...state,
+          lists: [...state.lists, normalizedList],
+        };
+      }
+
+      return {
+        ...state,
+        lists: state.lists.map((list) =>
+          list.id === targetListId
+            ? { ...list, ...normalizedList, id: targetListId }
+            : list,
+        ),
+      };
+    });
+
+    persistToStorage();
+  }
+
   // Reorder items in a list
   function reorderItems(reorderedItems, listId = null) {
     update((state) => {
@@ -559,6 +748,7 @@ function createListsStore() {
     removeItem,
     clearList,
     renameList,
+    upsertList,
     reorderItems,
     persistToStorage,
   };

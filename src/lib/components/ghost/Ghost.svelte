@@ -7,14 +7,14 @@
 	export let externalTheme = null;
 
 	const themeColors = {
-		peach: '#ffb6a3',
-		mint: '#86efac',
-		bubblegum: '#f0abfc',
-		rainbow: '#c4b5fd',
-		neo: '#fca5a5'
+		focus: '#ffab77',
+		chill: '#71c9ce',
+		zen: '#9775fa',
+		nocturne: '#c487d2',
+		neo: '#ffb000'
 	};
 
-	$: fillColor = themeColors[externalTheme] || themeColors.peach;
+	$: fillColor = themeColors[externalTheme] || themeColors.focus;
 </script>
 
 <svg

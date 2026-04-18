@@ -15,8 +15,9 @@ No more fumbling with tiny keyboards while standing in grocery stores. No more f
 - **Voice becomes lists in seconds** - Web Speech API magic, zero learning curve
 - **Works everywhere** - PWA that saves to your home screen, plus Chrome extension for any website
 - **Works offline** - No internet drama, your lists stay local and private
-- **Beautiful themes** - Four gorgeous color personalities that actually matter
-- **Drag, drop, check off** - Lists that feel alive and respond to your touch
+- **Multiple named lists** - Swipe between color-coded lists, add fresh ones, rename them inline
+- **Beautiful themes** - Five distinct moods with their own visual personality
+- **Drag, drop, check off** - Desktop drag plus touch-native reorder on mobile
 - **Stupidly simple** - One tap to talk, that's it
 
 ## Use It Anywhere
@@ -63,6 +64,14 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 Do not use `VITE_GEMINI_API_KEY` for the main app runtime. `VITE_*` vars are exposed to the browser.
 
+If you want PartyKit live sharing in a deployed environment, also set:
+
+```bash
+VITE_PARTYKIT_HOST=your-actual-host.partykit.dev
+```
+
+Leave it unset for solo/demo deployments and ZipList will stay in clean solo mode.
+
 ## How It's Built
 
 ```
@@ -85,14 +94,15 @@ Do not use `VITE_GEMINI_API_KEY` for the main app runtime. `VITE_*` vars are exp
 - **PWA Ready** - Full Progressive Web App with manifest and service worker
 - **Chrome Extension** - Voice-to-lists in any text field on any website
 
-## The Four Personalities
+## The Five Personalities
 
 Ziplist adapts its look and feel to match your mood:
 
-- **Warm sunset vibes** - Peachy, cozy energy
-- **Cool fresh energy** - Mint, clean focus
-- **Playful pink pop** - Bubblegum fun
-- **Full spectrum joy** - Rainbow everything
+- **Focus** - Warm tangerine sunrise
+- **Chill** - Minty cool clarity
+- **Zen** - Lavender calm with a lo-fi edge
+- **Nocturne** - Moonlit pastel night energy
+- **Neo** - High-contrast punch with extra pop
 
 Choose once, it remembers. Because good tools should feel like they know you.
 

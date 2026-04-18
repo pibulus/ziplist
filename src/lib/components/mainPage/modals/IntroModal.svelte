@@ -1,5 +1,4 @@
 <script>
-  import { browser } from '$app/environment';
   import { ModalCloseButton } from './index.js';
 
   export let closeModal;
@@ -17,7 +16,7 @@
   }
 </script>
 
-<dialog id="intro_modal" class="modal modal-bottom sm:modal-middle" role="dialog" aria-labelledby="intro_modal_title" aria-modal="true">
+<dialog id="intro_modal" class="modal modal-bottom sm:modal-middle" aria-labelledby="intro_modal_title" aria-modal="true">
   <div class="modal-box relative bg-[#fff9ed] rounded-3xl p-6 sm:p-8 md:p-10 w-[95%] max-w-[90vw] sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto border-0"
     style="box-shadow: 0 10px 25px -5px rgba(249, 168, 212, 0.3), 0 8px 10px -6px rgba(249, 168, 212, 0.2), 0 0 15px rgba(249, 168, 212, 0.15);">
 

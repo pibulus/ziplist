@@ -3,7 +3,10 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { listsStore } from '$lib/services/lists/listsStore';
-  import { connectToLive } from '$lib/services/realtime/liveListsService';
+  import {
+    connectToLive,
+    disconnectFromLive
+  } from '$lib/services/realtime/liveListsService';
   import { getPresenceStore } from '$lib/services/realtime/presenceStore';
   import { getOrCreateAvatar } from '$lib/services/realtime/avatarService';
   import SingleList from '$lib/components/list/SingleList.svelte';
@@ -52,6 +55,10 @@
     if (presenceUnsubscribe) {
       presenceUnsubscribe();
     }
+
+    if (listId) {
+      disconnectFromLive(listId);
+    }
   });
 </script>
 
@@ -86,7 +93,7 @@
       </div>
     </div>
 
-    <SingleList />
+    <SingleList {listId} showListManagement={false} />
   {/if}
 </div>
 

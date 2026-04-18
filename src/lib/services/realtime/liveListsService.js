@@ -5,16 +5,18 @@
  * Manages PartyKit connections and syncs changes bidirectionally.
  */
 
-import { listsStore } from '../lists/listsStore.js';
+import { get } from "svelte/store";
+import { listsStore } from "../lists/listsStore.js";
 import {
   createLiveList,
   connectToLiveList,
   sendUpdate,
   disconnectFromLiveList,
-  generateShareUrl
-} from './partyService.js';
-import { getPresenceStore, cleanupPresenceStore } from './presenceStore.js';
-import { getTypingStore, cleanupTypingStore } from './typingStore.js';
+  generateShareUrl,
+  isLiveCollaborationAvailable as isPartyKitAvailable,
+} from "./partyService.js";
+import { getPresenceStore, cleanupPresenceStore } from "./presenceStore.js";
+import { getTypingStore, cleanupTypingStore } from "./typingStore.js";
 
 /**
  * Active PartySocket connections
@@ -27,6 +29,24 @@ const activeConnections = new Map();
  */
 let isSyncingRemoteChange = false;
 
+function createPlaceholderList(listId, seedList = null) {
+  const fallbackList = get(listsStore).lists[0] ?? {};
+
+  return {
+    id: listId,
+    name: seedList?.name || "Live List",
+    color: seedList?.color || fallbackList.color || "blue",
+    primaryColor:
+      seedList?.primaryColor || fallbackList.primaryColor || "#00d4ff",
+    accentColor: seedList?.accentColor || fallbackList.accentColor || "#4dd0e1",
+    glowColor:
+      seedList?.glowColor || fallbackList.glowColor || "rgba(0, 212, 255, 0.3)",
+    items: Array.isArray(seedList?.items) ? seedList.items : [],
+    createdAt: seedList?.createdAt || new Date().toISOString(),
+    updatedAt: seedList?.updatedAt || new Date().toISOString(),
+  };
+}
+
 /**
  * Make a list "live" by creating a PartyKit room and connecting to it
  * @param {string} listId - The list ID to make live
@@ -35,12 +55,8 @@ let isSyncingRemoteChange = false;
  */
 export async function makeLive(listId, password = null) {
   // Get the list data from the store
-  const state = listsStore;
-  let listData = null;
-
-  state.subscribe(s => {
-    listData = s.lists.find(l => l.id === listId);
-  })();
+  const state = get(listsStore);
+  const listData = state.lists.find((list) => list.id === listId);
 
   if (!listData) {
     throw new Error(`List ${listId} not found`);
@@ -72,6 +88,11 @@ export async function connectToLive(listId, roomId, password = null) {
     return;
   }
 
+  const existingList = get(listsStore).lists.find((list) => list.id === listId);
+  if (!existingList) {
+    listsStore.upsertList(createPlaceholderList(listId));
+  }
+
   // Get presence and typing stores for this list
   const presenceStore = getPresenceStore(listId);
   const typingStore = getTypingStore(listId);
@@ -84,29 +105,15 @@ export async function connectToLive(listId, roomId, password = null) {
        * Called when we receive initial list state from server
        */
       onInit: (serverListData) => {
-        console.log('[LiveListsService] Received initial state from server', serverListData);
+        console.log(
+          "[LiveListsService] Received initial state from server",
+          serverListData,
+        );
+        if (!serverListData) return;
 
         // Apply server state to local store (merge strategy: server wins)
         isSyncingRemoteChange = true;
-
-        // Update the list in the store
-        listsStore.update(state => {
-          return {
-            ...state,
-            lists: state.lists.map(list => {
-              if (list.id === listId) {
-                return {
-                  ...list,
-                  ...serverListData,
-                  id: listId // Keep local ID
-                };
-              }
-              return list;
-            })
-          };
-        });
-
-        listsStore.persistToStorage();
+        listsStore.upsertList({ ...serverListData, id: listId }, listId);
         isSyncingRemoteChange = false;
       },
 
@@ -114,60 +121,51 @@ export async function connectToLive(listId, roomId, password = null) {
        * Called when remote changes arrive
        */
       onUpdate: (message) => {
-        console.log('[LiveListsService] Received update from', message.sender?.avatar, message.type);
+        console.log(
+          "[LiveListsService] Received update from",
+          message.sender?.avatar,
+          message.type,
+        );
 
         isSyncingRemoteChange = true;
 
         switch (message.type) {
-          case 'list_update':
+          case "list_update":
             // Full list update
-            listsStore.update(state => {
-              return {
-                ...state,
-                lists: state.lists.map(list => {
-                  if (list.id === listId) {
-                    return {
-                      ...list,
-                      ...message.data,
-                      id: listId
-                    };
-                  }
-                  return list;
-                })
-              };
-            });
+            if (message.data) {
+              listsStore.upsertList({ ...message.data, id: listId }, listId);
+            }
             break;
 
-          case 'item_add':
+          case "item_add":
             listsStore.addItem(message.data.text, listId, message.data.id);
             break;
 
-          case 'item_toggle':
+          case "item_toggle":
             listsStore.toggleItem(message.data.id, listId);
             break;
 
-          case 'item_update':
+          case "item_update":
             listsStore.editItem(message.data.id, message.data.text, listId);
             break;
 
-          case 'item_delete':
+          case "item_delete":
             listsStore.removeItem(message.data.id, listId);
             break;
 
-          case 'typing_start':
+          case "typing_start":
             if (message.sender) {
               typingStore.startTyping(message.sender);
             }
             break;
 
-          case 'typing_stop':
+          case "typing_stop":
             if (message.sender) {
               typingStore.stopTyping(message.sender.id);
             }
             break;
         }
 
-        listsStore.persistToStorage();
         isSyncingRemoteChange = false;
       },
 
@@ -175,19 +173,22 @@ export async function connectToLive(listId, roomId, password = null) {
        * Called when presence updates
        */
       onPresence: (users) => {
-        console.log('[LiveListsService] Presence update:', users.map(u => u.avatar).join(', '));
+        console.log(
+          "[LiveListsService] Presence update:",
+          users.map((u) => u.avatar).join(", "),
+        );
         presenceStore.setUsers(users);
       },
 
       onConnect: () => {
-        console.log('[LiveListsService] Connected to room', roomId);
+        console.log("[LiveListsService] Connected to room", roomId);
       },
 
       onDisconnect: () => {
-        console.log('[LiveListsService] Disconnected from room', roomId);
-      }
+        console.log("[LiveListsService] Disconnected from room", roomId);
+      },
     },
-    password
+    password,
   );
 
   // Store the connection
@@ -202,17 +203,17 @@ export async function connectToLive(listId, roomId, password = null) {
  */
 function setupLocalChangeSync(listId, socket) {
   // Subscribe to list changes
-  const unsubscribe = listsStore.subscribe(state => {
+  const unsubscribe = listsStore.subscribe((state) => {
     // Don't broadcast if we're applying a remote change (avoid loops)
     if (isSyncingRemoteChange) return;
 
     // Find the list
-    const list = state.lists.find(l => l.id === listId);
+    const list = state.lists.find((l) => l.id === listId);
     if (!list) return;
 
     // Broadcast the full list state
     // In a production app, you'd want to send only diffs, but for simplicity we send everything
-    sendUpdate(socket, 'list_update', list);
+    sendUpdate(socket, "list_update", list);
   });
 
   // Store the unsubscribe function for cleanup
@@ -245,7 +246,7 @@ export function disconnectFromLive(listId) {
   // Remove from active connections
   activeConnections.delete(listId);
 
-  console.log('[LiveListsService] Disconnected from list', listId);
+  console.log("[LiveListsService] Disconnected from list", listId);
 }
 
 /**
@@ -256,7 +257,7 @@ export function broadcastTypingStart(listId) {
   const connection = activeConnections.get(listId);
   if (!connection) return;
 
-  sendUpdate(connection.socket, 'typing_start', {});
+  sendUpdate(connection.socket, "typing_start", {});
 }
 
 /**
@@ -267,7 +268,7 @@ export function broadcastTypingStop(listId) {
   const connection = activeConnections.get(listId);
   if (!connection) return;
 
-  sendUpdate(connection.socket, 'typing_stop', {});
+  sendUpdate(connection.socket, "typing_stop", {});
 }
 
 /**
@@ -277,6 +278,10 @@ export function broadcastTypingStop(listId) {
  */
 export function isLive(listId) {
   return activeConnections.has(listId);
+}
+
+export function isLiveCollaborationAvailable() {
+  return isPartyKitAvailable();
 }
 
 /**

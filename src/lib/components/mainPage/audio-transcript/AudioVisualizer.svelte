@@ -31,7 +31,6 @@
 	let scalingFactor;
 	let offset;
 	let exponent;
-	let detectedDevice = 'Unknown'; // Variable to store detected device
 
 	// Platform detection for default settings
 	if (isAndroid) {
@@ -39,26 +38,22 @@
 		scalingFactor = 40;
 		offset = 80;
 		exponent = 0.5;
-		detectedDevice = 'Android';
 	} else if (isiPhone) {
 		// iPhone specific settings
 		scalingFactor = 40;
 		offset = 80;
 		exponent = 0.2;
-		detectedDevice = 'iPhone';
 	} else if (isMac) {
 		// macOS specific settings
 		scalingFactor = 20;
 		offset = 100;
 		exponent = 0.5;
-		detectedDevice = 'Mac';
 	} else {
 		// Default settings for other platforms (Windows/Linux)
 		// Reduced from 2000 to 80 for much better sensitivity
 		scalingFactor = 80;
 		offset = 80;
 		exponent = 0.5;
-		detectedDevice = 'PC';
 	}
 
 	// ===== STANDARD AUDIO VISUALIZER (using waveformData from audioService) =====
@@ -344,7 +339,7 @@
 	.history-bar {
 		position: absolute;
 		bottom: 0;
-		/* Default peach gradient as fallback */
+		/* Default focus gradient as fallback */
 		background: linear-gradient(to top, #ffa573, #ff9f9a, #ff7fcd, #ffb6f3);
 		transition: height 0.15s ease-in-out;
 		border-radius: 3px 3px 0 0;
@@ -357,19 +352,23 @@
 	}
 
 	/* Theme-specific gradient styles - directly applied based on data-theme */
-	:global([data-theme='peach'] .history-bar) {
+	:global([data-theme='focus'] .history-bar) {
 		background: linear-gradient(to top, #ffa573, #ff9f9a, #ff7fcd, #ffb6f3);
 	}
 
-	:global([data-theme='mint'] .history-bar) {
+	:global([data-theme='chill'] .history-bar) {
 		background: linear-gradient(to top, #86efac, #5eead4, #67e8f9);
 	}
 
-	:global([data-theme='bubblegum'] .history-bar) {
-		background: linear-gradient(to top, #20c5ff, #4d7bff, #c85aff, #ee45f0, #ff3ba0, #ff1a8d);
+	:global([data-theme='zen'] .history-bar) {
+		background: linear-gradient(to top, #7c3aed, #9775fa, #c4b5fd);
 	}
 
-	:global([data-theme='rainbow'] .history-bar) {
+	:global([data-theme='nocturne'] .history-bar) {
+		background: linear-gradient(to top, #6ca4c2, #84c6bb, #c487d2);
+	}
+
+	:global([data-theme='neo'] .history-bar) {
 		animation:
 			hueShift 9.1s linear infinite,
 			rainbowBars 3s ease-in-out infinite;
@@ -394,15 +393,15 @@
 	}
 
 	/* Svelte-controlled animation states */
-	:global(.animations-enabled [data-theme='rainbow'] .history-bar) {
+	:global(.animations-enabled [data-theme='neo'] .history-bar) {
 		animation-play-state: running;
 	}
 
-	:global(.animations-paused [data-theme='rainbow'] .history-bar) {
+	:global(.animations-paused [data-theme='neo'] .history-bar) {
 		animation-play-state: paused;
 	}
 
-	/* Special animation for rainbow theme bars */
+	/* Special animation for neo theme bars */
 	@keyframes rainbowBars {
 		0%,
 		100% {

@@ -1,5 +1,4 @@
 <script>
-	import { onMount } from 'svelte';
 	export let title = 'ZipList | Zip up a list lickety-split';
 	export let description =
 		'ZipList turns your voice into organized lists. Clean, simple, and freaky fast list creation. Free forever. Tap the mic and start talking!';
@@ -55,11 +54,15 @@
 		background-attachment: fixed;
 	}
 
+	footer {
+		padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+	}
+
 	/* Media queries for mobile optimization */
 	@media (max-width: 640px) {
 		section {
 			padding-top: 8vh !important;
-			padding-bottom: 10vh !important;
+			padding-bottom: calc(5.75rem + env(safe-area-inset-bottom)) !important;
 			min-height: 100vh;
 			display: flex;
 			flex-direction: column;
@@ -68,7 +71,7 @@
 
 		footer {
 			padding-top: 0.5rem;
-			padding-bottom: 0.5rem;
+			padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
 		}
 
 		footer .container {

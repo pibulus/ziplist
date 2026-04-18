@@ -16,9 +16,13 @@
 
   // Swipe handling state
   let touchStartX = 0;
+  let touchStartY = 0;
   let touchEndX = 0;
   let isSwiping = false;
+  let hasDirectionLock = false;
+  let isHorizontalSwipe = false;
   let activeIndex = 0;
+  const SWIPE_IGNORE_SELECTOR = 'button, input, textarea, select, a, label, [data-swipe-ignore="true"]';
   
   // Spring store for smooth physics-based movement
   const coords = spring({ x: 0 }, {
@@ -38,36 +42,73 @@
   }
 
   function handleTouchStart(e) {
+    if (e.target.closest(SWIPE_IGNORE_SELECTOR)) {
+      isSwiping = false;
+      hasDirectionLock = false;
+      isHorizontalSwipe = false;
+      return;
+    }
+
     touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+    touchEndX = touchStartX;
     isSwiping = true;
-    // When dragging starts, we want immediate response, but spring handles it well too
-    // We can adjust stiffness/damping dynamically if needed, but default is usually fine
+    hasDirectionLock = false;
+    isHorizontalSwipe = false;
   }
 
   function handleTouchMove(e) {
     if (!isSwiping) return;
-    const touchCurrentX = e.changedTouches[0].screenX;
-    const diff = touchCurrentX - touchStartX;
+    const touch = e.changedTouches[0];
+    const touchCurrentX = touch.screenX;
+    const touchCurrentY = touch.screenY;
+    const diffX = touchCurrentX - touchStartX;
+    const diffY = touchCurrentY - touchStartY;
+
+    touchEndX = touchCurrentX;
+
+    if (!hasDirectionLock) {
+      if (Math.abs(diffX) < 8 && Math.abs(diffY) < 8) return;
+
+      isHorizontalSwipe = Math.abs(diffX) > Math.abs(diffY) * 1.1;
+      hasDirectionLock = true;
+
+      if (!isHorizontalSwipe) {
+        isSwiping = false;
+        coords.set({ x: -activeIndex * 100 });
+        return;
+      }
+    }
+
+    if (!isHorizontalSwipe) return;
+
+    e.preventDefault();
     
     // Calculate percentage shift based on screen width
     const screenWidth = window.innerWidth;
-    const percentShift = (diff / screenWidth) * 100;
+    const percentShift = (diffX / screenWidth) * 100;
     
     let targetX = (-activeIndex * 100) + percentShift;
     
     // Apply resistance at edges
-    if ((activeIndex === 0 && diff > 0) || (activeIndex === lists.length - 1 && diff < 0)) {
+    if ((activeIndex === 0 && diffX > 0) || (activeIndex === lists.length - 1 && diffX < 0)) {
         targetX = (-activeIndex * 100) + (percentShift * 0.3);
     }
     
-    // Set spring immediately (hard: false allows some springiness even while dragging, or true for direct 1:1)
-    // For "lush" feel, let the spring follow the finger with slight lag
     coords.set({ x: targetX }, { hard: true }); 
   }
 
   function handleTouchEnd(e) {
+    if (!isSwiping && !isHorizontalSwipe) return;
+
     touchEndX = e.changedTouches[0].screenX;
     isSwiping = false;
+    const shouldHandleSwipe = isHorizontalSwipe;
+    hasDirectionLock = false;
+    isHorizontalSwipe = false;
+
+    if (!shouldHandleSwipe) return;
+
     handleSwipeGesture();
   }
 
@@ -110,6 +151,8 @@
 
 <div 
   class="swipe-container"
+  role="region"
+  aria-label="Swipe between lists"
   on:touchstart={handleTouchStart}
   on:touchmove={handleTouchMove}
   on:touchend={handleTouchEnd}
@@ -150,9 +193,9 @@
     width: 100%;
     overflow: hidden;
     position: relative;
-    /* Ensure it takes up available space but doesn't overflow vertically if possible */
     display: flex;
     flex-direction: column;
+    touch-action: pan-y pinch-zoom;
   }
 
   .lists-wrapper {
@@ -194,12 +237,12 @@
   }
 
   .dot {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background-color: var(--dot-accent);
     opacity: 0.4;
-    border: 12px solid transparent;
+    border: 16px solid transparent;
     background-clip: padding-box;
     cursor: pointer;
     transition: all 0.3s ease;
