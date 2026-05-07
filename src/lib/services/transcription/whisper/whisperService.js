@@ -3,23 +3,26 @@
  * Uses tiny model only - auto-downloads on first visit, falls back to Gemini if needed
  */
 
-import { writable } from 'svelte/store';
-import { pipeline, env } from '@xenova/transformers';
+import { writable } from "svelte/store";
+import { pipeline, env } from "@xenova/transformers";
+
+const isBrowser =
+  typeof window !== "undefined" && typeof navigator !== "undefined";
 
 // ============================================================================
 // STEP 1: Configure Transformers.js Environment
 // ============================================================================
 
 // Configure for maximum stability and offline capability
-env.allowRemoteModels = true;      // Allow CDN downloads
-env.useBrowserCache = true;        // Enable browser cache
-env.useIndexedDB = true;           // Persist models in IndexedDB
+env.allowRemoteModels = true; // Allow CDN downloads
+env.useBrowserCache = isBrowser; // Enable browser cache
+env.useIndexedDB = isBrowser; // Persist models in IndexedDB
 
 // WASM backend configuration
-if (env.backends?.onnx?.wasm) {
+if (isBrowser && env.backends?.onnx?.wasm) {
   const hwThreads = navigator.hardwareConcurrency || 2;
   env.backends.onnx.wasm.numThreads = Math.min(4, hwThreads);
-  env.backends.onnx.wasm.simd = true;  // Enable SIMD for speed
+  env.backends.onnx.wasm.simd = true; // Enable SIMD for speed
 }
 
 // Disable WebGPU for now (experimental, can cause issues)
@@ -32,10 +35,10 @@ if (env.backends?.onnx?.webgpu) {
 // ============================================================================
 
 const WHISPER_TINY_MODEL = {
-  id: 'Xenova/whisper-tiny.en',
-  name: 'Whisper Tiny English',
-  size: 117 * 1024 * 1024,  // ~117MB
-  description: 'Fast, lightweight, perfect for list transcription'
+  id: "Xenova/whisper-tiny.en",
+  name: "Whisper Tiny English",
+  size: 117 * 1024 * 1024, // ~117MB
+  description: "Fast, lightweight, perfect for list transcription",
 };
 
 const SAMPLE_RATE = 16000;
@@ -45,8 +48,18 @@ const SAMPLE_RATE = 16000;
 // ============================================================================
 
 async function convertAudioForWhisper(audioBlob) {
+  if (!isBrowser) {
+    throw new Error("Whisper transcription is only available in the browser");
+  }
+
   // Create AudioContext at 16kHz (Whisper requirement)
-  const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextCtor) {
+    throw new Error("AudioContext is not available in this browser");
+  }
+
+  const audioContext = new AudioContextCtor({ sampleRate: SAMPLE_RATE });
 
   try {
     // Decode blob to AudioBuffer
@@ -91,8 +104,8 @@ function convertToMono(audioBuffer) {
 }
 
 function trimSilence(audioData, sampleRate) {
-  const silenceThreshold = 0.01;  // Amplitude threshold
-  const padding = Math.floor(sampleRate * 0.02);  // 20ms padding
+  const silenceThreshold = 0.01; // Amplitude threshold
+  const padding = Math.floor(sampleRate * 0.02); // 20ms padding
 
   // Find first non-silent sample
   let start = 0;
@@ -167,23 +180,27 @@ class WhisperTranscriber {
     this.isLoading = true;
 
     try {
-      console.log(`🎯 Loading ${WHISPER_TINY_MODEL.name} (${Math.round(WHISPER_TINY_MODEL.size / 1024 / 1024)}MB)...`);
+      console.log(
+        `🎯 Loading ${WHISPER_TINY_MODEL.name} (${Math.round(WHISPER_TINY_MODEL.size / 1024 / 1024)}MB)...`,
+      );
 
       // Create pipeline with progress tracking
       this.transcriber = await pipeline(
-        'automatic-speech-recognition',
+        "automatic-speech-recognition",
         WHISPER_TINY_MODEL.id,
         {
-          device: 'wasm',           // Force WASM backend
-          dtype: 'q8',              // 8-bit quantization (smaller, faster)
+          device: "wasm", // Force WASM backend
+          dtype: "q8", // 8-bit quantization (smaller, faster)
           progress_callback: (progress) => {
-            if (progress.status === 'downloading') {
-              const percent = Math.round((progress.loaded / progress.total) * 100);
+            if (progress.status === "downloading") {
+              const percent = Math.round(
+                (progress.loaded / progress.total) * 100,
+              );
               console.log(`📥 Downloading: ${percent}%`);
               onProgress?.(percent);
             }
-          }
-        }
+          },
+        },
       );
 
       // Warmup: Run silent audio to JIT-compile WASM kernels
@@ -194,10 +211,9 @@ class WhisperTranscriber {
 
       console.log(`✅ ${WHISPER_TINY_MODEL.name} loaded and ready`);
       return this.transcriber;
-
     } catch (error) {
       this.isLoading = false;
-      console.error('Failed to load model:', error);
+      console.error("Failed to load model:", error);
       throw error;
     }
   }
@@ -212,14 +228,14 @@ class WhisperTranscriber {
     try {
       // Run inference to warm up WASM kernels
       await this.transcriber(silence, {
-        task: 'transcribe',
+        task: "transcribe",
         return_timestamps: false,
         temperature: 0,
-        do_sample: false
+        do_sample: false,
       });
-      console.log('🔥 Model warmed up');
+      console.log("🔥 Model warmed up");
     } catch (error) {
-      console.warn('Warmup failed (continuing):', error?.message);
+      console.warn("Warmup failed (continuing):", error?.message);
     }
   }
 
@@ -233,38 +249,40 @@ class WhisperTranscriber {
     const audioData = await convertAudioForWhisper(audioBlob);
 
     // Validate audio has content
-    const hasSignal = audioData.some(sample => Math.abs(sample) > 0.001);
+    const hasSignal = audioData.some((sample) => Math.abs(sample) > 0.001);
     if (!hasSignal) {
-      throw new Error('No speech detected in audio');
+      throw new Error("No speech detected in audio");
     }
 
     console.log(`🎤 Transcribing ${audioData.length} samples...`);
 
     // Run inference
     const result = await this.transcriber(audioData, {
-      task: 'transcribe',          // 'transcribe' or 'translate'
-      return_timestamps: false,     // Set true for word-level timing
-      temperature: 0,               // Deterministic output
-      do_sample: false              // Greedy decoding (fastest)
+      task: "transcribe", // 'transcribe' or 'translate'
+      return_timestamps: false, // Set true for word-level timing
+      temperature: 0, // Deterministic output
+      do_sample: false, // Greedy decoding (fastest)
     });
 
     // Extract text
-    const text = (typeof result === 'string' ? result : result?.text || '').trim();
+    const text = (
+      typeof result === "string" ? result : result?.text || ""
+    ).trim();
 
     if (!text) {
-      throw new Error('Whisper returned empty text');
+      throw new Error("Whisper returned empty text");
     }
 
     // Clean repetitions (Whisper artifact)
     const cleaned = this.cleanRepetitions(text);
     console.log(`✨ Transcribed: "${cleaned}"`);
-    
+
     return cleaned;
   }
 
   cleanRepetitions(text) {
     // Remove stuttering repetitions like "the the the"
-    return text.replace(/(\b.+?\b)(\s+\1)+/gi, '$1').trim();
+    return text.replace(/(\b.+?\b)(\s+\1)+/gi, "$1").trim();
   }
 
   async unload() {
@@ -282,18 +300,19 @@ class WhisperTranscriber {
 // ============================================================================
 
 async function requestPersistentStorage() {
+  if (!isBrowser) return false;
   if (!navigator.storage?.persist) return false;
 
   try {
     const isPersisted = await navigator.storage.persisted();
     if (!isPersisted) {
       const granted = await navigator.storage.persist();
-      console.log('💾 Persistent storage:', granted ? 'granted' : 'denied');
+      console.log("💾 Persistent storage:", granted ? "granted" : "denied");
       return granted;
     }
     return true;
   } catch (error) {
-    console.warn('Persistent storage failed:', error);
+    console.warn("Persistent storage failed:", error);
     return false;
   }
 }
@@ -308,7 +327,7 @@ export const whisperStatus = writable({
   isLoading: false,
   progress: 0,
   error: null,
-  supportsWhisper: typeof window !== 'undefined'
+  supportsWhisper: isBrowser,
 });
 
 class WhisperService {
@@ -317,7 +336,7 @@ class WhisperService {
     this.modelLoadPromise = null;
 
     // Request persistent storage on init (browser only)
-    if (typeof window !== 'undefined') {
+    if (isBrowser) {
       requestPersistentStorage();
     }
     // Whisper model download is deferred until startBackgroundLoad() is called
@@ -335,25 +354,31 @@ class WhisperService {
       return { success: true };
     }
 
-    whisperStatus.update(s => ({ ...s, isLoading: true, progress: 0, error: null }));
+    whisperStatus.update((s) => ({
+      ...s,
+      isLoading: true,
+      progress: 0,
+      error: null,
+    }));
 
-    this.modelLoadPromise = this.transcriber.loadModel((progress) => {
-      whisperStatus.update(s => ({ ...s, progress }));
-    })
+    this.modelLoadPromise = this.transcriber
+      .loadModel((progress) => {
+        whisperStatus.update((s) => ({ ...s, progress }));
+      })
       .then(() => {
-        whisperStatus.update(s => ({ 
-          ...s, 
-          isLoaded: true, 
-          isLoading: false, 
-          progress: 100
+        whisperStatus.update((s) => ({
+          ...s,
+          isLoaded: true,
+          isLoading: false,
+          progress: 100,
         }));
         return { success: true };
       })
       .catch((error) => {
-        whisperStatus.update(s => ({ 
-          ...s, 
-          isLoading: false, 
-          error: error.message 
+        whisperStatus.update((s) => ({
+          ...s,
+          isLoading: false,
+          error: error.message,
         }));
         this.modelLoadPromise = null;
         return { success: false, error };
@@ -367,18 +392,18 @@ class WhisperService {
       const text = await this.transcriber.transcribe(audioBlob);
       return text;
     } catch (error) {
-      console.error('Whisper transcription error:', error);
+      console.error("Whisper transcription error:", error);
       throw error;
     }
   }
 
   async unloadModel() {
     await this.transcriber.unload();
-    whisperStatus.update(s => ({ 
-      ...s, 
-      isLoaded: false, 
-      isLoading: false, 
-      progress: 0 
+    whisperStatus.update((s) => ({
+      ...s,
+      isLoaded: false,
+      isLoading: false,
+      progress: 0,
     }));
     this.modelLoadPromise = null;
   }
