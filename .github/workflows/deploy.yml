@@ -1,18 +1,9 @@
-name: Deploy to Pibulus
+name: Legacy deploy disabled
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Copy files via SSH
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.PI_IP }} # Your Tailscale IP
-        username: pibulus
-        key: ${{ secrets.SSH_KEY }}
-        source: "."
-        target: "/media/pibulus/passport/www/html"
+      - run: echo "ZipList deploys locally with npm run deploy:pi."

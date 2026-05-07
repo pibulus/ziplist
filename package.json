@@ -12,6 +12,7 @@
     "dev:party": "partykit dev",
     "build": "vite build",
     "preview": "vite preview",
+    "deploy:pi": "bash scripts/deploy-pi.sh",
     "prepare": "svelte-kit sync || echo ''",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
