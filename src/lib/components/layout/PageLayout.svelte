@@ -11,7 +11,7 @@
 </svelte:head>
 
 <section
-	class="bg-gradient-mesh main center hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-16 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10 lg:pb-16"
+	class="bg-gradient-mesh main center hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-0 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10 lg:pb-0"
 >
 	<div
 		class="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg md:max-w-2xl lg:max-w-3xl"
@@ -21,7 +21,7 @@
 
 	<!-- Footer section with attribution and Chrome extension info -->
 	<footer
-		class="fixed bottom-0 left-0 right-0 z-10 box-border border-t border-pink-200/80 bg-gradient-to-r from-[#fff6e6]/90 via-[#ffead8]/90 to-[#fff1df]/90 pb-2 pt-3 text-center text-xs text-gray-600 shadow-[0_-4px_15px_rgba(249,168,212,0.3)] backdrop-blur-[3px] sm:pb-3 sm:pt-4"
+		class="sticky bottom-0 z-10 box-border w-full border-t border-pink-200/80 bg-gradient-to-r from-[#fff6e6]/90 via-[#ffead8]/90 to-[#fff1df]/90 pb-2 pt-3 text-center text-xs text-gray-600 shadow-[0_-4px_15px_rgba(249,168,212,0.3)] backdrop-blur-[3px] sm:pb-3 sm:pt-4"
 	>
 		<div
 			class="container mx-auto flex flex-col flex-wrap items-center justify-between gap-2 sm:flex-row sm:gap-3"
@@ -55,14 +55,30 @@
 	}
 
 	footer {
+		margin-inline: -1rem;
+		width: calc(100% + 2rem);
 		padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+	}
+
+	@media (min-width: 640px) {
+		footer {
+			margin-inline: -1.5rem;
+			width: calc(100% + 3rem);
+		}
+	}
+
+	@media (min-width: 768px) {
+		footer {
+			margin-inline: -2.5rem;
+			width: calc(100% + 5rem);
+		}
 	}
 
 	/* Media queries for mobile optimization */
 	@media (max-width: 640px) {
 		section {
 			padding-top: 8vh !important;
-			padding-bottom: calc(5.75rem + env(safe-area-inset-bottom)) !important;
+			padding-bottom: 0 !important;
 			min-height: 100vh;
 			display: flex;
 			flex-direction: column;
@@ -94,7 +110,7 @@
 			flex-direction: column;
 			justify-content: flex-start;
 			padding-top: 15vh !important;
-			padding-bottom: 10vh !important;
+			padding-bottom: 0 !important;
 		}
 	}
 </style>

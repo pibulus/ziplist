@@ -456,7 +456,7 @@
   </div>
 
   <!-- Swipeable lists container -->
-  <div class="mt-2" id="lists-container">
+  <div class="mt-2 w-full max-w-full" id="lists-container">
     <SwipeableLists />
   </div>
 

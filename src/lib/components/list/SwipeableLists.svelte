@@ -191,6 +191,7 @@
 <style>
   .swipe-container {
     width: 100%;
+    max-width: 100%;
     overflow: hidden;
     position: relative;
     display: flex;
@@ -201,12 +202,14 @@
   .lists-wrapper {
     display: flex;
     width: 100%;
+    max-width: 100%;
     /* Will be transformed via inline styles */
     will-change: transform;
   }
 
   .list-slide {
     width: 100%;
+    max-width: 100%;
     flex-shrink: 0;
     padding: 0 4px; /* Tiny padding between slides */
     box-sizing: border-box;
@@ -223,6 +226,7 @@
   }
   
   .list-content-wrapper {
+    width: 100%;
     max-width: 600px; /* Match SingleList max-width */
     margin: 0 auto;
     height: 100%;
@@ -237,25 +241,40 @@
   }
 
   .dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .dot::before {
+    content: '';
     width: 12px;
     height: 12px;
     border-radius: 50%;
     background-color: var(--dot-accent);
     opacity: 0.4;
-    border: 16px solid transparent;
-    background-clip: padding-box;
-    cursor: pointer;
     transition: all 0.3s ease;
   }
 
   .dot.active {
+    transform: none;
+  }
+
+  .dot.active::before {
     transform: scale(1.5);
     background-color: var(--dot-primary);
     opacity: 1;
     box-shadow: 0 2px 8px var(--dot-glow), 0 0 12px var(--dot-glow);
   }
   
-  .dot:hover:not(.active) {
+  .dot:hover:not(.active)::before {
     opacity: 0.7;
     transform: scale(1.2);
   }

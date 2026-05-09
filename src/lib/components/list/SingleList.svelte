@@ -1124,6 +1124,7 @@
     overflow: hidden;
     
     /* Size and positioning */
+    box-sizing: border-box;
     width: 100%;
     max-width: 540px; /* Optimized for text wrapping */
     margin: 0 auto;
