@@ -413,8 +413,9 @@
       window.addEventListener('ziplist-storage-error', handleStorageError);
     }
 
-    // Check if first visit to show intro
-    firstVisitService.showIntroModal();
+    // Keep the first-visit state current without auto-opening a native
+    // dialog, because showModal() hides the root scrollbar while it is open.
+    firstVisitService.checkFirstVisit();
   });
 
   // Auto-stop recording when time limit is reached

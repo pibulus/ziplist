@@ -31,17 +31,14 @@ body {
   overflow-x: hidden;
 }
 
-/* Prevent modals from creating scroll issues - stronger overrides */
-html:has(dialog[open]),
+/* Prevent service-managed modals from creating scroll issues. */
 html.modal-active {
   overflow: hidden !important;
   padding-right: 0 !important; /* Prevent layout shift */
   margin-right: 0 !important;
   width: 100vw !important;
-  position: fixed !important;
 }
 
-body:has(dialog[open]),
 body.modal-active {
   overflow: hidden !important;
   padding-right: 0 !important;
