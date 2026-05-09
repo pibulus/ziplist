@@ -89,7 +89,7 @@
   /* Floating Dude Styles */
   .floating-dude {
     position: absolute;
-    top: -100px; /* Adjust based on size */
+    top: -116px; /* Adjust based on size */
     left: 50%;
     transform: translateX(-50%);
     width: 100px;
@@ -125,8 +125,9 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 150%;
-    height: 150%;
+    width: 205%;
+    height: 205%;
+    max-width: none;
     object-fit: contain;
   }
 
@@ -137,6 +138,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    transform-origin: center 47%;
     animation: blink 4s infinite;
   }
 
@@ -222,7 +224,7 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-    margin-top: 110px; /* Space for the floating dude (100px + buffer) */
+    margin-top: 128px; /* Space for the floating dude (100px + buffer) */
   }
   
   /* Container to visually center the main "Ziplist" word */
@@ -278,7 +280,11 @@
     .floating-dude {
       width: 80px;
       height: 80px;
-      top: -80px;
+      top: -92px;
+    }
+
+    .title-container {
+      margin-top: 110px;
     }
   }
   
