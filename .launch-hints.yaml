@@ -1,0 +1,38 @@
+# Launch hints for Launch Arsenal.
+# Project-facing launch metadata. Keep it sharp and human.
+name: ziplist
+slug: ziplist
+app_type: web-app
+audience: people who think in errands, groceries, chores, and tiny tasks they want to capture by talking
+problem: notes apps turn spoken chores into messy paragraphs, while todo apps make you tap too much before the list exists
+promise: Say the pile. Get a clean, cute checklist you can rename, reorder, share, and actually finish.
+cta: Try ZipList.
+differentiators:
+  - Voice-first list capture, not generic transcription
+  - Multiple named color lists with swipe navigation
+  - Local-first persistence so everyday lists stay fast and private
+  - Mobile list rows tuned for one-hand checking, deleting, and reordering
+  - Installable PWA for phone and desktop
+proof_points:
+  - Gemini-backed audio transcription through the server API route
+  - Generated list parser cleans bullets, speech prefixes, quotes, duplicates, and huge items
+  - Multiple list CRUD with rename, reorder, share, and color-safe creation
+  - Recent mobile pass verified list sizing at 375px and 390px widths
+  - Pi deploy now uses staged release directories, smoke tests, rollback, and env-file preservation
+objections:
+  - Still wants a real physical iPhone PWA pass before launch copy gets too confident
+  - Live collaboration exists as optional infrastructure, not the main launch promise yet
+keywords:
+  seed:
+    - ziplist
+    - voice to list
+    - voice checklist
+    - grocery list app
+  audience: people who want to turn spoken tasks into clean lists
+  intent:
+    - dictate a list
+    - make a checklist by voice
+    - capture errands quickly
+manual_notes:
+  - Keep the tone sweet, quick, and practical.
+  - Avoid subscription-productivity language.
