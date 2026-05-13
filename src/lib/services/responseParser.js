@@ -70,6 +70,17 @@ export function extractJSON(text) {
   return null;
 }
 
+function normalizeParsedItem(item) {
+  if (typeof item === "string") return item;
+
+  if (item && typeof item === "object") {
+    const text = item.text || item.title || item.name || item.task;
+    return typeof text === "string" ? text : "";
+  }
+
+  return "";
+}
+
 /**
  * Parse items from a model response, with fallbacks for different formats
  * @param {string} responseText - Raw response text from the model
@@ -82,7 +93,10 @@ export function parseItemsFromResponse(responseText) {
   const jsonData = extractJSON(responseText);
 
   if (jsonData && jsonData.items && Array.isArray(jsonData.items)) {
-    return jsonData.items.filter((item) => item && typeof item === "string");
+    return jsonData.items
+      .map(normalizeParsedItem)
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
 
   // Fallback: If JSON parsing fails, try to extract items line by line
@@ -94,15 +108,18 @@ export function parseItemsFromResponse(responseText) {
 
       // Remove common list markers
       cleaned = cleaned
-        .replace(/^[-•*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\]/, "")
+        .replace(/^[-\u2022*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\]/, "")
         .trim();
 
       // Remove quotes that might be from a json array
       cleaned = cleaned.replace(/^["']|["']$/g, "").trim();
+      cleaned = cleaned.replace(/,$/, "").trim();
 
       return cleaned;
     })
-    .filter((line) => line.length > 0); // Remove empty lines
+    .filter((line) => line.length > 0)
+    .filter((line) => !/^[{}\[\],]+$/.test(line))
+    .filter((line) => !/^"?items"?\s*:/i.test(line));
 
   return lines;
 }

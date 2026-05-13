@@ -276,29 +276,6 @@
   }
 
 
-  // Format item text with first-letter capitalization of each word - with memoization
-  const textCache = new Map();
-  function formatItemText(text) {
-    // Return cached result if available
-    if (textCache.has(text)) {
-      return textCache.get(text);
-    }
-
-    // Otherwise compute, cache and return
-    const formattedText = text.split(' ').map(word =>
-      word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word
-    ).join(' ');
-
-    // Cache the result (limit cache size to prevent memory issues)
-    if (textCache.size > 100) {
-      const firstKey = textCache.keys().next().value;
-      textCache.delete(firstKey);
-    }
-    textCache.set(text, formattedText);
-
-    return formattedText;
-  }
-
   // Helper function to calculate staggered delay for animations
   function getStaggerDelay(index) {
     return index * 50; // 50ms between each item
@@ -933,7 +910,6 @@
     <div
       class="zl-list-container"
       bind:this={listContainerNode}
-      style="position: relative; min-height: {list.items.length > 0 ? (100 + (list.items.length * 90)) : 320}px;"
     >
       {#if list.items.length > 0}
         <ul class="zl-list" role="list" in:fade={{ duration: 200 }}>
@@ -999,7 +975,7 @@
                     aria-label="Edit item: {item.text}"
                   >
                     <span class="zl-item-text {item.checked ? 'checked' : ''}">
-                      {formatItemText(item.text)}
+                      {item.text}
                     </span>
                   </button>
                 {/if}
@@ -1067,7 +1043,7 @@
       </div>
 
       <div class="edit-wrapper ghost-edit-wrapper">
-        <span class="zl-item-text">{formatItemText(touchDraggedItem.text)}</span>
+        <span class="zl-item-text">{touchDraggedItem.text}</span>
       </div>
 
       <div class="grab-indicator touch-active">
@@ -1119,7 +1095,7 @@
     /* Core shape and structure */
     border-radius: var(--zl-card-border-radius); /* Pillowy, rounded corners */
     border: var(--zl-card-border-width) solid var(--zl-card-border-color);
-    padding: 2.5rem; /* Generous padding for content */
+    padding: 2rem;
     position: relative;
     overflow: hidden;
     
@@ -1128,8 +1104,8 @@
     width: 100%;
     max-width: 540px; /* Optimized for text wrapping */
     margin: 0 auto;
-    margin-top: 2rem;
-    margin-bottom: 2.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
     height: auto;
     
     /* Typography */
@@ -1155,9 +1131,11 @@
 
   @media (max-width: 480px) {
     .zl-card {
-      padding: 2rem 1rem; /* Reduced side padding on mobile */
-      border-radius: 24px; /* Slightly smaller radius on mobile */
-      max-width: 100%; /* Full width on mobile */
+      padding: 1.25rem 0.875rem 1.5rem;
+      border-radius: 22px;
+      margin-top: 1.25rem;
+      margin-bottom: 1.5rem;
+      max-width: 100%;
     }
 
     .zl-list-header {
@@ -1173,30 +1151,6 @@
       width: 100%;
     }
 
-    .zl-list-actions {
-      justify-content: flex-start;
-    }
-
-    .zl-item {
-      border-radius: 16px; /* Slightly smaller radius on mobile */
-      padding: 16px 14px; /* Slightly reduced padding for mobile to optimize space */
-    }
-
-    .zl-list {
-      gap: 20px; /* Maintain or slightly increase gap for touch on mobile */
-    }
-
-    .zl-item-text {
-      font-size: 1.1rem; /* Slightly larger text on mobile for readability */
-    }
-
-    .edit-wrapper {
-      width: calc(100% - 32px - 32px - 1.75rem); /* Adjusted calculation for mobile padding */
-    }
-
-    .zl-edit-input {
-      padding: 0.75rem 1rem; /* Slightly reduced padding on mobile */
-    }
   }
   
   /* Subtle inner border effect */
@@ -1240,7 +1194,7 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    min-height: 320px;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -1291,9 +1245,9 @@
   .zl-list-title {
     margin: 0;
     font-family: 'Space Mono', monospace;
-    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    font-size: 1.25rem;
     font-weight: 800;
-    letter-spacing: 0.03em;
+    letter-spacing: 0;
     color: var(--zl-text-color-primary);
     display: block;
     max-width: 100%;
@@ -1317,9 +1271,9 @@
     color: var(--zl-text-color-primary);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
     font-family: 'Space Mono', monospace;
-    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    font-size: 1.1rem;
     font-weight: 800;
-    letter-spacing: 0.03em;
+    letter-spacing: 0;
     padding: 0.75rem 1rem;
     outline: none;
     transition: var(--zl-transition-fast);
@@ -1332,7 +1286,7 @@
   }
 
   .zl-title-edit-button {
-    min-height: 36px;
+    min-height: 44px;
     border: 1px solid rgba(255, 255, 255, 0.55);
     border-radius: 999px;
     padding: 0.4rem 0.75rem;
@@ -1341,7 +1295,7 @@
     font-family: 'Space Mono', monospace;
     font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
+    letter-spacing: 0;
     text-transform: uppercase;
     transition: var(--zl-transition-fast);
   }
@@ -1364,7 +1318,7 @@
     font-family: 'Space Mono', monospace;
     font-size: 0.82rem;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1425,6 +1379,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    min-height: 0;
   }
   
   .zl-list {
@@ -1433,7 +1388,7 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--zl-spacing-m); 
+    gap: 0.85rem;
     margin-bottom: var(--zl-spacing-m);
     position: relative;
     content-visibility: auto;
@@ -1443,16 +1398,16 @@
   .zl-item {
     border-radius: var(--zl-item-border-radius, 20px);
     background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
-    padding: var(--zl-spacing-s) var(--zl-spacing-s); 
-    
-    display: flex;
-    align-items: flex-start; 
-    gap: 1.25rem; 
-    justify-content: space-between;
-    
-    min-height: 80px; 
-    height: auto; 
-    max-height: none; 
+    padding: 0.85rem;
+
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 0.65rem;
+
+    min-height: 72px;
+    height: auto;
+    max-height: none;
     
     box-shadow: var(--zl-item-box-shadow, 0 4px 10px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.1));
     border: 2px solid var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
@@ -1524,12 +1479,12 @@
   }
   
   .zl-item-text {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 800;
-    line-height: 1.5;
+    line-height: 1.35;
     color: var(--zl-text-color-primary);
     font-family: 'Space Mono', monospace;
-    letter-spacing: 0.8px;
+    letter-spacing: 0;
     
     box-sizing: border-box;
     display: inline-block;
@@ -1537,15 +1492,14 @@
     text-align: left;
     position: relative;
     vertical-align: middle;
-    padding: 6px 0; 
-    min-height: 32px; 
+    padding: 0.2rem 0;
+    min-height: 0;
     
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto; 
     
     transition: var(--zl-transition-fast);
-    will-change: transform, color;
   }
 
   .zl-item-text-button:hover .zl-item-text:not(.checked) {
@@ -1562,21 +1516,22 @@
   .zl-item-text-button {
     background: transparent;
     border: none;
-    padding: 5px 8px; 
+    padding: 0.3rem 0.25rem;
     text-align: left;
     cursor: pointer;
     font-family: inherit;
     display: inline-flex;
-    align-items: flex-start; 
-    width: 100%; 
-    border-radius: 8px; 
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    border-radius: 8px;
     transition: all 0.2s ease;
-    margin-right: auto;
+    margin-right: 0;
     position: relative;
     min-height: 44px;
-    height: auto; 
-    align-self: stretch; 
-    flex-wrap: wrap; 
+    height: auto;
+    align-self: center;
+    flex-wrap: wrap;
   }
 
   .zl-item-text-button:hover:not(:disabled),
@@ -1595,7 +1550,9 @@
     justify-content: center;
     cursor: pointer;
     padding: 6px;
-    align-self: center; 
+    align-self: center;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .zl-checkbox {
@@ -1656,14 +1613,15 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 5rem 1.5rem;
-    height: 320px; 
+    padding: 2rem 1.25rem;
     width: 100%;
     box-sizing: border-box;
     background: var(--zl-empty-state-bg);
     border: var(--zl-empty-state-border);
     border-radius: 24px;
-    margin: 1.5rem 0;
+    margin: 1rem 0;
+    min-height: 260px;
+    height: auto;
     transition: var(--zl-transition-fast); 
   }
 
@@ -1690,9 +1648,9 @@
     font-weight: 800;
     color: var(--zl-empty-title-color);
     margin-bottom: 1.5rem;
-    font-size: 2.2rem;
+    font-size: 1.9rem;
     font-family: 'Space Mono', monospace;
-    letter-spacing: 0.8px;
+    letter-spacing: 0;
   }
   
   .zl-empty-description {
@@ -1700,7 +1658,7 @@
     font-size: 1.3rem;
     font-family: 'Space Mono', monospace;
     line-height: 1.5;
-    letter-spacing: 0.5px;
+    letter-spacing: 0;
     font-weight: 600;
     margin-bottom: 0.3rem;
   }
@@ -1710,19 +1668,20 @@
     font-size: 1.1rem;
     font-family: 'Space Mono', monospace;
     font-weight: 400;
-    letter-spacing: 0.4px;
+    letter-spacing: 0;
   }
   
   .edit-wrapper {
     flex: 1;
     position: relative;
     min-height: 44px;
-    margin-right: auto;
+    margin-right: 0;
     display: flex;
-    align-items: flex-start; 
-    padding-top: 4px; 
-    align-self: stretch; 
-    width: calc(100% - 32px - 32px - 2rem); 
+    align-items: center;
+    padding-top: 0;
+    align-self: center;
+    width: auto;
+    min-width: 0;
   }
 
   .zl-edit-input {
@@ -1737,7 +1696,7 @@
     color: #444444;
     width: 100%;
     font-size: 1.1rem;
-    letter-spacing: 0.8px;
+    letter-spacing: 0;
     box-sizing: border-box;
     line-height: 1.5;
     margin: 0;
@@ -1965,6 +1924,97 @@
 
   .ghost-edit-wrapper .zl-item-text {
     padding: 0.45rem 0;
+  }
+
+  @media (max-width: 480px) {
+    .zl-list-title {
+      font-size: 1.1rem;
+    }
+
+    .zl-list-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.6rem;
+      width: 100%;
+    }
+
+    .zl-list-actions > * {
+      width: 100%;
+    }
+
+    .zl-share-button {
+      grid-column: 1 / -1;
+    }
+
+    .zl-live-button,
+    .zl-add-list-button,
+    .zl-share-button,
+    .zl-live-indicator {
+      padding: 0.6rem 0.65rem;
+      font-size: 0.74rem;
+    }
+
+    .zl-list {
+      gap: 0.75rem;
+    }
+
+    .zl-item {
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      grid-template-rows: repeat(2, minmax(44px, auto));
+      gap: 0.25rem 0.45rem;
+      min-height: 104px;
+      padding: 0.45rem 0.6rem;
+      border-radius: 16px;
+    }
+
+    .zl-checkbox-wrapper,
+    .edit-wrapper {
+      grid-row: 1 / -1;
+    }
+
+    .zl-item-text {
+      font-size: 0.98rem;
+      line-height: 1.32;
+    }
+
+    .zl-item-text-button {
+      padding: 0.25rem 0.15rem;
+    }
+
+    .grab-indicator {
+      grid-column: 3;
+      grid-row: 1;
+      margin-right: 0;
+      min-height: 44px;
+    }
+
+    .zl-delete-button {
+      grid-column: 3;
+      grid-row: 1 / -1;
+      margin-left: 0;
+    }
+
+    .grab-indicator + .zl-delete-button {
+      grid-row: 2;
+    }
+
+    .zl-empty-state {
+      min-height: 230px;
+      padding: 1.5rem 0.9rem;
+    }
+
+    .zl-empty-title {
+      margin-bottom: 1rem;
+      font-size: 1.55rem;
+    }
+
+    .zl-empty-description {
+      font-size: 1rem;
+    }
+
+    .zl-empty-hint {
+      font-size: 0.9rem;
+    }
   }
 
   @media (hover: none) {

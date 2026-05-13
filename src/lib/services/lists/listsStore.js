@@ -65,13 +65,31 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 3).map((palette) => ({
 
 // Current schema version
 const CURRENT_VERSION = 2;
+const MAX_ITEM_TEXT_LENGTH = 180;
 
 function normalizeItemText(text) {
   const normalized = String(text || "")
     .replace(/\s+/g, " ")
+    .replace(/^[-\u2022*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\]/i, "")
+    .replace(/^["']|["']$/g, "")
+    .replace(/^(?:and|then|also)\s+/i, "")
+    .replace(/[.!?]+$/g, "")
     .trim();
   if (!normalized) return "";
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+
+  const clipped =
+    normalized.length > MAX_ITEM_TEXT_LENGTH
+      ? `${normalized.slice(0, MAX_ITEM_TEXT_LENGTH - 3).trim()}...`
+      : normalized;
+
+  return clipped.charAt(0).toUpperCase() + clipped.slice(1);
+}
+
+function getItemDedupeKey(text) {
+  return normalizeItemText(text)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 }
 
 function getListPaletteForIndex(index = 0) {
@@ -125,7 +143,11 @@ function normalizeListRecord(list, index = 0) {
 function getUniqueListName(baseName, existingLists = []) {
   const normalizedBaseName = String(baseName || "").trim() || "New List";
   const existingNames = new Set(
-    existingLists.map((list) => String(list.name || "").trim().toLowerCase()),
+    existingLists.map((list) =>
+      String(list.name || "")
+        .trim()
+        .toLowerCase(),
+    ),
   );
 
   if (!existingNames.has(normalizedBaseName.toLowerCase())) {
@@ -402,7 +424,8 @@ function createListsStore() {
           if (list.id === targetListId) {
             const alreadyExists = list.items.some(
               (item) =>
-                item.text.toLowerCase() === normalizedText.toLowerCase(),
+                getItemDedupeKey(item.text) ===
+                getItemDedupeKey(normalizedText),
             );
             if (alreadyExists) {
               return list;
@@ -439,14 +462,14 @@ function createListsStore() {
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
             const existingTexts = new Set(
-              list.items.map((item) => item.text.toLowerCase()),
+              list.items.map((item) => getItemDedupeKey(item.text)),
             );
             // Map text strings to item objects
             const dedupedTexts = items
               .map((text) => normalizeItemText(text))
               .filter((text) => text.length > 0)
               .filter((text) => {
-                const key = text.toLowerCase();
+                const key = getItemDedupeKey(text);
                 if (existingTexts.has(key)) {
                   return false;
                 }

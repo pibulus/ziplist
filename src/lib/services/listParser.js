@@ -26,9 +26,9 @@ export class ListParser {
     };
   }
 
-  log() {
+  log(...args) {
     if (this.config.debug) {
-
+      console.debug("[ListParser]", ...args);
     }
   }
 
@@ -48,11 +48,8 @@ export class ListParser {
       return { items, commands };
     }
 
-    // Split by commas, newlines, or sentence-ending punctuation (. ! ?) followed by optional space.
-    // Also split on phrases like "I want" which often indicate a new list item in speech.
-    // This helps break down a single block of transcribed text into multiple potential items.
     const potentialLines = transcribedText.split(
-      /\s*[,.!?]\s*(?=\S)|\n+|(?<=.)\s+I want\s+/i,
+      /\s*(?:[,;]|[.!?]\s+|\n+)\s*|(?<=.)\s+(?:I want|I need|I have to|remember to)\s+/i,
     );
 
     const lines = potentialLines
@@ -103,8 +100,11 @@ export class ListParser {
   _cleanItemText(text) {
     let cleanedText = text.replace(/\s+/g, " ").trim();
 
-    // Basic cleaning: if "add item" or similar keywords are still at the start of a line
-    // that wasn't parsed as a command, remove them.
+    cleanedText = cleanedText
+      .replace(/^[-\u2022*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\]/i, "")
+      .replace(/^["']|["']$/g, "")
+      .trim();
+
     for (const keyword of this.config.addItemKeywords) {
       if (cleanedText.toLowerCase().startsWith(keyword + " ")) {
         cleanedText = cleanedText.substring(keyword.length + 1).trim();
@@ -112,8 +112,14 @@ export class ListParser {
       }
     }
 
-    // Remove "I want" or "I want a/an" at the beginning of items
-    cleanedText = cleanedText.replace(/^I want\s+(a|an)?\s*/i, "").trim();
+    cleanedText = cleanedText
+      .replace(
+        /^(?:I want|I need|I have to|remember to|please)\s+(?:a|an|to)?\s*/i,
+        "",
+      )
+      .replace(/^(?:and|then|also)\s+/i, "")
+      .replace(/[.!?]+$/g, "")
+      .trim();
 
     // Capitalize first letter
     if (cleanedText.length > 0) {
