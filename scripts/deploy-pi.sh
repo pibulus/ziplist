@@ -31,20 +31,14 @@ remote_bash() {
 
 npm run build
 
-remote_bash "$STAGING_DIR" "$APP_DIR" "$BACKUP_DIR" <<'REMOTE'
+remote_bash "$STAGING_DIR" "$BACKUP_DIR" <<'REMOTE'
 set -euo pipefail
 
 staging_dir="$1"
-app_dir="$2"
-backup_dir="$3"
+backup_dir="$2"
 
 rm -rf "$staging_dir"
 mkdir -p "$staging_dir" "$backup_dir"
-if [[ -d "$app_dir" ]]; then
-  while IFS= read -r env_file; do
-    cp -p "$env_file" "$staging_dir/"
-  done < <(find "$app_dir" -maxdepth 1 -type f \( -name ".env" -o -name ".env.*" \) -print)
-fi
 printf 'staging=%s\n' "$staging_dir"
 REMOTE
 
@@ -56,6 +50,19 @@ rsync -az --delete \
   build/ "$REMOTE:$STAGING_DIR/"
 
 rsync -az -e "$rsync_rsh" package.json package-lock.json "$REMOTE:$STAGING_DIR/"
+
+remote_bash "$APP_DIR" "$STAGING_DIR" <<'REMOTE'
+set -euo pipefail
+
+app_dir="$1"
+staging_dir="$2"
+
+if [[ -d "$app_dir" ]]; then
+  while IFS= read -r env_file; do
+    cp -p "$env_file" "$staging_dir/"
+  done < <(find "$app_dir" -maxdepth 1 -type f \( -name ".env" -o -name ".env.*" \) -print)
+fi
+REMOTE
 
 remote_bash "$STAGING_DIR" "$SMOKE_HOST" "$SMOKE_PORT" <<'REMOTE'
 set -euo pipefail
