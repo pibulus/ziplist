@@ -1173,7 +1173,9 @@
               class="zl-live-button"
               on:click={handleMakeLive}
               title="Enable real-time collaboration"
-              aria-label={`Make ${list.name || "this list"} live`}
+              aria-label={`Make Live. Enable real-time collaboration for ${
+                list.name || "this list"
+              }`}
             >
               <span class="live-icon" aria-hidden="true">🔴</span>
               <span class="live-text">Make Live</span>
@@ -1399,7 +1401,9 @@
           type="button"
           class="zl-empty-state clickable"
           on:click={handleEmptyStateClick}
-          aria-label={`Add the first item to ${list.name || "this list"}`}
+          aria-label={`Your list awaits. Add the first thing or talk it in. Add the first item to ${
+            list.name || "this list"
+          }`}
           in:fade={{ duration: 200 }}
         >
           <div class="zl-empty-content">

@@ -1,10 +1,10 @@
 /**
- * WhisperService - Simple offline speech transcription using @xenova/transformers
+ * WhisperService - Simple offline speech transcription using Transformers.js
  * Uses tiny model only - auto-downloads on first visit, falls back to Gemini if needed
  */
 
 import { writable } from "svelte/store";
-import { pipeline, env } from "@xenova/transformers";
+import { pipeline, env } from "@huggingface/transformers";
 
 const isBrowser =
   typeof window !== "undefined" && typeof navigator !== "undefined";
@@ -15,20 +15,9 @@ const isBrowser =
 
 // Configure for maximum stability and offline capability
 env.allowRemoteModels = true; // Allow CDN downloads
-env.useBrowserCache = isBrowser; // Enable browser cache
-env.useIndexedDB = isBrowser; // Persist models in IndexedDB
-
-// WASM backend configuration
-if (isBrowser && env.backends?.onnx?.wasm) {
-  const hwThreads = navigator.hardwareConcurrency || 2;
-  env.backends.onnx.wasm.numThreads = Math.min(4, hwThreads);
-  env.backends.onnx.wasm.simd = true; // Enable SIMD for speed
-}
-
-// Disable WebGPU for now (experimental, can cause issues)
-if (env.backends?.onnx?.webgpu) {
-  env.backends.onnx.webgpu = undefined;
-}
+env.allowLocalModels = false; // Skip local model probing in browser builds
+env.useBrowserCache = isBrowser; // Persist model files in browser storage
+env.useWasmCache = isBrowser; // Reuse compiled WASM where supported
 
 // ============================================================================
 // STEP 2: Tiny Model Configuration (Only Model We Use)

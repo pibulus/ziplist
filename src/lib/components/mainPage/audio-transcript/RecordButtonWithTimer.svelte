@@ -173,10 +173,10 @@
       ? currentAddPhrase
       : currentStartPhrase;
   $: recordButtonAriaLabel = recording
-    ? `Stop recording. ${formatTime(recordingDuration)} recorded`
+    ? `${buttonLabel}. Stop recording. ${formatTime(recordingDuration)} recorded`
     : hasActiveList
-      ? "Add to your list"
-      : "Create a new list";
+      ? `${buttonLabel}. Add to your list`
+      : `${buttonLabel}. Create a new list`;
 
   $: baseButtonClasses =
     "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
