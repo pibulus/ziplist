@@ -22,7 +22,7 @@
   let hasDirectionLock = false;
   let isHorizontalSwipe = false;
   let activeIndex = 0;
-  const SWIPE_IGNORE_SELECTOR = 'button, input, textarea, select, a, label, [data-swipe-ignore="true"]';
+  const SWIPE_IGNORE_SELECTOR = 'input, textarea, select, a, label, [data-swipe-ignore="true"]';
   
   // Spring store for smooth physics-based movement
   const coords = spring({ x: 0 }, {

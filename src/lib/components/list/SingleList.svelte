@@ -19,6 +19,7 @@
   let editedItemText = '';
   let draftItemActive = false;
   let draftItemText = '';
+  let draftInputNode = null;
   let editingListName = false;
   let editedListName = '';
   let shareStatus = null; // To track share operation status
@@ -753,6 +754,38 @@
     dragOverPosition = 'before';
   }
 
+  function moveActiveItem(itemId, direction) {
+    const sourceIndex = activeItems.findIndex(item => item.id === itemId);
+    const destinationIndex = sourceIndex + direction;
+
+    if (
+      sourceIndex === -1 ||
+      destinationIndex < 0 ||
+      destinationIndex >= activeItems.length
+    ) {
+      hapticService.selection();
+      return;
+    }
+
+    const reorderedActiveItems = [...activeItems];
+    const [movedItem] = reorderedActiveItems.splice(sourceIndex, 1);
+    reorderedActiveItems.splice(destinationIndex, 0, movedItem);
+
+    listsService.reorderItems([...reorderedActiveItems, ...completedItems], list.id);
+    markItemSettling(itemId);
+    hapticService.selection();
+  }
+
+  function handleReorderKeyDown(event, itemId) {
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      moveActiveItem(itemId, -1);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      moveActiveItem(itemId, 1);
+    }
+  }
+
   function markItemSettling(itemId) {
     if (!itemId) return;
 
@@ -934,6 +967,8 @@
     draftItemText = '';
 
     await tick();
+    draftInputNode?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    draftInputNode?.focus();
   }
 
   function saveDraftItem() {
@@ -1084,7 +1119,12 @@
     {#if undoDelete && undoDelete.listId === list.id}
       <div class="zl-undo-toast" transition:fade={{ duration: 180 }}>
         <span class="zl-undo-text">Deleted {undoDelete.item.text}</span>
-        <button type="button" class="zl-undo-button" on:click={restoreDeletedItem}>
+        <button
+          type="button"
+          class="zl-undo-button"
+          data-swipe-ignore="true"
+          on:click={restoreDeletedItem}
+        >
           Undo
         </button>
       </div>
@@ -1112,6 +1152,7 @@
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
+              class:drag-over-after={dragOverItemId === item.id && dragOverPosition === 'after'}
               class:just-edited={recentlyEditedItems.has(item.id)}
               class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
@@ -1122,7 +1163,6 @@
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: touchDragItemId ? 180 : 300 }}
               in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
-              out:fly={{ y: -20, duration: 300 }}
               aria-grabbed={draggedItemId === item.id || touchDragItemId === item.id ? 'true' : 'false'}
               aria-dropeffect="move"
               role="listitem"
@@ -1180,23 +1220,27 @@
               </div>
 
               {#if !item.checked && editingItemId !== item.id && activeItems.length > 1}
-                <div
+                <button
+                  type="button"
                   class="grab-indicator"
                   class:touch-active={touchDragItemId === item.id}
                   data-swipe-ignore="true"
-                  aria-hidden="true"
+                  aria-label={`Reorder ${item.text}`}
                   title="Press and hold to reorder"
+                  on:click|stopPropagation={() => hapticService.selection()}
+                  on:keydown={(event) => handleReorderKeyDown(event, item.id)}
                   on:touchstart={(event) => handleTouchGrabStart(event, item.id)}
                 >
                   <span></span>
                   <span></span>
                   <span></span>
-                </div>
+                </button>
               {/if}
 
               <button
                 type="button"
                 class="zl-delete-button"
+                data-swipe-ignore="true"
                 on:click|stopPropagation={() => deleteItem(item.id)}
                 aria-label={`Delete ${item.text}`}
               >
@@ -1225,6 +1269,7 @@
                   class="zl-edit-input zl-draft-input"
                   placeholder="New item..."
                   bind:value={draftItemText}
+                  bind:this={draftInputNode}
                   on:blur={saveDraftItem}
                   on:keydown={handleDraftItemKeyDown}
                   on:input={handleTyping}
@@ -1236,6 +1281,7 @@
               <button
                 type="button"
                 class="zl-delete-button zl-draft-cancel"
+                data-swipe-ignore="true"
                 on:pointerdown|preventDefault
                 on:click|stopPropagation={cancelDraftItem}
                 aria-label="Cancel new item"
@@ -1278,6 +1324,7 @@
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
+              class:drag-over-after={dragOverItemId === item.id && dragOverPosition === 'after'}
               class:just-edited={recentlyEditedItems.has(item.id)}
               class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
@@ -1292,7 +1339,6 @@
                 duration: 300,
                 delay: getStaggerDelay(renderedActiveItems.length + index + 1),
               }}
-              out:fly={{ y: -20, duration: 300 }}
               aria-grabbed={draggedItemId === item.id || touchDragItemId === item.id ? 'true' : 'false'}
               aria-dropeffect="move"
               role="listitem"
@@ -1350,23 +1396,27 @@
               </div>
 
               {#if !item.checked && editingItemId !== item.id && activeItems.length > 1}
-                <div
+                <button
+                  type="button"
                   class="grab-indicator"
                   class:touch-active={touchDragItemId === item.id}
                   data-swipe-ignore="true"
-                  aria-hidden="true"
+                  aria-label={`Reorder ${item.text}`}
                   title="Press and hold to reorder"
+                  on:click|stopPropagation={() => hapticService.selection()}
+                  on:keydown={(event) => handleReorderKeyDown(event, item.id)}
                   on:touchstart={(event) => handleTouchGrabStart(event, item.id)}
                 >
                   <span></span>
                   <span></span>
                   <span></span>
-                </div>
+                </button>
               {/if}
 
               <button
                 type="button"
                 class="zl-delete-button"
+                data-swipe-ignore="true"
                 on:click|stopPropagation={() => deleteItem(item.id)}
                 aria-label={`Delete ${item.text}`}
               >
@@ -1386,7 +1436,7 @@
           role="button"
           tabindex="0"
           on:keydown={(e) => e.key === 'Enter' && handleEmptyStateClick()}
-          transition:fade={{ duration: 300 }}
+          in:fade={{ duration: 200 }}
         >
           <div class="zl-empty-content">
             <h3 class="zl-empty-title">Your list awaits</h3>
@@ -2306,6 +2356,11 @@
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
+  .zl-item.drag-over-after {
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+
   .zl-item.touch-placeholder {
     opacity: 0.22;
     border-style: dashed;
@@ -2375,6 +2430,10 @@
   }
 
   .grab-indicator {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: inherit;
     display: flex;
     flex-direction: column;
     gap: 4px;
