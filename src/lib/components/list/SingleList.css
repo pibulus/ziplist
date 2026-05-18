@@ -219,6 +219,11 @@
   gap: 0.65rem;
 }
 
+.zl-list-title-heading {
+  margin: 0;
+  max-width: 100%;
+}
+
 .zl-list-title-trigger {
   min-height: 44px;
   max-width: 100%;
@@ -822,6 +827,9 @@
   min-height: 260px;
   height: auto;
   transition: var(--zl-transition-fast);
+  appearance: none;
+  color: inherit;
+  font: inherit;
 }
 
 .zl-empty-state.clickable {

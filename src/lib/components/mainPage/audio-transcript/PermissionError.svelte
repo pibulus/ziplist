@@ -1,19 +1,19 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  
+  import { createEventDispatcher } from "svelte";
+
   // Event handling
   const dispatch = createEventDispatcher();
-  
+
   // Close the modal when clicked
   function closeModal() {
-    dispatch('close');
+    dispatch("close");
   }
 </script>
 
 <div
   class="flex justify-center w-full permission-error-container"
   on:click={closeModal}
-  on:keydown={(e) => e.key === 'Enter' && closeModal()}
+  on:keydown={(e) => (e.key === "Enter" || e.key === " ") && closeModal()}
   role="alertdialog"
   tabindex="0"
   aria-labelledby="permission_error_title"
@@ -44,8 +44,8 @@
 
     <!-- Permission error message -->
     <p id="permission_error_description">
-      ZipList needs microphone access to transcribe your speech. Please update your browser
-      settings to allow microphone access.
+      ZipList needs microphone access to transcribe your speech. Please update
+      your browser settings to allow microphone access.
     </p>
 
     <!-- Solution steps -->
@@ -65,7 +65,11 @@
     </div>
 
     <!-- Dismiss button -->
-    <button class="dismiss-btn" on:click|stopPropagation={closeModal}>
+    <button
+      type="button"
+      class="dismiss-btn"
+      on:click|stopPropagation={closeModal}
+    >
       Got it
     </button>
   </div>

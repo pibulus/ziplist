@@ -1,15 +1,15 @@
 <script>
-  import { onDestroy } from 'svelte';
-  import { spring } from 'svelte/motion';
-  import { listsStore } from '$lib/services/lists/listsStore';
-  import { hapticService } from '$lib/services/infrastructure/hapticService';
-  import SingleList from './SingleList.svelte';
+  import { onDestroy } from "svelte";
+  import { spring } from "svelte/motion";
+  import { listsStore } from "$lib/services/lists/listsStore";
+  import { hapticService } from "$lib/services/infrastructure/hapticService";
+  import SingleList from "./SingleList.svelte";
 
   // Subscribe to lists store
   let lists = [];
   let activeListId = null;
-  
-  const unsubscribe = listsStore.subscribe(state => {
+
+  const unsubscribe = listsStore.subscribe((state) => {
     lists = state.lists;
     activeListId = state.activeListId;
   });
@@ -22,16 +22,20 @@
   let hasDirectionLock = false;
   let isHorizontalSwipe = false;
   let activeIndex = 0;
-  const SWIPE_IGNORE_SELECTOR = 'input, textarea, select, a, label, [data-swipe-ignore="true"]';
-  
+  const SWIPE_IGNORE_SELECTOR =
+    'input, textarea, select, a, label, [data-swipe-ignore="true"]';
+
   // Spring store for smooth physics-based movement
-  const coords = spring({ x: 0 }, {
-    stiffness: 0.15,
-    damping: 0.5
-  });
+  const coords = spring(
+    { x: 0 },
+    {
+      stiffness: 0.15,
+      damping: 0.5,
+    },
+  );
 
   $: if (lists.length > 0 && activeListId) {
-    const index = lists.findIndex(l => l.id === activeListId);
+    const index = lists.findIndex((l) => l.id === activeListId);
     if (index !== -1 && index !== activeIndex) {
       activeIndex = index;
       // Update spring target
@@ -83,19 +87,22 @@
     if (!isHorizontalSwipe) return;
 
     e.preventDefault();
-    
+
     // Calculate percentage shift based on screen width
     const screenWidth = window.innerWidth;
     const percentShift = (diffX / screenWidth) * 100;
-    
-    let targetX = (-activeIndex * 100) + percentShift;
-    
+
+    let targetX = -activeIndex * 100 + percentShift;
+
     // Apply resistance at edges
-    if ((activeIndex === 0 && diffX > 0) || (activeIndex === lists.length - 1 && diffX < 0)) {
-        targetX = (-activeIndex * 100) + (percentShift * 0.3);
+    if (
+      (activeIndex === 0 && diffX > 0) ||
+      (activeIndex === lists.length - 1 && diffX < 0)
+    ) {
+      targetX = -activeIndex * 100 + percentShift * 0.3;
     }
-    
-    coords.set({ x: targetX }, { hard: true }); 
+
+    coords.set({ x: targetX }, { hard: true });
   }
 
   function handleTouchEnd(e) {
@@ -146,9 +153,9 @@
       activeIndex = index;
       coords.set({ x: -index * 100 });
       listsStore.setActiveList(lists[index].id);
-      
+
       // Haptic feedback on successful switch
-      hapticService.impact('medium');
+      hapticService.impact("medium");
     }
   }
 
@@ -157,7 +164,7 @@
   });
 </script>
 
-<div 
+<div
   class="swipe-container"
   role="region"
   aria-label="Swipe between lists"
@@ -166,34 +173,35 @@
   on:touchend={handleTouchEnd}
   on:touchcancel={handleTouchCancel}
 >
-  <div 
-    class="lists-wrapper" 
-    style="transform: translateX({$coords.x}%);"
-  >
+  <div class="lists-wrapper" style="transform: translateX({$coords.x}%);">
     {#each lists as list (list.id)}
-      <div 
-        class="list-slide" 
+      <div
+        id="list-slide-{list.id}"
+        class="list-slide"
         class:active={list.id === activeListId}
         inert={list.id !== activeListId}
         aria-hidden={list.id !== activeListId}
         style="--list-primary: {list.primaryColor}; --list-accent: {list.accentColor}; --list-glow: {list.glowColor}"
       >
         <div class="list-content-wrapper">
-            <SingleList listId={list.id} />
+          <SingleList listId={list.id} />
         </div>
       </div>
     {/each}
   </div>
-  
+
   <!-- Pagination Indicators -->
-  <div class="pagination-dots">
+  <div class="pagination-dots" role="navigation" aria-label="List picker">
     {#each lists as list, i}
-      <button 
-        class="dot" 
+      <button
+        type="button"
+        class="dot"
         class:active={i === activeIndex}
         style="--dot-primary: {list.primaryColor}; --dot-accent: {list.accentColor}; --dot-glow: {list.glowColor}"
         on:click={() => setActiveList(i)}
         aria-label="Switch to {list.name}"
+        aria-current={i === activeIndex ? "true" : undefined}
+        aria-controls="list-slide-{list.id}"
       ></button>
     {/each}
   </div>
@@ -227,7 +235,9 @@
     box-sizing: border-box;
     opacity: 0.4;
     transform: scale(0.95);
-    transition: opacity 0.3s, transform 0.3s;
+    transition:
+      opacity 0.3s,
+      transform 0.3s;
     pointer-events: none; /* Disable interaction on non-active slides */
   }
 
@@ -236,7 +246,7 @@
     transform: scale(1);
     pointer-events: auto;
   }
-  
+
   .list-content-wrapper {
     width: 100%;
     max-width: 600px; /* Match SingleList max-width */
@@ -266,7 +276,7 @@
   }
 
   .dot::before {
-    content: '';
+    content: "";
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -283,9 +293,11 @@
     transform: scale(1.5);
     background-color: var(--dot-primary);
     opacity: 1;
-    box-shadow: 0 2px 8px var(--dot-glow), 0 0 12px var(--dot-glow);
+    box-shadow:
+      0 2px 8px var(--dot-glow),
+      0 0 12px var(--dot-glow);
   }
-  
+
   .dot:hover:not(.active)::before {
     opacity: 0.7;
     transform: scale(1.2);

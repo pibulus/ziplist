@@ -31,6 +31,7 @@
       id="draft-item-{listId}"
       class="zl-edit-input zl-draft-input"
       placeholder="New item..."
+      aria-label="New item text"
       bind:value={draftItemText}
       bind:this={inputNode}
       on:blur={onSaveDraft}

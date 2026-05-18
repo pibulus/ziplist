@@ -1,16 +1,23 @@
 <script>
-  import { ANIMATION, CTA_PHRASES, COPY_MESSAGES, ZIPLIST_START_PHRASES, ZIPLIST_ADD_PHRASES, getRandomFromArray } from '$lib/constants';
-  import { listsService } from '$lib/services/lists/listsService';
-  import { activeListItems } from '$lib/services/lists/listsStore';
-  import { waveformData } from '$lib/services';
-  import { onMount, onDestroy } from 'svelte';
-import { fade } from 'svelte/transition';
+  import {
+    ANIMATION,
+    CTA_PHRASES,
+    COPY_MESSAGES,
+    ZIPLIST_START_PHRASES,
+    ZIPLIST_ADD_PHRASES,
+    getRandomFromArray,
+  } from "$lib/constants";
+  import { listsService } from "$lib/services/lists/listsService";
+  import { activeListItems } from "$lib/services/lists/listsStore";
+  import { waveformData } from "$lib/services";
+  import { onMount, onDestroy } from "svelte";
+  import { fade } from "svelte/transition";
 
   export let recording = false;
   export let transcribing = false;
   export let clipboardSuccess = false;
   export let recordingDuration = 0;
-  export let buttonLabel = '';
+  export let buttonLabel = "";
   export let progress = 0;
 
   let recordButtonElement;
@@ -27,7 +34,7 @@ import { fade } from 'svelte/transition';
   let animationFrameId;
   let pulseIntensity = 0;
   let waveformLevels = Array(WAVE_BAR_COUNT).fill(0);
-  const unsubscribeWaveform = waveformData.subscribe(data => {
+  const unsubscribeWaveform = waveformData.subscribe((data) => {
     if (data && data.length) {
       const sum = data.reduce((acc, val) => acc + val, 0);
       audioLevel = sum / data.length;
@@ -43,14 +50,22 @@ import { fade } from 'svelte/transition';
   function updateVisualization() {
     if (!recording) {
       pulseIntensity = Math.max(0, pulseIntensity - PULSE_FADE_RATE);
-      waveformLevels = waveformLevels.map(level => level * WAVE_FADE_RATE);
+      waveformLevels = waveformLevels.map((level) => level * WAVE_FADE_RATE);
     } else {
-      const targetIntensity = Math.min(1, audioLevel / AUDIO_LEVEL_SENSITIVITY_FACTOR);
-      pulseIntensity = pulseIntensity * PULSE_SMOOTHING_FACTOR_OLD + targetIntensity * PULSE_SMOOTHING_FACTOR_NEW;
+      const targetIntensity = Math.min(
+        1,
+        audioLevel / AUDIO_LEVEL_SENSITIVITY_FACTOR,
+      );
+      pulseIntensity =
+        pulseIntensity * PULSE_SMOOTHING_FACTOR_OLD +
+        targetIntensity * PULSE_SMOOTHING_FACTOR_NEW;
     }
 
     if (recordButtonElement) {
-      recordButtonElement.style.setProperty('--pulse-intensity', pulseIntensity.toString());
+      recordButtonElement.style.setProperty(
+        "--pulse-intensity",
+        pulseIntensity.toString(),
+      );
 
       waveformLevels.forEach((level, i) => {
         recordButtonElement.style.setProperty(`--wave-level-${i}`, `${level}%`);
@@ -64,7 +79,7 @@ import { fade } from 'svelte/transition';
   let currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
   let currentAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
 
-  const unsubscribe = activeListItems.subscribe(items => {
+  const unsubscribe = activeListItems.subscribe((items) => {
     const wasActiveList = hasActiveList;
     hasActiveList = items && items.length > 0;
 
@@ -103,21 +118,21 @@ import { fade } from 'svelte/transition';
   }
   export function animateButtonPress() {
     if (recordButtonElement) {
-      recordButtonElement.classList.remove('button-press');
+      recordButtonElement.classList.remove("button-press");
       void recordButtonElement.offsetWidth;
-      recordButtonElement.classList.add('button-press');
+      recordButtonElement.classList.add("button-press");
       setTimeout(() => {
         if (recordButtonElement) {
-          recordButtonElement.classList.remove('button-press');
+          recordButtonElement.classList.remove("button-press");
         }
       }, ANIMATION.BUTTON.PRESS_DURATION);
     }
   }
 
   function handleKeyDown(event) {
-    if ((event.key === 'Enter' || event.key === ' ') && !transcribing) {
+    if ((event.key === "Enter" || event.key === " ") && !transcribing) {
       event.preventDefault();
-      dispatch('click');
+      dispatch("click");
     }
   }
 
@@ -131,18 +146,18 @@ import { fade } from 'svelte/transition';
   function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
   }
 
   const LISTENING_PHRASES = [
-    'Listening...',
-    'Taking notes...',
-    'Capturing that...',
-    'All ears...',
-    'Catching your list...'
+    "Listening...",
+    "Taking notes...",
+    "Capturing that...",
+    "All ears...",
+    "Catching your list...",
   ];
 
-  let currentListeningPhrase = 'Listening...';
+  let currentListeningPhrase = "Listening...";
   let previousRecordingState = false;
 
   $: {
@@ -152,18 +167,30 @@ import { fade } from 'svelte/transition';
     previousRecordingState = recording;
   }
 
-  $: buttonLabel = recording ? currentListeningPhrase : (hasActiveList ? currentAddPhrase : currentStartPhrase);
+  $: buttonLabel = recording
+    ? currentListeningPhrase
+    : hasActiveList
+      ? currentAddPhrase
+      : currentStartPhrase;
+  $: recordButtonAriaLabel = recording
+    ? `Stop recording. ${formatTime(recordingDuration)} recorded`
+    : hasActiveList
+      ? "Add to your list"
+      : "Create a new list";
 
-  $: baseButtonClasses = "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
+  $: baseButtonClasses =
+    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
 
-  $: clipboardSuccessClasses = clipboardSuccess ? "notification-pulse border border-purple-200 bg-purple-50" : "";
+  $: clipboardSuccessClasses = clipboardSuccess
+    ? "notification-pulse border border-purple-200 bg-purple-50"
+    : "";
 
   $: progressStyle = recording
-    ? `--progress: ${Math.min(recordingDuration / ANIMATION.RECORDING.LIMIT * 100, 100)}%`
-    : '';
+    ? `--progress: ${Math.min((recordingDuration / ANIMATION.RECORDING.LIMIT) * 100, 100)}%`
+    : "";
 
   $: baseStyle = `min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; ${progressStyle}`;
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 </script>
 
@@ -176,6 +203,7 @@ import { fade } from 'svelte/transition';
       aria-valuenow={progress}
       aria-valuemin="0"
       aria-valuemax="100"
+      aria-valuetext={`Transcribing ${Math.round(progress)} percent complete`}
     >
       <div
         class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-rose-300"
@@ -185,67 +213,76 @@ import { fade } from 'svelte/transition';
       </div>
     </div>
   {:else}
-  <button
-    bind:this={recordButtonElement}
-    class="{baseButtonClasses} {clipboardSuccessClasses}"
-    class:has-list-button={hasActiveList && !recording}
-    class:pulse-subtle={!recording && !hasActiveList && !clipboardSuccess}
-    class:recording-active={recording}
-    class:audio-reactive={recording}
-    class:recording-warning={isWarning && recording}
-    class:recording-danger={isDanger && recording}
-    style={baseStyle}
-    on:click={() => {
-      dispatch('click');
-      // Only update phrases for next time after a click
-      if (!recording) {
-        updateRandomPhrases();
-      }
-    }}
-    on:mouseenter={() => {
-      dispatch('preload');
-      // Don't update phrases on hover to prevent flicker
-    }}
-    on:keydown={handleKeyDown}
-    disabled={transcribing}
-    aria-label={recording ? 'Zip Your List' : (hasActiveList ? 'Add to your list' : 'Create a new list')}
-    aria-pressed={recording}
-    aria-busy={transcribing}
-  >
-    {#if recording}
-      <div class="wave-visualization">
-        {#each { length: WAVE_BAR_COUNT } as _, i}
-          <div class="wave-bar" style="--index: {i}; --height: var(--wave-level-{i}, 0%);"></div>
-        {/each}
-      </div>
-    {/if}
-
-    <span
-      class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
-      style="letter-spacing: 0.02em;"
+    <button
+      bind:this={recordButtonElement}
+      class="{baseButtonClasses} {clipboardSuccessClasses}"
+      class:has-list-button={hasActiveList && !recording}
+      class:pulse-subtle={!recording && !hasActiveList && !clipboardSuccess}
+      class:recording-active={recording}
+      class:audio-reactive={recording}
+      class:recording-warning={isWarning && recording}
+      class:recording-danger={isDanger && recording}
+      style={baseStyle}
+      on:click={() => {
+        dispatch("click");
+        // Only update phrases for next time after a click
+        if (!recording) {
+          updateRandomPhrases();
+        }
+      }}
+      on:mouseenter={() => {
+        dispatch("preload");
+        // Don't update phrases on hover to prevent flicker
+      }}
+      on:keydown={handleKeyDown}
+      disabled={transcribing}
+      aria-label={recordButtonAriaLabel}
+      aria-pressed={recording}
+      aria-busy={transcribing}
     >
+      {#if recording}
+        <div class="wave-visualization" aria-hidden="true">
+          {#each { length: WAVE_BAR_COUNT } as _, i}
+            <div
+              class="wave-bar"
+              style="--index: {i}; --height: var(--wave-level-{i}, 0%);"
+            ></div>
+          {/each}
+        </div>
+      {/if}
+
       <span
-        class="transform transition-all duration-300 ease-out scale-100 opacity-100"
+        class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
+        style="letter-spacing: 0.02em;"
       >
-        <span class="button-content relative z-10">
-          <span class="flex items-center justify-center relative w-full">
-            <span class="cta__label relative z-10 px-1 py-0.5 rounded-lg" class:text-shadow-recording={recording} style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em; text-align: center; width: 100%;">
-              {buttonLabel}
-            </span>
-            <span class="sr-only">
-              {#if recording}
-                {formatTime(recordingDuration)} of {formatTime(ANIMATION.RECORDING.LIMIT)}
-              {/if}
+        <span
+          class="transform transition-all duration-300 ease-out scale-100 opacity-100"
+        >
+          <span class="button-content relative z-10">
+            <span class="flex items-center justify-center relative w-full">
+              <span
+                class="cta__label relative z-10 px-1 py-0.5 rounded-lg"
+                class:text-shadow-recording={recording}
+                style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em; text-align: center; width: 100%;"
+              >
+                {buttonLabel}
+              </span>
+              <span class="sr-only">
+                {#if recording}
+                  {formatTime(recordingDuration)} of {formatTime(
+                    ANIMATION.RECORDING.LIMIT,
+                  )}
+                {/if}
+              </span>
             </span>
           </span>
         </span>
       </span>
-    </span>
 
-    {#if recording}
-      <div class="recording-indicator"></div>
-    {/if}
-  </button>
+      {#if recording}
+        <div class="recording-indicator" aria-hidden="true"></div>
+      {/if}
+    </button>
   {/if}
 </div>
 
@@ -258,17 +295,18 @@ import { fade } from 'svelte/transition';
     background-size: 100% 100%;
     background-position: 0% 0%;
     transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-    transition-property: transform, box-shadow, background-image, background-position;
-    
+    transition-property:
+      transform, box-shadow, background-image, background-position;
+
     /* Soft tangerine to pink gradient */
     background-image: linear-gradient(
       to right,
       rgba(251, 191, 36, 0.95),
       rgba(249, 168, 212, 0.8)
     );
-    
+
     /* Better default shadow */
-    box-shadow: 
+    box-shadow:
       0 4px 6px -1px rgba(251, 191, 36, 0.2),
       0 2px 4px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -276,11 +314,21 @@ import { fade } from 'svelte/transition';
 
   /* Spring Bounce Animation */
   @keyframes springBounce {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.25); }
-    50% { transform: scale(0.9); }
-    70% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(1.25);
+    }
+    50% {
+      transform: scale(0.9);
+    }
+    70% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 
   /* Neo-brutalist button override */
@@ -293,12 +341,12 @@ import { fade } from 'svelte/transition';
     color: #000000;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
   }
-  
+
   :global(html.mode-neo-brutalist) .record-button:hover:not(:disabled) {
     transform: translate(-2px, -2px) scale(1.05);
     box-shadow: 8px 8px 0px 0px #000000;
     background-image: none;
-    background-color: #FFC107; /* Slightly lighter amber */
+    background-color: #ffc107; /* Slightly lighter amber */
     filter: brightness(1.1);
   }
 
@@ -307,28 +355,30 @@ import { fade } from 'svelte/transition';
     transform: translate(2px, 2px) scale(0.95);
     box-shadow: 2px 2px 0px 0px #000000;
   }
-  
+
   /* Focus state */
   .record-button:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 0 0 3px rgba(251, 191, 36, 0.4),
+      0 1px 3px rgba(0, 0, 0, 0.1);
   }
-  
+
   /* Enhanced focus ring for keyboard navigation */
   .record-button:focus-visible {
     outline: 3px solid #ffd65c;
     outline-offset: 2px;
   }
-  
+
   /* Hover state */
   .record-button:hover:not(:disabled) {
     transform: translateY(-1px) scale(1.02);
-    box-shadow: 
+    box-shadow:
       0 6px 10px -2px rgba(251, 191, 36, 0.25),
       0 4px 6px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
-  
+
   /* Non-recording hover effect - softer gradient with subtle pink */
   .record-button:not(.recording-active):hover:not(:disabled) {
     background-image: linear-gradient(
@@ -386,19 +436,21 @@ import { fade } from 'svelte/transition';
   /* Enhanced glow effect during recording */
   .recording-active::before {
     box-shadow:
-      0 0 calc(20px * var(--pulse-intensity)) calc(8px * var(--pulse-intensity)) rgba(249, 168, 212, calc(0.5 * var(--pulse-intensity))),
-      0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity)) rgba(251, 191, 36, calc(0.6 * var(--pulse-intensity)));
+      0 0 calc(20px * var(--pulse-intensity)) calc(8px * var(--pulse-intensity))
+        rgba(249, 168, 212, calc(0.5 * var(--pulse-intensity))),
+      0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity))
+        rgba(251, 191, 36, calc(0.6 * var(--pulse-intensity)));
   }
-  
+
   /* Active/pressed state */
   .record-button:active:not(:disabled) {
     transform: translateY(1px) scale(0.98);
-    box-shadow: 
+    box-shadow:
       0 2px 4px -1px rgba(251, 191, 36, 0.15),
       0 1px 2px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 3px rgba(0, 0, 0, 0.1);
   }
-  
+
   /* Non-recording active effect */
   .record-button:not(.recording-active):active:not(:disabled) {
     background-image: linear-gradient(
@@ -407,12 +459,12 @@ import { fade } from 'svelte/transition';
       rgba(234, 88, 12, 0.95)
     );
   }
-  
+
   /* Button press animation */
   .button-press {
     animation: button-press 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
-  
+
   @keyframes button-press {
     0% {
       transform: scale(1);
@@ -431,15 +483,16 @@ import { fade } from 'svelte/transition';
       background-color: #fbbf24;
     }
   }
-  
+
   /* Subtle breathing glow for button */
   .pulse-subtle {
     animation: button-breathe 3.5s ease-in-out infinite;
     transform-origin: center;
   }
-  
+
   @keyframes button-breathe {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow: 0 0 12px 2px rgba(251, 191, 36, 0.35);
       transform: scale(1);
     }
@@ -448,12 +501,12 @@ import { fade } from 'svelte/transition';
       transform: scale(1.02);
     }
   }
-  
+
   /* Notification pulse animation */
   .notification-pulse {
     animation: notification-glow 2.5s ease-in-out infinite;
     transform-origin: center;
-    box-shadow: 
+    box-shadow:
       0 0 15px 3px rgba(139, 92, 246, 0.2),
       0 0 5px 1px rgba(139, 92, 246, 0.1);
     background-image: linear-gradient(
@@ -463,29 +516,30 @@ import { fade } from 'svelte/transition';
     );
     border: 1px solid rgba(167, 139, 250, 0.3);
   }
-  
+
   @keyframes notification-glow {
-    0%, 100% {
-      box-shadow: 
+    0%,
+    100% {
+      box-shadow:
         0 0 10px 1px rgba(139, 92, 246, 0.2),
         0 0 3px 0px rgba(139, 92, 246, 0.1);
       transform: scale(1);
     }
     50% {
-      box-shadow: 
+      box-shadow:
         0 0 18px 4px rgba(139, 92, 246, 0.3),
         0 0 8px 2px rgba(139, 92, 246, 0.15);
       transform: scale(1.003);
     }
   }
-  
+
   /* Progress bar styling */
   .progress-container {
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
   }
-  
+
   .progress-bar {
     position: absolute;
     top: 0;
@@ -494,7 +548,7 @@ import { fade } from 'svelte/transition';
     transition: width 0.3s ease;
     animation: pulse-glow 1.5s infinite ease-in-out;
   }
-  
+
   @keyframes pulse-glow {
     0% {
       box-shadow: inset 0 0 5px rgba(255, 190, 60, 0.5);
@@ -506,7 +560,7 @@ import { fade } from 'svelte/transition';
       box-shadow: inset 0 0 5px rgba(255, 190, 60, 0.5);
     }
   }
-  
+
   /* Whole-button progress indicator - Enhanced with softer, pinker gradient */
   .recording-active {
     position: relative;
@@ -514,7 +568,8 @@ import { fade } from 'svelte/transition';
 
     /* Soft tangerine to pink gradient for recording state */
     background-image:
-      linear-gradient(to right,
+      linear-gradient(
+        to right,
         rgba(251, 191, 36, 0.9),
         rgba(251, 191, 36, 0.9) var(--progress, 0%),
         rgba(249, 168, 212, 0.7) calc(var(--progress, 0%) + 0.5%),
@@ -542,16 +597,18 @@ import { fade } from 'svelte/transition';
     z-index: 1;
   }
 
-  .audio-reactive .cta-text, .audio-reactive .cta__label {
+  .audio-reactive .cta-text,
+  .audio-reactive .cta__label {
     position: relative;
     z-index: 5; /* Increased z-index for text to appear above effects */
   }
-  
+
   /* Warning/danger gradients - tangerine with pink accents */
   .recording-warning {
-    background-image: linear-gradient(to right, 
-      rgb(251, 191, 36) var(--progress, 0%), 
-      rgba(251, 191, 36, 0.7) var(--progress, 0%), 
+    background-image: linear-gradient(
+      to right,
+      rgb(251, 191, 36) var(--progress, 0%),
+      rgba(251, 191, 36, 0.7) var(--progress, 0%),
       rgba(249, 168, 212, 0.6) 100%
     );
     box-shadow:
@@ -559,11 +616,12 @@ import { fade } from 'svelte/transition';
       inset 0 0 10px rgba(251, 191, 36, 0.2),
       0 0 20px rgba(251, 191, 36, 0.2);
   }
-  
+
   .recording-danger {
-    background-image: linear-gradient(to right, 
-      rgb(251, 191, 36) var(--progress, 0%), 
-      rgba(251, 191, 36, 0.7) var(--progress, 0%), 
+    background-image: linear-gradient(
+      to right,
+      rgb(251, 191, 36) var(--progress, 0%),
+      rgba(251, 191, 36, 0.7) var(--progress, 0%),
       rgba(244, 114, 182, 0.7) 100%
     );
     box-shadow:
@@ -572,7 +630,7 @@ import { fade } from 'svelte/transition';
       0 0 20px rgba(244, 114, 182, 0.2);
     animation: danger-pulse 1s infinite alternate ease-in-out;
   }
-  
+
   @keyframes danger-pulse {
     0% {
       box-shadow:
@@ -587,21 +645,23 @@ import { fade } from 'svelte/transition';
         0 0 25px rgba(244, 114, 182, 0.25);
     }
   }
-  
+
   .button-content {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
-  
+
   /* Enhanced text visibility when recording */
   .text-shadow-recording {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.1);
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.2),
+      0 0 1px rgba(0, 0, 0, 0.1);
     font-weight: 700;
     letter-spacing: 0.01em;
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -610,11 +670,11 @@ import { fade } from 'svelte/transition';
       opacity: 1;
     }
   }
-  
+
   .animate-fadeIn {
     animation: fadeIn 0.3s ease-in-out;
   }
-  
+
   /* Responsive adjustments for mobile */
   @media (max-width: 640px) {
     .record-button {
@@ -666,8 +726,9 @@ import { fade } from 'svelte/transition';
     width: 5px; /* Slightly wider for better visibility */
     height: var(--height, 0%);
     max-height: 80%;
-    background: linear-gradient(to top, 
-      rgba(255, 255, 255, 0.95), 
+    background: linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0.95),
       rgba(255, 255, 255, 0.4)
     );
     border-radius: 2px 2px 0 0;
@@ -687,7 +748,7 @@ import { fade } from 'svelte/transition';
       transform: scaleY(1.05);
     }
   }
-  
+
   /* Fixed button container for consistent spacing and positioning */
   .fixed-button-container {
     display: flex;
@@ -698,7 +759,7 @@ import { fade } from 'svelte/transition';
     margin: 1rem 0;
     z-index: 5; /* Ensure it stays on top during transitions */
   }
-  
+
   /* Recording indicator - more noticeable pulsing dot */
   .recording-indicator {
     position: absolute;
@@ -713,9 +774,10 @@ import { fade } from 'svelte/transition';
     animation: recording-pulse 1.5s infinite ease-in-out;
     z-index: 10;
   }
-  
+
   @keyframes recording-pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
       transform: translateY(-50%) scale(1);
       box-shadow: 0 0 8px rgba(236, 72, 153, 0.9);

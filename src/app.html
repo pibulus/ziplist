@@ -3,9 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <!-- Theme-aware favicons -->
-    <link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
-    <link rel="icon" href="%sveltekit.assets%/favicon.png" sizes="32x32" type="image/png" />
-    <link rel="shortcut icon" href="%sveltekit.assets%/favicon.png" type="image/png" />
+    <link
+      rel="icon"
+      href="%sveltekit.assets%/favicon.svg"
+      type="image/svg+xml"
+    />
+    <link
+      rel="icon"
+      href="%sveltekit.assets%/favicon.png"
+      sizes="32x32"
+      type="image/png"
+    />
+    <link
+      rel="shortcut icon"
+      href="%sveltekit.assets%/favicon.png"
+      type="image/png"
+    />
 
     <!-- Apple touch icons for all device sizes -->
     <link
@@ -34,16 +47,6 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="format-detection" content="telephone=no" />
-    <meta
-      name="description"
-      content="Create stacked list cards with your voice. Ziplist makes it easy to organize your thoughts as you speak."
-    />
-    <link rel="canonical" href="https://ziplist.app/" />
-    <meta name="robots" content="index, follow" />
-    <meta
-      name="keywords"
-      content="voice lists, audio lists, voice notes, list cards, stacked lists, voice organization"
-    />
     <meta name="author" content="Pablo" />
 
     <!-- Manifest -->
@@ -102,35 +105,6 @@
       media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
     />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://ziplist.app/" />
-    <meta property="og:title" content="Ziplist - Voice to Lists" />
-    <meta
-      property="og:description"
-      content="Create organized lists by speaking. Ziplist turns your voice into stacked list cards instantly."
-    />
-    <meta property="og:image" content="https://ziplist.app/og-image.png" />
-    <meta property="og:image:secure_url" content="https://ziplist.app/og-image.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Ziplist turns voice notes into stacked lists" />
-    <meta property="og:site_name" content="Ziplist" />
-    <meta property="og:locale" content="en_US" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://ziplist.app/" />
-    <meta name="twitter:title" content="Ziplist - Voice to Lists" />
-    <meta
-      name="twitter:description"
-      content="Create organized lists by speaking. Ziplist turns your voice into stacked list cards instantly."
-    />
-    <meta name="twitter:image" content="https://ziplist.app/og-image.png" />
-    <meta name="twitter:image:src" content="https://ziplist.app/og-image.png" />
-    <meta name="twitter:image:alt" content="Ziplist turns voice notes into stacked lists" />
-
     <script>
       // Apply saved theme immediately to prevent flash of default theme
       // StorageUtils inline helpers
@@ -164,11 +138,11 @@
 
       const savedTheme = getStorageItem(THEME_KEY, DEFAULT_THEME);
       document.documentElement.setAttribute("data-theme", savedTheme);
-      
+
       // Check for chunky mode preference, default to true for pop-punk
       const CHUNKY_MODE_KEY = "ziplist-chunky-mode";
       const savedChunkyMode = getStorageItem(CHUNKY_MODE_KEY, "true");
-      
+
       if (savedChunkyMode === "true") {
         document.documentElement.classList.add("mode-neo-brutalist");
       }

@@ -38,6 +38,9 @@
     checked={item.checked}
     on:change={(event) => onToggle(item.id, event)}
     class="zl-checkbox"
+    aria-label={item.checked
+      ? `Mark ${item.text} incomplete`
+      : `Mark ${item.text} complete`}
   />
   <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
 </label>

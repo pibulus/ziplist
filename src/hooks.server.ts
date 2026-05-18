@@ -1,3 +1,17 @@
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+  const response = await resolve(event);
+
+  if (
+    event.url.pathname.startsWith("/import") ||
+    event.url.pathname.startsWith("/live/")
+  ) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+
+  return response;
+}
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
   const details =

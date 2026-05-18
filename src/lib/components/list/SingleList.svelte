@@ -329,8 +329,8 @@
 
   function getItemGrabbedState(itemId) {
     return draggedItemId === itemId || touchDragItemId === itemId
-      ? 'true'
-      : 'false';
+      ? "true"
+      : "false";
   }
 
   // Action to auto-focus an input element when it's created
@@ -1078,7 +1078,7 @@
   }
 </script>
 
-<div class="zl-card">
+<section class="zl-card" aria-labelledby="list-title-{list.id || 'active'}">
   <div class="card-content">
     <!-- List Header with Live Collaboration Toggle -->
     <div class="zl-list-header">
@@ -1097,33 +1097,47 @@
         {:else}
           <div class="zl-list-title-row">
             {#if showListManagement}
-              <button
-                type="button"
-                class="zl-list-title-trigger"
-                on:click={startEditingListName}
-                aria-label="Rename list"
-              >
-                <span class="zl-list-title">{list.name || "Your List"}</span>
-              </button>
+              <h2 class="zl-list-title-heading">
+                <button
+                  type="button"
+                  class="zl-list-title-trigger"
+                  on:click={startEditingListName}
+                  aria-label={`Rename ${list.name || "list"}`}
+                >
+                  <span
+                    id="list-title-{list.id || 'active'}"
+                    class="zl-list-title"
+                  >
+                    {list.name || "Your List"}
+                  </span>
+                </button>
+              </h2>
               <button
                 type="button"
                 class="zl-title-edit-button"
                 on:click={startEditingListName}
+                aria-label={`Rename ${list.name || "list"}`}
               >
                 Rename
               </button>
             {:else}
-              <h2 class="zl-list-title">{list.name || "Your List"}</h2>
+              <h2 id="list-title-{list.id || 'active'}" class="zl-list-title">
+                {list.name || "Your List"}
+              </h2>
             {/if}
           </div>
         {/if}
         {#if isLive}
           <div class="flex items-center gap-2 mt-1">
-            <div class="zl-presence-dots">
+            <div
+              class="zl-presence-dots"
+              aria-label="{presence.length} collaborators online"
+            >
               {#each presence as user (user.id)}
                 <div
                   class="zl-presence-dot"
                   title={user.avatar}
+                  aria-hidden="true"
                   style="background-color: {user.avatar.includes('Fox')
                     ? '#ff6b6b'
                     : user.avatar.includes('Frog')
@@ -1142,9 +1156,11 @@
       <div class="zl-list-actions">
         {#if showListManagement}
           <button
+            type="button"
             class="zl-add-list-button"
             on:click={handleCreateList}
             title="Create a new list"
+            aria-label="Create a new list"
           >
             <span class="add-icon">+</span>
             <span class="add-text">New List</span>
@@ -1153,27 +1169,36 @@
         {#if liveFeatureAvailable}
           {#if !isLive}
             <button
+              type="button"
               class="zl-live-button"
               on:click={handleMakeLive}
               title="Enable real-time collaboration"
+              aria-label={`Make ${list.name || "this list"} live`}
             >
-              <span class="live-icon">🔴</span>
+              <span class="live-icon" aria-hidden="true">🔴</span>
               <span class="live-text">Make Live</span>
             </button>
           {:else}
-            <div class="zl-live-indicator">
-              <span class="live-pulse">🔴</span>
+            <div
+              class="zl-live-indicator"
+              role="status"
+              aria-live="polite"
+              aria-label="{presence.length} collaborators online"
+            >
+              <span class="live-pulse" aria-hidden="true">🔴</span>
               <span class="live-count">{presence.length}</span>
             </div>
           {/if}
         {/if}
 
         <button
+          type="button"
           class="zl-share-button"
           on:click={handleShareList}
           title="Share list link"
+          aria-label={`Share ${list.name || "this list"}`}
         >
-          <span class="share-icon">🔗</span>
+          <span class="share-icon" aria-hidden="true">🔗</span>
           <span class="share-text">Share</span>
         </button>
       </div>
@@ -1185,6 +1210,8 @@
         class="zl-share-notification {shareStatus.success
           ? 'success'
           : 'error'}"
+        role={shareStatus.success ? "status" : "alert"}
+        aria-live={shareStatus.success ? "polite" : "assertive"}
         transition:fade={{ duration: 200 }}
       >
         {shareStatus.message}
@@ -1192,7 +1219,12 @@
     {/if}
 
     {#if undoDelete && undoDelete.listId === list.id}
-      <div class="zl-undo-toast" transition:fade={{ duration: 180 }}>
+      <div
+        class="zl-undo-toast"
+        role="status"
+        aria-live="polite"
+        transition:fade={{ duration: 180 }}
+      >
         <span class="zl-undo-text">Deleted {undoDelete.item.text}</span>
         <button
           type="button"
@@ -1207,7 +1239,12 @@
 
     <!-- Typing indicator -->
     {#if isLive && typingUsers.length > 0}
-      <div class="typing-indicator" in:fade={{ duration: 200 }}>
+      <div
+        class="typing-indicator"
+        role="status"
+        aria-live="polite"
+        in:fade={{ duration: 200 }}
+      >
         <span class="typing-avatar">{typingUsers[0].avatar}</span> is adding an
         item
         <span class="typing-dots">
@@ -1221,7 +1258,12 @@
     <!-- List Items -->
     <div class="zl-list-container" bind:this={listContainerNode}>
       {#if list.items.length > 0 || draftItemActive}
-        <ul class="zl-list" role="list" in:fade={{ duration: 200 }}>
+        <ul
+          class="zl-list"
+          role="list"
+          aria-label={`${list.name || "List"} items`}
+          in:fade={{ duration: 200 }}
+        >
           {#each renderedActiveItems as item, index (item.id)}
             <li
               class="zl-item"
@@ -1287,7 +1329,7 @@
                 type="button"
                 class="zl-add-item-button"
                 on:click={handleAddItemClick}
-                aria-label="Add item"
+                aria-label={`Add item to ${list.name || "this list"}`}
               >
                 <span class="zl-add-item-icon">+</span>
                 <span>Add item</span>
@@ -1353,12 +1395,11 @@
         </ul>
       {:else}
         <!-- Empty state - Minimalist and friendly -->
-        <div
+        <button
+          type="button"
           class="zl-empty-state clickable"
           on:click={handleEmptyStateClick}
-          role="button"
-          tabindex="0"
-          on:keydown={(e) => e.key === "Enter" && handleEmptyStateClick()}
+          aria-label={`Add the first item to ${list.name || "this list"}`}
           in:fade={{ duration: 200 }}
         >
           <div class="zl-empty-content">
@@ -1366,11 +1407,11 @@
             <p class="zl-empty-description">Add the first thing</p>
             <p class="zl-empty-hint">or talk it in</p>
           </div>
-        </div>
+        </button>
       {/if}
     </div>
   </div>
-</div>
+</section>
 
 {#if touchDraggedItem && touchDragGhostRect}
   <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">

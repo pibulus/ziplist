@@ -1,26 +1,26 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
-  import { listsStore } from '$lib/services/lists/listsStore';
+  import { onMount, onDestroy } from "svelte";
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
+  import { listsStore } from "$lib/services/lists/listsStore";
   import {
     connectToLive,
-    disconnectFromLive
-  } from '$lib/services/realtime/liveListsService';
-  import { getPresenceStore } from '$lib/services/realtime/presenceStore';
-  import { getOrCreateAvatar } from '$lib/services/realtime/avatarService';
-  import SingleList from '$lib/components/list/SingleList.svelte';
-  import { fade, fly } from 'svelte/transition';
+    disconnectFromLive,
+  } from "$lib/services/realtime/liveListsService";
+  import { getPresenceStore } from "$lib/services/realtime/presenceStore";
+  import { getOrCreateAvatar } from "$lib/services/realtime/avatarService";
+  import SingleList from "$lib/components/list/SingleList.svelte";
+  import { fade, fly } from "svelte/transition";
 
   // Get room ID from URL
   $: roomId = $page.params.roomId;
-  $: password = $page.url.searchParams.get('pwd');
+  $: password = $page.url.searchParams.get("pwd");
 
   let isLoading = true;
   let error = null;
   let listId = null;
   let presence = [];
-  let avatar = '';
+  let avatar = "";
   let presenceUnsubscribe = null;
 
   onMount(async () => {
@@ -35,7 +35,7 @@
 
       // Subscribe to presence
       const presenceStore = getPresenceStore(listId);
-      presenceUnsubscribe = presenceStore.subscribe(users => {
+      presenceUnsubscribe = presenceStore.subscribe((users) => {
         presence = users;
       });
 
@@ -45,8 +45,8 @@
       // The list data will be populated by the onInit callback in liveListsService
       listsStore.setActiveList(listId);
     } catch (err) {
-      console.error('Failed to join live list:', err);
-      error = err.message || 'Failed to join live list';
+      console.error("Failed to join live list:", err);
+      error = err.message || "Failed to join live list";
       isLoading = false;
     }
   });
@@ -62,31 +62,74 @@
   });
 </script>
 
+<svelte:head>
+  <title>Join Live List | ZipList</title>
+  <meta
+    name="description"
+    content="Join a shared live ZipList room and collaborate on a list in real time."
+  />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ZipList" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:url" content={`https://ziplist.app/live/${roomId}`} />
+  <meta property="og:title" content="Join a Live ZipList" />
+  <meta
+    property="og:description"
+    content="Open a shared ZipList room and collaborate on a list in real time."
+  />
+  <meta property="og:image" content="https://ziplist.app/og-image.png" />
+  <meta
+    property="og:image:secure_url"
+    content="https://ziplist.app/og-image.png"
+  />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ZipList live shared list room" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content={`https://ziplist.app/live/${roomId}`} />
+  <meta name="twitter:title" content="Join a Live ZipList" />
+  <meta
+    name="twitter:description"
+    content="Open a shared ZipList room and collaborate on a list in real time."
+  />
+  <meta name="twitter:image" content="https://ziplist.app/og-image.png" />
+  <meta name="twitter:image:alt" content="ZipList live shared list room" />
+</svelte:head>
+
 <div class="live-join-container">
   {#if isLoading}
-    <div class="loading-state" in:fade>
-      <div class="spinner"></div>
+    <div class="loading-state" role="status" aria-live="polite" in:fade>
+      <div class="spinner" aria-hidden="true"></div>
       <h2>Joining live list...</h2>
       <p>Connected as <strong>{avatar}</strong></p>
     </div>
   {:else if error}
-    <div class="error-state" in:fly={{ y: 20 }}>
-      <div class="error-icon">❌</div>
+    <div class="error-state" role="alert" in:fly={{ y: 20 }}>
+      <div class="error-icon" aria-hidden="true">❌</div>
       <h2>Failed to Join</h2>
       <p>{error}</p>
-      <button class="btn-primary" on:click={() => goto('/')}>
+      <button type="button" class="btn-primary" on:click={() => goto("/")}>
         Go Home
       </button>
     </div>
   {:else}
-    <div class="live-header" in:fade>
-      <div class="live-badge">
-        <span class="live-pulse">🔴</span>
+    <div class="live-header" role="status" aria-live="polite" in:fade>
+      <div class="live-badge" aria-label="Live collaboration is active">
+        <span class="live-pulse" aria-hidden="true">🔴</span>
         <span>LIVE</span>
       </div>
-      <div class="presence-avatars">
+      <div
+        class="presence-avatars"
+        aria-label="{presence.length} collaborators online"
+      >
         {#each presence as user (user.id)}
-          <div class="avatar-badge" title={user.avatar}>
+          <div
+            class="avatar-badge"
+            title={user.avatar}
+            aria-label={user.avatar}
+          >
             {user.avatar}
           </div>
         {/each}
@@ -137,7 +180,7 @@
 
   .loading-state h2,
   .error-state h2 {
-    font-family: 'Space Mono', monospace;
+    font-family: "Space Mono", monospace;
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
     color: #333;
@@ -145,7 +188,7 @@
 
   .loading-state p,
   .error-state p {
-    font-family: 'Space Mono', monospace;
+    font-family: "Space Mono", monospace;
     color: #666;
     margin-bottom: 1rem;
   }
@@ -161,7 +204,7 @@
     border: none;
     border-radius: 16px;
     padding: 0.75rem 1.5rem;
-    font-family: 'Space Mono', monospace;
+    font-family: "Space Mono", monospace;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -192,7 +235,7 @@
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 12px;
-    font-family: 'Space Mono', monospace;
+    font-family: "Space Mono", monospace;
     font-weight: 600;
     font-size: 0.9rem;
     box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
@@ -223,7 +266,7 @@
     color: white;
     padding: 0.5rem 0.75rem;
     border-radius: 12px;
-    font-family: 'Space Mono', monospace;
+    font-family: "Space Mono", monospace;
     font-size: 0.8rem;
     font-weight: 600;
     box-shadow: 0 2px 6px rgba(201, 120, 255, 0.2);

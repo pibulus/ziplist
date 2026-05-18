@@ -3,16 +3,8 @@
   <!-- Main app page -->
   <url>
     <loc>https://ziplist.app/</loc>
-    <lastmod>2026-04-17</lastmod>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-  </url>
-
-  <!-- Import functionality for shared lists -->
-  <url>
-    <loc>https://ziplist.app/import</loc>
-    <lastmod>2026-04-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
   </url>
 </urlset>
