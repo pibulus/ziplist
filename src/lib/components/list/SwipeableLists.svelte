@@ -112,6 +112,14 @@
     handleSwipeGesture();
   }
 
+  function handleTouchCancel() {
+    isSwiping = false;
+    hasDirectionLock = false;
+    isHorizontalSwipe = false;
+    touchEndX = touchStartX;
+    coords.set({ x: -activeIndex * 100 });
+  }
+
   function handleSwipeGesture() {
     const threshold = 50; // Minimum distance for swipe
     const diff = touchEndX - touchStartX;
@@ -156,6 +164,7 @@
   on:touchstart={handleTouchStart}
   on:touchmove={handleTouchMove}
   on:touchend={handleTouchEnd}
+  on:touchcancel={handleTouchCancel}
 >
   <div 
     class="lists-wrapper" 
@@ -165,6 +174,8 @@
       <div 
         class="list-slide" 
         class:active={list.id === activeListId}
+        inert={list.id !== activeListId}
+        aria-hidden={list.id !== activeListId}
         style="--list-primary: {list.primaryColor}; --list-accent: {list.accentColor}; --list-glow: {list.glowColor}"
       >
         <div class="list-content-wrapper">
@@ -192,7 +203,8 @@
   .swipe-container {
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
+    overflow-x: clip;
+    overflow-y: visible;
     position: relative;
     display: flex;
     flex-direction: column;

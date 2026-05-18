@@ -89,11 +89,11 @@
   /* Floating Dude Styles */
   .floating-dude {
     position: absolute;
-    top: -116px; /* Adjust based on size */
+    top: -148px; /* Adjust based on size */
     left: 50%;
     transform: translateX(-50%);
-    width: 100px;
-    height: 100px;
+    width: 132px;
+    height: 132px;
     background: none;
     border: none;
     cursor: pointer;
@@ -105,7 +105,7 @@
   .floating-dude:focus-visible {
     outline: 3px solid #FFB000;
     outline-offset: 4px;
-    border-radius: 50%;
+    border-radius: 28px;
   }
 
   .dude-wrapper {
@@ -125,8 +125,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 205%;
-    height: 205%;
+    width: 100%;
+    height: 100%;
     max-width: none;
     object-fit: contain;
   }
@@ -138,7 +138,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    transform-origin: center 47%;
+    transform-origin: center 34%;
     animation: blink 4s infinite;
   }
 
@@ -259,7 +259,7 @@
   /* Media queries for mobile optimization */
   @media (max-width: 640px) {
     h1.staggered-text {
-      font-size: 3rem;
+      font-size: 2.85rem;
       line-height: 1.1;
     }
     
@@ -272,19 +272,21 @@
 
     .slide-in-subtitle {
       max-inline-size: 28ch !important;
-      font-size: 1rem; /* 16px on mobile as requested */
-      line-height: 1.6;
+      margin-top: 0.6rem !important;
+      margin-bottom: 0.4rem !important;
+      font-size: 0.95rem;
+      line-height: 1.45;
       text-wrap: balance;
     }
     
     .floating-dude {
-      width: 80px;
-      height: 80px;
-      top: -92px;
+      width: 84px;
+      height: 84px;
+      top: -96px;
     }
 
     .title-container {
-      margin-top: 110px;
+      margin-top: 96px;
     }
   }
   

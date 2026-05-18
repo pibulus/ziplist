@@ -271,8 +271,7 @@ function createListsStore() {
         persistToStorage();
       }
 
-      // Set up periodic cleanup of completed items
-      setupAutoCleanup();
+      registerLifecycleFlush();
     } catch (error) {
       console.error("Error initializing lists from storage:", error);
       const fallbackLists = DEFAULT_LISTS.map((list, index) =>
@@ -289,6 +288,7 @@ function createListsStore() {
 
   // Persist current state to localStorage (debounced)
   let _persistTimer = null;
+  let _lifecycleFlushRegistered = false;
 
   function persistToStorage() {
     if (!browser) return;
@@ -297,6 +297,11 @@ function createListsStore() {
   }
 
   function _flushToStorage() {
+    if (_persistTimer) {
+      clearTimeout(_persistTimer);
+      _persistTimer = null;
+    }
+
     try {
       const state = get({ subscribe });
       const listsJSON = JSON.stringify(state.lists);
@@ -322,6 +327,25 @@ function createListsStore() {
         }
       }
     }
+  }
+
+  function registerLifecycleFlush() {
+    if (
+      !browser ||
+      _lifecycleFlushRegistered ||
+      typeof window === "undefined" ||
+      typeof document === "undefined"
+    ) {
+      return;
+    }
+
+    window.addEventListener("pagehide", _flushToStorage);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        _flushToStorage();
+      }
+    });
+    _lifecycleFlushRegistered = true;
   }
 
   function generateListId() {
@@ -533,9 +557,6 @@ function createListsStore() {
     });
 
     persistToStorage();
-
-    // If the item was checked, schedule cleanup of old completed items
-    cleanupCompletedItems();
   }
 
   // Edit an item's text
@@ -676,16 +697,33 @@ function createListsStore() {
 
   // Reorder items in a list
   function reorderItems(reorderedItems, listId = null) {
+    const orderedIds = reorderedItems.map((item) =>
+      typeof item === "object" ? item.id : item,
+    );
+    const orderedIdSet = new Set(orderedIds);
+
     update((state) => {
       const targetListId = listId || state.activeListId;
       return {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
-            const updatedItems = reorderedItems.map((item, index) => ({
-              ...item,
-              order: index,
-            }));
+            const itemsById = new Map(
+              list.items.map((item) => [item.id, item]),
+            );
+            const orderedItems = orderedIds
+              .map((id) => itemsById.get(id))
+              .filter(Boolean);
+            const unseenItems = list.items.filter(
+              (item) => !orderedIdSet.has(item.id),
+            );
+
+            const updatedItems = [...orderedItems, ...unseenItems].map(
+              (item, index) => ({
+                ...item,
+                order: index,
+              }),
+            );
 
             return {
               ...list,
@@ -699,60 +737,6 @@ function createListsStore() {
     });
 
     persistToStorage();
-  }
-
-  // Cleanup function for removing old completed items
-  function cleanupCompletedItems() {
-    if (!browser) return;
-
-    setTimeout(() => {
-      update((state) => {
-        const EXPIRATION_TIME = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-        const now = new Date();
-
-        return {
-          ...state,
-          lists: state.lists.map((list) => {
-            const filteredItems = list.items.filter((item) => {
-              if (!item.checked) return true;
-              if (!item.completedAt) return true; // Legacy items without timestamp
-
-              const completedAt = new Date(item.completedAt);
-              const ageMs = now - completedAt;
-              return ageMs < EXPIRATION_TIME;
-            });
-
-            if (filteredItems.length !== list.items.length) {
-              return {
-                ...list,
-                items: filteredItems,
-                updatedAt: new Date().toISOString(),
-              };
-            }
-            return list;
-          }),
-        };
-      });
-
-      persistToStorage();
-    }, 1000);
-  }
-
-  // Set up periodic cleanup of completed items (every hour)
-  let _cleanupInterval = null;
-
-  function setupAutoCleanup() {
-    if (!browser) return;
-    if (_cleanupInterval) clearInterval(_cleanupInterval);
-
-    cleanupCompletedItems();
-
-    _cleanupInterval = setInterval(
-      () => {
-        cleanupCompletedItems();
-      },
-      60 * 60 * 1000,
-    );
   }
 
   // Initialize when created

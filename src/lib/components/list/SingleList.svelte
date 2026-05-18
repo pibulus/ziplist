@@ -9,26 +9,33 @@
   import * as liveListsService from '$lib/services/realtime/liveListsService';
   import { getPresenceStore } from '$lib/services/realtime/presenceStore';
   import { getTypingStore } from '$lib/services/realtime/typingStore';
-  
+
   // State variables
   let list = { name: '', items: [] };
   let draggedItemId = null;
   let dragOverItemId = null;
   let editingItemId = null;
   let editedItemText = '';
+  let draftItemActive = false;
+  let draftItemText = '';
   let editingListName = false;
   let editedListName = '';
   let shareStatus = null; // To track share operation status
+  let undoDelete = null;
+  let undoDeleteTimer = null;
+  let previousListIdentity = null;
   let isLive = false; // Track if this list is live
   let liveFeatureAvailable = false;
   let presence = []; // Who's online
   let typingUsers = []; // Who's typing
   let recentlyEditedItems = new Set(); // Track items just edited by others
+  let settlingItemIds = new Set(); // Brief bounce after check, uncheck, or reorder
   let typingTimeout = null; // Debounce typing broadcasts
   let listContainerNode = null;
   const itemNodes = new Map();
-  const MOBILE_REORDER_LONG_PRESS_MS = 160;
-  const MOBILE_REORDER_CANCEL_DISTANCE_PX = 10;
+  const settlingTimers = new Map();
+  const MOBILE_REORDER_LONG_PRESS_MS = 320;
+  const MOBILE_REORDER_CANCEL_DISTANCE_PX = 16;
   const MOBILE_REORDER_AUTO_SCROLL_EDGE_PX = 88;
   let touchDragPreviewItems = null;
   let touchDragItemId = null;
@@ -44,19 +51,25 @@
   let touchDragAutoScrollDelta = 0;
   let touchDragAutoScrollFrame = null;
   let touchDragListenersAttached = false;
-  
+
   // Props
   export let listId = null;
   export let showListManagement = true;
 
   // Subscribe to the appropriate list
   let unsubscribe;
+  let subscribedListId;
 
-  $: {
+  $: if (subscribedListId !== listId) {
+    subscribeToList(listId);
+    subscribedListId = listId;
+  }
+
+  function subscribeToList(nextListId) {
     if (unsubscribe) unsubscribe();
-    if (listId) {
+    if (nextListId) {
       unsubscribe = listsStore.subscribe(state => {
-        const foundList = state.lists.find(l => l.id === listId);
+        const foundList = state.lists.find(l => l.id === nextListId);
         if (foundList) list = foundList;
       });
     } else {
@@ -69,6 +82,15 @@
   $: liveFeatureAvailable = liveListsService.isLiveCollaborationAvailable();
   $: if (!editingListName) {
     editedListName = list.name || '';
+  }
+  $: if (list.id && previousListIdentity !== list.id) {
+    if (previousListIdentity !== null) {
+      draftItemActive = false;
+      draftItemText = '';
+      editingItemId = null;
+      editedItemText = '';
+    }
+    previousListIdentity = list.id;
   }
 
   // Subscribe to presence and typing for this list
@@ -104,14 +126,17 @@
     if (presenceUnsubscribe) presenceUnsubscribe();
     if (typingUnsubscribe) typingUnsubscribe();
     if (typingTimeout) clearTimeout(typingTimeout);
+    if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
     clearTouchDragLongPressTimer();
     stopTouchDragAutoScroll();
     removeTouchDragListeners();
+    settlingTimers.forEach(timer => clearTimeout(timer));
+    settlingTimers.clear();
     if (typeof document !== 'undefined') {
       document.body.classList.remove('zl-touch-dragging');
     }
   });
-  
+
   // Share list function
   async function handleShareList() {
     if (!list || !list.items || list.items.length === 0) {
@@ -119,7 +144,7 @@
       setTimeout(() => shareStatus = null, 3000); // Clear message after 3 seconds
       return;
     }
-    
+
     try {
       const result = await shareList(list);
       if (result.success) {
@@ -223,13 +248,15 @@
       cancelListNameEdit();
     }
   }
-  
+
   // Separated active and completed items
   $: activeItems = list.items.filter(item => !item.checked);
   $: completedItems = list.items.filter(item => item.checked);
 
   // Sort items - active items first, completed items last
   $: sortedItems = touchDragPreviewItems || [...activeItems, ...completedItems];
+  $: renderedActiveItems = sortedItems.filter(item => !item.checked);
+  $: renderedCompletedItems = sortedItems.filter(item => item.checked);
   $: touchDraggedItem = touchDragItemId
     ? list.items.find(item => item.id === touchDragItemId) || null
     : null;
@@ -572,6 +599,7 @@
     if (commitChange && didMove && touchDragPreviewItems) {
       listsService.reorderItems(touchDragPreviewItems, list.id);
       hapticService.dragEnd();
+      markItemSettling(touchDragItemId);
     } else {
       hapticService.selection();
     }
@@ -644,7 +672,7 @@
 
     // Update dragover state
     dragOverItemId = itemId;
-    
+
     // Haptic feedback
     hapticService.impact('light');
   }
@@ -665,23 +693,46 @@
     // Haptic feedback - stronger for successful drop
     hapticService.impact('heavy');
 
-    // Reorder items
-    const reorderedItems = [...list.items];
-    const sourceIndex = reorderedItems.findIndex(item => item.id === draggedItemId);
-    const targetIndex = reorderedItems.findIndex(item => item.id === targetItemId);
+    // Reorder only active items, then keep completed items anchored at the bottom.
+    const reorderedActiveItems = [...activeItems];
+    const sourceIndex = reorderedActiveItems.findIndex(item => item.id === draggedItemId);
+    const targetIndex = reorderedActiveItems.findIndex(item => item.id === targetItemId);
 
     if (sourceIndex !== -1 && targetIndex !== -1) {
-      // Remove the item from the source position
-      const [movedItem] = reorderedItems.splice(sourceIndex, 1);
+      const targetBounds = event.currentTarget.getBoundingClientRect();
+      const insertAfter = event.clientY > targetBounds.top + targetBounds.height / 2;
+      let destinationIndex = targetIndex + (insertAfter ? 1 : 0);
+      const [movedItem] = reorderedActiveItems.splice(sourceIndex, 1);
 
-      // Insert the item at the target position
-      reorderedItems.splice(targetIndex, 0, movedItem);
+      if (sourceIndex < destinationIndex) {
+        destinationIndex -= 1;
+      }
+
+      reorderedActiveItems.splice(destinationIndex, 0, movedItem);
 
       // Update the list with the new order
-      listsService.reorderItems(reorderedItems, list.id);
+      listsService.reorderItems([...reorderedActiveItems, ...completedItems], list.id);
+      markItemSettling(draggedItemId);
     }
   }
-  
+
+  function markItemSettling(itemId) {
+    if (!itemId) return;
+
+    const existingTimer = settlingTimers.get(itemId);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    settlingItemIds = new Set([...settlingItemIds, itemId]);
+
+    const timer = setTimeout(() => {
+      settlingItemIds.delete(itemId);
+      settlingItemIds = new Set(settlingItemIds);
+      settlingTimers.delete(itemId);
+    }, 280);
+
+    settlingTimers.set(itemId, timer);
+  }
+
   // Handle item toggle with sparkle animation
   async function toggleItem(itemId, event) {
     const itemToToggle = list.items.find(item => item.id === itemId);
@@ -693,6 +744,7 @@
 
     // Toggle the item state
     listsService.toggleItem(itemId, list.id);
+    markItemSettling(itemId);
 
     // If checking the item (not unchecking), add sparkle animation
     if (!itemToToggle?.checked) {
@@ -704,7 +756,7 @@
           y: event.clientY / window.innerHeight
         };
       }
-      
+
       const confetti = (await import('canvas-confetti')).default;
       confetti({
         particleCount: 60,
@@ -728,7 +780,7 @@
           // If this completes the list, trigger haptic feedback but no message
           if (allCompleted) {
             hapticService.notification('success');
-            
+
             // Extra confetti for finishing the list!
             setTimeout(() => {
               confetti({
@@ -746,6 +798,8 @@
 
   function startEditingItem(item) {
     if (item.checked) return;
+    draftItemActive = false;
+    draftItemText = '';
     editingItemId = item.id;
     editedItemText = item.text;
   }
@@ -753,11 +807,13 @@
   function saveItemEdit() {
     if (editingItemId !== null && editedItemText.trim() !== '') {
       listsService.editItem(editingItemId, editedItemText.trim(), list.id);
+      hapticService.selection();
       editingItemId = null;
       editedItemText = '';
     } else if (editedItemText.trim() === '') {
       // If text is cleared, remove the item
       listsService.removeItem(editingItemId, list.id);
+      hapticService.impact('light');
       editingItemId = null;
     }
   }
@@ -775,24 +831,110 @@
     }
   }
 
-  async function handleEmptyStateClick() {
-    // Add a new item and start editing it
-    listsService.addItem('Type here...', list.id);
-    
-    // Wait for DOM update
-    await tick();
-    
-    if (list.items.length > 0) {
-      const newItem = list.items[list.items.length - 1];
-      startEditingItem(newItem);
-      editedItemText = ''; // Clear the placeholder text so user can just start typing
+  function deleteItem(itemId) {
+    if (editingItemId === itemId) {
+      cancelItemEdit();
     }
+
+    const deletedItem = list.items.find(item => item.id === itemId);
+    const originalIndex = list.items.findIndex(item => item.id === itemId);
+
+    hapticService.impact('light');
+    listsService.removeItem(itemId, list.id);
+
+    if (deletedItem) {
+      if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+
+      undoDelete = {
+        item: deletedItem,
+        listId: list.id,
+        originalIndex,
+      };
+
+      undoDeleteTimer = setTimeout(() => {
+        undoDelete = null;
+        undoDeleteTimer = null;
+      }, 4500);
+    }
+  }
+
+  function restoreDeletedItem() {
+    if (!undoDelete || undoDelete.listId !== list.id) return;
+
+    const currentItems = list.items.filter(item => item.id !== undoDelete.item.id);
+    const insertIndex = Math.min(undoDelete.originalIndex, currentItems.length);
+    const restoredItems = [
+      ...currentItems.slice(0, insertIndex),
+      undoDelete.item,
+      ...currentItems.slice(insertIndex),
+    ];
+
+    listsStore.upsertList(
+      {
+        ...list,
+        items: restoredItems,
+        updatedAt: new Date().toISOString(),
+      },
+      list.id,
+    );
+
+    hapticService.selection();
+    undoDelete = null;
+
+    if (undoDeleteTimer) {
+      clearTimeout(undoDeleteTimer);
+      undoDeleteTimer = null;
+    }
+  }
+
+  async function startDraftItem() {
+    hapticService.selection();
+    editingItemId = null;
+    editedItemText = '';
+    draftItemActive = true;
+    draftItemText = '';
+
+    await tick();
+  }
+
+  function saveDraftItem() {
+    const newText = draftItemText.trim();
+
+    if (newText) {
+      listsService.addItem(newText, list.id);
+      hapticService.selection();
+    }
+
+    draftItemActive = false;
+    draftItemText = '';
+  }
+
+  function cancelDraftItem() {
+    draftItemActive = false;
+    draftItemText = '';
+    hapticService.selection();
+  }
+
+  function handleDraftItemKeyDown(event) {
+    if (event.key === 'Enter') {
+      saveDraftItem();
+    } else if (event.key === 'Escape') {
+      cancelDraftItem();
+    }
+  }
+
+  async function handleAddItemClick() {
+    await startDraftItem();
+  }
+
+  async function handleEmptyStateClick() {
+    await handleAddItemClick();
   }
 </script>
 
 <div class="zl-card">
   <div class="card-content">
-    
+
     <!-- List Header with Live Collaboration Toggle -->
     <div class="zl-list-header">
       <div class="zl-list-header-main">
@@ -834,8 +976,8 @@
           <div class="flex items-center gap-2 mt-1">
             <div class="zl-presence-dots">
               {#each presence as user (user.id)}
-                <div 
-                  class="zl-presence-dot" 
+                <div
+                  class="zl-presence-dot"
                   title={user.avatar}
                   style="background-color: {user.avatar.includes('Fox') ? '#ff6b6b' : user.avatar.includes('Frog') ? '#51cf66' : '#4dabf7'}"
                 ></div>
@@ -874,9 +1016,9 @@
             </div>
           {/if}
         {/if}
-        
-        <button 
-          class="zl-share-button" 
+
+        <button
+          class="zl-share-button"
           on:click={handleShareList}
           title="Share list link"
         >
@@ -888,11 +1030,20 @@
 
     <!-- Share status notification -->
     {#if shareStatus}
-      <div 
-        class="zl-share-notification {shareStatus.success ? 'success' : 'error'}" 
+      <div
+        class="zl-share-notification {shareStatus.success ? 'success' : 'error'}"
         transition:fade={{duration: 200}}
       >
         {shareStatus.message}
+      </div>
+    {/if}
+
+    {#if undoDelete && undoDelete.listId === list.id}
+      <div class="zl-undo-toast" transition:fade={{ duration: 180 }}>
+        <span class="zl-undo-text">Deleted {undoDelete.item.text}</span>
+        <button type="button" class="zl-undo-button" on:click={restoreDeletedItem}>
+          Undo
+        </button>
       </div>
     {/if}
 
@@ -905,20 +1056,21 @@
         </span>
       </div>
     {/if}
-    
+
     <!-- List Items -->
     <div
       class="zl-list-container"
       bind:this={listContainerNode}
     >
-      {#if list.items.length > 0}
+      {#if list.items.length > 0 || draftItemActive}
         <ul class="zl-list" role="list" in:fade={{ duration: 200 }}>
-          {#each sortedItems as item, index (item.id)}
+          {#each renderedActiveItems as item, index (item.id)}
             <li
               class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
               class:just-edited={recentlyEditedItems.has(item.id)}
+              class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
               draggable={!item.checked && editingItemId !== item.id && !touchDragItemId}
               on:dragstart|passive={(e) => handleDragStart(e, item.id)}
@@ -949,10 +1101,10 @@
                 />
                 <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
               </label>
-              
+
               <div class="edit-wrapper">
                 {#if editingItemId === item.id}
-                  <input 
+                  <input
                     id="edit-item-{list.id}-{item.id}"
                     class="zl-edit-input"
                     placeholder="Enter item text..."
@@ -964,15 +1116,18 @@
                     use:autoFocus
                   />
                 {:else}
-                  <button 
+                  <button
                     type="button"
                     class="zl-item-text-button {item.checked ? 'checked' : ''}"
                     on:click|stopPropagation={() => {
                       if (!item.checked) startEditingItem(item);
                     }}
-                    on:keydown={(e) => e.key === 'Enter' && !item.checked && startEditingItem(item)}
+                    on:keydown={(e) =>
+                      e.key === 'Enter' && !item.checked && startEditingItem(item)}
                     disabled={item.checked}
-                    aria-label="Edit item: {item.text}"
+                    aria-label={item.checked
+                      ? `Completed item: ${item.text}`
+                      : `Edit item: ${item.text}`}
                   >
                     <span class="zl-item-text {item.checked ? 'checked' : ''}">
                       {item.text}
@@ -996,11 +1151,180 @@
                 </div>
               {/if}
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="zl-delete-button"
-                on:click|stopPropagation={() => listsService.removeItem(item.id, list.id)}
-                aria-label="Delete item"
+                on:click|stopPropagation={() => deleteItem(item.id)}
+                aria-label={`Delete ${item.text}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </li>
+          {/each}
+
+          {#if draftItemActive}
+            <li
+              class="zl-item editing zl-draft-item"
+              in:fly={{ y: 20, duration: 220, delay: getStaggerDelay(renderedActiveItems.length) }}
+              out:fly={{ y: -12, duration: 180 }}
+              role="listitem"
+            >
+              <div class="zl-checkbox-wrapper zl-draft-checkbox" aria-hidden="true">
+                <span class="zl-checkbox-custom"></span>
+              </div>
+
+              <div class="edit-wrapper">
+                <input
+                  id="draft-item-{list.id}"
+                  class="zl-edit-input zl-draft-input"
+                  placeholder="New item..."
+                  bind:value={draftItemText}
+                  on:blur={saveDraftItem}
+                  on:keydown={handleDraftItemKeyDown}
+                  transition:fade={{ duration: 150 }}
+                  use:autoFocus
+                />
+              </div>
+
+              <button
+                type="button"
+                class="zl-delete-button zl-draft-cancel"
+                on:pointerdown|preventDefault
+                on:click|stopPropagation={cancelDraftItem}
+                aria-label="Cancel new item"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </li>
+          {:else}
+            <li class="zl-add-row" role="listitem">
+              <button
+                type="button"
+                class="zl-add-item-button"
+                on:click={handleAddItemClick}
+                aria-label="Add item"
+              >
+                <span class="zl-add-item-icon">+</span>
+                <span>Add item</span>
+              </button>
+            </li>
+          {/if}
+
+          {#if completedItems.length > 0}
+            <li
+              class="zl-completed-divider"
+              role="listitem"
+              aria-label="{completedItems.length} completed items"
+            >
+              <span class="zl-completed-line"></span>
+              <span class="zl-completed-label">Done</span>
+              <span class="zl-completed-count">{completedItems.length}</span>
+              <span class="zl-completed-line"></span>
+            </li>
+          {/if}
+
+          {#each renderedCompletedItems as item, index (item.id)}
+            <li
+              class="zl-item {item.checked ? 'checked' : ''} {editingItemId === item.id ? 'editing' : ''}"
+              class:dragging={draggedItemId === item.id}
+              class:drag-over={dragOverItemId === item.id}
+              class:just-edited={recentlyEditedItems.has(item.id)}
+              class:settling={settlingItemIds.has(item.id)}
+              class:touch-placeholder={touchDragItemId === item.id}
+              draggable={!item.checked && editingItemId !== item.id && !touchDragItemId}
+              on:dragstart|passive={(e) => handleDragStart(e, item.id)}
+              on:dragend|passive={handleDragEnd}
+              on:dragover={(e) => handleDragOver(e, item.id)}
+              on:drop={(e) => handleDrop(e, item.id)}
+              animate:flip={{ duration: touchDragItemId ? 180 : 300 }}
+              in:fly={{
+                y: 20,
+                duration: 300,
+                delay: getStaggerDelay(renderedActiveItems.length + index + 1),
+              }}
+              out:fly={{ y: -20, duration: 300 }}
+              aria-grabbed={draggedItemId === item.id || touchDragItemId === item.id ? 'true' : 'false'}
+              aria-dropeffect="move"
+              role="listitem"
+              use:registerItemNode={item.id}
+            >
+              {#if dragOverItemId === item.id}
+                <div class="drop-indicator">
+                  <div class="drop-arrow"></div>
+                </div>
+              {/if}
+
+              <label class="zl-checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  id="item-{list.id}-{item.id}"
+                  checked={item.checked}
+                  on:change={(e) => toggleItem(item.id, e)}
+                  class="zl-checkbox"
+                />
+                <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
+              </label>
+
+              <div class="edit-wrapper">
+                {#if editingItemId === item.id}
+                  <input
+                    id="edit-item-{list.id}-{item.id}"
+                    class="zl-edit-input"
+                    placeholder="Enter item text..."
+                    bind:value={editedItemText}
+                    on:blur={saveItemEdit}
+                    on:keydown={handleEditItemKeyDown}
+                    on:input={handleTyping}
+                    transition:fade={{ duration: 150 }}
+                    use:autoFocus
+                  />
+                {:else}
+                  <button
+                    type="button"
+                    class="zl-item-text-button {item.checked ? 'checked' : ''}"
+                    on:click|stopPropagation={() => {
+                      if (!item.checked) startEditingItem(item);
+                    }}
+                    on:keydown={(e) =>
+                      e.key === 'Enter' && !item.checked && startEditingItem(item)}
+                    disabled={item.checked}
+                    aria-label={item.checked
+                      ? `Completed item: ${item.text}`
+                      : `Edit item: ${item.text}`}
+                  >
+                    <span class="zl-item-text {item.checked ? 'checked' : ''}">
+                      {item.text}
+                    </span>
+                  </button>
+                {/if}
+              </div>
+
+              {#if !item.checked && editingItemId !== item.id && activeItems.length > 1}
+                <div
+                  class="grab-indicator"
+                  class:touch-active={touchDragItemId === item.id}
+                  data-swipe-ignore="true"
+                  aria-hidden="true"
+                  title="Press and hold to reorder"
+                  on:touchstart={(event) => handleTouchGrabStart(event, item.id)}
+                >
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              {/if}
+
+              <button
+                type="button"
+                class="zl-delete-button"
+                on:click|stopPropagation={() => deleteItem(item.id)}
+                aria-label={`Delete ${item.text}`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1012,8 +1336,8 @@
         </ul>
       {:else}
         <!-- Empty state - Minimalist and friendly -->
-        <div 
-          class="zl-empty-state clickable" 
+        <div
+          class="zl-empty-state clickable"
           on:click={handleEmptyStateClick}
           role="button"
           tabindex="0"
@@ -1022,8 +1346,8 @@
         >
           <div class="zl-empty-content">
             <h3 class="zl-empty-title">Your list awaits</h3>
-            <p class="zl-empty-description">Hit that yellow button</p>
-            <p class="zl-empty-hint">to start adding items</p>
+            <p class="zl-empty-description">Add the first thing</p>
+            <p class="zl-empty-hint">or talk it in</p>
           </div>
         </div>
       {/if}
@@ -1061,22 +1385,28 @@
     0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
-  
+
   @keyframes soft-pulse {
     0%, 100% { opacity: 0.7; }
     50% { opacity: 1; }
   }
-  
+
   @keyframes check-pop {
     0% { transform: scale(1); }
     50% { transform: scale(1.3); }
     100% { transform: scale(1); }
   }
 
+  @keyframes item-settle {
+    0% { transform: translateY(0) scale(1); }
+    45% { transform: translateY(-3px) scale(1.015); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
   .animate-pop {
     animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  
+
   /**
    * Keyframes for the `gradient-shift` animation.
    */
@@ -1087,7 +1417,7 @@
     75% { background-position: 50% 50%; }
     100% { background-position: 0% 0%; }
   }
-  
+
   /**
    * Card styling with animated gradient background.
    */
@@ -1097,8 +1427,8 @@
     border: var(--zl-card-border-width) solid var(--zl-card-border-color);
     padding: 2rem;
     position: relative;
-    overflow: hidden;
-    
+    overflow: clip;
+
     /* Size and positioning */
     box-sizing: border-box;
     width: 100%;
@@ -1107,16 +1437,16 @@
     margin-top: 1.5rem;
     margin-bottom: 2rem;
     height: auto;
-    
+
     /* Typography */
     font-family: 'Space Mono', monospace;
-    
+
     /* Transitions */
     transition: var(--zl-transition-standard);
-    
+
     /* Shadow for depth */
     box-shadow: var(--zl-card-box-shadow);
-    
+
     background: linear-gradient(
       var(--zl-card-bg-gradient-angle),
       var(--zl-card-bg-gradient-color-start),
@@ -1131,28 +1461,35 @@
 
   @media (max-width: 480px) {
     .zl-card {
-      padding: 1.25rem 0.875rem 1.5rem;
-      border-radius: 22px;
-      margin-top: 1.25rem;
-      margin-bottom: 1.5rem;
+      padding: 0.95rem 0.75rem 1.1rem;
+      border-radius: 18px;
+      margin-top: 0.75rem;
+      margin-bottom: 1rem;
       max-width: 100%;
     }
 
     .zl-list-header {
       align-items: stretch;
       flex-direction: column;
+      gap: 0.65rem;
+      margin-bottom: 0.75rem;
     }
 
     .zl-list-title-row {
-      align-items: flex-start;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
     }
 
     .zl-list-title-input {
       width: 100%;
     }
 
+    .zl-card::before {
+      border-radius: 18px;
+    }
   }
-  
+
   /* Subtle inner border effect */
   .zl-card::before {
     content: '';
@@ -1172,7 +1509,7 @@
     z-index: 1;
     opacity: 0.7;
   }
-  
+
   /* Subtle light effect in the corner */
   .zl-card::after {
     content: '';
@@ -1187,7 +1524,7 @@
     pointer-events: none;
     animation: soft-pulse 8s infinite alternate ease-in-out;
   }
-  
+
   /* Card content container */
   .card-content {
     position: relative;
@@ -1195,7 +1532,7 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .zl-list-header {
@@ -1372,7 +1709,57 @@
     min-width: 1.25rem;
     text-align: center;
   }
-  
+
+  .zl-undo-toast {
+    align-items: center;
+    background: rgba(24, 24, 27, 0.92);
+    border: 2px solid rgba(0, 0, 0, 0.78);
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+    color: #ffffff;
+    display: flex;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    gap: 0.75rem;
+    justify-content: space-between;
+    line-height: 1.25;
+    margin: 0 0 0.85rem;
+    padding: 0.7rem 0.85rem;
+    position: sticky;
+    top: 0.75rem;
+    z-index: 20;
+  }
+
+  .zl-undo-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .zl-undo-button {
+    background: #ffb000;
+    border: 2px solid #000000;
+    border-radius: 999px;
+    color: #111111;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 900;
+    min-height: 44px;
+    padding: 0.25rem 0.75rem;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .zl-undo-button:hover,
+  .zl-undo-button:focus-visible {
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+    outline: none;
+    transform: translateY(-1px);
+  }
+
   /* List container */
   .zl-list-container {
     flex-grow: 1;
@@ -1381,7 +1768,7 @@
     position: relative;
     min-height: 0;
   }
-  
+
   .zl-list {
     list-style: none;
     padding: 0;
@@ -1394,7 +1781,99 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 400px;
   }
-  
+
+  .zl-add-row {
+    list-style: none;
+  }
+
+  .zl-add-item-button {
+    width: 100%;
+    min-height: 52px;
+    border: 2px dashed rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.34);
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 245, 250, 0.5)),
+      rgba(255, 255, 255, 0.5);
+    color: var(--zl-text-color-primary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    transition:
+      transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.18s ease,
+      border-color 0.18s ease,
+      background 0.18s ease;
+  }
+
+  .zl-add-item-button:hover,
+  .zl-add-item-button:focus-visible {
+    border-color: rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.62);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 241, 248, 0.72)),
+      rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 18px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.13);
+    outline: none;
+    transform: translateY(-1px);
+  }
+
+  .zl-add-item-button:active {
+    transform: translateY(1px) scale(0.99);
+  }
+
+  .zl-add-item-icon {
+    align-items: center;
+    background: var(--zl-primary-color, #ffb000);
+    border: 2px solid rgba(0, 0, 0, 0.72);
+    border-radius: 50%;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
+    color: #111111;
+    display: inline-flex;
+    font-size: 1rem;
+    height: 24px;
+    justify-content: center;
+    line-height: 1;
+    width: 24px;
+  }
+
+  .zl-completed-divider {
+    align-items: center;
+    color: var(--zl-text-color-secondary);
+    display: flex;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 800;
+    gap: 0.55rem;
+    letter-spacing: 0;
+    list-style: none;
+    margin: 0.15rem 0 0;
+    opacity: 0.8;
+    text-transform: uppercase;
+  }
+
+  .zl-completed-line {
+    border-top: 2px dashed rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.28);
+    flex: 1;
+    min-width: 18px;
+  }
+
+  .zl-completed-count {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.24);
+    border-radius: 999px;
+    display: inline-flex;
+    height: 1.45rem;
+    justify-content: center;
+    min-width: 1.45rem;
+    padding: 0 0.35rem;
+  }
+
   .zl-item {
     border-radius: var(--zl-item-border-radius, 20px);
     background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
@@ -1408,11 +1887,11 @@
     min-height: 72px;
     height: auto;
     max-height: none;
-    
+
     box-shadow: var(--zl-item-box-shadow, 0 4px 10px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.1));
     border: 2px solid var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
     border-left: 4px solid var(--zl-item-border-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.3));
-    
+
     position: relative;
     cursor: grab;
     touch-action: manipulation;
@@ -1422,7 +1901,7 @@
   .zl-item:not(.checked):not(.editing) {
     will-change: transform, opacity;
   }
-  
+
   .zl-item:hover {
     background: var(--zl-item-hover-bg, rgba(255, 255, 255, 0.8));
     transform: translateY(-3px);
@@ -1430,7 +1909,7 @@
     border-left: 4px solid var(--zl-item-border-hover-color, rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.7));
     border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
   }
-  
+
   .zl-item::after {
     content: '';
     position: absolute;
@@ -1444,11 +1923,11 @@
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
-  
+
   .zl-item:hover::after {
     opacity: 1;
   }
-  
+
   .zl-item.checked {
     opacity: var(--zl-item-checked-opacity, 0.75);
     background: var(--zl-item-checked-bg, rgba(245, 240, 250, 0.4));
@@ -1456,6 +1935,10 @@
     transform: scale(0.98);
     box-shadow: 0 2px 6px rgba(0, 151, 167, 0.05);
     border-color: var(--zl-item-checked-border-color, rgba(255, 212, 218, 0.4));
+  }
+
+  .zl-item.settling:not(.touch-placeholder) {
+    animation: item-settle 0.28s cubic-bezier(0.19, 1, 0.22, 1);
   }
 
   /* Item glow effect for remote edits */
@@ -1477,7 +1960,7 @@
       transform: scale(1);
     }
   }
-  
+
   .zl-item-text {
     font-size: 1.05rem;
     font-weight: 800;
@@ -1485,7 +1968,7 @@
     color: var(--zl-text-color-primary);
     font-family: 'Space Mono', monospace;
     letter-spacing: 0;
-    
+
     box-sizing: border-box;
     display: inline-block;
     width: 100%;
@@ -1494,11 +1977,11 @@
     vertical-align: middle;
     padding: 0.2rem 0;
     min-height: 0;
-    
+
     word-wrap: break-word;
     overflow-wrap: break-word;
-    hyphens: auto; 
-    
+    hyphens: auto;
+
     transition: var(--zl-transition-fast);
   }
 
@@ -1574,22 +2057,22 @@
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: var(--zl-checkbox-shadow, 0 3px 7px rgba(0, 151, 167, 0.15));
   }
-  
+
   .zl-checkbox-wrapper:hover .zl-checkbox-custom {
     border: var(--zl-checkbox-hover-border, 2px solid rgba(0, 188, 212, 0.7));
     background-color: var(--zl-checkbox-hover-bg, rgba(255, 245, 250, 0.8));
     transform: scale(1.1);
     box-shadow: var(--zl-checkbox-hover-shadow, 0 3px 8px rgba(0, 151, 167, 0.15));
   }
-  
+
   .zl-checkbox:checked + .zl-checkbox-custom {
-    background: linear-gradient(145deg, 
-      var(--zl-checkbox-checked-gradient-start, #4dd0e1) 0%, 
+    background: linear-gradient(145deg,
+      var(--zl-checkbox-checked-gradient-start, #4dd0e1) 0%,
       var(--zl-checkbox-checked-gradient-end, #0097a7) 100%);
     border-color: transparent;
     box-shadow: var(--zl-checkbox-checked-shadow, 0 3px 8px rgba(0, 151, 167, 0.2));
   }
-  
+
   .zl-checkbox:checked + .zl-checkbox-custom::after {
     content: '';
     position: absolute;
@@ -1598,15 +2081,15 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: radial-gradient(circle, 
-      var(--zl-checkbox-sparkle-color, rgba(255, 255, 255, 0.8)) 0%, 
+    background: radial-gradient(circle,
+      var(--zl-checkbox-sparkle-color, rgba(255, 255, 255, 0.8)) 0%,
       rgba(255, 255, 255, 0) 70%);
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
     animation: sparkle 0.5s var(--zl-transition-easing-bounce) forwards;
     z-index: 5;
   }
-  
+
   .zl-empty-state {
     display: flex;
     flex-direction: column;
@@ -1622,7 +2105,7 @@
     margin: 1rem 0;
     min-height: 260px;
     height: auto;
-    transition: var(--zl-transition-fast); 
+    transition: var(--zl-transition-fast);
   }
 
   .zl-empty-state.clickable {
@@ -1633,7 +2116,7 @@
     background: linear-gradient(135deg, rgba(255, 245, 250, 0.6), rgba(255, 235, 245, 0.6));
     border-color: rgba(201, 120, 255, 0.5);
   }
-  
+
   .zl-empty-content {
     display: flex;
     flex-direction: column;
@@ -1643,7 +2126,7 @@
     opacity: 1;
     transition: opacity 0.2s ease;
   }
-  
+
   .zl-empty-title {
     font-weight: 800;
     color: var(--zl-empty-title-color);
@@ -1652,7 +2135,7 @@
     font-family: 'Space Mono', monospace;
     letter-spacing: 0;
   }
-  
+
   .zl-empty-description {
     color: var(--zl-text-color-secondary);
     font-size: 1.3rem;
@@ -1662,7 +2145,7 @@
     font-weight: 600;
     margin-bottom: 0.3rem;
   }
-  
+
   .zl-empty-hint {
     color: var(--zl-text-color-secondary);
     font-size: 1.1rem;
@@ -1670,7 +2153,7 @@
     font-weight: 400;
     letter-spacing: 0;
   }
-  
+
   .edit-wrapper {
     flex: 1;
     position: relative;
@@ -1689,8 +2172,8 @@
     font-weight: 800;
     border: var(--zl-edit-input-border, 2px solid rgba(201, 120, 255, 0.3));
     background-color: var(--zl-edit-input-bg, rgba(255, 255, 255, 0.8));
-    border-radius: 16px; 
-    padding: 0.75rem 1.25rem; 
+    border-radius: 16px;
+    padding: 0.75rem 1.25rem;
     outline: none;
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     color: #444444;
@@ -1700,20 +2183,20 @@
     box-sizing: border-box;
     line-height: 1.5;
     margin: 0;
-    min-height: 60px; 
-    height: 60px; 
+    min-height: 60px;
+    height: 60px;
     text-align: left;
     display: flex;
     align-items: center;
   }
-  
+
   .zl-edit-input {
     position: absolute;
     top: 50%;
     left: 0;
     transform: translateY(-50%);
-    width: calc(100% - var(--zl-spacing-s)); 
-    max-width: none; 
+    width: calc(100% - var(--zl-spacing-s));
+    max-width: none;
   }
 
   .zl-edit-input::placeholder {
@@ -1725,18 +2208,36 @@
     box-shadow: var(--zl-edit-input-focus-shadow, 0 0 0 3px rgba(201, 120, 255, 0.1));
     background-color: rgba(255, 255, 255, 0.95);
   }
-  
+
+  .zl-draft-item {
+    border-style: dashed;
+    cursor: default;
+  }
+
+  .zl-draft-checkbox {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .zl-draft-input {
+    border-color: rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0.46);
+  }
+
+  .zl-draft-cancel {
+    opacity: 0.88;
+  }
+
   @keyframes float {
-    0%, 100% { 
-      transform: translateY(var(--float-y-min, 0)) rotate(var(--float-rotate-min, -0.5deg)); 
+    0%, 100% {
+      transform: translateY(var(--float-y-min, 0)) rotate(var(--float-rotate-min, -0.5deg));
     }
-    50% { 
-      transform: translateY(var(--float-y-max, -3px)) rotate(var(--float-rotate-max, 0.5deg)); 
+    50% {
+      transform: translateY(var(--float-y-max, -3px)) rotate(var(--float-rotate-max, 0.5deg));
     }
   }
 
   .zl-item.dragging {
-    opacity: 1; 
+    opacity: 1;
     background-color: var(--zl-item-dragging-bg, rgba(255, 255, 255, 1));
     transform: scale(1.03);
     box-shadow: var(--zl-item-dragging-shadow, 0 15px 30px rgba(0, 151, 167, 0.4));
@@ -1753,12 +2254,12 @@
 
   .zl-item.drag-over {
     position: relative;
-    margin-top: 20px; 
+    margin-top: 20px;
     background-color: var(--zl-item-dragover-bg, rgba(252, 242, 255, 0.9));
     border: var(--zl-item-dragover-border, 2px solid rgba(0, 188, 212, 0.8));
     box-shadow: var(--zl-item-dragover-shadow, 0 8px 20px rgba(0, 151, 167, 0.3));
-    transform: translateY(2px); 
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    transform: translateY(2px);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .zl-item.touch-placeholder {
@@ -1822,16 +2323,16 @@
   .grab-indicator {
     display: flex;
     flex-direction: column;
-    gap: 4px; 
-    margin-right: 12px; 
+    gap: 4px;
+    margin-right: 12px;
     opacity: var(--zl-grab-handle-opacity, 0.6);
     transition: all 0.25s ease;
-    padding: 8px 8px; 
-    min-width: 32px; 
-    min-height: 32px; 
-    justify-content: center; 
-    align-self: center; 
-    cursor: grab; 
+    padding: 8px 8px;
+    min-width: 32px;
+    min-height: 32px;
+    justify-content: center;
+    align-self: center;
+    cursor: grab;
     position: relative;
     touch-action: pan-y;
     user-select: none;
@@ -1840,8 +2341,8 @@
   }
 
   .grab-indicator span {
-    width: 16px; 
-    height: 2.5px; 
+    width: 16px;
+    height: 2.5px;
     background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 0.8));
     border-radius: 2px;
     transition: transform 0.2s ease, width 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
@@ -1849,12 +2350,12 @@
 
   .zl-item:hover .grab-indicator {
     opacity: var(--zl-grab-handle-hover-opacity, 1);
-    transform: scale(1.1); 
+    transform: scale(1.1);
   }
 
   .zl-item:hover .grab-indicator span {
-    background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1)); 
-    box-shadow: 0 1px 3px rgba(0, 151, 167, 0.3); 
+    background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1));
+    box-shadow: 0 1px 3px rgba(0, 151, 167, 0.3);
   }
 
   .grab-indicator.touch-active {
@@ -1866,7 +2367,7 @@
     background-color: rgba(0, 188, 212, 1);
     box-shadow: 0 2px 6px rgba(0, 151, 167, 0.35);
   }
-  
+
   .zl-delete-button {
     background: var(--zl-delete-button-bg, rgba(255, 255, 255, 0.8));
     border: var(--zl-delete-button-border, 1px solid rgba(0, 188, 212, 0.4));
@@ -1884,8 +2385,8 @@
     justify-content: center;
     flex-shrink: 0;
   }
-  .zl-item:hover .zl-delete-button { 
-    opacity: 1; 
+  .zl-item:hover .zl-delete-button {
+    opacity: 1;
   }
   .zl-delete-button:hover {
     background-color: var(--zl-delete-button-hover-bg, rgba(255, 0, 0, 0.1));
@@ -1933,8 +2434,8 @@
 
     .zl-list-actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.6rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.45rem;
       width: 100%;
     }
 
@@ -1943,19 +2444,58 @@
     }
 
     .zl-share-button {
-      grid-column: 1 / -1;
+      grid-column: auto;
     }
 
     .zl-live-button,
     .zl-add-list-button,
     .zl-share-button,
     .zl-live-indicator {
-      padding: 0.6rem 0.65rem;
-      font-size: 0.74rem;
+      gap: 0.28rem;
+      min-height: 44px;
+      padding: 0.45rem 0.35rem;
+      font-size: 0.68rem;
+    }
+
+    .zl-add-list-button .add-text,
+    .zl-live-button .live-text {
+      font-size: 0;
+    }
+
+    .zl-add-list-button .add-text::after {
+      content: 'New';
+      font-size: 0.68rem;
+    }
+
+    .zl-live-button .live-text::after {
+      content: 'Live';
+      font-size: 0.68rem;
     }
 
     .zl-list {
       gap: 0.75rem;
+    }
+
+    .zl-add-item-button {
+      min-height: 48px;
+      border-radius: 16px;
+      font-size: 0.86rem;
+    }
+
+    .zl-add-item-icon {
+      height: 22px;
+      width: 22px;
+    }
+
+    .zl-completed-divider {
+      font-size: 0.68rem;
+      gap: 0.42rem;
+      margin-top: 0;
+    }
+
+    .zl-completed-count {
+      height: 1.3rem;
+      min-width: 1.3rem;
     }
 
     .zl-item {
@@ -1965,6 +2505,11 @@
       min-height: 104px;
       padding: 0.45rem 0.6rem;
       border-radius: 16px;
+    }
+
+    .zl-item.checked {
+      opacity: 0.72;
+      transform: none;
     }
 
     .zl-checkbox-wrapper,
@@ -1999,31 +2544,49 @@
     }
 
     .zl-empty-state {
-      min-height: 230px;
-      padding: 1.5rem 0.9rem;
+      min-height: 190px;
+      margin: 0.65rem 0 0.25rem;
+      padding: 1.15rem 0.8rem;
     }
 
     .zl-empty-title {
-      margin-bottom: 1rem;
-      font-size: 1.55rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.35rem;
     }
 
     .zl-empty-description {
-      font-size: 1rem;
+      font-size: 0.92rem;
     }
 
     .zl-empty-hint {
-      font-size: 0.9rem;
+      font-size: 0.84rem;
     }
   }
 
   @media (hover: none) {
-    .zl-delete-button { opacity: 0.35; }
+    .zl-delete-button {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(255, 68, 68, 0.24);
+      color: rgba(255, 68, 68, 0.82);
+      opacity: 1;
+    }
+
+    .zl-item.checked .zl-delete-button {
+      opacity: 0.78;
+    }
+
     .grab-indicator {
       opacity: 0.85;
       min-width: 44px;
       min-height: 44px;
       padding: 10px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zl-item.settling:not(.touch-placeholder),
+    .animate-pop {
+      animation: none;
     }
   }
 

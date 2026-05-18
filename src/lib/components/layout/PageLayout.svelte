@@ -77,7 +77,7 @@
 	/* Media queries for mobile optimization */
 	@media (max-width: 640px) {
 		section {
-			padding-top: 8vh !important;
+			padding-top: 6vh !important;
 			padding-bottom: 0 !important;
 			min-height: 100vh;
 			display: flex;

@@ -617,6 +617,26 @@ import { fade } from 'svelte/transition';
   
   /* Responsive adjustments for mobile */
   @media (max-width: 640px) {
+    .record-button {
+      width: 72% !important;
+      max-width: 320px !important;
+      min-width: 248px !important;
+      min-height: 56px !important;
+      padding: 0.85rem 1.2rem !important;
+    }
+
+    .progress-container {
+      width: 72% !important;
+      max-width: 320px !important;
+      min-width: 248px !important;
+      height: 56px !important;
+    }
+
+    .fixed-button-container {
+      height: 60px;
+      margin: 0.55rem 0 0.75rem;
+    }
+
     .button-content {
       font-size: 0.95em;
     }

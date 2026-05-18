@@ -443,7 +443,7 @@
   <ContentContainer on:toggleRecording={handleToggleRecording} />
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->
-  <div class="flex justify-center my-4">
+  <div class="flex justify-center my-3 sm:my-4">
     <RecordButtonWithTimer
       recording={$isRecording}
       transcribing={$isTranscribing}
@@ -456,7 +456,7 @@
   </div>
 
   <!-- Swipeable lists container -->
-  <div class="mt-2 w-full max-w-full" id="lists-container">
+  <div class="mt-0 w-full max-w-full sm:mt-2" id="lists-container">
     <SwipeableLists />
   </div>
 
