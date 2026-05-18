@@ -14,6 +14,7 @@
   let list = { name: '', items: [] };
   let draggedItemId = null;
   let dragOverItemId = null;
+  let dragOverPosition = 'before';
   let editingItemId = null;
   let editedItemText = '';
   let draftItemActive = false;
@@ -650,6 +651,7 @@
     // Remove styling
     draggedItemId = null;
     dragOverItemId = null;
+    dragOverPosition = 'before';
 
     // Haptic feedback
     hapticService.impact('medium');
@@ -660,18 +662,38 @@
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
 
+    if (!draggedItemId) {
+      dragOverItemId = null;
+      dragOverPosition = 'before';
+      return;
+    }
+
     // Don't allow drag over on checked items or the dragged item itself
-    if (draggedItemId === itemId) return;
+    if (draggedItemId === itemId) {
+      dragOverItemId = null;
+      dragOverPosition = 'before';
+      return;
+    }
 
     // Get the target item to check if it's checked
     const targetItem = list.items.find(item => item.id === itemId);
-    if (targetItem?.checked) return;
+    if (targetItem?.checked) {
+      dragOverItemId = null;
+      dragOverPosition = 'before';
+      return;
+    }
+
+    const targetBounds = event.currentTarget.getBoundingClientRect();
+    const nextPosition = event.clientY > targetBounds.top + targetBounds.height / 2
+      ? 'after'
+      : 'before';
 
     // Only update if we're moving to a new item
-    if (dragOverItemId === itemId) return;
+    if (dragOverItemId === itemId && dragOverPosition === nextPosition) return;
 
     // Update dragover state
     dragOverItemId = itemId;
+    dragOverPosition = nextPosition;
 
     // Haptic feedback
     hapticService.impact('light');
@@ -683,12 +705,23 @@
 
     dragOverItemId = null;
 
+    if (!draggedItemId) {
+      dragOverPosition = 'before';
+      return;
+    }
+
     // If dropped on itself, do nothing
-    if (draggedItemId === targetItemId) return;
+    if (draggedItemId === targetItemId) {
+      dragOverPosition = 'before';
+      return;
+    }
 
     // Check if target is a completed item (don't allow dropping on completed items)
     const targetItem = list.items.find(item => item.id === targetItemId);
-    if (targetItem?.checked) return;
+    if (targetItem?.checked) {
+      dragOverPosition = 'before';
+      return;
+    }
 
     // Haptic feedback - stronger for successful drop
     hapticService.impact('heavy');
@@ -700,7 +733,9 @@
 
     if (sourceIndex !== -1 && targetIndex !== -1) {
       const targetBounds = event.currentTarget.getBoundingClientRect();
-      const insertAfter = event.clientY > targetBounds.top + targetBounds.height / 2;
+      const insertAfter =
+        dragOverPosition === 'after' ||
+        event.clientY > targetBounds.top + targetBounds.height / 2;
       let destinationIndex = targetIndex + (insertAfter ? 1 : 0);
       const [movedItem] = reorderedActiveItems.splice(sourceIndex, 1);
 
@@ -714,6 +749,8 @@
       listsService.reorderItems([...reorderedActiveItems, ...completedItems], list.id);
       markItemSettling(draggedItemId);
     }
+
+    dragOverPosition = 'before';
   }
 
   function markItemSettling(itemId) {
@@ -805,16 +842,18 @@
   }
 
   function saveItemEdit() {
-    if (editingItemId !== null && editedItemText.trim() !== '') {
-      listsService.editItem(editingItemId, editedItemText.trim(), list.id);
+    if (editingItemId === null) return;
+
+    const itemId = editingItemId;
+    const nextText = editedItemText.trim();
+
+    if (nextText) {
+      listsService.editItem(itemId, nextText, list.id);
       hapticService.selection();
       editingItemId = null;
       editedItemText = '';
-    } else if (editedItemText.trim() === '') {
-      // If text is cleared, remove the item
-      listsService.removeItem(editingItemId, list.id);
-      hapticService.impact('light');
-      editingItemId = null;
+    } else {
+      deleteItem(itemId);
     }
   }
 
@@ -901,10 +940,14 @@
     const newText = draftItemText.trim();
 
     if (newText) {
-      listsService.addItem(newText, list.id);
-      hapticService.selection();
+      const added = listsService.addItem(newText, list.id);
+      if (!added) {
+        hapticService.notification('warning');
+        return;
+      }
     }
 
+    hapticService.selection();
     draftItemActive = false;
     draftItemText = '';
   }
@@ -1086,7 +1129,7 @@
               use:registerItemNode={item.id}
             >
               {#if dragOverItemId === item.id}
-                <div class="drop-indicator">
+                <div class="drop-indicator" class:after={dragOverPosition === 'after'}>
                   <div class="drop-arrow"></div>
                 </div>
               {/if}
@@ -1184,6 +1227,7 @@
                   bind:value={draftItemText}
                   on:blur={saveDraftItem}
                   on:keydown={handleDraftItemKeyDown}
+                  on:input={handleTyping}
                   transition:fade={{ duration: 150 }}
                   use:autoFocus
                 />
@@ -1255,7 +1299,7 @@
               use:registerItemNode={item.id}
             >
               {#if dragOverItemId === item.id}
-                <div class="drop-indicator">
+                <div class="drop-indicator" class:after={dragOverPosition === 'after'}>
                   <div class="drop-arrow"></div>
                 </div>
               {/if}
@@ -2291,6 +2335,11 @@
     pointer-events: none;
   }
 
+  .drop-indicator.after {
+    top: auto;
+    bottom: -12px;
+  }
+
   .drop-arrow {
     position: absolute;
     top: -6px;
@@ -2301,6 +2350,11 @@
     border-radius: 50%;
     transform: translateX(-50%);
     box-shadow: var(--zl-drop-arrow-shadow, 0 0 8px rgba(0, 151, 167, 0.4));
+  }
+
+  .drop-indicator.after .drop-arrow {
+    top: auto;
+    bottom: -6px;
   }
 
   .drop-arrow::after {

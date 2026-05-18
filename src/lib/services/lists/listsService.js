@@ -163,8 +163,8 @@ export class ListsService {
    * @param {string} [listId] - Optional list ID
    */
   addItem(text, listId = null) {
-    if (!text) return;
-    listsStore.addItem(text, listId);
+    if (!text) return false;
+    return listsStore.addItem(text, listId);
   }
 
   /**

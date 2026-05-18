@@ -438,7 +438,9 @@ function createListsStore() {
   // Add an item to a specific list (or active list by default)
   function addItem(text, listId = null) {
     const normalizedText = normalizeItemText(text);
-    if (!normalizedText) return;
+    if (!normalizedText) return false;
+
+    let itemAdded = false;
 
     update((state) => {
       const targetListId = listId || state.activeListId;
@@ -454,6 +456,8 @@ function createListsStore() {
             if (alreadyExists) {
               return list;
             }
+
+            itemAdded = true;
             return {
               ...list,
               items: [
@@ -472,7 +476,11 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    if (itemAdded) {
+      persistToStorage();
+    }
+
+    return itemAdded;
   }
 
   // Add multiple items to a list (or active list)
