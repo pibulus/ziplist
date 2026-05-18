@@ -7,6 +7,7 @@
       rel="icon"
       href="%sveltekit.assets%/favicon.svg"
       type="image/svg+xml"
+      sizes="any"
     />
     <link
       rel="icon"
@@ -18,6 +19,11 @@
       rel="shortcut icon"
       href="%sveltekit.assets%/favicon.png"
       type="image/png"
+    />
+    <link
+      rel="mask-icon"
+      href="%sveltekit.assets%/safari-pinned-tab.svg"
+      color="#ffb000"
     />
 
     <!-- Apple touch icons for all device sizes -->
@@ -48,15 +54,19 @@
     />
     <meta name="format-detection" content="telephone=no" />
     <meta name="author" content="Pablo" />
+    <meta name="application-name" content="ZipList" />
+    <meta name="color-scheme" content="light" />
 
     <!-- Manifest -->
     <link rel="manifest" href="%sveltekit.assets%/manifest.json" />
 
     <!-- PWA related meta tags -->
     <meta name="theme-color" content="#FFF6E6" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Ziplist" />
+    <meta name="apple-mobile-web-app-title" content="ZipList" />
+    <meta name="msapplication-TileColor" content="#FFF6E6" />
 
     <!-- iOS specific splash screens (main sizes) -->
     <link
@@ -164,16 +174,25 @@
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "Ziplist",
+        "name": "ZipList",
         "url": "https://ziplist.app",
         "applicationCategory": "UtilitiesApplication",
+        "applicationSubCategory": "Productivity Tools",
         "operatingSystem": "Web",
+        "isAccessibleForFree": true,
         "offers": {
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "USD"
         },
-        "description": "Create organized lists by speaking. Ziplist turns your voice into stacked list cards instantly.",
+        "description": "Turn speech into organized checklist cards with ZipList, a free voice-to-list app for quick notes, groceries, tasks, and shared lists.",
+        "featureList": [
+          "Voice-to-list transcription",
+          "Checklist editing and reordering",
+          "Multiple saved lists",
+          "Progressive web app installation",
+          "Optional shared live lists"
+        ],
         "potentialAction": {
           "@type": "ConsumeAction",
           "target": {
@@ -190,9 +209,8 @@
             "description": "Free voice-to-list creation service"
           }
         },
-        "browserRequirements": "Requires a modern web browser with WebSpeech API or microphone access. Works best in Chrome, Edge, Safari, and Firefox.",
-        "keywords": "voice lists, audio lists, voice notes, list cards, stacked lists, voice organization",
-        "applicationSubCategory": "Productivity Tools"
+        "browserRequirements": "Requires HTTPS and a modern browser with microphone and MediaRecorder support. Works best in Chrome, Edge, Safari, and Firefox.",
+        "keywords": "voice-to-list app, checklist app, speech to text lists, grocery list app, task list app, voice notes"
       }
     </script>
     %sveltekit.head%

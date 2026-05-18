@@ -36,12 +36,35 @@ class SimpleHybridService {
     localStorage.setItem(key, value);
   }
 
+  shouldLoadWhisperInBackground() {
+    if (!browser) return false;
+
+    const connection = navigator.connection;
+    if (connection?.saveData) return false;
+
+    const effectiveType = connection?.effectiveType;
+    if (effectiveType === "slow-2g" || effectiveType === "2g") {
+      return false;
+    }
+
+    const deviceMemory = navigator.deviceMemory;
+    if (deviceMemory && deviceMemory < 4) {
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * Start loading Whisper in the background
    */
-  async startBackgroundLoad() {
+  async startBackgroundLoad({ force = false } = {}) {
     if (this.whisperLoadPromise || this.whisperReady) {
       return; // Already loading or loaded
+    }
+
+    if (!force && !this.shouldLoadWhisperInBackground()) {
+      return { success: false, skipped: true };
     }
 
     try {
@@ -79,8 +102,11 @@ class SimpleHybridService {
     // Check privacy mode preference
     const privacyMode = this.getLocalFlag("ziplist_privacy_mode") === "true";
 
-    // Start loading Whisper in background if not already
-    this.startBackgroundLoad();
+    if (privacyMode) {
+      await this.startBackgroundLoad({ force: true });
+    } else {
+      this.startBackgroundLoad();
+    }
 
     // If privacy mode is on, wait for Whisper or fail
     if (privacyMode) {

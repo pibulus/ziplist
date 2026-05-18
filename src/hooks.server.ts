@@ -2,6 +2,11 @@
 export async function handle({ event, resolve }) {
   const response = await resolve(event);
 
+  response.headers.set(
+    "Permissions-Policy",
+    "microphone=(self), camera=(), geolocation=(), payment=()",
+  );
+
   if (
     event.url.pathname.startsWith("/import") ||
     event.url.pathname.startsWith("/live/")

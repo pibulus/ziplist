@@ -3,6 +3,7 @@ export const AudioStates = {
   INITIALIZING: "initializing",
   REQUESTING_PERMISSIONS: "requesting_permissions",
   PERMISSION_DENIED: "permission_denied",
+  NO_INPUT_DETECTED: "no_input_detected",
   READY: "ready",
   RECORDING: "recording",
   STOPPING: "stopping",

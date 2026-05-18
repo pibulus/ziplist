@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1024 1024"
+  role="img"
+  aria-labelledby="ziplist-pinned-tab-title"
+>
+  <title id="ziplist-pinned-tab-title">ZipList</title>
+  <path
+    d="M264 132H760C845 132 898 185 898 270V552C898 637 845 690 760 690H616L543 803C529 825 495 825 481 803L408 690H264C179 690 126 637 126 552V270C126 185 179 132 264 132Z"
+    fill="#000000"
+  />
+  <ellipse cx="421" cy="344" rx="40" ry="62" fill="#ffffff" />
+  <ellipse cx="603" cy="344" rx="40" ry="62" fill="#ffffff" />
+  <rect x="312" y="542" width="44" height="44" rx="6" fill="#ffffff" />
+  <path
+    d="M410 564H704"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="42"
+    stroke-linecap="round"
+  />
+  <rect x="312" y="618" width="44" height="44" rx="6" fill="#ffffff" />
+  <path
+    d="M410 640H704"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="42"
+    stroke-linecap="round"
+  />
+</svg>

@@ -27,9 +27,18 @@
   import { fade } from 'svelte/transition';
   import { StorageUtils } from '$lib/services/infrastructure/storageUtils';
   import { STORAGE_KEYS } from '$lib/constants';
-  import { simpleHybridService } from '$lib/services/transcription/simpleHybridService';
 
   import { AboutModal, ExtensionModal, IntroModal } from './modals';
+
+  const AUDIO_CAPTURE_CONSTRAINTS = {
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    }
+  };
+  const RECORDER_CHUNK_INTERVAL_MS = 1000;
+  const LAUNCH_RECORD_ACTION = 'record';
 
   // Lazy load settings modal - only import when needed
   let SettingsModal;
@@ -62,6 +71,23 @@
     mediaRecorder = null;
     audioChunks = [];
     isStartingRecording = false;
+  }
+
+  function getRecorderOptions() {
+    if (
+      typeof MediaRecorder === 'undefined' ||
+      !MediaRecorder.isTypeSupported
+    ) {
+      return {};
+    }
+
+    const supportedMimeType = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4'
+    ].find((mimeType) => MediaRecorder.isTypeSupported(mimeType));
+
+    return supportedMimeType ? { mimeType: supportedMimeType } : {};
   }
 
   // Modal functions
@@ -127,7 +153,6 @@
 
       geminiService
         .preloadModel()
-        .then(() => simpleHybridService.startBackgroundLoad())
         .catch((err) => {
           // Just log the error, don't block UI
           console.error('Error preloading speech model:', err);
@@ -145,6 +170,30 @@
 
   function handleStorageError(event) {
     uiActions.setErrorMessage(event.detail.message);
+  }
+
+  function hasLaunchRecordIntent() {
+    if (!browser) return false;
+    return (
+      new URLSearchParams(window.location.search).get('action') ===
+      LAUNCH_RECORD_ACTION
+    );
+  }
+
+  function prepareRecorderOnLaunch() {
+    preloadSpeechModel();
+
+    autoRecordTimeout = window.setTimeout(() => {
+      const recordButton = document.querySelector('[data-record-button]');
+
+      recordButton?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      recordButton?.focus({ preventScroll: true });
+      uiActions.setScreenReaderMessage(
+        'Recorder ready. Tap the record button to allow microphone access.'
+      );
+
+      autoRecordTimeout = null;
+    }, 500);
   }
 
   function stopWaveformMonitoring() {
@@ -259,30 +308,44 @@
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.error('getUserMedia not supported on this browser!');
           audioActions.updateState(AudioStates.ERROR, 'getUserMedia is not supported.');
-          uiActions.setErrorMessage('Audio recording is not supported on this browser.');
+          uiActions.setErrorMessage(
+            'Audio recording is not supported on this browser.'
+          );
           return;
         }
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        audioActions.updateState(AudioStates.REQUESTING_PERMISSIONS);
+        stream = await navigator.mediaDevices.getUserMedia(
+          AUDIO_CAPTURE_CONSTRAINTS
+        );
         activeStream = stream;
-        mediaRecorder = new MediaRecorder(stream);
+
+        const recorderOptions = getRecorderOptions();
+        const recorder = new MediaRecorder(stream, recorderOptions);
+        mediaRecorder = recorder;
         await startWaveformMonitoring(stream);
 
-        mediaRecorder.onstart = () => {
+        recorder.onstart = () => {
           isStartingRecording = false;
           audioActions.updateState(AudioStates.RECORDING);
         };
 
-        mediaRecorder.ondataavailable = (event) => {
+        recorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
             audioChunks.push(event.data);
           }
         };
 
-        mediaRecorder.onstop = async () => {
+        recorder.onstop = async () => {
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
+          stopWaveformMonitoring();
+          stopStream(stream);
+          if (activeStream === stream) {
+            activeStream = null;
+          }
 
           const audioBlob = new Blob(audioChunks, {
-            type: mediaRecorder.mimeType || 'audio/webm'
+            type: recorder.mimeType || recorderOptions.mimeType || 'audio/webm'
           });
           audioChunks = [];
 
@@ -293,6 +356,7 @@
             }
 
             await transcriptionService.transcribeAudio(audioBlob);
+            pwaService.incrementTranscriptionCount();
             // Auto-scroll to lists after successful transcription to show new items
             setTimeout(scrollToLists, 100);
           } catch (transcriptionError) {
@@ -305,7 +369,7 @@
           }
         };
         
-        mediaRecorder.onerror = (event) => {
+        recorder.onerror = (event) => {
           isStartingRecording = false;
           console.error('MediaRecorder error:', event.error);
           audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
@@ -313,7 +377,7 @@
           resetRecordingSession();
         };
 
-        mediaRecorder.start();
+        recorder.start(RECORDER_CHUNK_INTERVAL_MS);
 
       } catch (err) {
         isStartingRecording = false;
@@ -396,15 +460,14 @@
       settingsModalPreloadTimeout = null;
     }, 1000);
 
-    // Check for auto-record setting and start recording if enabled
-    if (browser && StorageUtils.getBooleanItem(STORAGE_KEYS.AUTO_RECORD, false)) {
-      // Wait minimal time for component initialization
-      autoRecordTimeout = window.setTimeout(() => {
-        if (!$isRecording) { // Check store directly
-          handleToggleRecording(); // Use the main toggle function
-        }
-        autoRecordTimeout = null;
-      }, 500);
+    // Mobile PWAs cannot reliably open the microphone on launch without a fresh tap.
+    // Treat launch intents as "ready the recorder" instead of forcing a permission prompt.
+    if (
+      browser &&
+      (StorageUtils.getBooleanItem(STORAGE_KEYS.AUTO_RECORD, false) ||
+        hasLaunchRecordIntent())
+    ) {
+      prepareRecorderOnLaunch();
     }
 
     // Listen for settings changes

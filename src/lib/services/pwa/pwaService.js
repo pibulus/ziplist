@@ -71,9 +71,9 @@ export class PwaService {
     this.debug = !!value;
   }
 
-  log() {
+  log(...args) {
     if (this.debug) {
-
+      console.debug("[PWA]", ...args);
     }
   }
 
@@ -97,6 +97,8 @@ export class PwaService {
     window.addEventListener("beforeinstallprompt", (e) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
+
+      this.markAsNotInstalled();
 
       // Store the event for later use
       deferredInstallPrompt.set(e);
@@ -250,6 +252,17 @@ export class PwaService {
     }
   }
 
+  markAsNotInstalled() {
+    if (!browser) return;
+
+    try {
+      StorageUtils.setItem(STORAGE_KEYS.PWA_INSTALLED, "false");
+      isPwaInstalled.set(false);
+    } catch (error) {
+      console.error("Error marking PWA as not installed:", error);
+    }
+  }
+
   async checkIfRunningAsPwa() {
     if (!browser) return false;
 
@@ -266,10 +279,6 @@ export class PwaService {
         return false;
       }
 
-      let confidenceScore = 0;
-      const confidenceThreshold = 2;
-
-      // Display mode checks (less weight now)
       const isStandalone = window.matchMedia(
         "(display-mode: standalone)",
       ).matches;
@@ -279,40 +288,18 @@ export class PwaService {
       const isMinimalUi = window.matchMedia(
         "(display-mode: minimal-ui)",
       ).matches;
-      const iOSStandalone = navigator.standalone; // iOS specific
-
-      if (isStandalone || iOSStandalone) confidenceScore += 1;
-      if (isFullscreen || isMinimalUi) confidenceScore += 0.5;
-
-      // Web App Manifest check
-      const manifestLinks = document.querySelectorAll('link[rel="manifest"]');
-      if (manifestLinks.length > 0) confidenceScore += 0.5;
-
-      // Service Worker check (strong indicator)
-      if ("serviceWorker" in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        if (registrations.length > 0) confidenceScore += 1.5;
-      }
-
-      // Check for installation event registration
-      if (StorageUtils.getBooleanItem(STORAGE_KEYS.PWA_PROMPT_SHOWN, false)) {
-        confidenceScore += 0.5;
-      }
-
-      // Check for device context (desktop needs more confidence)
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      const requiredConfidence = isMobile
-        ? confidenceThreshold - 0.5
-        : confidenceThreshold;
-
-      const isPWA = confidenceScore >= requiredConfidence;
+      const iOSStandalone = navigator.standalone === true;
+      const isPWA =
+        isStandalone || isFullscreen || isMinimalUi || iOSStandalone;
 
       this.log(
-        `PWA detection: confidence=${confidenceScore}, threshold=${requiredConfidence}, isPWA=${isPWA}`,
+        `PWA detection: standalone=${isStandalone}, fullscreen=${isFullscreen}, minimalUi=${isMinimalUi}, iosStandalone=${iOSStandalone}`,
       );
 
       if (isPWA) {
         this.markAsInstalled();
+      } else {
+        this.markAsNotInstalled();
       }
 
       return isPWA;

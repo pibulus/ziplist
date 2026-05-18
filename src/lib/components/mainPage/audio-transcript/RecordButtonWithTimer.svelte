@@ -223,6 +223,7 @@
       class:recording-warning={isWarning && recording}
       class:recording-danger={isDanger && recording}
       style={baseStyle}
+      data-record-button
       on:click={() => {
         dispatch("click");
         // Only update phrases for next time after a click
@@ -230,6 +231,7 @@
           updateRandomPhrases();
         }
       }}
+      on:pointerdown={() => dispatch("preload")}
       on:mouseenter={() => {
         dispatch("preload");
         // Don't update phrases on hover to prevent flicker

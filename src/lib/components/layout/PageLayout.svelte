@@ -1,11 +1,9 @@
 <script>
-  export let title = "ZipList | Zip up a list lickety-split";
+  export let title = "ZipList | Voice-to-List Checklist App";
   export let description =
-    "ZipList turns your voice into organized lists. Clean, simple, and freaky fast list creation. Free forever. Tap the mic and start talking!";
+    "Turn speech into organized checklist cards with ZipList, a free voice-to-list app for quick notes, groceries, tasks, and shared lists.";
   export let canonical = "https://ziplist.app/";
   export let robots = "index, follow, max-image-preview:large";
-  export let keywords =
-    "voice lists, audio lists, voice notes, checklist app, list cards, voice organization";
   export let ogTitle = "";
   export let ogDescription = "";
   export let ogUrl = "";
@@ -23,9 +21,6 @@
   <title>{title}</title>
   <meta name="description" content={description} />
   <meta name="robots" content={robots} />
-  {#if keywords}
-    <meta name="keywords" content={keywords} />
-  {/if}
   {#if canonical}
     <link rel="canonical" href={canonical} />
   {/if}

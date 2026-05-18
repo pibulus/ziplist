@@ -137,9 +137,9 @@
 
         <div class="zl-setting-row">
           <div class="zl-setting-info">
-            <span class="zl-setting-name">Auto-Record on Start</span>
+            <span class="zl-setting-name">Ready Mic on Start</span>
             <p class="zl-setting-desc">
-              Start recording immediately when you open ZipList
+              Prep the recorder when ZipList opens; tap once before mic access
             </p>
           </div>
           <label class="zl-toggle">
@@ -147,7 +147,7 @@
               type="checkbox"
               checked={autoRecordValue}
               on:change={toggleAutoRecord}
-              aria-label="Auto-record on start"
+              aria-label="Ready microphone on start"
             />
             <span class="zl-toggle-slider"></span>
           </label>
