@@ -50,6 +50,18 @@ export const PROMPT_STYLES = {
 
 export const DEFAULT_PROMPT_STYLE = PROMPT_STYLES.STANDARD;
 
+// Product limits: keep ZipList focused on quick, graspable lists.
+export const PRODUCT_LIMITS = {
+  RECORDING_SECONDS: 120,
+  MAX_LISTS: 6,
+  MAX_ITEMS_PER_LIST: 60,
+  MAX_ITEM_TEXT_LENGTH: 140,
+  MAX_LIST_NAME_LENGTH: 32,
+  MAX_IMPORT_ITEMS: 60,
+  MAX_IMPORT_NAME_LENGTH: 120,
+  SHARE_URL_WARNING_LENGTH: 1500,
+};
+
 // Animation Timing (in ms)
 export const ANIMATION = {
   // Button animations
@@ -73,7 +85,7 @@ export const ANIMATION = {
 
   // Recording time limits
   RECORDING: {
-    LIMIT: 600, // Maximum recording time in seconds
+    LIMIT: PRODUCT_LIMITS.RECORDING_SECONDS, // Maximum recording time in seconds
     WARNING_THRESHOLD: 15, // Seconds remaining when to start showing warning
     DANGER_THRESHOLD: 8, // Seconds remaining when to start showing danger state
     ALMOST_DONE_THRESHOLD: 3, // Seconds remaining for final warning flash

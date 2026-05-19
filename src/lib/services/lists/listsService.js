@@ -19,6 +19,23 @@ export class ListsService {
     }
   }
 
+  _announceListNotice(result) {
+    if (
+      typeof window !== "undefined" &&
+      result?.message &&
+      (result.reason?.startsWith("max-") || result.skippedCount > 0)
+    ) {
+      window.dispatchEvent(
+        new CustomEvent("ziplist-list-notice", {
+          detail: {
+            message: result.message,
+            success: !!result.ok,
+          },
+        }),
+      );
+    }
+  }
+
   /**
    * Process a transcription result and update lists accordingly
    * @param {Object} transcriptionResult - The result from transcription service
@@ -54,7 +71,7 @@ export class ListsService {
         // Extract list name from parameters or use default
         const listName =
           command.params && command.params.length > 0 ? command.params[0] : "";
-        this.createList(listName);
+        this._announceListNotice(this.createList(listName));
         break;
       }
 
@@ -87,7 +104,7 @@ export class ListsService {
    * @param {string} name - Name for the new list
    */
   createList(name = "") {
-    listsStore.addList(name);
+    return listsStore.addList(name);
   }
 
   /**
@@ -102,11 +119,14 @@ export class ListsService {
 
     // Create a new list with the properties from the shared list
     const name = list.name;
-    listsStore.addList(name);
+    const createResult = listsStore.addList(name);
+    if (!createResult.ok) {
+      throw new Error(createResult.message || "Could not import list");
+    }
 
     // Get the newly created list
     const state = get(listsStore);
-    const newListId = state.activeListId;
+    const newListId = createResult.listId || state.activeListId;
 
     // Add all the items
     if (list.items && list.items.length > 0) {
@@ -152,7 +172,9 @@ export class ListsService {
    * @private
    */
   _addItemsToActiveList(items) {
-    listsStore.addItems(items);
+    const result = listsStore.addItems(items);
+    this._announceListNotice(result);
+    return result;
   }
 
   /**

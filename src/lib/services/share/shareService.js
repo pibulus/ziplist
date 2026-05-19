@@ -2,6 +2,7 @@
  * ShareService - Functions for encoding and sharing lists
  * Handles list data encoding/decoding for sharing between users
  */
+import { PRODUCT_LIMITS } from "$lib/constants";
 
 /**
  * Encode a list into a format suitable for sharing
@@ -27,9 +28,6 @@ export function encodeListForSharing(list) {
  * @param {string} encodedData - Base64 encoded list data
  * @return {Object|null} The decoded list or null if decoding failed
  */
-const MAX_IMPORT_ITEMS = 500;
-const MAX_NAME_LENGTH = 200;
-
 export function decodeSharedList(encodedData) {
   try {
     const listData = JSON.parse(atob(encodedData));
@@ -40,12 +38,12 @@ export function decodeSharedList(encodedData) {
 
     const name =
       typeof listData.name === "string"
-        ? listData.name.slice(0, MAX_NAME_LENGTH)
+        ? listData.name.slice(0, PRODUCT_LIMITS.MAX_IMPORT_NAME_LENGTH)
         : "Imported List";
 
     // Cap item count and validate each item
     const validItems = listData.items
-      .slice(0, MAX_IMPORT_ITEMS)
+      .slice(0, PRODUCT_LIMITS.MAX_IMPORT_ITEMS)
       .filter(
         (item) =>
           item && typeof item.text === "string" && item.text.trim().length > 0,
@@ -115,7 +113,7 @@ export async function shareList(list, baseUrl = window.location.origin) {
   const shareUrl = generateShareableUrl(list, baseUrl);
 
   // Check URL length (warn if > 1500 characters, most browsers support 2000+)
-  const urlTooLong = shareUrl.length > 1500;
+  const urlTooLong = shareUrl.length > PRODUCT_LIMITS.SHARE_URL_WARNING_LENGTH;
 
   // Try Web Share API first (better mobile UX)
   if (

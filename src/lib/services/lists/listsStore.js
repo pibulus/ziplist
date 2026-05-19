@@ -1,6 +1,6 @@
 import { writable, derived, get } from "svelte/store";
 import { browser } from "$app/environment";
-import { STORAGE_KEYS } from "$lib/constants";
+import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
 
 const LIST_COLOR_PRESETS = [
   {
@@ -65,8 +65,6 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 3).map((palette) => ({
 
 // Current schema version
 const CURRENT_VERSION = 2;
-const MAX_ITEM_TEXT_LENGTH = 180;
-
 function normalizeItemText(text) {
   const normalized = String(text || "")
     .replace(/\s+/g, " ")
@@ -78,8 +76,8 @@ function normalizeItemText(text) {
   if (!normalized) return "";
 
   const clipped =
-    normalized.length > MAX_ITEM_TEXT_LENGTH
-      ? `${normalized.slice(0, MAX_ITEM_TEXT_LENGTH - 3).trim()}...`
+    normalized.length > PRODUCT_LIMITS.MAX_ITEM_TEXT_LENGTH
+      ? `${normalized.slice(0, PRODUCT_LIMITS.MAX_ITEM_TEXT_LENGTH - 3).trim()}...`
       : normalized;
 
   return clipped.charAt(0).toUpperCase() + clipped.slice(1);
@@ -160,6 +158,14 @@ function getUniqueListName(baseName, existingLists = []) {
   }
 
   return `${normalizedBaseName} ${suffix}`;
+}
+
+function createLimitResult(message, reason = "limit") {
+  return { ok: false, reason, message };
+}
+
+function createSuccessResult(extra = {}) {
+  return { ok: true, ...extra };
 }
 
 // Initialize the lists store
@@ -363,7 +369,16 @@ function createListsStore() {
 
   // Add a new list
   function addList(name = "") {
+    let result = createLimitResult(
+      `ZipList keeps ${PRODUCT_LIMITS.MAX_LISTS} lists max. Rename one or clear space first.`,
+      "max-lists",
+    );
+
     update((state) => {
+      if (state.lists.length >= PRODUCT_LIMITS.MAX_LISTS) {
+        return state;
+      }
+
       const palette = getListPaletteForIndex(state.lists.length);
       const resolvedName = getUniqueListName(
         name?.trim() ? name : palette.defaultName,
@@ -388,10 +403,15 @@ function createListsStore() {
         activeListId: newList.id, // Auto-select the new list
       };
 
+      result = createSuccessResult({ listId: newList.id });
       return newState;
     });
 
-    persistCriticalChange();
+    if (result.ok) {
+      persistCriticalChange();
+    }
+
+    return result;
   }
 
   // Delete a list by ID
@@ -447,9 +467,11 @@ function createListsStore() {
   // Add an item to a specific list (or active list by default)
   function addItem(text, listId = null) {
     const normalizedText = normalizeItemText(text);
-    if (!normalizedText) return false;
+    if (!normalizedText) {
+      return createLimitResult("Add a few words first.", "empty");
+    }
 
-    let itemAdded = false;
+    let result = createLimitResult("That item is already here.", "duplicate");
 
     update((state) => {
       const targetListId = listId || state.activeListId;
@@ -457,6 +479,14 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
+            if (list.items.length >= PRODUCT_LIMITS.MAX_ITEMS_PER_LIST) {
+              result = createLimitResult(
+                `${PRODUCT_LIMITS.MAX_ITEMS_PER_LIST} items is the sweet spot for one list. Start a fresh one.`,
+                "max-items",
+              );
+              return list;
+            }
+
             const alreadyExists = list.items.some(
               (item) =>
                 getItemDedupeKey(item.text) ===
@@ -466,7 +496,7 @@ function createListsStore() {
               return list;
             }
 
-            itemAdded = true;
+            result = createSuccessResult({ addedCount: 1 });
             return {
               ...list,
               items: [
@@ -485,16 +515,20 @@ function createListsStore() {
       };
     });
 
-    if (itemAdded) {
+    if (result.ok) {
       persistCriticalChange();
     }
 
-    return itemAdded;
+    return result;
   }
 
   // Add multiple items to a list (or active list)
   function addItems(items, listId = null) {
-    if (!items || !items.length) return;
+    if (!items || !items.length) {
+      return createSuccessResult({ addedCount: 0, skippedCount: 0 });
+    }
+
+    let result = createSuccessResult({ addedCount: 0, skippedCount: 0 });
 
     update((state) => {
       const targetListId = listId || state.activeListId;
@@ -502,6 +536,19 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
+            const availableSlots = Math.max(
+              0,
+              PRODUCT_LIMITS.MAX_ITEMS_PER_LIST - list.items.length,
+            );
+
+            if (availableSlots === 0) {
+              result = createLimitResult(
+                `${PRODUCT_LIMITS.MAX_ITEMS_PER_LIST} items is the sweet spot for one list. Start a fresh one.`,
+                "max-items",
+              );
+              return list;
+            }
+
             const existingTexts = new Set(
               list.items.map((item) => getItemDedupeKey(item.text)),
             );
@@ -516,7 +563,8 @@ function createListsStore() {
                 }
                 existingTexts.add(key);
                 return true;
-              });
+              })
+              .slice(0, availableSlots);
 
             const newItems = dedupedTexts.map((text, index) => ({
               id: crypto.randomUUID(),
@@ -526,8 +574,23 @@ function createListsStore() {
             }));
 
             if (newItems.length === 0) {
+              result = createLimitResult(
+                "Those items are already here.",
+                "duplicate",
+              );
               return list;
             }
+
+            const requestedCount = items.length;
+            const skippedCount = Math.max(0, requestedCount - newItems.length);
+            result = createSuccessResult({
+              addedCount: newItems.length,
+              skippedCount,
+              message:
+                skippedCount > 0
+                  ? `Added ${newItems.length}. Kept this list to ${PRODUCT_LIMITS.MAX_ITEMS_PER_LIST} items.`
+                  : "",
+            });
 
             return {
               ...list,
@@ -540,7 +603,11 @@ function createListsStore() {
       };
     });
 
-    persistCriticalChange();
+    if (result.ok && result.addedCount > 0) {
+      persistCriticalChange();
+    }
+
+    return result;
   }
 
   // Toggle an item's checked state
@@ -649,7 +716,10 @@ function createListsStore() {
 
   // Rename a list
   function renameList(newName, listId = null) {
-    if (!newName.trim()) return;
+    const nextName = String(newName || "")
+      .trim()
+      .slice(0, PRODUCT_LIMITS.MAX_LIST_NAME_LENGTH);
+    if (!nextName) return;
 
     update((state) => {
       const targetListId = listId || state.activeListId;
@@ -659,7 +729,7 @@ function createListsStore() {
           if (list.id === targetListId) {
             return {
               ...list,
-              name: newName.trim(),
+              name: nextName,
               updatedAt: new Date().toISOString(),
             };
           }

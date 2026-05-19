@@ -9,6 +9,7 @@
   import * as liveListsService from "$lib/services/realtime/liveListsService";
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
   import { getTypingStore } from "$lib/services/realtime/typingStore";
+  import { PRODUCT_LIMITS } from "$lib/constants";
   import CompletedDivider from "./CompletedDivider.svelte";
   import DraftItemRow from "./DraftItemRow.svelte";
   import ListItemBody from "./ListItemBody.svelte";
@@ -57,6 +58,7 @@
   let touchDragAutoScrollDelta = 0;
   let touchDragAutoScrollFrame = null;
   let touchDragListenersAttached = false;
+  let shareStatusTimer = null;
 
   // Props
   export let listId = null;
@@ -125,6 +127,10 @@
         });
       }
     }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("ziplist-list-notice", handleListNotice);
+    }
   });
 
   onDestroy(() => {
@@ -133,6 +139,7 @@
     if (typingUnsubscribe) typingUnsubscribe();
     if (typingTimeout) clearTimeout(typingTimeout);
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+    if (shareStatusTimer) clearTimeout(shareStatusTimer);
     clearTouchDragLongPressTimer();
     stopTouchDragAutoScroll();
     removeTouchDragListeners();
@@ -141,50 +148,64 @@
     if (typeof document !== "undefined") {
       document.body.classList.remove("zl-touch-dragging");
     }
+    if (typeof window !== "undefined") {
+      window.removeEventListener("ziplist-list-notice", handleListNotice);
+    }
   });
+
+  function showListStatus(message, success = false, duration = 3500) {
+    if (shareStatusTimer) clearTimeout(shareStatusTimer);
+    shareStatus = { success, message };
+    shareStatusTimer = setTimeout(() => {
+      shareStatus = null;
+      shareStatusTimer = null;
+    }, duration);
+  }
+
+  function handleListNotice(event) {
+    if (!event.detail?.message) return;
+    showListStatus(event.detail.message, !!event.detail.success);
+  }
 
   // Share list function
   async function handleShareList() {
     if (!list || !list.items || list.items.length === 0) {
-      shareStatus = { success: false, message: "Cannot share an empty list" };
-      setTimeout(() => (shareStatus = null), 3000); // Clear message after 3 seconds
+      showListStatus("Cannot share an empty list");
       return;
     }
 
     try {
       const result = await shareList(list);
       if (result.success) {
-        shareStatus = {
-          success: true,
-          message: result.urlTooLong
+        showListStatus(
+          result.urlTooLong
             ? "Share link copied! Note: Very long URL."
             : "Share link copied!",
-        };
+          true,
+          result.urlTooLong ? 5000 : 3000,
+        );
       } else {
-        shareStatus = { success: false, message: "Failed to share list" };
+        showListStatus("Failed to share list");
       }
-      setTimeout(() => (shareStatus = null), result.urlTooLong ? 5000 : 3000);
     } catch (error) {
       console.error("Failed to share list:", error);
-      shareStatus = { success: false, message: "Failed to share list" };
-      setTimeout(() => (shareStatus = null), 3000);
+      showListStatus("Failed to share list");
     }
   }
 
   // Make list live (real-time collaboration)
   async function handleMakeLive() {
     if (!liveFeatureAvailable) {
-      shareStatus = {
-        success: false,
-        message: "Live collaboration is not configured on this deployment yet",
-      };
-      setTimeout(() => (shareStatus = null), 4000);
+      showListStatus(
+        "Live collaboration is not configured on this deployment yet",
+        false,
+        4000,
+      );
       return;
     }
 
     if (!list || !list.id) {
-      shareStatus = { success: false, message: "Cannot make list live" };
-      setTimeout(() => (shareStatus = null), 3000);
+      showListStatus("Cannot make list live");
       return;
     }
 
@@ -197,11 +218,7 @@
         await navigator.clipboard.writeText(shareUrl);
       }
 
-      shareStatus = {
-        success: true,
-        message: "🔴 List is now LIVE! Link copied!",
-      };
-      setTimeout(() => (shareStatus = null), 3000);
+      showListStatus("🔴 List is now LIVE! Link copied!", true);
 
       // Subscribe to presence
       const presenceStore = getPresenceStore(list.id);
@@ -216,16 +233,18 @@
       });
     } catch (error) {
       console.error("Failed to make list live:", error);
-      shareStatus = {
-        success: false,
-        message: "Failed to make list live: " + error.message,
-      };
-      setTimeout(() => (shareStatus = null), 5000);
+      showListStatus("Failed to make list live: " + error.message, false, 5000);
     }
   }
 
   function handleCreateList() {
-    listsService.createList();
+    const result = listsService.createList();
+    if (!result.ok) {
+      showListStatus(result.message);
+      hapticService.notification("warning");
+      return;
+    }
+
     hapticService.notification("success");
   }
 
@@ -1043,8 +1062,9 @@
     const newText = draftItemText.trim();
 
     if (newText) {
-      const added = listsService.addItem(newText, list.id);
-      if (!added) {
+      const result = listsService.addItem(newText, list.id);
+      if (!result.ok) {
+        showListStatus(result.message || "Could not add that item");
         hapticService.notification("warning");
         return;
       }
@@ -1091,7 +1111,7 @@
             on:keydown={handleListNameKeyDown}
             on:focus={(event) => event.currentTarget.select()}
             aria-label="List name"
-            maxlength="40"
+            maxlength={PRODUCT_LIMITS.MAX_LIST_NAME_LENGTH}
             use:autoFocus
           />
         {:else}
