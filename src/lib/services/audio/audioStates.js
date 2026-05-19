@@ -7,6 +7,7 @@ export const AudioStates = {
   READY: "ready",
   RECORDING: "recording",
   STOPPING: "stopping",
+  PROCESSING: "processing",
   CLEANING: "cleaning",
   PAUSED: "paused",
   ERROR: "error",

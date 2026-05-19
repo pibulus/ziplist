@@ -2,7 +2,6 @@
   import { draggable } from '$lib/actions/draggable';
   import { vibrate, HAPTIC_PATTERNS } from '$lib/utils/haptics';
   import { fade } from 'svelte/transition';
-  import { flip } from 'svelte/animate';
 
   // Props
   export let item;
@@ -68,7 +67,6 @@
     onDrop: (e) => onDrop(e, item.id),
     disabled: item.checked || isEditing
   }}
-  animate:flip={{ duration: 300 }}
   in:fade={{ duration: 200 }}
   out:fade={{ duration: 200 }}
 >

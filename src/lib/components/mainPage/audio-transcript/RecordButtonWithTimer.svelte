@@ -1,34 +1,31 @@
 <script>
   import {
     ANIMATION,
-    CTA_PHRASES,
-    COPY_MESSAGES,
     ZIPLIST_START_PHRASES,
     ZIPLIST_ADD_PHRASES,
     getRandomFromArray,
   } from "$lib/constants";
-  import { listsService } from "$lib/services/lists/listsService";
   import { activeListItems } from "$lib/services/lists/listsStore";
   import { waveformData } from "$lib/services";
   import { onMount, onDestroy } from "svelte";
-  import { fade } from "svelte/transition";
+  import { createEventDispatcher } from "svelte";
 
   export let recording = false;
   export let transcribing = false;
+  export let disabled = false;
   export let clipboardSuccess = false;
   export let recordingDuration = 0;
   export let buttonLabel = "";
   export let progress = 0;
 
   let recordButtonElement;
-  let audioVisualizerElement;
   const WAVE_BAR_COUNT = 12;
   const PULSE_FADE_RATE = 0.05;
   const WAVE_FADE_RATE = 0.9;
   const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35;
   const PULSE_SMOOTHING_FACTOR_OLD = 0.8;
   const PULSE_SMOOTHING_FACTOR_NEW = 0.2;
-  const RANDOM_PHRASE_HOVER_UPDATE_CHANCE = 0.3;
+  const waveBars = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => index);
 
   let audioLevel = 0;
   let animationFrameId;
@@ -129,13 +126,6 @@
     }
   }
 
-  function handleKeyDown(event) {
-    if ((event.key === "Enter" || event.key === " ") && !transcribing) {
-      event.preventDefault();
-      dispatch("click");
-    }
-  }
-
   function getTimeRemaining() {
     return ANIMATION.RECORDING.LIMIT - recordingDuration;
   }
@@ -190,7 +180,6 @@
     : "";
 
   $: baseStyle = `min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; ${progressStyle}`;
-  import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 </script>
 
@@ -236,15 +225,14 @@
         dispatch("preload");
         // Don't update phrases on hover to prevent flicker
       }}
-      on:keydown={handleKeyDown}
-      disabled={transcribing}
+      disabled={disabled || transcribing}
       aria-label={recordButtonAriaLabel}
       aria-pressed={recording}
-      aria-busy={transcribing}
+      aria-busy={disabled || transcribing}
     >
       {#if recording}
         <div class="wave-visualization" aria-hidden="true">
-          {#each { length: WAVE_BAR_COUNT } as _, i}
+          {#each waveBars as i}
             <div
               class="wave-bar"
               style="--index: {i}; --height: var(--wave-level-{i}, 0%);"

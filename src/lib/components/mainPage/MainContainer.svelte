@@ -53,6 +53,7 @@
   let activeStream = null;
   let audioChunks = [];
   let isStartingRecording = false;
+  let isStoppingRecording = false;
   let preloadCleanup = null;
   let visualizerAudioContext = null;
   let visualizerAnalyser = null;
@@ -71,6 +72,7 @@
     mediaRecorder = null;
     audioChunks = [];
     isStartingRecording = false;
+    isStoppingRecording = false;
   }
 
   function getRecorderOptions() {
@@ -211,6 +213,29 @@
     }
   }
 
+  function isStartableAudioState(state) {
+    return [
+      AudioStates.IDLE,
+      AudioStates.ERROR,
+      AudioStates.PERMISSION_DENIED,
+      AudioStates.NO_INPUT_DETECTED
+    ].includes(state);
+  }
+
+  function stopActiveRecording() {
+    if (isStoppingRecording) return;
+    isStoppingRecording = true;
+
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      audioActions.updateState(AudioStates.STOPPING);
+      mediaRecorder.stop();
+      return;
+    }
+
+    resetRecordingSession();
+    audioActions.updateState(AudioStates.IDLE);
+  }
+
   async function startWaveformMonitoring(stream) {
     stopWaveformMonitoring();
 
@@ -286,18 +311,18 @@
 
   // Handle toggle recording
   async function handleToggleRecording() {
-
     if ($isRecording) {
-      // Currently recording, so stop
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop(); // This will trigger onstop handler
-      } else {
-        resetRecordingSession();
-        audioActions.updateState(AudioStates.IDLE);
-      }
+      stopActiveRecording();
     } else {
+      if (
+        isStartingRecording ||
+        $isTranscribing ||
+        !isStartableAudioState($audioState.state)
+      ) {
+        return;
+      }
+
       // Guard against rapid double-taps spawning multiple streams
-      if (isStartingRecording) return;
       isStartingRecording = true;
 
       audioChunks = []; // Clear previous chunks
@@ -327,6 +352,7 @@
 
         recorder.onstart = () => {
           isStartingRecording = false;
+          isStoppingRecording = false;
           audioActions.updateState(AudioStates.RECORDING);
         };
 
@@ -338,6 +364,7 @@
 
         recorder.onstop = async () => {
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
+          isStoppingRecording = false;
           stopWaveformMonitoring();
           stopStream(stream);
           if (activeStream === stream) {
@@ -371,6 +398,7 @@
         
         recorder.onerror = (event) => {
           isStartingRecording = false;
+          isStoppingRecording = false;
           console.error('MediaRecorder error:', event.error);
           audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
           uiActions.setErrorMessage(`Recording error: ${event.error.name}`);
@@ -381,6 +409,7 @@
 
       } catch (err) {
         isStartingRecording = false;
+        isStoppingRecording = false;
         stopWaveformMonitoring();
         stopStream(stream);
         if (activeStream === stream) {
@@ -404,6 +433,12 @@
       }
     }
   }
+
+  $: recordButtonDisabled =
+    !$isRecording &&
+    (isStartingRecording ||
+      $isTranscribing ||
+      !isStartableAudioState($audioState.state));
 
   
   // Scroll to lists container
@@ -510,6 +545,7 @@
     <RecordButtonWithTimer
       recording={$isRecording}
       transcribing={$isTranscribing}
+      disabled={recordButtonDisabled}
       clipboardSuccess={$uiState.clipboardSuccess}
       recordingDuration={$recordingDuration}
       progress={$transcriptionProgress}

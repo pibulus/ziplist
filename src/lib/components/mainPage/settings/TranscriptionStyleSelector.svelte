@@ -16,20 +16,22 @@
     PROMPT_STYLES.SPARKLE_POP,
   ];
 
-  // Define style icons with nicer SVG icons in more distinct colors
-  const styleIcons = {
-    standard: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-pink-500">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>`,
-    surlyPirate: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-amber-500">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                 </svg>`,
-    codeWhisperer: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-cyan-500">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                   </svg>`,
-    quillAndInk: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-violet-500">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                 </svg>`,
+  const styleGlyphs = {
+    standard: "Aa",
+    surlyPirate: "Yo",
+    codeWhisperer: "</>",
+    quillAndInk: "Ink",
+    leetSpeak: "1337",
+    sparklePop: "Pop",
+  };
+
+  const styleGlyphClasses = {
+    standard: "text-pink-500 border-pink-200 bg-pink-50",
+    surlyPirate: "text-amber-600 border-amber-200 bg-amber-50",
+    codeWhisperer: "text-cyan-600 border-cyan-200 bg-cyan-50",
+    quillAndInk: "text-violet-600 border-violet-200 bg-violet-50",
+    leetSpeak: "text-lime-700 border-lime-200 bg-lime-50",
+    sparklePop: "text-fuchsia-600 border-fuchsia-200 bg-fuchsia-50",
   };
 
   // Style names (more descriptive)
@@ -38,6 +40,8 @@
     surlyPirate: "Pirate",
     codeWhisperer: "Code",
     quillAndInk: "Victorian",
+    leetSpeak: "Leet",
+    sparklePop: "Pop",
   };
 
   // Style tooltips (full descriptions for tooltips)
@@ -46,6 +50,8 @@
     surlyPirate: "Pirate lingo & swagger",
     codeWhisperer: "Structured tech syntax",
     quillAndInk: "Victorian literature style",
+    leetSpeak: "Internet shorthand style",
+    sparklePop: "Bright, playful style",
   };
 
   // Props for handler function
@@ -92,7 +98,13 @@
             <div
               class="preview-icon-layers relative h-full w-full flex items-center justify-center"
             >
-              {@html styleIcons[style] || ""}
+              <span
+                class="style-glyph border {styleGlyphClasses[style] ||
+                  styleGlyphClasses.standard}"
+                aria-hidden="true"
+              >
+                {styleGlyphs[style] || "Aa"}
+              </span>
             </div>
           </div>
         </div>
@@ -137,14 +149,20 @@
       0 4px 8px rgba(249, 168, 212, 0.2);
   }
 
-  /* SVG icon styling */
-  :global(svg) {
+  .style-glyph {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-family: "Space Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 900;
+    height: 2.25rem;
+    justify-content: center;
     transition: all 0.3s ease;
-    height: 28px;
-    width: 28px;
+    width: 2.25rem;
   }
 
-  .vibe-option:hover :global(svg) {
+  .vibe-option:hover .style-glyph {
     filter: drop-shadow(0 0 3px rgba(249, 168, 212, 0.5));
   }
 

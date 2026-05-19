@@ -290,10 +290,19 @@ function createListsStore() {
   let _persistTimer = null;
   let _lifecycleFlushRegistered = false;
 
-  function persistToStorage() {
+  function persistToStorage({ immediate = false } = {}) {
     if (!browser) return;
+    if (immediate) {
+      _flushToStorage();
+      return;
+    }
+
     if (_persistTimer) clearTimeout(_persistTimer);
     _persistTimer = setTimeout(_flushToStorage, 300);
+  }
+
+  function persistCriticalChange() {
+    persistToStorage({ immediate: true });
   }
 
   function _flushToStorage() {
@@ -382,7 +391,7 @@ function createListsStore() {
       return newState;
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Delete a list by ID
@@ -416,7 +425,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Set the active list
@@ -432,7 +441,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Add an item to a specific list (or active list by default)
@@ -477,7 +486,7 @@ function createListsStore() {
     });
 
     if (itemAdded) {
-      persistToStorage();
+      persistCriticalChange();
     }
 
     return itemAdded;
@@ -531,7 +540,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Toggle an item's checked state
@@ -564,7 +573,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Edit an item's text
@@ -591,7 +600,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Remove an item from a list
@@ -613,7 +622,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Clear all items from a list
@@ -635,7 +644,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Rename a list
@@ -659,7 +668,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Insert or replace a list record while preserving the target ID
@@ -700,7 +709,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Reorder items in a list
@@ -744,7 +753,7 @@ function createListsStore() {
       };
     });
 
-    persistToStorage();
+    persistCriticalChange();
   }
 
   // Initialize when created

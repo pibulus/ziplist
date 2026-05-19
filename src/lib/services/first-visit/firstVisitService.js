@@ -15,8 +15,9 @@ export class FirstVisitService {
     this.debug = !!value;
   }
 
-  log() {
+  log(...args) {
     if (this.debug) {
+      console.log("[FirstVisitService]", ...args);
     }
   }
 

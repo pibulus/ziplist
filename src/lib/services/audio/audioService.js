@@ -1,6 +1,5 @@
 import { AudioStateManager, AudioStates } from "./audioStates";
 import { audioState, audioActions, uiActions } from "../infrastructure/stores";
-import { get } from "svelte/store";
 
 export const AudioEvents = {
   RECORDING_STARTED: "audio:recordingStarted",

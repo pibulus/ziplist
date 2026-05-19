@@ -118,7 +118,7 @@ export function parseItemsFromResponse(responseText) {
       return cleaned;
     })
     .filter((line) => line.length > 0)
-    .filter((line) => !/^[{}\[\],]+$/.test(line))
+    .filter((line) => !/^[{}[\],]+$/.test(line))
     .filter((line) => !/^"?items"?\s*:/i.test(line));
 
   return lines;

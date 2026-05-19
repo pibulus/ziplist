@@ -13,6 +13,9 @@ export class EventBus {
     callbacks.push(callback);
 
     if (this.debug) {
+      console.log(
+        `[EventBus] Subscribed to event: ${event}, total listeners: ${callbacks.length}`,
+      );
     }
 
     return () => this.off(event, callback);
