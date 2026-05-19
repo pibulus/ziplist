@@ -23,7 +23,9 @@ export class ListsService {
     if (
       typeof window !== "undefined" &&
       result?.message &&
-      (result.reason?.startsWith("max-") || result.skippedCount > 0)
+      (result.ok ||
+        result.reason?.startsWith("max-") ||
+        result.skippedCount > 0)
     ) {
       window.dispatchEvent(
         new CustomEvent("ziplist-list-notice", {

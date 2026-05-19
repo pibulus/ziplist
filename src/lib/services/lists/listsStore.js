@@ -168,6 +168,13 @@ function createSuccessResult(extra = {}) {
   return { ok: true, ...extra };
 }
 
+function getLongListNudge(previousCount, nextCount) {
+  return previousCount < PRODUCT_LIMITS.LONG_LIST_NUDGE_AT &&
+    nextCount >= PRODUCT_LIMITS.LONG_LIST_NUDGE_AT
+    ? `This list has ${nextCount} items now. You can keep adding here, but a fresh list may be easier soon.`
+    : "";
+}
+
 // Initialize the lists store
 function createListsStore() {
   // Create the main store with default empty state
@@ -479,14 +486,6 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
-            if (list.items.length >= PRODUCT_LIMITS.MAX_ITEMS_PER_LIST) {
-              result = createLimitResult(
-                `${PRODUCT_LIMITS.MAX_ITEMS_PER_LIST} items is the sweet spot for one list. Start a fresh one.`,
-                "max-items",
-              );
-              return list;
-            }
-
             const alreadyExists = list.items.some(
               (item) =>
                 getItemDedupeKey(item.text) ===
@@ -496,7 +495,11 @@ function createListsStore() {
               return list;
             }
 
-            result = createSuccessResult({ addedCount: 1 });
+            const nextCount = list.items.length + 1;
+            result = createSuccessResult({
+              addedCount: 1,
+              message: getLongListNudge(list.items.length, nextCount),
+            });
             return {
               ...list,
               items: [
@@ -536,19 +539,6 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
-            const availableSlots = Math.max(
-              0,
-              PRODUCT_LIMITS.MAX_ITEMS_PER_LIST - list.items.length,
-            );
-
-            if (availableSlots === 0) {
-              result = createLimitResult(
-                `${PRODUCT_LIMITS.MAX_ITEMS_PER_LIST} items is the sweet spot for one list. Start a fresh one.`,
-                "max-items",
-              );
-              return list;
-            }
-
             const existingTexts = new Set(
               list.items.map((item) => getItemDedupeKey(item.text)),
             );
@@ -563,8 +553,7 @@ function createListsStore() {
                 }
                 existingTexts.add(key);
                 return true;
-              })
-              .slice(0, availableSlots);
+              });
 
             const newItems = dedupedTexts.map((text, index) => ({
               id: crypto.randomUUID(),
@@ -583,13 +572,19 @@ function createListsStore() {
 
             const requestedCount = items.length;
             const skippedCount = Math.max(0, requestedCount - newItems.length);
+            const nextCount = list.items.length + newItems.length;
+            const longListMessage = getLongListNudge(
+              list.items.length,
+              nextCount,
+            );
             result = createSuccessResult({
               addedCount: newItems.length,
               skippedCount,
               message:
-                skippedCount > 0
-                  ? `Added ${newItems.length}. Kept this list to ${PRODUCT_LIMITS.MAX_ITEMS_PER_LIST} items.`
-                  : "",
+                longListMessage ||
+                (skippedCount > 0
+                  ? `Added ${newItems.length}. Skipped ${skippedCount} duplicate ${skippedCount === 1 ? "item" : "items"}.`
+                  : ""),
             });
 
             return {

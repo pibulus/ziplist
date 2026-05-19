@@ -1068,6 +1068,10 @@
         hapticService.notification("warning");
         return;
       }
+
+      if (result.message) {
+        showListStatus(result.message, true);
+      }
     }
 
     hapticService.selection();
