@@ -24,6 +24,8 @@ export const STORAGE_KEYS = {
   AUTO_RECORD: "ziplist-autoRecord",
   PROMPT_STYLE: "ziplist-prompt-style",
   DEBUG_MODE: "ziplist-debug-mode",
+  CONTRIBUTOR: "ziplist-contributor",
+  CONTRIBUTOR_TOKEN: "ziplist-contributor-token",
 
   // PWA Related
   TRANSCRIPTION_COUNT: "ziplist-transcription-count",
@@ -53,7 +55,9 @@ export const DEFAULT_PROMPT_STYLE = PROMPT_STYLES.STANDARD;
 // Product limits: keep ZipList focused on quick, graspable lists.
 export const PRODUCT_LIMITS = {
   RECORDING_SECONDS: 120,
-  MAX_LISTS: 6,
+  FREE_MAX_LISTS: 3,
+  CONTRIBUTOR_MAX_LISTS: 12,
+  MAX_LISTS: 3,
   LONG_LIST_NUDGE_AT: 60,
   MAX_ITEM_TEXT_LENGTH: 140,
   MAX_LIST_NAME_LENGTH: 32,

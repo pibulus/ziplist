@@ -1,5 +1,6 @@
 import { writable, derived, get } from "svelte/store";
 import { browser } from "$app/environment";
+import { getContributorSnapshot } from "$lib";
 import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
 
 const LIST_COLOR_PRESETS = [
@@ -173,6 +174,20 @@ function getLongListNudge(previousCount, nextCount) {
     nextCount >= PRODUCT_LIMITS.LONG_LIST_NUDGE_AT
     ? `This list has ${nextCount} items now. You can keep adding here, but a fresh list may be easier soon.`
     : "";
+}
+
+function getMaxListCount() {
+  return getContributorSnapshot()
+    ? PRODUCT_LIMITS.CONTRIBUTOR_MAX_LISTS
+    : PRODUCT_LIMITS.FREE_MAX_LISTS;
+}
+
+function getMaxListsMessage(maxLists) {
+  if (getContributorSnapshot()) {
+    return `ZipList keeps ${maxLists} lists max. Rename one or clear space first.`;
+  }
+
+  return `Free ZipList keeps ${maxLists} lists. Contributor opens more room and live sharing.`;
 }
 
 // Initialize the lists store
@@ -376,13 +391,11 @@ function createListsStore() {
 
   // Add a new list
   function addList(name = "") {
-    let result = createLimitResult(
-      `ZipList keeps ${PRODUCT_LIMITS.MAX_LISTS} lists max. Rename one or clear space first.`,
-      "max-lists",
-    );
+    const maxLists = getMaxListCount();
+    let result = createLimitResult(getMaxListsMessage(maxLists), "max-lists");
 
     update((state) => {
-      if (state.lists.length >= PRODUCT_LIMITS.MAX_LISTS) {
+      if (state.lists.length >= maxLists) {
         return state;
       }
 

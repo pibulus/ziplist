@@ -338,6 +338,12 @@
   );
 }
 
+.zl-live-button.locked {
+  border-color: rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--zl-text-color-secondary);
+}
+
 .zl-add-list-button .add-icon {
   font-size: 1rem;
   line-height: 1;

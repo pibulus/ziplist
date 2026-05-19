@@ -165,6 +165,16 @@ export default class ListRoom implements Party.Server {
    */
   async onRequest(req: Party.Request) {
     if (req.method === "POST") {
+      const createSecret = (this.party as any).env?.PARTYKIT_CREATE_SECRET;
+      const authHeader = req.headers.get("authorization") || "";
+
+      if (createSecret && authHeader !== `Bearer ${createSecret}`) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
       // Create new list
       const data = await req.json<ListData>();
       await this.saveListData(data);

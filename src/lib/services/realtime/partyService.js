@@ -5,6 +5,7 @@
  */
 
 import PartySocket from "partysocket";
+import { getContributorTokenSnapshot } from "$lib";
 import { getOrCreateAvatar } from "./avatarService.js";
 
 const PARTYKIT_PLACEHOLDER_HOST = "ziplist.your-username.partykit.dev";
@@ -58,22 +59,26 @@ function requirePartyKitHost() {
  * @returns {Promise<{roomId: string, listId: string}>}
  */
 export async function createLiveList(listData, password = null) {
-  const host = requirePartyKitHost();
-  const url = `http${host.includes("localhost") ? "" : "s"}://${host}/party/listRoom?${password ? `pwd=${encodeURIComponent(password)}` : ""}`;
+  requirePartyKitHost();
 
-  const response = await fetch(url, {
+  const token = getContributorTokenSnapshot();
+  const response = await fetch("/api/live/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(listData),
+    body: JSON.stringify({ listData, password }),
   });
 
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(`Failed to create live list: ${response.statusText}`);
+    throw new Error(
+      payload.error || `Failed to create live list: ${response.statusText}`,
+    );
   }
 
-  return await response.json();
+  return payload;
 }
 
 /**

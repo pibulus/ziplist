@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { get } from 'svelte/store';
   import { browser } from '$app/environment';
   import ContentContainer from './ContentContainer.svelte';
@@ -43,6 +43,10 @@
   // Lazy load settings modal - only import when needed
   let SettingsModal;
   let loadingSettingsModal = false;
+
+  // Lazy load contributor modal - only import when needed
+  let ContributorModal;
+  let loadingContributorModal = false;
 
   // PWA Install Prompt component - lazy loaded
   let PwaInstallPrompt;
@@ -131,11 +135,47 @@
       }
     }
 
+    await tick();
+
     // Open the settings modal
     modalService.openModal('settings_modal');
   }
 
   function closeSettingsModal() {
+    modalService.closeModal();
+  }
+
+  async function openContributorModal() {
+    if (modalService.isModalOpen()) {
+      modalService.closeModal();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    if (loadingContributorModal) {
+      return;
+    }
+
+    if (!ContributorModal) {
+      loadingContributorModal = true;
+
+      try {
+        const module = await import('./modals/ContributorModal.svelte');
+        ContributorModal = module.default;
+      } catch (err) {
+        console.error('Error loading ContributorModal:', err);
+        loadingContributorModal = false;
+        return;
+      } finally {
+        loadingContributorModal = false;
+      }
+    }
+
+    await tick();
+
+    modalService.openModal('contributor_modal');
+  }
+
+  function closeContributorModal() {
     modalService.closeModal();
   }
 
@@ -306,6 +346,7 @@
     if (browser) {
       window.removeEventListener('ziplist-setting-changed', handleSettingChanged);
       window.removeEventListener('ziplist-storage-error', handleStorageError);
+      window.removeEventListener('ziplist-open-contributor', openContributorModal);
     }
   });
 
@@ -509,6 +550,7 @@
     if (browser) {
       window.addEventListener('ziplist-setting-changed', handleSettingChanged);
       window.addEventListener('ziplist-storage-error', handleStorageError);
+      window.addEventListener('ziplist-open-contributor', openContributorModal);
     }
 
     // Keep the first-visit state current without auto-opening a native
@@ -562,6 +604,7 @@
   <svelte:fragment slot="footer-buttons">
     <FooterComponent
       on:showAbout={showAboutModal}
+      on:showContributor={openContributorModal}
       on:showSettings={openSettingsModal}
       on:showExtension={showExtensionModal}
     />
@@ -580,6 +623,10 @@
 <!-- Settings Modal - lazy loaded -->
 {#if SettingsModal}
   <svelte:component this={SettingsModal} closeModal={closeSettingsModal} on:close={closeSettingsModal} />
+{/if}
+
+{#if ContributorModal}
+  <svelte:component this={ContributorModal} closeModal={closeContributorModal} on:close={closeContributorModal} />
 {/if}
 
 <!-- PWA Install Prompt -->

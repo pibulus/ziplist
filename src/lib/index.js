@@ -1,6 +1,7 @@
 // Centralized stores for application state management
-import { writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
 import { browser } from "$app/environment";
+import { env as publicEnv } from "$env/dynamic/public";
 import * as CONSTANTS from "./constants";
 
 // Initialize store with localStorage value if available
@@ -63,6 +64,49 @@ export const promptStyle = createLocalStorageStore(
   CONSTANTS.STORAGE_KEYS.PROMPT_STYLE,
   CONSTANTS.DEFAULT_PROMPT_STYLE,
 );
+
+export const contributor = createLocalStorageStore(
+  CONSTANTS.STORAGE_KEYS.CONTRIBUTOR,
+  "false",
+);
+
+export const contributorToken = createLocalStorageStore(
+  CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_TOKEN,
+  "",
+);
+
+function isForcedContributorMode() {
+  return publicEnv.PUBLIC_FORCE_CONTRIBUTOR_MODE === "true";
+}
+
+export const isContributor = derived(contributor, ($contributor) => {
+  return isForcedContributorMode() || $contributor === "true";
+});
+
+export function setContributorStatus(isUnlocked, token = null) {
+  contributor.set(isUnlocked ? "true" : "false");
+
+  if (token) {
+    contributorToken.set(token);
+  } else if (!isUnlocked) {
+    contributorToken.set("");
+  }
+}
+
+export function getContributorSnapshot() {
+  if (isForcedContributorMode()) return true;
+  if (!browser) return false;
+
+  return (
+    localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR) === "true" ||
+    Boolean(localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_TOKEN))
+  );
+}
+
+export function getContributorTokenSnapshot() {
+  if (!browser) return "";
+  return localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_TOKEN) || "";
+}
 
 // Export all constants for use throughout the app
 export { CONSTANTS };

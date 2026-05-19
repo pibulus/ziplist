@@ -9,7 +9,8 @@ export async function handle({ event, resolve }) {
 
   if (
     event.url.pathname.startsWith("/import") ||
-    event.url.pathname.startsWith("/live/")
+    event.url.pathname.startsWith("/live/") ||
+    event.url.pathname.startsWith("/contributor/success")
   ) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   }

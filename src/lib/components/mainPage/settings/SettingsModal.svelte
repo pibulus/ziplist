@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
-  import { theme, autoRecord, applyTheme } from "$lib";
+  import { theme, autoRecord, applyTheme, isContributor } from "$lib";
+  import { PRICING } from "$lib/config/pricing.js";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -9,6 +10,7 @@
   let selectedVibe;
   let autoRecordValue = false;
   let chunkyModeValue = false;
+  let contributorUnlocked = false;
 
   // Subscribe to theme store
   const unsubscribeTheme = theme.subscribe((value) => {
@@ -18,6 +20,10 @@
   // Subscribe to autoRecord store
   const unsubscribeAutoRecord = autoRecord.subscribe((value) => {
     autoRecordValue = value === "true";
+  });
+
+  const unsubscribeContributor = isContributor.subscribe((value) => {
+    contributorUnlocked = value;
   });
 
   // Theme options
@@ -48,6 +54,7 @@
     return () => {
       unsubscribeTheme();
       unsubscribeAutoRecord();
+      unsubscribeContributor();
       if (dialog) {
         dialog.removeEventListener("close", onDialogClose);
       }
@@ -94,6 +101,10 @@
 
   function handleModalClose() {
     closeModal();
+  }
+
+  function openContributorModal() {
+    window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
   }
 </script>
 
@@ -167,6 +178,22 @@
             />
             <span class="zl-toggle-slider"></span>
           </label>
+        </div>
+
+        <div class="zl-setting-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Contributor</span>
+            <p class="zl-setting-desc">
+              More lists, live sharing, and device unlocks
+            </p>
+          </div>
+          <button
+            type="button"
+            class="zl-setting-action"
+            on:click={openContributorModal}
+          >
+            {contributorUnlocked ? "Unlocked" : PRICING.displayPrice}
+          </button>
         </div>
       </div>
 
@@ -385,6 +412,35 @@
 
   input:checked + .zl-toggle-slider:before {
     transform: translateX(24px);
+  }
+
+  .zl-setting-action {
+    background: linear-gradient(
+      135deg,
+      var(--zl-primary-color, #ffcc33),
+      #f2a93b
+    );
+    border: 2px solid var(--zl-card-border-color, #000000);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 #000000;
+    color: #111111;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: "Space Mono", monospace;
+    font-size: 0.78rem;
+    font-weight: 900;
+    min-height: 44px;
+    padding: 0.35rem 0.85rem;
+    transition:
+      transform 0.16s ease,
+      box-shadow 0.16s ease;
+  }
+
+  .zl-setting-action:hover,
+  .zl-setting-action:focus-visible {
+    box-shadow: 4px 4px 0 #000000;
+    outline: none;
+    transform: translate(-1px, -1px);
   }
 
   /* Vibe Grid */

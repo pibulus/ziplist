@@ -72,9 +72,23 @@ If you want PartyKit live sharing in a deployed environment, also set:
 
 ```bash
 VITE_PARTYKIT_HOST=your-actual-host.partykit.dev
+PARTYKIT_HOST=your-actual-host.partykit.dev
+PARTYKIT_CREATE_SECRET=long_random_secret_also_set_in_partykit
 ```
 
 Leave it unset for solo/demo deployments and ZipList will stay in clean solo mode.
+
+Contributor checkout and unlock codes use:
+
+```bash
+CONTRIBUTOR_LICENSE_SECRET=long_random_secret_at_least_16_chars
+CONTRIBUTOR_UNLOCK_CODES=ZL-DEMO-CODE
+PUBLIC_APP_URL=https://ziplist.app
+SQUARE_ACCESS_TOKEN=your_square_access_token
+SQUARE_LOCATION_ID=your_square_location_id
+SQUARE_WEBHOOK_SIGNATURE_KEY=your_square_webhook_signature_key
+SQUARE_WEBHOOK_NOTIFICATION_URL=https://ziplist.app/api/square/webhook
+```
 
 ## How It's Built
 

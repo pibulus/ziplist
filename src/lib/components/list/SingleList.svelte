@@ -10,6 +10,7 @@
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
   import { getTypingStore } from "$lib/services/realtime/typingStore";
   import { PRODUCT_LIMITS } from "$lib/constants";
+  import { isContributor } from "$lib";
   import CompletedDivider from "./CompletedDivider.svelte";
   import DraftItemRow from "./DraftItemRow.svelte";
   import ListItemBody from "./ListItemBody.svelte";
@@ -204,6 +205,13 @@
       return;
     }
 
+    if (!$isContributor) {
+      showListStatus("Contributor opens live shared lists.", false, 4200);
+      hapticService.notification("warning");
+      requestContributorUnlock();
+      return;
+    }
+
     if (!list || !list.id) {
       showListStatus("Cannot make list live");
       return;
@@ -242,10 +250,18 @@
     if (!result.ok) {
       showListStatus(result.message);
       hapticService.notification("warning");
+      if (result.reason === "max-lists") {
+        requestContributorUnlock();
+      }
       return;
     }
 
     hapticService.notification("success");
+  }
+
+  function requestContributorUnlock() {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
   }
 
   function startEditingListName() {
@@ -1195,14 +1211,19 @@
             <button
               type="button"
               class="zl-live-button"
+              class:locked={!$isContributor}
               on:click={handleMakeLive}
-              title="Enable real-time collaboration"
+              title={$isContributor
+                ? "Enable real-time collaboration"
+                : "Contributor opens live shared lists"}
               aria-label={`Make Live. Enable real-time collaboration for ${
                 list.name || "this list"
               }`}
             >
-              <span class="live-icon" aria-hidden="true">🔴</span>
-              <span class="live-text">Make Live</span>
+              <span class="live-icon" aria-hidden="true"
+                >{$isContributor ? "🔴" : "↗"}</span
+              >
+              <span class="live-text">{$isContributor ? "Make Live" : "Live"}</span>
             </button>
           {:else}
             <div
