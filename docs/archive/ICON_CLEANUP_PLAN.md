@@ -22,6 +22,7 @@
 ## Changes:
 
 ### MainContainer.svelte
+
 - Remove line 5: `import GhostContainer from './GhostContainer.svelte';`
 
 ---

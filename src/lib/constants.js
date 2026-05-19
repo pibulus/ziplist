@@ -114,9 +114,7 @@ export const CTA_PHRASES = [
 ];
 
 // ZipList specific phrases for different button contexts
-export const ZIPLIST_START_PHRASES = [
-  "Talk That List",
-];
+export const ZIPLIST_START_PHRASES = ["Talk That List"];
 
 export const ZIPLIST_ADD_PHRASES = [
   "Keep Zippin",

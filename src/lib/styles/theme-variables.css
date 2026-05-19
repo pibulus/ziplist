@@ -558,7 +558,6 @@ html[data-theme="nocturne"] {
   --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(196, 135, 210, 0.2);
 }
 
-
 /**
  * Theme: Neo
  *
@@ -573,14 +572,14 @@ html[data-theme="neo"] {
   --zl-card-bg-gradient-color-mid: #fff9f0;
   --zl-card-bg-gradient-color-fourth: #fff9f0;
   --zl-card-bg-gradient-color-end: #fff9f0;
-  
+
   /* Base theme colors */
-  --zl-primary-color: #FFB000; /* Amber/Egg Yolk */
+  --zl-primary-color: #ffb000; /* Amber/Egg Yolk */
   --zl-primary-color-rgb: 255, 176, 0;
-  --zl-secondary-color: #FFD1DC; /* Pastel Pink */
+  --zl-secondary-color: #ffd1dc; /* Pastel Pink */
   --zl-accent-color: #000000; /* Black */
   --zl-accent-color-rgb: 0, 0, 0;
-  --zl-highlight-color: #A0E7E5; /* Tiffany Blue / Mint */
+  --zl-highlight-color: #a0e7e5; /* Tiffany Blue / Mint */
   --zl-text-hover-color: #000000;
 
   /* Text colors */
@@ -589,29 +588,29 @@ html[data-theme="neo"] {
   --zl-text-color-disabled: #777777;
 
   /* List item styling */
-  --zl-item-bg: #FFFFFF;
-  --zl-item-hover-bg: #FFF8E1;
+  --zl-item-bg: #ffffff;
+  --zl-item-hover-bg: #fff8e1;
   --zl-item-border-color: #000000;
   --zl-item-border-hover-color: #000000;
-  
+
   /* Checked item styling */
   --zl-item-checked-opacity: 1;
-  --zl-item-checked-bg: #E0E0E0;
+  --zl-item-checked-bg: #e0e0e0;
   --zl-item-checked-border-color: #555555;
-  
+
   /* Drag and drop styling */
-  --zl-item-dragging-bg: #FFD1DC;
-  --zl-item-dragover-bg: #E6F7FF;
+  --zl-item-dragging-bg: #ffd1dc;
+  --zl-item-dragover-bg: #e6f7ff;
 
   /* Checkbox styling */
-  --zl-checkbox-bg: #FFFFFF;
-  --zl-checkbox-hover-bg: #A0E7E5;
+  --zl-checkbox-bg: #ffffff;
+  --zl-checkbox-hover-bg: #a0e7e5;
   --zl-checkbox-checked-gradient-start: #000000;
   --zl-checkbox-checked-gradient-end: #000000;
-  --zl-checkbox-sparkle-color: #FFB000;
+  --zl-checkbox-sparkle-color: #ffb000;
 
   /* Text button styling */
-  --zl-text-button-hover-bg: #FFD1DC;
+  --zl-text-button-hover-bg: #ffd1dc;
 
   /* Grab handle styling */
   --zl-grab-handle-color: #000000;
@@ -619,8 +618,8 @@ html[data-theme="neo"] {
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-bg: #FF6B6B;
-  --zl-delete-button-hover-bg: #FF4757;
+  --zl-delete-button-bg: #ff6b6b;
+  --zl-delete-button-hover-bg: #ff4757;
   --zl-delete-button-text-color: #000000;
 
   /* Drop indicator styling */
@@ -629,12 +628,12 @@ html[data-theme="neo"] {
   --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-bg: #FFFFFF;
-  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #A0E7E5;
+  --zl-edit-input-bg: #ffffff;
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #a0e7e5;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #FFB000;
-  
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #ffb000;
+
   /* Empty state styling */
   --zl-empty-state-bg: #fff0f5;
   --zl-empty-title-color: #000000;
@@ -661,7 +660,7 @@ html.mode-neo-brutalist {
   --zl-item-border-radius: 8px;
   --zl-item-box-shadow: 4px 4px 0px 0px #000000;
   --zl-item-hover-box-shadow: 6px 6px 0px 0px #000000;
-  
+
   /* Dragging */
   --zl-item-dragging-border: 3px solid #000000;
   --zl-item-dragging-shadow: 10px 10px 0px 0px #000000;
@@ -671,7 +670,7 @@ html.mode-neo-brutalist {
   /* Checkbox */
   --zl-checkbox-border: 3px solid #000000;
   --zl-checkbox-hover-border: 3px solid #000000;
-  --zl-checkbox-checked-shadow: 2px 2px 0px 0px rgba(0,0,0,0.2);
+  --zl-checkbox-checked-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.2);
   --zl-checkbox-size: 28px;
   --zl-checkbox-border-radius: 6px;
 

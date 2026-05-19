@@ -4,7 +4,7 @@
  * Tracks who's currently online in a live list using Svelte 5 runes.
  */
 
-import { writable } from 'svelte/store';
+import { writable } from "svelte/store";
 
 /**
  * @typedef {Object} PresenceUser
@@ -18,7 +18,9 @@ import { writable } from 'svelte/store';
  * @returns {Object} Presence store with subscribe method and update functions
  */
 export function createPresenceStore() {
-  const { subscribe, set, update } = writable(/** @type {PresenceUser[]} */ ([]));
+  const { subscribe, set, update } = writable(
+    /** @type {PresenceUser[]} */ ([]),
+  );
 
   return {
     subscribe,
@@ -36,9 +38,9 @@ export function createPresenceStore() {
      * @param {PresenceUser} user
      */
     addUser(user) {
-      update(users => {
+      update((users) => {
         // Don't add duplicates
-        if (users.some(u => u.id === user.id)) {
+        if (users.some((u) => u.id === user.id)) {
           return users;
         }
         return [...users, user];
@@ -50,7 +52,7 @@ export function createPresenceStore() {
      * @param {string} userId
      */
     removeUser(userId) {
-      update(users => users.filter(u => u.id !== userId));
+      update((users) => users.filter((u) => u.id !== userId));
     },
 
     /**
@@ -58,7 +60,7 @@ export function createPresenceStore() {
      */
     clear() {
       set([]);
-    }
+    },
   };
 }
 

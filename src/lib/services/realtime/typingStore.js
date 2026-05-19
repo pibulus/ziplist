@@ -4,7 +4,7 @@
  * Tracks who's currently typing/adding items in live lists.
  */
 
-import { writable } from 'svelte/store';
+import { writable } from "svelte/store";
 
 /**
  * @typedef {Object} TypingUser
@@ -27,9 +27,9 @@ export function createTypingStore() {
     if (cleanupInterval) clearInterval(cleanupInterval);
 
     cleanupInterval = setInterval(() => {
-      update(users => {
+      update((users) => {
         const now = Date.now();
-        return users.filter(user => now - user.startedAt < 5000);
+        return users.filter((user) => now - user.startedAt < 5000);
       });
     }, 1000);
   }
@@ -44,9 +44,9 @@ export function createTypingStore() {
      * @param {TypingUser} user
      */
     startTyping(user) {
-      update(users => {
+      update((users) => {
         // Remove existing entry for this user
-        const filtered = users.filter(u => u.id !== user.id);
+        const filtered = users.filter((u) => u.id !== user.id);
         // Add new entry with current timestamp
         return [...filtered, { ...user, startedAt: Date.now() }];
       });
@@ -57,7 +57,7 @@ export function createTypingStore() {
      * @param {string} userId
      */
     stopTyping(userId) {
-      update(users => users.filter(u => u.id !== userId));
+      update((users) => users.filter((u) => u.id !== userId));
     },
 
     /**
@@ -69,7 +69,7 @@ export function createTypingStore() {
         clearInterval(cleanupInterval);
         cleanupInterval = null;
       }
-    }
+    },
   };
 }
 

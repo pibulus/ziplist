@@ -24,7 +24,7 @@ export class HapticService {
 
     return Boolean(
       navigator.maxTouchPoints > 0 ||
-        window.matchMedia?.("(pointer: coarse)").matches,
+      window.matchMedia?.("(pointer: coarse)").matches,
     );
   }
 
@@ -41,7 +41,6 @@ export class HapticService {
       navigator.vibrate(pattern);
       return true;
     } catch {
-
       return false;
     }
   }

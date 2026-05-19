@@ -26,8 +26,6 @@ export class AudioService {
     this.stateManager = new AudioStateManager();
 
     this.stateManager.addListener(({ newState, error }) => {
-
-
       // Update the store instead of emitting event
       audioActions.updateState(newState, error);
     });

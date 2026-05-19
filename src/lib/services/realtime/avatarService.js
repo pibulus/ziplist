@@ -6,18 +6,48 @@
  */
 
 const ADJECTIVES = [
-  'Misty', 'Happy', 'Quiet', 'Bright', 'Swift', 'Gentle',
-  'Bold', 'Calm', 'Eager', 'Mellow', 'Clever', 'Lucky',
-  'Brave', 'Kind', 'Wise', 'Jolly', 'Noble', 'Zesty'
+  "Misty",
+  "Happy",
+  "Quiet",
+  "Bright",
+  "Swift",
+  "Gentle",
+  "Bold",
+  "Calm",
+  "Eager",
+  "Mellow",
+  "Clever",
+  "Lucky",
+  "Brave",
+  "Kind",
+  "Wise",
+  "Jolly",
+  "Noble",
+  "Zesty",
 ];
 
 const ANIMALS = [
-  'Fox', 'Frog', 'Owl', 'Deer', 'Wolf', 'Bear',
-  'Lynx', 'Hawk', 'Otter', 'Raven', 'Seal', 'Eagle',
-  'Panda', 'Tiger', 'Koala', 'Dove', 'Swan', 'Hare'
+  "Fox",
+  "Frog",
+  "Owl",
+  "Deer",
+  "Wolf",
+  "Bear",
+  "Lynx",
+  "Hawk",
+  "Otter",
+  "Raven",
+  "Seal",
+  "Eagle",
+  "Panda",
+  "Tiger",
+  "Koala",
+  "Dove",
+  "Swan",
+  "Hare",
 ];
 
-const STORAGE_KEY = 'ziplist_user_avatar';
+const STORAGE_KEY = "ziplist_user_avatar";
 
 /**
  * Get or create an avatar name for the current user
@@ -25,7 +55,7 @@ const STORAGE_KEY = 'ziplist_user_avatar';
  */
 export function getOrCreateAvatar() {
   // Check if we already have an avatar
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const existing = localStorage.getItem(STORAGE_KEY);
     if (existing) {
       return existing;
@@ -38,7 +68,7 @@ export function getOrCreateAvatar() {
   }
 
   // Fallback for SSR
-  return 'Guest';
+  return "Guest";
 }
 
 /**
@@ -56,12 +86,12 @@ function generateAvatar() {
  * @returns {string} New avatar name
  */
 export function resetAvatar() {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const newAvatar = generateAvatar();
     localStorage.setItem(STORAGE_KEY, newAvatar);
     return newAvatar;
   }
-  return 'Guest';
+  return "Guest";
 }
 
 /**
@@ -69,7 +99,7 @@ export function resetAvatar() {
  * @returns {string | null} Current avatar or null
  */
 export function getAvatar() {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     return localStorage.getItem(STORAGE_KEY);
   }
   return null;

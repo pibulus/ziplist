@@ -9,11 +9,13 @@ Simplified Whisper implementation to **tiny model only** with **auto-download on
 ## Key Changes
 
 ### 1. Single Model Strategy
+
 - ✅ **Only Whisper Tiny** (117MB) - removed all other models
 - ✅ **Auto-downloads** on first page visit
 - ✅ **No model selection** - simpler, cleaner
 
 ### 2. Smart Hybrid Fallback
+
 ```
 First visit → Whisper starts downloading in background
 First recording → Uses Gemini Flash 2.5 Lite (instant)
@@ -22,15 +24,18 @@ Whisper fails → Falls back to Gemini gracefully
 ```
 
 ### 3. Code Reduction
+
 - **Before**: ~1,200 lines (whisperService + modelRegistry + modelCache + deviceCapabilities + audioConverter)
 - **After**: ~410 lines (whisperService + audioConverter stub)
 - **Reduction**: 66% less code
 
 ### 4. Files Modified
+
 1. `whisperService.js` - Simplified to 391 lines, tiny-only, auto-download
 2. `audioConverter.js` - Reduced to 20-line stub
 
 ### 5. Files Deleted
+
 1. `modelRegistry.js` - 249 lines removed
 2. `modelCacheService.js` - 7.5KB removed
 3. `deviceCapabilities.js` - 7.6KB removed
@@ -38,29 +43,32 @@ Whisper fails → Falls back to Gemini gracefully
 ## Implementation Details
 
 ### Auto-Download Behavior
+
 ```javascript
 // In WhisperService constructor
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Request persistent storage
   requestPersistentStorage();
-  
+
   // Start downloading tiny model in background immediately
-  console.log('🚀 ZipList: Auto-starting Whisper Tiny model download...');
+  console.log("🚀 ZipList: Auto-starting Whisper Tiny model download...");
   this.preloadModel();
 }
 ```
 
 ### Model Configuration
+
 ```javascript
 const WHISPER_TINY_MODEL = {
-  id: 'Xenova/whisper-tiny.en',
-  name: 'Whisper Tiny English',
-  size: 117 * 1024 * 1024,  // ~117MB
-  description: 'Fast, lightweight, perfect for list transcription'
+  id: "Xenova/whisper-tiny.en",
+  name: "Whisper Tiny English",
+  size: 117 * 1024 * 1024, // ~117MB
+  description: "Fast, lightweight, perfect for list transcription",
 };
 ```
 
 ### Hybrid Service Flow
+
 1. User records audio
 2. `simpleHybridService.transcribeAudio()` checks if Whisper is ready
 3. If ready → Use Whisper (offline, free, private)
@@ -70,6 +78,7 @@ const WHISPER_TINY_MODEL = {
 ## Expected Console Logs
 
 ### On First Visit
+
 ```
 🚀 ZipList: Auto-starting Whisper Tiny model download...
 🎯 Loading Whisper Tiny English (117MB)...
@@ -83,12 +92,14 @@ const WHISPER_TINY_MODEL = {
 ```
 
 ### On First Recording (while downloading)
+
 ```
 🔄 Starting background Whisper model download...
 ☁️ Using Gemini API while Whisper loads...
 ```
 
 ### On Second Recording (after download)
+
 ```
 🎯 Using offline Whisper transcription
 🎤 Transcribing 48000 samples...
@@ -98,6 +109,7 @@ const WHISPER_TINY_MODEL = {
 ## Benefits
 
 ### For Users
+
 - ✅ **First recording works instantly** (Gemini API)
 - ✅ **All future recordings are free** (Whisper offline)
 - ✅ **Works offline** after first download
@@ -105,6 +117,7 @@ const WHISPER_TINY_MODEL = {
 - ✅ **Fast** - tiny model is optimized for speed
 
 ### For Developers
+
 - ✅ **Simple** - no model selection complexity
 - ✅ **Clean** - 66% less code
 - ✅ **Maintainable** - single model to support

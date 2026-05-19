@@ -129,6 +129,7 @@ The Ziplist app uses subtle text animations for improved user experience:
 ## Theme System
 
 Five themes defined in `src/lib/styles/theme-variables.css` with 50+ CSS variables each:
+
 - **focus** (warm tangerine), **chill** (cool mint), **zen** (lavender), **nocturne** (moonlight), **neo** (high-contrast, default)
 - Applied via `data-theme` attribute on `<html>` root
 - "Chunky Mode" (Neo-Brutalist) is an orthogonal style overlay

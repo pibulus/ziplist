@@ -17,7 +17,6 @@ export class FirstVisitService {
 
   log() {
     if (this.debug) {
-
     }
   }
 

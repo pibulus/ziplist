@@ -14,6 +14,7 @@
 **Solution**: Clean 410-line implementation with tiny model only
 
 **Changes**:
+
 - ✅ Simplified `whisperService.js` (551 → 391 lines)
 - ✅ Removed model selection complexity
 - ✅ Auto-downloads tiny model on first visit
@@ -30,6 +31,7 @@
 **Solution**: Clean, modular components
 
 **New Architecture**:
+
 ```
 utils/haptics.js (30 lines) - Haptic feedback utility
 actions/draggable.js (85 lines) - Reusable drag & drop
@@ -46,12 +48,14 @@ components/list/
 ### **3. Tech Debt - Fixed Critical Issues** ✅
 
 **Fixed**:
+
 - ✅ Settings modal theme names (peach/mint/bubblegum/rainbow → focus/chill/zen/nocturne)
 - ✅ Removed outdated "Privacy Mode" from coming soon (it's live!)
 - ✅ Removed "Whisper model selection" from coming soon (not applicable)
 - ✅ Added "Recurring list templates" as future feature
 
 **Remaining** (minor):
+
 - Ghost component still uses old theme names internally (works via mapping)
 - Old list files still exist (waiting for testing before deletion)
 
@@ -59,17 +63,18 @@ components/list/
 
 ## 📊 **Code Metrics**
 
-| Component | Before | After | Reduction |
-|-----------|--------|-------|-----------|
-| **Whisper** | 1,200 lines | 410 lines | 66% |
-| **List** | 2,600 lines | 775 lines | 70% |
-| **Total** | 3,800 lines | 1,185 lines | 69% |
+| Component   | Before      | After       | Reduction |
+| ----------- | ----------- | ----------- | --------- |
+| **Whisper** | 1,200 lines | 410 lines   | 66%       |
+| **List**    | 2,600 lines | 775 lines   | 70%       |
+| **Total**   | 3,800 lines | 1,185 lines | 69%       |
 
 ---
 
 ## 🎨 **Features Preserved**
 
 ### **Whisper**:
+
 - ✅ Offline transcription
 - ✅ Auto-download on first visit
 - ✅ Gemini API fallback
@@ -77,6 +82,7 @@ components/list/
 - ✅ Progress tracking
 
 ### **List**:
+
 - ✅ Drag & drop reordering
 - ✅ Check/uncheck items
 - ✅ Inline editing
@@ -100,10 +106,12 @@ components/list/
 ## 📝 **Files Created**
 
 ### **Whisper**:
+
 - `whisperService.js` (391 lines) - Simplified service
 - `audioConverter.js` (20 lines) - Stub for compatibility
 
 ### **List**:
+
 - `utils/haptics.js` - Haptic feedback utility
 - `actions/draggable.js` - Drag & drop action
 - `list.css` - External styles
@@ -111,6 +119,7 @@ components/list/
 - `List.svelte` - Main component
 
 ### **Documentation**:
+
 - `WHISPER_TINY_IMPLEMENTATION.md` - Whisper summary
 - `CLEAN_LIST_IMPLEMENTATION.md` - List component summary
 - `SINGLELIST_AUDIT.md` - Original audit
@@ -135,6 +144,7 @@ components/list/
 ## ⏳ **Pending Actions**
 
 ### **After Testing**:
+
 1. Test new `List.svelte` component
 2. Verify all features work
 3. Check all themes look good
@@ -144,6 +154,7 @@ components/list/
    - `list-components-fixed.css` (784 lines)
 
 ### **Optional Improvements**:
+
 1. Update ghost theme mapping (low priority)
 2. Fix a11y warnings (non-critical)
 3. Add theme descriptions to settings modal
@@ -153,18 +164,21 @@ components/list/
 ## 💡 **Key Improvements**
 
 ### **Architecture**:
+
 - ✅ Better separation of concerns
 - ✅ Reusable components and utilities
 - ✅ External CSS (no inline styles)
 - ✅ Modular, focused code
 
 ### **Maintainability**:
+
 - ✅ 69% less code overall
 - ✅ Easier to understand
 - ✅ Easier to modify
 - ✅ Better for future features
 
 ### **Performance**:
+
 - ✅ Smaller bundle size
 - ✅ Faster load time
 - ✅ Better tree-shaking
@@ -174,6 +188,7 @@ components/list/
 ## 🎉 **Summary**
 
 **What we did**:
+
 - Simplified Whisper to tiny-only with auto-download
 - Rebuilt list component from scratch (70% smaller)
 - Fixed critical tech debt (theme names)
@@ -181,6 +196,7 @@ components/list/
 - Kept it cute and themed!
 
 **Result**:
+
 - ✅ Cleaner codebase
 - ✅ Better architecture
 - ✅ Same features
@@ -192,6 +208,7 @@ components/list/
 **Status**: ✅ **Ready for production testing!** 🚀
 
 **Next Steps**:
+
 1. Test Whisper auto-download
 2. Test new List component
 3. Verify theme switching works

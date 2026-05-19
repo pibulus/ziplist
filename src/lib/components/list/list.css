@@ -14,11 +14,11 @@
   max-width: 540px;
   margin: 2rem auto 2.5rem;
   padding: 2.5rem;
-  
+
   /* Shape */
   border-radius: var(--zl-card-border-radius);
   border: var(--zl-card-border-width) solid var(--zl-card-border-color);
-  
+
   /* Visual */
   background: linear-gradient(
     var(--zl-card-bg-gradient-angle),
@@ -30,21 +30,32 @@
   );
   background-size: var(--zl-card-bg-gradient-size);
   box-shadow: var(--zl-card-box-shadow);
-  
+
   /* Animation */
-  animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease infinite;
+  animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease
+    infinite;
   transition: var(--zl-transition-standard);
-  
+
   /* Typography */
-  font-family: 'Space Mono', monospace;
+  font-family: "Space Mono", monospace;
 }
 
 @keyframes gradient-shift {
-  0% { background-position: 0% 0%; }
-  25% { background-position: 50% 50%; }
-  50% { background-position: 100% 100%; }
-  75% { background-position: 50% 50%; }
-  100% { background-position: 0% 0%; }
+  0% {
+    background-position: 0% 0%;
+  }
+  25% {
+    background-position: 50% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 50% 50%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
 }
 
 /* Mobile responsive */
@@ -118,16 +129,16 @@
   gap: 1rem;
   padding: var(--zl-spacing-s);
   min-height: 70px;
-  
+
   /* Shape */
   border-radius: var(--zl-item-border-radius);
   border: 2px solid var(--zl-item-border-color);
   border-left: 4px solid var(--zl-item-border-color);
-  
+
   /* Visual */
   background: var(--zl-item-bg);
   box-shadow: var(--zl-item-box-shadow);
-  
+
   /* Interaction */
   cursor: grab;
   transition: var(--zl-transition-standard);
@@ -200,7 +211,7 @@
 }
 
 .zl-checkbox:checked::after {
-  content: '✓';
+  content: "✓";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -239,7 +250,7 @@
   padding: 0.75rem 1rem;
   font-size: 1.1rem;
   font-weight: 600;
-  font-family: 'Space Mono', monospace;
+  font-family: "Space Mono", monospace;
   border: var(--zl-edit-input-border);
   border-radius: 12px;
   background: var(--zl-edit-input-bg);

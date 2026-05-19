@@ -14,22 +14,25 @@
 **Problem**: Theme names don't match actual theme IDs
 
 **Current (Lines 38-55)**:
+
 ```javascript
 const vibeOptions = [
-  { id: 'peach', name: 'Peach' },      // ❌ Should be 'focus'
-  { id: 'mint', name: 'Mint' },        // ❌ Should be 'chill'
-  { id: 'bubblegum', name: 'Bubblegum' }, // ❌ Should be 'zen'
-  { id: 'rainbow', name: 'Rainbow' }   // ❌ Should be 'nocturne'
+  { id: "peach", name: "Peach" }, // ❌ Should be 'focus'
+  { id: "mint", name: "Mint" }, // ❌ Should be 'chill'
+  { id: "bubblegum", name: "Bubblegum" }, // ❌ Should be 'zen'
+  { id: "rainbow", name: "Rainbow" }, // ❌ Should be 'nocturne'
 ];
 ```
 
 **Actual theme IDs** (from `theme-variables.css`):
+
 - `focus` (peachy tangerine)
 - `chill` (mint/cyan)
 - `zen` (lavender/purple)
 - `nocturne` (moonlight blue)
 
-**Impact**: 
+**Impact**:
+
 - Settings modal won't change themes properly
 - Clicking theme buttons does nothing
 - User confusion
@@ -40,7 +43,8 @@ const vibeOptions = [
 
 ### **2. Ghost Component - Legacy Theme Names** ⚠️
 
-**Files**: 
+**Files**:
+
 - `src/lib/components/ghost/DisplayGhost.svelte`
 - `src/lib/components/ghost/ghostStore.js`
 - `src/lib/components/ghost/ghost-animations.css`
@@ -48,6 +52,7 @@ const vibeOptions = [
 **Problem**: Ghost still uses old theme names (`peach`, `mint`, `bubblegum`, `rainbow`)
 
 **Impact**:
+
 - Ghost might not match selected theme
 - Theme switching might not update ghost colors
 
@@ -60,12 +65,14 @@ const vibeOptions = [
 **File**: `src/lib/components/mainPage/settings/SettingsModal.svelte` (Lines 273-314)
 
 **Items marked as "Coming Soon"**:
+
 - ✅ Privacy Mode (offline-only) - **ALREADY IMPLEMENTED!** (Whisper auto-downloads)
 - ❌ Export lists (CSV/JSON) - Not implemented
 - ❌ Multi-list management - Not implemented
 - ❌ Whisper model selection - Not needed (tiny-only now)
 
-**Fix**: 
+**Fix**:
+
 - Remove "Privacy Mode" from coming soon (it's live!)
 - Remove "Whisper model selection" (no longer applicable)
 - Keep export and multi-list as future features
@@ -75,6 +82,7 @@ const vibeOptions = [
 ### **4. List Component - Old vs New** 📦
 
 **Files**:
+
 - `src/lib/components/list/SingleList.svelte` (1,510 lines - OLD)
 - `src/lib/components/list/List.svelte` (180 lines - NEW)
 - `src/lib/components/list/list-components.css` (766 lines - OLD)
@@ -82,7 +90,8 @@ const vibeOptions = [
 
 **Problem**: Old files still exist alongside new clean implementation
 
-**Impact**: 
+**Impact**:
+
 - Confusion about which to use
 - Larger bundle size
 - Maintenance burden
@@ -94,15 +103,18 @@ const vibeOptions = [
 ## ✅ **Good News**
 
 ### **No TalkType References** ✅
+
 - Searched entire codebase
 - Zero mentions of "TalkType"
 - All branding is ZipList
 
 ### **No TODO Comments** ✅
+
 - No TODO markers found
 - Code is relatively clean
 
 ### **Build Passes** ✅
+
 - No errors
 - Only a11y warnings (minor)
 
@@ -115,28 +127,29 @@ const vibeOptions = [
 **File**: `src/lib/components/mainPage/settings/SettingsModal.svelte`
 
 **Change lines 38-55**:
+
 ```javascript
 const vibeOptions = [
   {
-    id: 'focus',
-    name: 'Focus',
-    description: 'Peachy tangerine sunrise'
+    id: "focus",
+    name: "Focus",
+    description: "Peachy tangerine sunrise",
   },
   {
-    id: 'chill',
-    name: 'Chill',
-    description: 'Cool mint vibes'
+    id: "chill",
+    name: "Chill",
+    description: "Cool mint vibes",
   },
   {
-    id: 'zen',
-    name: 'Zen',
-    description: 'Regal violet lo-fi'
+    id: "zen",
+    name: "Zen",
+    description: "Regal violet lo-fi",
   },
   {
-    id: 'nocturne',
-    name: 'Nocturne',
-    description: 'Dreamy moonlight'
-  }
+    id: "nocturne",
+    name: "Nocturne",
+    description: "Dreamy moonlight",
+  },
 ];
 ```
 
@@ -145,10 +158,12 @@ const vibeOptions = [
 ### **Priority 2: Update Advanced Features Section**
 
 **Remove from "Coming Soon"**:
+
 - ✅ Privacy Mode (it's live!)
 - ✅ Whisper model selection (not applicable)
 
 **Keep as "Coming Soon"**:
+
 - Export lists (CSV/JSON)
 - Multi-list management
 
@@ -159,12 +174,13 @@ const vibeOptions = [
 **File**: `src/lib/components/ghost/ghostStore.js`
 
 **Add theme mapping**:
+
 ```javascript
 const THEME_MAPPING = {
-  'focus': 'peach',      // Map new theme to ghost theme
-  'chill': 'mint',
-  'zen': 'bubblegum',
-  'nocturne': 'rainbow'
+  focus: "peach", // Map new theme to ghost theme
+  chill: "mint",
+  zen: "bubblegum",
+  nocturne: "rainbow",
 };
 ```
 
@@ -173,11 +189,13 @@ const THEME_MAPPING = {
 ### **Priority 4: Clean Up Old List Files** (After testing)
 
 **Delete**:
+
 - `src/lib/components/list/SingleList.svelte`
 - `src/lib/components/list/list-components.css`
 - `src/lib/components/list/list-components-fixed.css`
 
 **Keep**:
+
 - `src/lib/components/list/List.svelte` (new)
 - `src/lib/components/list/ListItem.svelte` (new)
 - `src/lib/components/list/list.css` (new)
@@ -186,28 +204,31 @@ const THEME_MAPPING = {
 
 ## 📊 **Tech Debt Summary**
 
-| Issue | Severity | Impact | Effort | Status |
-|-------|----------|--------|--------|--------|
-| **Settings Modal Themes** | 🔴 High | Broken functionality | 15min | Not fixed |
-| **Ghost Theme Names** | 🟡 Medium | Visual inconsistency | 30min | Not fixed |
-| **Advanced Features** | 🟢 Low | Misleading UI | 10min | Not fixed |
-| **Old List Files** | 🟡 Medium | Bundle bloat | 5min | Waiting for test |
+| Issue                     | Severity  | Impact               | Effort | Status           |
+| ------------------------- | --------- | -------------------- | ------ | ---------------- |
+| **Settings Modal Themes** | 🔴 High   | Broken functionality | 15min  | Not fixed        |
+| **Ghost Theme Names**     | 🟡 Medium | Visual inconsistency | 30min  | Not fixed        |
+| **Advanced Features**     | 🟢 Low    | Misleading UI        | 10min  | Not fixed        |
+| **Old List Files**        | 🟡 Medium | Bundle bloat         | 5min   | Waiting for test |
 
 ---
 
 ## 🎯 **Quick Wins**
 
 ### **Win 1: Fix Settings Modal** (15 minutes)
+
 - Update theme IDs
 - Test theme switching
 - Verify ghost updates
 
 ### **Win 2: Update Advanced Features** (10 minutes)
+
 - Remove Privacy Mode from "Coming Soon"
 - Remove Whisper model selection
 - Update copy
 
 ### **Win 3: Add Theme Descriptions** (5 minutes)
+
 - Add descriptions to theme buttons
 - Improve UX
 

@@ -8,7 +8,7 @@
  * @param {number|number[]} pattern - Vibration pattern (single duration or array of durations)
  */
 export function vibrate(pattern) {
-  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
     navigator.vibrate(pattern);
   }
 }
@@ -25,5 +25,5 @@ export const HAPTIC_PATTERNS = {
   COMPLETE: [30, 50, 30, 50, 30],
   DRAG_START: 50,
   DRAG_OVER: 15,
-  DRAG_END: [20, 30, 20]
+  DRAG_END: [20, 30, 20],
 };

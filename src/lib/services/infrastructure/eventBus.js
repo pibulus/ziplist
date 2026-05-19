@@ -13,7 +13,6 @@ export class EventBus {
     callbacks.push(callback);
 
     if (this.debug) {
-
     }
 
     return () => this.off(event, callback);
@@ -30,7 +29,7 @@ export class EventBus {
 
       if (this.debug) {
         console.log(
-          `[EventBus] Unsubscribed from event: ${event}, remaining listeners: ${callbacks.length}`
+          `[EventBus] Unsubscribed from event: ${event}, remaining listeners: ${callbacks.length}`,
         );
       }
     }

@@ -35,17 +35,21 @@ export function decodeSharedList(encodedData) {
     const listData = JSON.parse(atob(encodedData));
 
     // Validate structure
-    if (!listData || typeof listData !== 'object') return null;
+    if (!listData || typeof listData !== "object") return null;
     if (!Array.isArray(listData.items)) return null;
 
-    const name = typeof listData.name === 'string'
-      ? listData.name.slice(0, MAX_NAME_LENGTH)
-      : 'Imported List';
+    const name =
+      typeof listData.name === "string"
+        ? listData.name.slice(0, MAX_NAME_LENGTH)
+        : "Imported List";
 
     // Cap item count and validate each item
     const validItems = listData.items
       .slice(0, MAX_IMPORT_ITEMS)
-      .filter((item) => item && typeof item.text === 'string' && item.text.trim().length > 0);
+      .filter(
+        (item) =>
+          item && typeof item.text === "string" && item.text.trim().length > 0,
+      );
 
     if (validItems.length === 0) return null;
 
@@ -114,7 +118,10 @@ export async function shareList(list, baseUrl = window.location.origin) {
   const urlTooLong = shareUrl.length > 1500;
 
   // Try Web Share API first (better mobile UX)
-  if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  if (
+    navigator.share &&
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  ) {
     try {
       await navigator.share({
         title: `${list.name} - ZipList`,
@@ -129,7 +136,6 @@ export async function shareList(list, baseUrl = window.location.origin) {
         // User cancelled, don't show error
         return { success: false, urlTooLong: false };
       }
-
     }
   }
 

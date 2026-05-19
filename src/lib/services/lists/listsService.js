@@ -53,9 +53,7 @@ export class ListsService {
       case "CREATE_LIST": {
         // Extract list name from parameters or use default
         const listName =
-          command.params && command.params.length > 0
-            ? command.params[0]
-            : "";
+          command.params && command.params.length > 0 ? command.params[0] : "";
         this.createList(listName);
         break;
       }
