@@ -2,13 +2,13 @@
   "id": "/",
   "name": "ZipList",
   "short_name": "ZipList",
-  "description": "Create stacked list cards with your voice. Quick, simple, zippy.",
+  "description": "Make a checklist by talking. Quick, warm, and simple.",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#FFF6E6",
   "theme_color": "#FFF6E6",
   "orientation": "portrait-primary",
-  "categories": ["utilities", "productivity"],
+  "categories": ["utilities", "lifestyle"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -85,7 +85,7 @@
     {
       "name": "Open Recorder",
       "short_name": "Record",
-      "description": "Open ZipList with the recorder ready",
+      "description": "Open ZipList ready to add items",
       "url": "/?action=record",
       "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }

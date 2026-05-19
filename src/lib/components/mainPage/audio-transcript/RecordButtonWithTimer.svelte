@@ -188,11 +188,11 @@
     <div
       class="progress-container h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full bg-amber-200 shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
       role="progressbar"
-      aria-label="Transcription progress"
+      aria-label="List-making progress"
       aria-valuenow={progress}
       aria-valuemin="0"
       aria-valuemax="100"
-      aria-valuetext={`Transcribing ${Math.round(progress)} percent complete`}
+      aria-valuetext={`Making list ${Math.round(progress)} percent complete`}
     >
       <div
         class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-rose-300"

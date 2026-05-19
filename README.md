@@ -1,30 +1,34 @@
 # ZipList
 
-**Speak your list, we'll do the rest.**
+**Talk it into a list. Tick it off.**
 
-Clean, sweet, and stupidly easy voice-to-lists magic that works everywhere.
+ZipList is a warm little voice checklist for groceries, errands, packing,
+gear, chores, and all the small things you just need to get down.
 
 ## The Story
 
-Ziplist's the best. Organize the rest.
+No setup. No dates. No priorities.
 
-No more fumbling with tiny keyboards while standing in grocery stores. No more forgetting what you meant to buy. Just tap, talk, and watch your words become beautiful, organized lists. It's fast, it's fun, it's freaky good.
+Tap the mic, say the pile, and ZipList turns it into a clean checklist. Add
+more whenever. Drag things around. Tick them off. That is the whole point.
 
 ## What You Get
 
-- **Voice becomes lists in seconds** - Web Speech API magic, zero learning curve
-- **Works everywhere** - PWA that saves to your home screen, plus Chrome extension for any website
-- **Works offline** - No internet drama, your lists stay local and private
-- **Multiple named lists** - Swipe between color-coded lists, add fresh ones, rename them inline
-- **Beautiful themes** - Five distinct moods with their own visual personality
-- **Drag, drop, check off** - Desktop drag plus touch-native reorder on mobile
-- **Stupidly simple** - One tap to talk, that's it
+- **Talk into the active list** - choose a list, tap the mic, add items
+- **Add more whenever** - record again and the new items append to that list
+- **Three local lists by default** - swipe between color-coded list cards
+- **Fast local storage** - your everyday lists stay on your device
+- **Drag, drop, check off** - desktop drag plus touch-native reorder on mobile
+- **Installable web app** - save it to your home screen, no app store needed
+- **No task-manager pressure** - no dates, priorities, streaks, or dashboard
 
 ## Use It Anywhere
 
-**As a PWA**: Save to your home screen, use like a native app. Perfect for quick grocery lists, to-dos, or brainstorming sessions.
+**As a PWA**: Save to your home screen and use it like a tiny checklist app.
+Good for groceries, packing, gear, chores, set lists, and housemate runs.
 
-**Chrome Extension**: Install once, use everywhere. Turn any text field on any website into a voice-powered list maker. Perfect for emails, social media, messaging apps, or anywhere you need to organize thoughts.
+**Chrome Extension**: Install once and turn text fields into quick list capture
+spots when you need them.
 
 ## Getting Started
 
@@ -56,7 +60,7 @@ npm run build
 
 ## Environment
 
-Ziplist now uses a server-side Gemini route. Set:
+ZipList uses a server-side speech processing route. Set:
 
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
@@ -76,12 +80,12 @@ Leave it unset for solo/demo deployments and ZipList will stay in clean solo mod
 
 ```
 /src
-├── lib/components/list/         # List card magic
+├── lib/components/list/         # List cards and checklist controls
 ├── lib/components/mainPage/     # Voice recording UI + modals
-├── lib/services/lists/          # List brain logic
-├── lib/services/transcription/  # Voice → text wizardry
+├── lib/services/lists/          # List state and item logic
+├── lib/services/transcription/  # Audio processing flow
 ├── lib/services/theme/          # Color personality system
-├── lib/services/pwa/            # PWA installation magic
+├── lib/services/pwa/            # PWA installation support
 └── routes/                      # SvelteKit pages
 ```
 
@@ -89,7 +93,6 @@ Leave it unset for solo/demo deployments and ZipList will stay in clean solo mod
 
 - **SvelteKit** - Fast, modern, feels snappy
 - **Tailwind CSS + DaisyUI** - Pretty without the pain
-- **Web Speech API** - Browser-native voice recognition
 - **Local Storage** - Your lists stay yours, offline-first
 - **PWA Ready** - Full Progressive Web App with manifest and service worker
 - **Chrome Extension** - Voice-to-lists in any text field on any website
@@ -116,7 +119,7 @@ Choose once, it remembers. Because good tools should feel like they know you.
 
 ## Chrome Extension
 
-Install the extension to use Ziplist's voice-to-text magic anywhere on the web:
+Install the extension to make quick lists in text fields around the web:
 
 1. Download extension files (link in app)
 2. Unzip to a folder
@@ -124,16 +127,19 @@ Install the extension to use Ziplist's voice-to-text magic anywhere on the web:
 4. Enable "Developer mode"
 5. Click "Load unpacked" and select the folder
 
-Now you can create voice lists directly in Gmail, Twitter, Slack, or any text field. Voice-to-lists anywhere, anytime.
+Now you can create voice lists directly in Gmail, Slack, social fields, or any
+other text field.
 
 ---
 
 ## Why This Exists
 
-Lists shouldn't be boring. Voice input shouldn't be frustrating. Apps shouldn't treat you like a database.
+Lists should not make you set up a system before you can write the thing down.
 
-This is for anyone who's ever stood in a store trying to remember what they needed, anyone who thinks better out loud, anyone who wants their tools to feel a little more human.
+This is for anyone who has stood in a store trying to remember what they
+needed, anyone who thinks better out loud, and anyone who wants a checklist
+without the task-app baggage.
 
-Clean, sweet, and stupidly easy. Because that's how software should be.
+Talk. List. Tick.
 
 **MIT License • Built with care • Contributions welcome**

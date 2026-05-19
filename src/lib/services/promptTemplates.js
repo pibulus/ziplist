@@ -4,7 +4,7 @@ export const promptTemplates = {
   // Standard prompt style (current implementation)
   standard: {
     transcribeAudio: {
-      text: `Process this audio file into a structured JSON format with a list of tasks or items.
+      text: `Process this audio file into a structured JSON format with a list of checklist items.
 The response MUST be valid JSON with ONLY this structure:
 
 {
@@ -16,13 +16,14 @@ The response MUST be valid JSON with ONLY this structure:
 }
 
 Requirements:
-1. Extract distinct and separate items from the audio
-2. Remove filler words, duplicates, and profanity
-3. Format each item consistently with proper capitalization
-4. If the audio mentions "I need to" or "I want to" phrases, convert these to clean action items
+1. Extract distinct and separate checklist items from the audio
+2. Remove filler words, repeated starts, and duplicates
+3. Format each item with plain wording and proper capitalization
+4. If the audio mentions "I need to" or "I want to" phrases, convert these to clean checklist items
 5. Return ONLY the raw JSON without any explanation, markdown formatting, or code blocks
 6. The response must be valid, parseable JSON
 7. Do not add any text outside the JSON structure
+8. Do not invent priorities, due dates, reminders, headings, jokes, slogans, or extra context
 
 Example valid response:
 {"items":["Reply to emails","Buy groceries","Schedule dentist appointment"]}`,

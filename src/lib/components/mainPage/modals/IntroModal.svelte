@@ -41,34 +41,34 @@
         id="intro_modal_title"
         class="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-gray-900"
       >
-        Ziplist's the best. <br /> Organize the rest.
+        Talk it into a list. <br /> Tick it off.
       </h1>
 
       <div class="space-y-3 sm:space-y-4">
         <p
           class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
         >
-          Clean, sweet, and stupidly easy.
+          No setup. No dates. No priorities.
         </p>
 
         <p
           class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
         >
-          Tap the mic to speak — we turn your voice into lists.
+          Tap the mic, say the pile, and get a clean checklist.
         </p>
 
         <p
           class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
         >
-          Use it anywhere. Save it to your home screen. Add the extension. Talk
-          into any box on any site.
+          Add more whenever. Swipe between lists. Drag things around when the
+          order matters.
         </p>
       </div>
 
       <p
         class="text-center text-pink-600 font-bold text-base sm:text-lg md:text-xl py-2"
       >
-        It's fast, it's fun, it's freaky good.
+        Small enough to stay out of your way.
       </p>
 
       <form method="dialog">
@@ -77,7 +77,7 @@
           class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-yellow-400 to-pink-400 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
           on:click={handleActionButton}
         >
-          Tap the mic and start talking
+          Start a list
         </button>
       </form>
     </div>

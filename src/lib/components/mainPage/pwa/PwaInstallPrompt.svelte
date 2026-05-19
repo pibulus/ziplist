@@ -148,7 +148,7 @@
 			</div>
 			<div class="app-info">
 				<h2 id="pwa-prompt-title">Install ZipList</h2>
-				<p class="tagline">Voice-to-lists made easy</p>
+				<p class="tagline">Talk a list. Tick it off.</p>
 			</div>
 		</div>
 		
@@ -174,12 +174,12 @@
 					{/if}
 				</div>
 			{:else}
-				<p>Add ZipList to your home screen for:</p>
-				<ul class="benefits-list">
-					<li>Faster loading</li>
-					<li>Full-screen experience</li>
-					<li>Offline support</li>
-				</ul>
+					<p>Add ZipList to your home screen for:</p>
+					<ul class="benefits-list">
+						<li>Faster list capture</li>
+						<li>One-tap access</li>
+						<li>Your local lists close by</li>
+					</ul>
 			{/if}
 		</div>
 		

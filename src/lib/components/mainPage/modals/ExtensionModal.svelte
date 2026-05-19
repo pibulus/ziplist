@@ -44,10 +44,9 @@
         class="bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 rounded-lg border border-pink-200/60 shadow-sm"
       >
         <p class="text-sm leading-relaxed text-gray-700">
-          Use Ziplist everywhere on the web! Our Chrome extension lets you
-          create lists directly in any text field. Perfect for emails, social
-          media, messaging apps, or anywhere else you need to organize your
-          thoughts.
+          Use ZipList in more places on the web. The Chrome extension lets you
+          make quick lists directly in text fields when a full app would be too
+          much.
         </p>
       </div>
 
@@ -80,7 +79,7 @@
 
       <div class="pt-1 flex justify-end">
         <span class="text-xs text-gray-600 italic font-medium"
-          >Voice-to-lists anywhere, anytime 🎙️</span
+          >Talk a list into any box.</span
         >
       </div>
     </div>

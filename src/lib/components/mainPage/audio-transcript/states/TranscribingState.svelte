@@ -5,7 +5,7 @@
 <div
 	class="mx-auto h-[64px] w-[90%] min-w-[280px] max-w-[420px] overflow-hidden rounded-full bg-amber-200 shadow-md shadow-black/10 sm:w-[85%]"
 	role="progressbar"
-	aria-label="Transcription progress"
+	aria-label="List-making progress"
 	aria-valuenow={progress}
 	aria-valuemin="0"
 	aria-valuemax="100"

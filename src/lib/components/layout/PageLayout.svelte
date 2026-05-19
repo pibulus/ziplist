@@ -1,14 +1,16 @@
 <script>
-  export let title = "ZipList | Voice-to-List Checklist App";
+  export let title = "ZipList | Talk a List. Tick It Off.";
   export let description =
-    "Turn speech into organized checklist cards with ZipList, a free voice-to-list app for quick notes, groceries, tasks, and shared lists.";
+    "Make a checklist by talking. ZipList is a warm little web app for groceries, errands, packing, gear, chores, and quick shared lists.";
+  export let keywords =
+    "voice checklist app, talk to list, voice to list, grocery checklist, shared checklist, packing checklist, web checklist app";
   export let canonical = "https://ziplist.app/";
   export let robots = "index, follow, max-image-preview:large";
   export let ogTitle = "";
   export let ogDescription = "";
   export let ogUrl = "";
   export let ogImage = "https://ziplist.app/og-image.png";
-  export let ogImageAlt = "ZipList turns voice notes into stacked list cards";
+  export let ogImageAlt = "ZipList warm voice checklist app preview";
   export let ogType = "website";
   export let footerYear = new Date().getFullYear();
 
@@ -20,6 +22,7 @@
 <svelte:head>
   <title>{title}</title>
   <meta name="description" content={description} />
+  <meta name="keywords" content={keywords} />
   <meta name="robots" content={robots} />
   {#if canonical}
     <link rel="canonical" href={canonical} />

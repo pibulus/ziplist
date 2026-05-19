@@ -46,7 +46,7 @@
 
   // Style tooltips (full descriptions for tooltips)
   const styleTooltips = {
-    standard: "Elegant, professional tone",
+    standard: "Clean everyday items",
     surlyPirate: "Pirate lingo & swagger",
     codeWhisperer: "Structured tech syntax",
     quillAndInk: "Victorian literature style",
@@ -75,7 +75,7 @@
 </script>
 
 <div class="space-y-2">
-  <h4 class="text-sm font-bold text-gray-700">Transcription Style</h4>
+  <h4 class="text-sm font-bold text-gray-700">List Style</h4>
 
   <!-- Using exact same grid pattern as vibe selector -->
   <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -87,7 +87,7 @@
           ? 'selected-vibe border-pink-300 ring-2 ring-pink-200 ring-opacity-60'
           : ''}"
         on:click={() => changePromptStyle(style)}
-        aria-label={`Use ${styleNames[style] || style} transcription style`}
+        aria-label={`Use ${styleNames[style] || style} list style`}
         aria-pressed={selectedPromptStyle === style}
         title={styleTooltips[style]}
         data-style-type={style}

@@ -40,13 +40,9 @@
         class="bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 rounded-lg border border-pink-200/60 shadow-sm"
       >
         <p class="text-sm leading-relaxed text-gray-700">
-          Ziplist is a minimalist voice-to-list tool that transforms your spoken
-          thoughts into organized list cards. Built with love by two friends who
-          think tech should be <span class="text-pink-600 font-medium"
-            >simple</span
-          >,
-          <span class="text-amber-600 font-medium">delightful</span>, and
-          actually <span class="text-pink-600 font-medium">helpful</span>.
+          ZipList is a warm little voice checklist. Talk into one active list,
+          add more whenever, and tick things off without dates, priorities, or
+          setup.
         </p>
       </div>
 
@@ -55,15 +51,15 @@
         <ul class="space-y-1.5 text-sm text-gray-600">
           <li class="flex items-start gap-2">
             <span class="text-pink-500 text-lg">⬩</span>
-            <span>We need a quick way to organize thoughts into lists</span>
+            <span>Sometimes you need the list before you need an app</span>
           </li>
           <li class="flex items-start gap-2">
             <span class="text-pink-500 text-lg">⬩</span>
-            <span>Voice is the fastest way to capture ideas on the go</span>
+            <span>Talking is the fastest way to get the pile out</span>
           </li>
           <li class="flex items-start gap-2">
             <span class="text-pink-500 text-lg">⬩</span>
-            <span>We wanted something beautiful that just works</span>
+            <span>Checking things off should feel simple and satisfying</span>
           </li>
         </ul>
       </div>
@@ -71,7 +67,7 @@
       <div
         class="border-l-3 border-pink-300 py-1 pl-4 ml-1 my-2 italic text-gray-600"
       >
-        "A little bit of soul, a hint of chaos, and a deep love for clarity."
+        "Talk. List. Tick."
       </div>
 
       <div class="flex items-center gap-3 pt-2">

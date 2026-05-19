@@ -113,15 +113,12 @@ export const ANIMATION = {
 // CTA Button Phrases
 export const CTA_PHRASES = [
   "Start Recording", // Always first
-  "Click & Speak",
-  "Talk Now",
-  "Transcribe Me Baby",
-  "Start Yer Yappin'",
-  "Say the Thing",
-  "Feed Words Now",
+  "Talk a List",
+  "Add by Voice",
+  "Say the List",
+  "Add More",
+  "Talk More",
   "Just Say It",
-  "Speak Up Friend",
-  "Talk to Me",
   "Ready When You Are",
 ];
 
@@ -129,36 +126,27 @@ export const CTA_PHRASES = [
 export const ZIPLIST_START_PHRASES = ["Talk That List"];
 
 export const ZIPLIST_ADD_PHRASES = [
-  "Keep Zippin",
-  "What's Next?",
+  "Add More",
+  "Talk More",
   "Add A Thing",
-  "Keep Em Comin",
-  "Add A Zip",
+  "Keep Going",
+  "Add To List",
 ];
 
 // Clipboard Success Messages
 export const COPY_MESSAGES = [
-  "Copied to clipboard! ✨",
-  "Boom! In your clipboard! 🎉",
-  "Text saved to clipboard! 👍",
-  "Snagged that for you! 🙌",
-  "All yours now! 💫",
-  "Copied and ready to paste! 📋",
-  "Captured in clipboard! ✅",
-  "Text copied successfully! 🌟",
-  "Got it! Ready to paste! 🚀",
-  "Your text is saved! 💖",
-  "Copied with magic! ✨",
-  "Text safely copied! 🔮",
-  "Copied and good to go! 🎯",
-  "Saved to clipboard! 🎊",
+  "Copied to clipboard.",
+  "Copied and ready to paste.",
+  "All yours.",
+  "Saved to clipboard.",
+  "Got it.",
 ];
 
 // Attribution Tags
 export const ATTRIBUTION = {
   SIMPLE_TAG: "𝘊𝘳𝘦𝘢𝘵𝘦𝘥 𝘸𝘪𝘵𝘩 𝘡𝘪𝘱𝘭𝘪𝘴𝘵 👻",
   SHARE_POSTFIX: "\n\n𝘊𝘳𝘦𝘢𝘵𝘦𝘥 𝘸𝘪𝘵𝘩 𝘡𝘪𝘱𝘭𝘪𝘴𝘵 👻",
-  FOCUS_RECOVERY_MESSAGE: "Click in window first, then copy again! 🔍",
+  FOCUS_RECOVERY_MESSAGE: "Click in the window first, then copy again.",
 };
 
 // Get a random element from any array
