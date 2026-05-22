@@ -1557,17 +1557,14 @@
       {#if moveTargets.length > 0}
         <div class="zl-move-targets" aria-label="Move to list">
           <p class="zl-action-section-label">Move to</p>
-          {#each moveTargets as targetList (targetList.id)}
+          {#each moveTargets as targetList, index (targetList.id)}
             <button
               type="button"
               class="zl-move-target-button"
+              style="--move-index: {index}; --target-color: {targetList.primaryColor}; --target-glow: {targetList.glowColor}"
               on:click={() => moveItemToList(actionSheetItem.id, targetList.id)}
             >
-              <span
-                class="zl-list-swatch"
-                style="--target-color: {targetList.primaryColor}; --target-glow: {targetList.glowColor}"
-                aria-hidden="true"
-              ></span>
+              <span class="zl-list-swatch" aria-hidden="true"></span>
               <span class="zl-move-target-name">{targetList.name}</span>
             </button>
           {/each}
