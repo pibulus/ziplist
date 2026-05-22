@@ -218,6 +218,16 @@ export class ListsService {
   }
 
   /**
+   * Move an item from one list to another
+   * @param {number|string} itemId - ID of the item to move
+   * @param {string} fromListId - Source list ID
+   * @param {string} toListId - Destination list ID
+   */
+  moveItem(itemId, fromListId, toListId) {
+    return listsStore.moveItem(itemId, fromListId, toListId);
+  }
+
+  /**
    * Remove the last item from the active list
    */
   removeLastItem() {

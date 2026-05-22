@@ -700,6 +700,88 @@ function createListsStore() {
     persistCriticalChange();
   }
 
+  // Move an item between lists while preserving the original item record.
+  function moveItem(itemId, fromListId, toListId) {
+    if (!itemId || !fromListId || !toListId || fromListId === toListId) {
+      return createLimitResult("Choose a different list first.", "same-list");
+    }
+
+    let result = createLimitResult("Could not move that item.", "not-found");
+
+    update((state) => {
+      const sourceList = state.lists.find((list) => list.id === fromListId);
+      const targetList = state.lists.find((list) => list.id === toListId);
+      const itemToMove = sourceList?.items.find((item) => item.id === itemId);
+
+      if (!sourceList || !targetList || !itemToMove) {
+        return state;
+      }
+
+      const duplicateExists = targetList.items.some(
+        (item) =>
+          getItemDedupeKey(item.text) === getItemDedupeKey(itemToMove.text),
+      );
+
+      if (duplicateExists) {
+        result = createLimitResult(
+          `${itemToMove.text} is already in ${targetList.name}.`,
+          "duplicate",
+        );
+        return state;
+      }
+
+      const timestamp = new Date().toISOString();
+      const targetInsertIndex = itemToMove.checked
+        ? targetList.items.length
+        : targetList.items.findIndex((item) => item.checked);
+      const resolvedInsertIndex =
+        targetInsertIndex === -1 ? targetList.items.length : targetInsertIndex;
+
+      const nextLists = state.lists.map((list) => {
+        if (list.id === fromListId) {
+          return {
+            ...list,
+            items: list.items
+              .filter((item) => item.id !== itemId)
+              .map((item, index) => ({ ...item, order: index })),
+            updatedAt: timestamp,
+          };
+        }
+
+        if (list.id === toListId) {
+          const nextItems = [...list.items];
+          nextItems.splice(resolvedInsertIndex, 0, itemToMove);
+
+          return {
+            ...list,
+            items: nextItems.map((item, index) => ({ ...item, order: index })),
+            updatedAt: timestamp,
+          };
+        }
+
+        return list;
+      });
+
+      result = createSuccessResult({
+        itemId,
+        fromListId,
+        toListId,
+        message: `Moved to ${targetList.name}.`,
+      });
+
+      return {
+        ...state,
+        lists: nextLists,
+      };
+    });
+
+    if (result.ok) {
+      persistCriticalChange();
+    }
+
+    return result;
+  }
+
   // Clear all items from a list
   function clearList(listId = null) {
     update((state) => {
@@ -848,6 +930,7 @@ function createListsStore() {
     toggleItem,
     editItem,
     removeItem,
+    moveItem,
     clearList,
     renameList,
     upsertList,

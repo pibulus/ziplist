@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy, tick } from "svelte";
-  import { listsStore, activeList } from "$lib/services/lists/listsStore";
+  import { listsStore } from "$lib/services/lists/listsStore";
   import { listsService } from "$lib/services/lists/listsService";
   import { shareList } from "$lib/services/share";
   import { fade, fly } from "svelte/transition";
@@ -28,6 +28,8 @@
   let draftInputNode = null;
   let editingListName = false;
   let editedListName = "";
+  let allLists = [];
+  let actionSheetItemId = null;
   let shareStatus = null; // To track share operation status
   let undoDelete = null;
   let undoDeleteTimer = null;
@@ -78,11 +80,16 @@
     if (unsubscribe) unsubscribe();
     if (nextListId) {
       unsubscribe = listsStore.subscribe((state) => {
+        allLists = state.lists;
         const foundList = state.lists.find((l) => l.id === nextListId);
         if (foundList) list = foundList;
       });
     } else {
-      unsubscribe = activeList.subscribe((activeListData) => {
+      unsubscribe = listsStore.subscribe((state) => {
+        allLists = state.lists;
+        const activeListData = state.lists.find(
+          (l) => l.id === state.activeListId,
+        );
         if (activeListData) list = activeListData;
       });
     }
@@ -98,9 +105,17 @@
       draftItemText = "";
       editingItemId = null;
       editedItemText = "";
+      actionSheetItemId = null;
     }
     previousListIdentity = list.id;
   }
+
+  $: moveTargets = showListManagement
+    ? allLists.filter((candidate) => candidate.id !== list.id)
+    : [];
+  $: actionSheetItem = actionSheetItemId
+    ? list.items.find((item) => item.id === actionSheetItemId) || null
+    : null;
 
   // Subscribe to presence and typing for this list
   let presenceUnsubscribe = null;
@@ -299,6 +314,44 @@
       event.preventDefault();
       cancelListNameEdit();
     }
+  }
+
+  function openItemActions(itemId) {
+    if (editingItemId === itemId) return;
+
+    actionSheetItemId = itemId;
+    hapticService.selection();
+  }
+
+  function closeItemActions() {
+    actionSheetItemId = null;
+  }
+
+  function handleActionSheetKeyDown(event) {
+    if (!actionSheetItemId || event.key !== "Escape") return;
+
+    event.preventDefault();
+    closeItemActions();
+  }
+
+  function moveItemToList(itemId, targetListId) {
+    const result = listsService.moveItem(itemId, list.id, targetListId);
+
+    closeItemActions();
+
+    if (!result.ok) {
+      showListStatus(result.message || "Could not move that item");
+      hapticService.notification("warning");
+      return;
+    }
+
+    showListStatus(result.message || "Moved item.", true);
+    hapticService.notification("success");
+  }
+
+  function deleteItemFromActions(itemId) {
+    closeItemActions();
+    deleteItem(itemId);
   }
 
   // Separated active and completed items
@@ -1118,6 +1171,8 @@
   }
 </script>
 
+<svelte:window on:keydown={handleActionSheetKeyDown} />
+
 <section class="zl-card" aria-labelledby="list-title-{list.id || 'active'}">
   <div class="card-content">
     <!-- List Header with Live Collaboration Toggle -->
@@ -1223,7 +1278,9 @@
               <span class="live-icon" aria-hidden="true"
                 >{$isContributor ? "🔴" : "↗"}</span
               >
-              <span class="live-text">{$isContributor ? "Make Live" : "Live"}</span>
+              <span class="live-text"
+                >{$isContributor ? "Make Live" : "Live"}</span
+              >
             </button>
           {:else}
             <div
@@ -1354,7 +1411,7 @@
                 onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
-                onDelete={deleteItem}
+                onOpenActions={openItemActions}
               />
             </li>
           {/each}
@@ -1435,7 +1492,7 @@
                 onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
-                onDelete={deleteItem}
+                onOpenActions={openItemActions}
               />
             </li>
           {/each}
@@ -1461,6 +1518,82 @@
     </div>
   </div>
 </section>
+
+{#if actionSheetItem}
+  <div
+    class="zl-item-action-layer"
+    role="presentation"
+    transition:fade={{ duration: 140 }}
+  >
+    <button
+      type="button"
+      class="zl-item-action-backdrop"
+      aria-label="Close item actions"
+      on:click={closeItemActions}
+    ></button>
+    <div
+      class="zl-item-action-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="item-action-title-{list.id}-{actionSheetItem.id}"
+      aria-describedby="item-action-text-{list.id}-{actionSheetItem.id}"
+      transition:fly={{ y: 18, duration: 180 }}
+    >
+      <div class="zl-item-action-header">
+        <p
+          id="item-action-title-{list.id}-{actionSheetItem.id}"
+          class="zl-item-action-title"
+        >
+          Item actions
+        </p>
+        <p
+          id="item-action-text-{list.id}-{actionSheetItem.id}"
+          class="zl-item-action-text"
+        >
+          {actionSheetItem.text}
+        </p>
+      </div>
+
+      {#if moveTargets.length > 0}
+        <div class="zl-move-targets" aria-label="Move to list">
+          <p class="zl-action-section-label">Move to</p>
+          {#each moveTargets as targetList (targetList.id)}
+            <button
+              type="button"
+              class="zl-move-target-button"
+              on:click={() => moveItemToList(actionSheetItem.id, targetList.id)}
+            >
+              <span
+                class="zl-list-swatch"
+                style="--target-color: {targetList.primaryColor}; --target-glow: {targetList.glowColor}"
+                aria-hidden="true"
+              ></span>
+              <span class="zl-move-target-name">{targetList.name}</span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+
+      <div class="zl-action-sheet-footer">
+        <button
+          type="button"
+          class="zl-action-delete-button"
+          on:click={() => deleteItemFromActions(actionSheetItem.id)}
+        >
+          Delete item
+        </button>
+        <button
+          type="button"
+          class="zl-action-cancel-button"
+          on:click={closeItemActions}
+          use:autoFocus
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 {#if touchDraggedItem && touchDragGhostRect}
   <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">
