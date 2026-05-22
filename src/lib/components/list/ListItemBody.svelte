@@ -102,8 +102,8 @@
     type="button"
     class="zl-item-actions-trigger"
     data-swipe-ignore="true"
-    on:click|stopPropagation={() => onOpenActions(item.id)}
-    aria-label={`Open actions for ${item.text}`}
+    on:click|stopPropagation={(event) => onOpenActions(item.id, event)}
+    aria-label={`Move or delete ${item.text}`}
     aria-haspopup="dialog"
   >
     <span class="zl-action-dot"></span>

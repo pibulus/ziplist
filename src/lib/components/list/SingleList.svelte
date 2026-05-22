@@ -30,6 +30,8 @@
   let editedListName = "";
   let allLists = [];
   let actionSheetItemId = null;
+  let actionSheetNode = null;
+  let actionSheetOpener = null;
   let shareStatus = null; // To track share operation status
   let undoDelete = null;
   let undoDeleteTimer = null;
@@ -105,7 +107,7 @@
       draftItemText = "";
       editingItemId = null;
       editedItemText = "";
-      actionSheetItemId = null;
+      closeItemActions({ restoreFocus: false });
     }
     previousListIdentity = list.id;
   }
@@ -156,6 +158,7 @@
     if (typingTimeout) clearTimeout(typingTimeout);
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
     if (shareStatusTimer) clearTimeout(shareStatusTimer);
+    setActionSheetScrollLock(false);
     clearTouchDragLongPressTimer();
     stopTouchDragAutoScroll();
     removeTouchDragListeners();
@@ -316,28 +319,110 @@
     }
   }
 
-  function openItemActions(itemId) {
+  async function openItemActions(itemId, event = null) {
     if (editingItemId === itemId) return;
 
+    actionSheetOpener = event?.currentTarget || null;
     actionSheetItemId = itemId;
+    setActionSheetScrollLock(true);
     hapticService.selection();
+
+    await tick();
+    focusInitialActionSheetControl();
   }
 
-  function closeItemActions() {
+  function closeItemActions({ restoreFocus = true } = {}) {
+    const opener = actionSheetOpener;
     actionSheetItemId = null;
+    actionSheetNode = null;
+    actionSheetOpener = null;
+    setActionSheetScrollLock(false);
+
+    if (
+      restoreFocus &&
+      opener &&
+      typeof document !== "undefined" &&
+      document.contains(opener)
+    ) {
+      opener.focus();
+    }
+  }
+
+  function setActionSheetScrollLock(locked) {
+    if (typeof document === "undefined") return;
+    document.body.classList.toggle("zl-action-sheet-open", locked);
+  }
+
+  function getActionSheetFocusableControls() {
+    if (!actionSheetNode) return [];
+
+    return Array.from(
+      actionSheetNode.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter(
+      (element) =>
+        !element.disabled &&
+        element.getAttribute("aria-hidden") !== "true" &&
+        element.offsetParent !== null,
+    );
+  }
+
+  function focusInitialActionSheetControl() {
+    const [firstControl] = getActionSheetFocusableControls();
+    if (firstControl) {
+      firstControl.focus();
+      return;
+    }
+
+    actionSheetNode?.focus();
   }
 
   function handleActionSheetKeyDown(event) {
-    if (!actionSheetItemId || event.key !== "Escape") return;
+    if (!actionSheetItemId) return;
 
-    event.preventDefault();
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeItemActions();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+
+    const focusableControls = getActionSheetFocusableControls();
+    if (focusableControls.length === 0) {
+      event.preventDefault();
+      actionSheetNode?.focus();
+      return;
+    }
+
+    const firstControl = focusableControls[0];
+    const lastControl = focusableControls[focusableControls.length - 1];
+    const activeElement = document.activeElement;
+
+    if (!actionSheetNode?.contains(activeElement)) {
+      event.preventDefault();
+      firstControl.focus();
+      return;
+    }
+
+    if (event.shiftKey && activeElement === firstControl) {
+      event.preventDefault();
+      lastControl.focus();
+    } else if (!event.shiftKey && activeElement === lastControl) {
+      event.preventDefault();
+      firstControl.focus();
+    }
+  }
+
+  function handleActionSheetBackdropClick() {
     closeItemActions();
   }
 
   function moveItemToList(itemId, targetListId) {
     const result = listsService.moveItem(itemId, list.id, targetListId);
 
-    closeItemActions();
+    closeItemActions({ restoreFocus: false });
 
     if (!result.ok) {
       showListStatus(result.message || "Could not move that item");
@@ -350,7 +435,7 @@
   }
 
   function deleteItemFromActions(itemId) {
-    closeItemActions();
+    closeItemActions({ restoreFocus: false });
     deleteItem(itemId);
   }
 
@@ -1173,7 +1258,12 @@
 
 <svelte:window on:keydown={handleActionSheetKeyDown} />
 
-<section class="zl-card" aria-labelledby="list-title-{list.id || 'active'}">
+<section
+  class="zl-card"
+  aria-hidden={actionSheetItem ? "true" : undefined}
+  inert={!!actionSheetItem}
+  aria-labelledby="list-title-{list.id || 'active'}"
+>
   <div class="card-content">
     <!-- List Header with Live Collaboration Toggle -->
     <div class="zl-list-header">
@@ -1520,31 +1610,28 @@
 </section>
 
 {#if actionSheetItem}
-  <div
-    class="zl-item-action-layer"
-    role="presentation"
-    transition:fade={{ duration: 140 }}
-  >
+  <div class="zl-item-action-layer" role="presentation">
     <button
       type="button"
       class="zl-item-action-backdrop"
       aria-label="Close item actions"
-      on:click={closeItemActions}
+      on:click={handleActionSheetBackdropClick}
     ></button>
     <div
+      bind:this={actionSheetNode}
       class="zl-item-action-sheet"
       role="dialog"
       aria-modal="true"
       aria-labelledby="item-action-title-{list.id}-{actionSheetItem.id}"
       aria-describedby="item-action-text-{list.id}-{actionSheetItem.id}"
-      transition:fly={{ y: 18, duration: 180 }}
+      tabindex="-1"
     >
       <div class="zl-item-action-header">
         <p
           id="item-action-title-{list.id}-{actionSheetItem.id}"
           class="zl-item-action-title"
         >
-          Item actions
+          Move or delete
         </p>
         <p
           id="item-action-text-{list.id}-{actionSheetItem.id}"
@@ -1583,7 +1670,6 @@
           type="button"
           class="zl-action-cancel-button"
           on:click={closeItemActions}
-          use:autoFocus
         >
           Cancel
         </button>

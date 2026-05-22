@@ -1443,6 +1443,24 @@
   z-index: 1;
 }
 
+.zl-move-targets {
+  max-height: min(42vh, 290px);
+  overflow-y: auto;
+  padding-right: 0.1rem;
+}
+
+.zl-action-sheet-footer {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.96) 18%
+  );
+  bottom: -1rem;
+  margin: 0 -1rem -1rem;
+  padding: 0.75rem 1rem 1rem;
+  position: sticky;
+}
+
 .zl-move-target-button,
 .zl-action-delete-button,
 .zl-action-cancel-button {
@@ -1845,6 +1863,11 @@
 body.zl-touch-dragging {
   user-select: none;
   -webkit-user-select: none;
+}
+
+body.zl-action-sheet-open {
+  overflow: hidden;
+  touch-action: none;
 }
 
 /* Presence Dots */
