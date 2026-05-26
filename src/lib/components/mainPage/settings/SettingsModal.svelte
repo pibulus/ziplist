@@ -1,7 +1,9 @@
 <script>
   import { onMount } from "svelte";
   import { theme, autoRecord, applyTheme, isContributor } from "$lib";
+  import { STORAGE_KEYS, THEMES } from "$lib/constants";
   import { PRICING } from "$lib/config/pricing.js";
+  import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -28,11 +30,11 @@
 
   // Theme options
   const vibeOptions = [
-    { id: "focus", name: "Focus" },
-    { id: "chill", name: "Chill" },
-    { id: "zen", name: "Zen" },
-    { id: "nocturne", name: "Nocturne" },
-    { id: "neo", name: "Neo" },
+    { id: THEMES.NEO, name: "Neo" },
+    { id: THEMES.FOCUS, name: "Focus" },
+    { id: THEMES.CHILL, name: "Chill" },
+    { id: THEMES.ZEN, name: "Zen" },
+    { id: THEMES.NOCTURNE, name: "Nocturne" },
   ];
 
   onMount(() => {
@@ -67,15 +69,23 @@
 
     if (chunkyModeValue) {
       document.documentElement.classList.add("mode-neo-brutalist");
-      localStorage.setItem("ziplist-chunky-mode", "true");
+      StorageUtils.setItem(STORAGE_KEYS.CHUNKY_MODE, "true");
     } else {
       document.documentElement.classList.remove("mode-neo-brutalist");
-      localStorage.setItem("ziplist-chunky-mode", "false");
+      StorageUtils.setItem(STORAGE_KEYS.CHUNKY_MODE, "false");
     }
+
+    window.dispatchEvent(
+      new CustomEvent("ziplist-setting-changed", {
+        detail: { setting: "chunkyMode", value: chunkyModeValue },
+      }),
+    );
   }
 
   // Handle vibe change
   function changeVibe(vibeId) {
+    if (!vibeOptions.some((vibe) => vibe.id === vibeId)) return;
+
     selectedVibe = vibeId;
     applyTheme(vibeId);
 
@@ -117,7 +127,7 @@
   <div class="zl-settings-card">
     <div class="zl-settings-content">
       <div class="zl-settings-header">
-        <h3 id="settings_modal_title" class="zl-settings-title">⚙️ Settings</h3>
+        <h3 id="settings_modal_title" class="zl-settings-title">Options</h3>
         <form method="dialog">
           <button
             type="button"
@@ -209,6 +219,10 @@
               aria-label={`Use ${vibe.name} vibe`}
               aria-pressed={selectedVibe === vibe.id}
             >
+              <span
+                class="zl-vibe-swatch vibe-{vibe.id}"
+                aria-hidden="true"
+              ></span>
               <span class="zl-vibe-name">{vibe.name}</span>
               {#if selectedVibe === vibe.id}
                 <span class="zl-vibe-check" aria-hidden="true">✓</span>
@@ -254,11 +268,17 @@
     display: flex;
   }
 
+  :global(dialog.zl-settings-dialog:focus),
+  .zl-settings-card:focus,
+  .zl-settings-content:focus {
+    outline: none;
+  }
+
   .zl-settings-card {
     position: relative;
     z-index: 1001;
     width: min(92vw, 480px);
-    max-height: min(85dvh, 42rem);
+    max-height: min(88dvh, 46rem);
     background: var(--zl-card-bg-gradient-color-start, #fff);
     border: var(--zl-card-border-width, 4px) solid
       var(--zl-card-border-color, #000);
@@ -270,7 +290,7 @@
   }
 
   .zl-settings-content {
-    max-height: calc(min(85dvh, 42rem) - 4rem);
+    max-height: calc(min(88dvh, 46rem) - 4rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 0.125rem;
@@ -284,6 +304,14 @@
     to {
       opacity: 1;
       transform: scale(1) translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zl-settings-card {
+      animation: none;
+      opacity: 1;
+      transform: none;
     }
   }
 
@@ -320,6 +348,13 @@
   .zl-settings-close:hover {
     background: rgba(0, 0, 0, 0.05);
     transform: rotate(90deg);
+  }
+
+  .zl-settings-close:focus-visible,
+  .zl-setting-action:focus-visible,
+  .zl-vibe-option:focus-visible {
+    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
+    outline-offset: 3px;
   }
 
   .zl-settings-section {
@@ -369,9 +404,11 @@
   /* Toggle Switch */
   .zl-toggle {
     position: relative;
-    display: inline-block;
-    width: 48px;
-    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    width: 56px;
+    min-width: 56px;
+    height: 44px;
     flex-shrink: 0;
   }
 
@@ -384,22 +421,25 @@
   .zl-toggle-slider {
     position: absolute;
     cursor: pointer;
-    top: 0;
+    top: 50%;
     left: 0;
-    right: 0;
-    bottom: 0;
+    right: auto;
+    bottom: auto;
+    width: 52px;
+    height: 30px;
     background-color: var(--zl-text-color-disabled, #ccc);
     transition: 0.4s;
     border-radius: 24px;
     border: 2px solid transparent;
+    transform: translateY(-50%);
   }
 
   .zl-toggle-slider:before {
     position: absolute;
     content: "";
-    height: 16px;
-    width: 16px;
-    left: 2px;
+    height: 22px;
+    width: 22px;
+    left: 4px;
     bottom: 2px;
     background-color: white;
     transition: 0.4s;
@@ -411,7 +451,12 @@
   }
 
   input:checked + .zl-toggle-slider:before {
-    transform: translateX(24px);
+    transform: translateX(22px);
+  }
+
+  .zl-toggle input:focus-visible + .zl-toggle-slider {
+    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
+    outline-offset: 3px;
   }
 
   .zl-setting-action {
@@ -439,14 +484,13 @@
   .zl-setting-action:hover,
   .zl-setting-action:focus-visible {
     box-shadow: 4px 4px 0 #000000;
-    outline: none;
     transform: translate(-1px, -1px);
   }
 
   /* Vibe Grid */
   .zl-vibe-grid {
     display: grid;
-    grid-template-cols: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 0.75rem;
   }
 
@@ -463,8 +507,38 @@
     font-weight: 700;
     font-size: 0.8rem;
     display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
     align-items: center;
     justify-content: center;
+  }
+
+  .zl-vibe-swatch {
+    width: 2.4rem;
+    height: 1.1rem;
+    border: 2px solid rgba(0, 0, 0, 0.78);
+    border-radius: 999px;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18);
+  }
+
+  .vibe-neo {
+    background: linear-gradient(90deg, #ffb000, #ffd1dc 52%, #a0e7e5);
+  }
+
+  .vibe-focus {
+    background: linear-gradient(90deg, #fff9f5, #ffdbc5 48%, #ffab77);
+  }
+
+  .vibe-chill {
+    background: linear-gradient(90deg, #e5f9f6, #94d7dd 48%, #4da1a9);
+  }
+
+  .vibe-zen {
+    background: linear-gradient(90deg, #f4efff, #c4b5fd 48%, #8b5cf6);
+  }
+
+  .vibe-nocturne {
+    background: linear-gradient(90deg, #8db0c8, #7da9ad 48%, #c487d2);
   }
 
   .zl-vibe-option:hover {
@@ -480,8 +554,8 @@
 
   .zl-vibe-check {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: 4px;
+    right: 4px;
     background: var(--zl-primary-color);
     color: white;
     width: 18px;

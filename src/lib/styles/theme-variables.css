@@ -362,78 +362,78 @@ html[data-theme="zen"] {
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
   --zl-item-hover-bg: rgba(255, 255, 255, 0.8);
-  --zl-item-border-color: rgba(169, 132, 103, 0.3);
-  --zl-item-border-hover-color: rgba(169, 132, 103, 0.6);
-  --zl-item-box-shadow: 0 4px 10px rgba(130, 100, 75, 0.1);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(130, 100, 75, 0.15);
+  --zl-item-border-color: rgba(151, 117, 250, 0.3);
+  --zl-item-border-hover-color: rgba(151, 117, 250, 0.6);
+  --zl-item-box-shadow: 0 4px 10px rgba(151, 117, 250, 0.1);
+  --zl-item-hover-box-shadow: 0 8px 20px rgba(151, 117, 250, 0.15);
 
   /* Checked item styling */
   --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(245, 245, 240, 0.4);
-  --zl-item-checked-border-color: rgba(169, 132, 103, 0.2);
+  --zl-item-checked-bg: rgba(244, 238, 255, 0.4);
+  --zl-item-checked-border-color: rgba(151, 117, 250, 0.2);
 
   /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(169, 132, 103, 0.6);
+  --zl-item-dragging-border: 3px solid rgba(151, 117, 250, 0.6);
   --zl-item-dragging-bg: rgba(255, 255, 255, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(130, 100, 75, 0.25);
-  --zl-item-dragover-bg: rgba(245, 245, 240, 0.8);
-  --zl-item-dragover-border: 2px solid rgba(169, 132, 103, 0.5);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(130, 100, 75, 0.2);
+  --zl-item-dragging-shadow: 0 15px 30px rgba(151, 117, 250, 0.25);
+  --zl-item-dragover-bg: rgba(244, 238, 255, 0.8);
+  --zl-item-dragover-border: 2px solid rgba(151, 117, 250, 0.5);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(151, 117, 250, 0.2);
 
   /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(169, 132, 103, 0.5);
+  --zl-checkbox-border: 2px solid rgba(151, 117, 250, 0.5);
   --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
-  --zl-checkbox-hover-border: 2px solid rgba(169, 132, 103, 0.7);
-  --zl-checkbox-hover-bg: rgba(245, 245, 240, 0.8);
-  --zl-checkbox-checked-gradient-start: #c5b9a0;
-  --zl-checkbox-checked-gradient-end: #a98467;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(130, 100, 75, 0.2);
+  --zl-checkbox-hover-border: 2px solid rgba(151, 117, 250, 0.7);
+  --zl-checkbox-hover-bg: rgba(244, 238, 255, 0.8);
+  --zl-checkbox-checked-gradient-start: #c4b5fd;
+  --zl-checkbox-checked-gradient-end: #9775fa;
+  --zl-checkbox-checked-shadow: 0 3px 8px rgba(151, 117, 250, 0.2);
   --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
 
   /* Text button styling */
   --zl-text-button-hover-bg: linear-gradient(
     135deg,
-    rgba(245, 245, 240, 0.7),
-    rgba(245, 245, 240, 0.9)
+    rgba(244, 238, 255, 0.7),
+    rgba(244, 238, 255, 0.9)
   );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(130, 100, 75, 0.2);
+  --zl-text-button-focus-shadow: 0 3px 8px rgba(151, 117, 250, 0.2);
 
   /* Grab handle styling */
-  --zl-grab-handle-color: rgba(169, 132, 103, 0.7);
+  --zl-grab-handle-color: rgba(151, 117, 250, 0.7);
   --zl-grab-handle-opacity: 0.6;
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
   --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
-  --zl-delete-button-border: 1px solid rgba(169, 132, 103, 0.4);
-  --zl-delete-button-hover-bg: rgba(245, 245, 240, 0.95);
-  --zl-delete-button-hover-border: rgba(169, 132, 103, 0.7);
-  --zl-delete-button-text-color: rgba(108, 124, 89, 0.9);
+  --zl-delete-button-border: 1px solid rgba(151, 117, 250, 0.4);
+  --zl-delete-button-hover-bg: rgba(244, 238, 255, 0.95);
+  --zl-delete-button-hover-border: rgba(151, 117, 250, 0.7);
+  --zl-delete-button-text-color: rgba(132, 94, 247, 0.9);
 
   /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(169, 132, 103, 0.7);
-  --zl-drop-arrow-bg: rgba(169, 132, 103, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(130, 100, 75, 0.3);
+  --zl-drop-indicator-color: rgba(151, 117, 250, 0.7);
+  --zl-drop-arrow-bg: rgba(151, 117, 250, 0.9);
+  --zl-drop-arrow-shadow: 0 0 8px rgba(151, 117, 250, 0.3);
 
   /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(169, 132, 103, 0.3);
+  --zl-edit-input-border: 2px solid rgba(151, 117, 250, 0.3);
   --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
-  --zl-edit-input-focus-border: rgba(169, 132, 103, 0.6);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(169, 132, 103, 0.1);
+  --zl-edit-input-focus-border: rgba(151, 117, 250, 0.6);
+  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(151, 117, 250, 0.1);
 
   /* Empty state styling */
   --zl-empty-state-bg: linear-gradient(
     135deg,
-    rgba(245, 245, 240, 0.4),
-    rgba(232, 230, 223, 0.4)
+    rgba(244, 238, 255, 0.4),
+    rgba(230, 219, 255, 0.4)
   );
-  --zl-empty-state-border: 3px dashed rgba(169, 132, 103, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #a98467);
+  --zl-empty-state-border: 3px dashed rgba(151, 117, 250, 0.3);
+  --zl-empty-title-color: var(--zl-primary-color, #9775fa);
 
   /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(169, 132, 103, 0.4);
-  --zl-new-item-input-focus-border: rgba(169, 132, 103, 0.7);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(169, 132, 103, 0.1);
+  --zl-new-item-input-border: 2px solid rgba(151, 117, 250, 0.4);
+  --zl-new-item-input-focus-border: rgba(151, 117, 250, 0.7);
+  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(151, 117, 250, 0.1);
 }
 
 /**
@@ -688,11 +688,7 @@ html.mode-neo-brutalist {
   --zl-new-item-input-focus-border: #000000;
 }
 
-/* Optional: Add smooth transitions between themes */
-html[data-theme],
-html[data-theme] * {
-  transition:
-    background-color 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
+/* Note: per-component transitions are defined in each component.
+   A global * transition selector is intentionally omitted — it
+   triggers concurrent transitions on every DOM node during theme
+   switching and tanks performance on low-powered devices. */

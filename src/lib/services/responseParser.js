@@ -132,9 +132,17 @@ export function parseItemsFromResponse(responseText) {
 export function parseModelResponse(responseText) {
   const items = parseItemsFromResponse(responseText);
 
+  // Extract the complete array if present
+  const jsonData = extractJSON(responseText);
+  const complete =
+    jsonData && jsonData.complete && Array.isArray(jsonData.complete)
+      ? jsonData.complete.map((t) => t.trim()).filter(Boolean)
+      : [];
+
   return {
-    success: items.length > 0,
+    success: items.length > 0 || complete.length > 0,
     items,
+    complete,
     raw: responseText,
     timestamp: new Date().toISOString(),
   };

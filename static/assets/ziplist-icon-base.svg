@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg
-  viewBox="0 0 1024 1024"
+  viewBox="96 56 832 872"
   xmlns="http://www.w3.org/2000/svg"
   role="img"
   aria-hidden="true"
@@ -21,7 +21,7 @@
   </defs>
 
   <path
-    d="M264 132H760C845 132 898 185 898 270V552C898 637 845 690 760 690H616L543 803C529 825 495 825 481 803L408 690H264C179 690 126 637 126 552V270C126 185 179 132 264 132Z"
+    d="M308 118H716C815 118 878 181 878 280V574C878 673 815 736 716 736H600L542 846C529 870 495 870 482 846L424 736H308C209 736 146 673 146 574V280C146 181 209 118 308 118Z"
     fill="url(#ziplistIconGradient)"
     stroke="#000000"
     stroke-width="54"
@@ -34,9 +34,9 @@
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <rect x="312" y="542" width="44" height="44" rx="6" stroke-width="18" />
-    <path d="M410 564H704" stroke-width="21" />
-    <rect x="312" y="618" width="44" height="44" rx="6" stroke-width="18" />
-    <path d="M410 640H704" stroke-width="21" />
+    <rect x="334" y="520" width="44" height="44" rx="6" stroke-width="18" />
+    <path d="M430 542H690" stroke-width="21" />
+    <rect x="334" y="598" width="44" height="44" rx="6" stroke-width="18" />
+    <path d="M430 620H690" stroke-width="21" />
   </g>
 </svg>

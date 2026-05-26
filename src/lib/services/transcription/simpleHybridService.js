@@ -98,7 +98,7 @@ class SimpleHybridService {
   /**
    * Transcribe audio using best available method
    */
-  async transcribeAudio(audioBlob) {
+  async transcribeAudio(audioBlob, existingItems = []) {
     // Check privacy mode preference
     const privacyMode = this.getLocalFlag("ziplist_privacy_mode") === "true";
 
@@ -109,15 +109,18 @@ class SimpleHybridService {
     }
 
     // If privacy mode is on, wait for Whisper or fail
+    // Whisper returns plain text so wrap in consistent shape
     if (privacyMode) {
       if (this.whisperReady && whisperService) {
         this.setLocalFlag("last_transcription_method", "whisper");
-        return await whisperService.transcribeAudio(audioBlob);
+        const text = await whisperService.transcribeAudio(audioBlob);
+        return { text, items: [], complete: [] };
       } else if (this.whisperLoadPromise) {
         const result = await this.whisperLoadPromise;
         if (result.success && whisperService) {
           this.setLocalFlag("last_transcription_method", "whisper");
-          return await whisperService.transcribeAudio(audioBlob);
+          const text = await whisperService.transcribeAudio(audioBlob);
+          return { text, items: [], complete: [] };
         }
         throw new Error(
           "Privacy mode enabled but offline model failed to load",
@@ -130,20 +133,21 @@ class SimpleHybridService {
     // Normal mode: If Whisper is ready, use it (offline, fast, free)
     if (this.whisperReady && whisperService) {
       this.setLocalFlag("last_transcription_method", "whisper");
-      return await whisperService.transcribeAudio(audioBlob);
+      const text = await whisperService.transcribeAudio(audioBlob);
+      return { text, items: [], complete: [] };
     }
 
-    // Otherwise use Gemini API for instant results
+    // Otherwise use Gemini API for instant results (passes context for completion detection)
     this.setLocalFlag("last_transcription_method", "gemini");
-    return await this.transcribeWithGemini(audioBlob);
+    return await this.transcribeWithGemini(audioBlob, existingItems);
   }
 
   /**
    * Transcribe using Gemini service (ZipList's direct integration)
    */
-  async transcribeWithGemini(audioBlob) {
+  async transcribeWithGemini(audioBlob, existingItems = []) {
     try {
-      const transcription = await geminiService.transcribeAudio(audioBlob);
+      const transcription = await geminiService.transcribeAudio(audioBlob, existingItems);
       return transcription;
     } catch (error) {
       console.error("Gemini transcription error:", error);

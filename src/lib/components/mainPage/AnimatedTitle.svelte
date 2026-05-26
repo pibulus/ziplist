@@ -97,17 +97,37 @@
   /* Floating Dude Styles */
   .floating-dude {
     position: absolute;
-    top: -148px; /* Adjust based on size */
+    top: -172px;
     left: 50%;
     transform: translateX(-50%);
-    width: 132px;
-    height: 132px;
+    width: 156px;
+    height: 156px;
     background: none;
     border: none;
     cursor: pointer;
     z-index: 20;
     padding: 0;
     outline: none;
+  }
+
+  /* Idle pulse ring — appears after entrance animation, hints it's tappable */
+  .floating-dude::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 42px;
+    border: 3px solid rgba(255, 176, 0, 0.5);
+    animation: dude-pulse 3s ease-in-out infinite;
+    animation-delay: 2.2s;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @keyframes dude-pulse {
+    0%   { opacity: 0; transform: scale(0.92); }
+    30%  { opacity: 1; }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.08); }
   }
 
   .floating-dude:focus-visible {
@@ -260,7 +280,7 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-    margin-top: 128px; /* Space for the floating dude (100px + buffer) */
+    margin-top: 152px;
   }
 
   /* Container to visually center the main "Ziplist" word */
@@ -316,13 +336,18 @@
     }
 
     .floating-dude {
-      width: 84px;
-      height: 84px;
-      top: -96px;
+      width: 104px;
+      height: 104px;
+      top: -116px;
+    }
+
+    .floating-dude::after {
+      inset: -8px;
+      border-radius: 32px;
     }
 
     .title-container {
-      margin-top: 96px;
+      margin-top: 116px;
     }
   }
 
@@ -348,6 +373,10 @@
     }
     .dude-eyes {
       animation: none;
+    }
+    .floating-dude::after {
+      animation: none;
+      opacity: 0;
     }
   }
 </style>

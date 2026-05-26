@@ -71,19 +71,17 @@
         Small enough to stay out of your way.
       </p>
 
-      <form method="dialog">
-        <button
-          type="button"
-          class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-yellow-400 to-pink-400 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
-          on:click={handleActionButton}
-        >
-          Start a list
-        </button>
-      </form>
+      <button
+        type="button"
+        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-yellow-400 to-pink-400 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
+        on:click={handleActionButton}
+      >
+        Start a list
+      </button>
     </div>
   </div>
   <form method="dialog" class="modal-backdrop">
-    <button type="submit" aria-label="Close intro">close</button>
+    <button type="submit" class="text-[0]" aria-label="Close intro">close</button>
   </form>
 </dialog>
 

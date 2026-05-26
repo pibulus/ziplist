@@ -1,6 +1,8 @@
 <script>
   import { onMount, onDestroy, tick } from "svelte";
-  import { listsStore } from "$lib/services/lists/listsStore";
+  import { listsStore, LIST_COLOR_PRESETS } from "$lib/services/lists/listsStore";
+
+  const DEFAULT_LIST_NAMES = new Set(LIST_COLOR_PRESETS.map((p) => p.defaultName));
   import { listsService } from "$lib/services/lists/listsService";
   import { shareList } from "$lib/services/share";
   import { fade, fly } from "svelte/transition";
@@ -108,9 +110,15 @@
       editingItemId = null;
       editedItemText = "";
       closeItemActions({ restoreFocus: false });
+      // Clear drag state so a mid-drag list switch doesn't leave a phantom indicator
+      draggedItemId = null;
+      dragOverItemId = null;
+      dragOverPosition = "before";
     }
     previousListIdentity = list.id;
   }
+
+  $: isDefaultName = DEFAULT_LIST_NAMES.has(list.name);
 
   $: moveTargets = showListManagement
     ? allLists.filter((candidate) => candidate.id !== list.id)
@@ -245,6 +253,10 @@
       }
 
       showListStatus("🔴 List is now LIVE! Link copied!", true);
+
+      // Clean up any existing subscriptions before re-subscribing
+      if (presenceUnsubscribe) presenceUnsubscribe();
+      if (typingUnsubscribe) typingUnsubscribe();
 
       // Subscribe to presence
       const presenceStore = getPresenceStore(list.id);
@@ -1172,6 +1184,7 @@
   function restoreDeletedItem() {
     if (!undoDelete || undoDelete.listId !== list.id) return;
 
+    // Filter out both the deleted item AND any duplicate that was added while undo was pending
     const currentItems = list.items.filter(
       (item) => item.id !== undoDelete.item.id,
     );
@@ -1288,26 +1301,27 @@
                   class="zl-list-title-trigger"
                   on:click={startEditingListName}
                   aria-label={`Rename ${list.name || "list"}`}
+                  title="Tap to rename"
                 >
-                  <span
-                    id="list-title-{list.id || 'active'}"
-                    class="zl-list-title"
-                  >
-                    {list.name || "Your List"}
+                  <span class="zl-list-title-inner">
+                    <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
+                    {#if !isDefaultName}
+                      <span
+                        id="list-title-{list.id || 'active'}"
+                        class="zl-list-title"
+                      >
+                        {list.name}
+                      </span>
+                    {/if}
                   </span>
                 </button>
               </h2>
-              <button
-                type="button"
-                class="zl-title-edit-button"
-                on:click={startEditingListName}
-                aria-label={`Rename ${list.name || "list"}`}
-              >
-                Rename
-              </button>
             {:else}
-              <h2 id="list-title-{list.id || 'active'}" class="zl-list-title">
-                {list.name || "Your List"}
+              <h2 class="zl-list-title-inner">
+                <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
+                {#if !isDefaultName}
+                  <span id="list-title-{list.id || 'active'}" class="zl-list-title">{list.name}</span>
+                {/if}
               </h2>
             {/if}
           </div>
@@ -1347,8 +1361,7 @@
             title="Create a new list"
             aria-label="Create a new list"
           >
-            <span class="add-icon">+</span>
-            <span class="add-text">New List</span>
+            <span class="add-icon" aria-hidden="true">+</span>
           </button>
         {/if}
         {#if liveFeatureAvailable}
@@ -1365,12 +1378,7 @@
                 list.name || "this list"
               }`}
             >
-              <span class="live-icon" aria-hidden="true"
-                >{$isContributor ? "🔴" : "↗"}</span
-              >
-              <span class="live-text"
-                >{$isContributor ? "Make Live" : "Live"}</span
-              >
+              <span class="live-icon" aria-hidden="true">{$isContributor ? "🔴" : "↗"}</span>
             </button>
           {:else}
             <div
@@ -1393,7 +1401,6 @@
           aria-label={`Share ${list.name || "this list"}`}
         >
           <span class="share-icon" aria-hidden="true">🔗</span>
-          <span class="share-text">Share</span>
         </button>
       </div>
     </div>

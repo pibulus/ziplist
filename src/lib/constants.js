@@ -24,6 +24,7 @@ export const STORAGE_KEYS = {
   AUTO_RECORD: "ziplist-autoRecord",
   PROMPT_STYLE: "ziplist-prompt-style",
   DEBUG_MODE: "ziplist-debug-mode",
+  CHUNKY_MODE: "ziplist-chunky-mode",
   CONTRIBUTOR: "ziplist-contributor",
   CONTRIBUTOR_TOKEN: "ziplist-contributor-token",
 

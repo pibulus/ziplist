@@ -14,10 +14,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Global scroll behavior improvement - more subtle */
+/* Keep normal page scrolling on touch devices. */
 html,
 body {
-  overscroll-behavior: none; /* Disable bounce/glow on over-scroll for the main page */
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
 }
 

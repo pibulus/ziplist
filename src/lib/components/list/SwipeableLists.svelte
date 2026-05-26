@@ -257,7 +257,7 @@
   .pagination-dots {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 4px;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
   }

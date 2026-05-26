@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import { browser } from "$app/environment";
   import { isContributor, setContributorStatus } from "$lib";
   import {
@@ -12,6 +12,13 @@
   export let closeModal = () => {};
 
   const dispatch = createEventDispatcher();
+
+  onMount(() => {
+    const dialog = document.getElementById("contributor_modal");
+    function onDialogClose() { closeModal(); }
+    if (dialog) dialog.addEventListener("close", onDialogClose);
+    return () => { if (dialog) dialog.removeEventListener("close", onDialogClose); };
+  });
 
   let code = "";
   let errorMessage = "";
@@ -116,7 +123,7 @@
       <ModalCloseButton
         closeModal={handleClose}
         label="Close contributor modal"
-        position="right-3 top-3"
+        position="right-4 top-4"
         modalId="contributor_modal"
       />
     </form>
@@ -185,8 +192,9 @@
             bind:value={code}
             type="text"
             placeholder="Enter code"
-            autocomplete="off"
+            autocomplete="one-time-code"
             autocapitalize="none"
+            autocorrect="off"
             spellcheck="false"
           />
           <button
@@ -247,10 +255,10 @@
     width: min(92vw, 28rem);
     max-height: min(88dvh, 42rem);
     overflow-y: auto;
-    border: 4px solid #000000;
-    border-radius: 28px;
+    border: var(--zl-card-border-width, 4px) solid var(--zl-card-border-color, #000000);
+    border-radius: var(--zl-card-border-radius, 28px);
     background: linear-gradient(145deg, #fffaf0 0%, #ffefd5 100%);
-    box-shadow: 10px 10px 0 #000000;
+    box-shadow: var(--zl-card-box-shadow, 10px 10px 0 #000000);
     padding: 1.35rem;
     font-family: "Space Mono", monospace;
     animation: modal-pop 0.24s cubic-bezier(0.19, 1, 0.22, 1) forwards;
@@ -267,10 +275,10 @@
     align-items: center;
     align-self: flex-start;
     background: linear-gradient(135deg, #ffd56a, #79e7d3);
-    border: 3px solid #000000;
+    border: 3px solid var(--zl-card-border-color, #000000);
     border-radius: 18px;
-    box-shadow: 4px 4px 0 #000000;
-    color: #111827;
+    box-shadow: 4px 4px 0 var(--zl-card-border-color, #000000);
+    color: var(--zl-text-color-primary, #111827);
     display: inline-flex;
     font-size: 0.82rem;
     font-weight: 900;
@@ -283,7 +291,7 @@
   }
 
   .zl-contributor-eyebrow {
-    color: #db5f78;
+    color: var(--zl-accent-color, #db5f78);
     font-size: 0.72rem;
     font-weight: 900;
     letter-spacing: 0.14em;
@@ -292,7 +300,7 @@
   }
 
   .zl-contributor-heading h3 {
-    color: #111827;
+    color: var(--zl-text-color-primary, #111827);
     font-size: clamp(1.65rem, 8vw, 2.25rem);
     font-weight: 900;
     letter-spacing: 0;
@@ -301,7 +309,7 @@
   }
 
   .zl-contributor-heading p {
-    color: #4b5563;
+    color: var(--zl-text-color-secondary, #4b5563);
     font-size: 0.92rem;
     line-height: 1.55;
     margin: 0.75rem 0 0;
@@ -366,15 +374,15 @@
   }
 
   .zl-contributor-primary {
-    background: linear-gradient(135deg, #ffcc4d, #f3a72f);
-    border: 3px solid #000000;
-    box-shadow: 5px 5px 0 #000000;
+    background: linear-gradient(135deg, var(--zl-primary-color, #ffcc4d), var(--zl-accent-color, #f3a72f));
+    border: 3px solid var(--zl-card-border-color, #000000);
+    box-shadow: 5px 5px 0 var(--zl-card-border-color, #000000);
     color: #111111;
   }
 
   .zl-contributor-primary:hover:not(:disabled),
   .zl-contributor-primary:focus-visible:not(:disabled) {
-    box-shadow: 7px 7px 0 #000000;
+    box-shadow: 7px 7px 0 var(--zl-card-border-color, #000000);
     outline: none;
     transform: translate(-1px, -1px);
   }
@@ -493,6 +501,14 @@
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zl-contributor-card {
+      animation: none;
+      opacity: 1;
+      transform: none;
     }
   }
 

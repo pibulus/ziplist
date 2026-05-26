@@ -13,7 +13,6 @@ export class ListsService {
     if (typeof window !== "undefined") {
       // Wait for next tick to ensure browser environment is fully ready
       setTimeout(() => {
-        console.log("Initializing lists store from listsService constructor");
         listsStore.initialize();
       }, 0);
     }
@@ -45,7 +44,7 @@ export class ListsService {
   processTranscription(transcriptionResult) {
     if (!transcriptionResult) return;
 
-    const { items, commands } = transcriptionResult;
+    const { items, commands, complete } = transcriptionResult;
 
     // Process commands first
     if (commands && commands.length > 0) {
@@ -54,9 +53,40 @@ export class ListsService {
       }
     }
 
-    // Add any parsed items to the active list
+    // Tick off items the user said they've completed
+    if (complete && complete.length > 0) {
+      this._completeItemsByText(complete);
+    }
+
+    // Add any new items to the active list
     if (items && items.length > 0) {
       this._addItemsToActiveList(items);
+    }
+  }
+
+  /**
+   * Mark items as complete by matching their text against the active list.
+   * Uses case-insensitive exact match then falls back to substring match.
+   * @param {string[]} completedTexts - Item texts Gemini identified as done
+   * @private
+   */
+  _completeItemsByText(completedTexts) {
+    const state = get(listsStore);
+    const activeList = state.lists.find((l) => l.id === state.activeListId);
+    if (!activeList) return;
+
+    for (const completedText of completedTexts) {
+      const needle = completedText.toLowerCase().trim();
+      const match = activeList.items.find(
+        (item) =>
+          !item.checked &&
+          (item.text.toLowerCase() === needle ||
+            item.text.toLowerCase().includes(needle) ||
+            needle.includes(item.text.toLowerCase())),
+      );
+      if (match) {
+        listsStore.toggleItem(match.id, activeList.id);
+      }
     }
   }
 

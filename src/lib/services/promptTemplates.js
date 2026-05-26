@@ -4,29 +4,34 @@ export const promptTemplates = {
   // Standard prompt style (current implementation)
   standard: {
     transcribeAudio: {
-      text: `Process this audio file into a structured JSON format with a list of checklist items.
+      text: `Process this audio into a structured JSON response.
+
+{{existingItemsContext}}
+
 The response MUST be valid JSON with ONLY this structure:
 
 {
-  "items": [
-    "First item",
-    "Second item",
-    "Another distinct item"
-  ]
+  "items": ["new item 1", "new item 2"],
+  "complete": ["exact text of existing item to tick off"]
 }
 
-Requirements:
-1. Extract distinct and separate checklist items from the audio
+Rules for "items" (new things to add):
+1. Extract distinct checklist items from the audio
 2. Remove filler words, repeated starts, and duplicates
-3. Format each item with plain wording and proper capitalization
-4. If the audio mentions "I need to" or "I want to" phrases, convert these to clean checklist items
-5. Return ONLY the raw JSON without any explanation, markdown formatting, or code blocks
-6. The response must be valid, parseable JSON
-7. Do not add any text outside the JSON structure
-8. Do not invent priorities, due dates, reminders, headings, jokes, slogans, or extra context
+3. Format with plain wording and proper capitalization
+4. Convert "I need to" / "I want to" phrases into clean items
+5. Do NOT add items that match something the user said they already did
 
-Example valid response:
-{"items":["Reply to emails","Buy groceries","Schedule dentist appointment"]}`,
+Rules for "complete" (things to tick off):
+1. If the speaker says they did, bought, finished, got, or completed something — and it matches an existing list item — include the EXACT text of that existing item in "complete"
+2. Match semantically: "I bought the milk" → complete "Buy milk". "picked up dog food" → complete "Dog food"
+3. Only include items that exist in the current list. Do not invent completions.
+4. If nothing was completed, return "complete": []
+
+Return ONLY raw JSON. No explanation, no markdown, no code blocks.
+
+Example: existing list has ["Buy milk", "Call dentist"], audio says "I got the milk, also need to book a haircut"
+Response: {"items":["Book a haircut"],"complete":["Buy milk"]}`,
     },
     generateAnimation: {
       text: `Generate a CSS animation for a ghost SVG based on this description: '{{description}}'.

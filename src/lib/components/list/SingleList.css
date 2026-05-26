@@ -272,15 +272,35 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.65rem;
+  min-width: 0;
+}
+
+.zl-list-title-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.zl-list-color-dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .zl-list-title-heading {
   margin: 0;
-  max-width: 100%;
+  min-width: 0;
+  width: 100%;
 }
 
 .zl-list-title-trigger {
   min-height: 44px;
+  width: 100%;
   max-width: 100%;
   border: none;
   border-radius: 16px;
@@ -303,13 +323,15 @@
 .zl-list-title {
   margin: 0;
   font-family: "Space Mono", monospace;
-  font-size: 1.25rem;
+  font-size: 0.95rem;
   font-weight: 800;
   letter-spacing: 0;
   color: var(--zl-text-color-primary);
   display: block;
   max-width: 100%;
-  overflow-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .zl-list-actions {
@@ -318,6 +340,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.65rem;
+  flex-shrink: 0;
 }
 
 .zl-list-title-input {
@@ -549,7 +572,7 @@
   margin-bottom: var(--zl-spacing-m);
   position: relative;
   content-visibility: auto;
-  contain-intrinsic-size: auto 400px;
+  contain-intrinsic-size: auto 72px;
 }
 
 .zl-add-row {

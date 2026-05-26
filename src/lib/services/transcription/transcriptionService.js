@@ -2,6 +2,8 @@ import { geminiService as defaultGeminiService } from "$lib/services/geminiServi
 import { simpleHybridService } from "./simpleHybridService";
 import { listParser } from "../listParser.js"; // Import the listParser
 import { listsService } from "../lists/listsService"; // Import the listsService
+import { listsStore } from "../lists/listsStore";
+import { get } from "svelte/store";
 import {
   transcriptionState,
   transcriptionActions,
@@ -39,9 +41,25 @@ export class TranscriptionService {
       // Start progress animation
       this.startProgressAnimation();
 
+      // Collect unchecked items from the active list to give Gemini context
+      const storeState = get(listsStore);
+      const activeList = storeState.lists.find(
+        (l) => l.id === storeState.activeListId,
+      );
+      const existingItems = activeList
+        ? activeList.items
+            .filter((item) => !item.checked)
+            .map((item) => item.text)
+        : [];
+
       // Transcribe using hybrid service (Whisper if ready, Gemini API as fallback)
-      const transcriptText =
-        await simpleHybridService.transcribeAudio(audioBlob);
+      // Returns { text, items, complete } — items/complete may be empty for Whisper
+      const transcriptResult = await simpleHybridService.transcribeAudio(
+        audioBlob,
+        existingItems,
+      );
+      const transcriptText = transcriptResult.text || "";
+      const aiComplete = transcriptResult.complete || [];
 
       // Complete progress animation with smooth transition
       this.completeProgressAnimation();
@@ -56,10 +74,14 @@ export class TranscriptionService {
         commands: parsedResult.commands,
       });
 
-      // Send parsed result to listsService for processing
-      listsService.processTranscription(parsedResult);
+      // Send parsed result to listsService — include AI-identified completions
+      listsService.processTranscription({
+        ...parsedResult,
+        complete: aiComplete,
+        existingItems,
+      });
 
-      return { rawText: transcriptText, ...parsedResult }; // Return raw text and parsed data
+      return { rawText: transcriptText, ...parsedResult, complete: aiComplete };
     } catch (error) {
       console.error("Transcription error:", error);
 

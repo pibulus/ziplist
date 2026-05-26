@@ -56,7 +56,7 @@
 <a class="skip-link" href="#main-content">Skip to lists</a>
 
 <div
-  class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pb-0 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10 lg:pb-0"
+  class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10"
 >
   <main
     id="main-content"
@@ -67,23 +67,29 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="sticky bottom-0 z-10 box-border w-full border-t border-pink-200/80 bg-gradient-to-r from-[#fff6e6]/90 via-[#ffead8]/90 to-[#fff1df]/90 pb-2 pt-3 text-center text-xs text-gray-600 shadow-[0_-4px_15px_rgba(249,168,212,0.3)] backdrop-blur-[3px] sm:pb-3 sm:pt-4"
+    class="footer-component fixed bottom-0 left-0 right-0 z-10 box-border pb-2 pt-3 text-center text-xs text-gray-600 backdrop-blur-[8px] sm:pb-4 sm:pt-4"
+    style="background: transparent;"
   >
     <div
-      class="container mx-auto flex flex-col flex-wrap items-center justify-between gap-2 sm:flex-row sm:gap-3"
+      class="container mx-auto flex flex-row items-center justify-center gap-1 sm:justify-between sm:gap-3"
     >
       <div
-        class="copyright ml-4 flex flex-wrap items-center justify-center sm:ml-6 md:ml-8"
+        class="copyright ml-4 hidden flex-wrap items-center justify-center sm:ml-6 sm:flex md:ml-8"
       >
-        <span
-          class="hidden text-xs font-medium tracking-tight text-gray-500 sm:inline-block sm:text-sm"
-        >
+        <span class="mr-1 text-sm font-medium tracking-tight text-gray-500">
           © {footerYear} ZipList
         </span>
-        <span class="hidden mx-1 text-pink-300 sm:inline-block sm:mx-2">•</span>
-        <span class="text-xs font-light text-gray-600 sm:text-sm"> </span>
+        <span class="mx-2 text-pink-300">•</span>
+        <span class="text-sm font-light text-gray-600">
+          Made with
+          <span
+            class="mx-0.5 inline-block transform animate-pulse text-pink-500 transition-transform duration-300 hover:scale-110"
+            aria-label="love">♥</span
+          >
+          in Melbourne
+        </span>
       </div>
-      <div class="mr-4 flex items-center sm:mr-6 md:mr-8">
+      <div class="flex items-center sm:mr-6 md:mr-8">
         <slot name="footer-buttons" />
       </div>
     </div>
@@ -122,34 +128,57 @@
       #fff0d4 70%,
       #ffe8c8 100%
     );
-    background-attachment: fixed;
+    /* background-attachment: fixed is intentionally omitted —
+       iOS Safari renders it as a flat color on non-viewport elements. */
+  }
+
+  /* Page background adapts to cool/dark themes */
+  :global(html[data-theme="chill"] .bg-gradient-mesh) {
+    background-color: #e5f9f6;
+    background-image: radial-gradient(
+      circle at center,
+      #e5f9f6 0%,
+      #e5f9f6 40%,
+      #d0f0f0 70%,
+      #b7e5e5 100%
+    );
+  }
+
+  :global(html[data-theme="zen"] .bg-gradient-mesh) {
+    background-color: #f4eeff;
+    background-image: radial-gradient(
+      circle at center,
+      #f4eeff 0%,
+      #f4eeff 40%,
+      #ebe0ff 70%,
+      #d0bfff 100%
+    );
+  }
+
+  :global(html[data-theme="nocturne"] .bg-gradient-mesh) {
+    background-color: #dbeaf3;
+    background-image: radial-gradient(
+      circle at center,
+      #dbeaf3 0%,
+      #dbeaf3 40%,
+      #c8dde9 70%,
+      #b5cfe0 100%
+    );
+  }
+
+  .page-shell {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
   }
 
   footer {
-    margin-inline: -1rem;
-    width: calc(100% + 2rem);
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  }
-
-  @media (min-width: 640px) {
-    footer {
-      margin-inline: -1.5rem;
-      width: calc(100% + 3rem);
-    }
-  }
-
-  @media (min-width: 768px) {
-    footer {
-      margin-inline: -2.5rem;
-      width: calc(100% + 5rem);
-    }
   }
 
   /* Media queries for mobile optimization */
   @media (max-width: 640px) {
     .page-shell {
       padding-top: 6vh !important;
-      padding-bottom: 0 !important;
+      padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)) !important;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -181,7 +210,7 @@
       flex-direction: column;
       justify-content: flex-start;
       padding-top: 15vh !important;
-      padding-bottom: 0 !important;
+      padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
     }
   }
 </style>

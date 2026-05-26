@@ -3,7 +3,7 @@ import { browser } from "$app/environment";
 import { getContributorSnapshot } from "$lib";
 import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
 
-const LIST_COLOR_PRESETS = [
+export const LIST_COLOR_PRESETS = [
   {
     id: "list-blue",
     defaultName: "Blue List",

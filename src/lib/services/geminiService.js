@@ -16,7 +16,7 @@ export const geminiService = {
   getAvailableStyles: promptManager.getAvailableStyles,
   subscribeToStyleChanges: promptManager.subscribe,
 
-  async transcribeAudio(audioBlob) {
+  async transcribeAudio(audioBlob, existingItems = []) {
     try {
       if (import.meta.env.DEV) {
         console.log("🎤 Transcribing audio with Gemini");
@@ -40,8 +40,16 @@ export const geminiService = {
         }
       }
 
+      // Build context block for existing unchecked items
+      const existingItemsContext =
+        existingItems.length > 0
+          ? `The current list has these unchecked items:\n${existingItems.map((t) => `- ${t}`).join("\n")}\n`
+          : "The current list is empty.";
+
       // Get the appropriate prompt based on current style
-      const prompt = promptManager.getPrompt("transcribeAudio");
+      const prompt = promptManager.getPrompt("transcribeAudio", {
+        existingItemsContext,
+      });
 
       // Convert audio to format Gemini can use
       const audioPart = await geminiApiService.blobToGenerativePart(audioBlob);
@@ -70,13 +78,17 @@ export const geminiService = {
         console.log("Parsed response:", parsedResponse);
       }
 
-      if (parsedResponse.success && parsedResponse.items.length > 0) {
-        // Return the items as a formatted string
-        return parsedResponse.items.join("\n");
+      if (parsedResponse.success) {
+        // Return structured result so callers can access both items and completions
+        return {
+          text: parsedResponse.items.join("\n"),
+          items: parsedResponse.items,
+          complete: parsedResponse.complete || [],
+        };
       } else {
         // Fallback to raw text if parsing fails completely
         console.warn("Unable to extract structured items from response");
-        return responseText;
+        return { text: responseText, items: [], complete: [] };
       }
     } catch (error) {
       console.error("❌ Error transcribing audio:", error);
