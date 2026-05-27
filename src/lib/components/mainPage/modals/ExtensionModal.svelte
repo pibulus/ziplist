@@ -89,6 +89,7 @@
     class="modal-backdrop bg-black/40"
     on:click={closeModal}
     aria-label="Close modal"
+    tabindex="-1"
   ></button>
 </dialog>
 

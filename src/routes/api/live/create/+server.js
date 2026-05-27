@@ -4,6 +4,11 @@ import { env as publicEnv } from "$env/dynamic/public";
 import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter.js";
 import { verifyContributorToken } from "$lib/server/contributor/licenseCrypto.js";
+import {
+  generateLiveRoomId,
+  sanitizeLiveListData,
+  sanitizeLivePassword,
+} from "$lib/services/realtime/liveListProtocol.js";
 
 function getBearerToken(request) {
   const header = request.headers.get("authorization") || "";
@@ -17,8 +22,28 @@ function getPartyKitHost() {
     env.PUBLIC_PARTYKIT_HOST?.trim() ||
     "";
 
-  if (configuredHost) return configuredHost;
+  if (configuredHost) return normalizePartyKitHost(configuredHost);
   return dev ? "localhost:1999" : "";
+}
+
+function normalizePartyKitHost(host) {
+  return host.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+}
+
+function isLocalPartyKitHost(host) {
+  const hostname = host.split(":")[0];
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "0.0.0.0" ||
+    hostname.startsWith("192.168.") ||
+    hostname.startsWith("10.") ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+  );
+}
+
+function getPartyKitProtocol(host) {
+  return isLocalPartyKitHost(host) ? "http" : "https";
 }
 
 function isDevContributorBypassEnabled() {
@@ -68,14 +93,20 @@ export async function POST(event) {
 
   try {
     const { listData, password = null } = await event.request.json();
-    if (!listData?.id || !Array.isArray(listData.items)) {
+    const sanitizedListData = sanitizeLiveListData(listData);
+
+    if (!sanitizedListData) {
       return json({ error: "Invalid list data." }, { status: 400 });
     }
 
-    const protocol = host.includes("localhost") ? "http" : "https";
-    const query = password ? `?pwd=${encodeURIComponent(password)}` : "";
+    const roomId = generateLiveRoomId();
+    const protocol = getPartyKitProtocol(host);
+    const sanitizedPassword = sanitizeLivePassword(password);
+    const query = sanitizedPassword
+      ? `?pwd=${encodeURIComponent(sanitizedPassword)}`
+      : "";
     const response = await fetch(
-      `${protocol}://${host}/party/listRoom${query}`,
+      `${protocol}://${host}/parties/main/${encodeURIComponent(roomId)}${query}`,
       {
         method: "POST",
         headers: {
@@ -84,7 +115,7 @@ export async function POST(event) {
             ? { Authorization: `Bearer ${getPartyKitCreateSecret()}` }
             : {}),
         },
-        body: JSON.stringify(listData),
+        body: JSON.stringify(sanitizedListData),
       },
     );
 

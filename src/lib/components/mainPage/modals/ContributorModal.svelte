@@ -219,6 +219,7 @@
     type="button"
     class="zl-contributor-backdrop"
     aria-label="Close contributor modal"
+    tabindex="-1"
     on:click={handleClose}
   ></button>
 </dialog>

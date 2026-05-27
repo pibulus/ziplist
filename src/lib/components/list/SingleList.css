@@ -283,6 +283,18 @@
   max-width: 100%;
 }
 
+.zl-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .zl-list-color-dot {
   flex-shrink: 0;
   width: 14px;
@@ -332,6 +344,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.zl-list-title-hint {
+  color: var(--zl-text-color-secondary);
+  font-family: "Space Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  opacity: 0.72;
+  text-transform: uppercase;
 }
 
 .zl-list-actions {
@@ -1698,14 +1719,15 @@
   }
 
   .zl-list-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.45rem;
     width: 100%;
   }
 
   .zl-list-actions > * {
-    width: 100%;
+    flex: 0 0 44px;
+    width: 44px;
   }
 
   .zl-share-button {
@@ -1717,23 +1739,9 @@
   .zl-share-button,
   .zl-live-indicator {
     gap: 0.28rem;
+    min-width: 44px;
     min-height: 44px;
     padding: 0.45rem 0.35rem;
-    font-size: 0.68rem;
-  }
-
-  .zl-add-list-button .add-text,
-  .zl-live-button .live-text {
-    font-size: 0;
-  }
-
-  .zl-add-list-button .add-text::after {
-    content: "New";
-    font-size: 0.68rem;
-  }
-
-  .zl-live-button .live-text::after {
-    content: "Live";
     font-size: 0.68rem;
   }
 }

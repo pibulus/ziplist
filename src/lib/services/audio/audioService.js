@@ -1,5 +1,6 @@
 import { AudioStateManager, AudioStates } from "./audioStates";
 import { audioState, audioActions, uiActions } from "../infrastructure/stores";
+import { wakeLockService } from "../pwa/wakeLockService";
 
 export const AudioEvents = {
   RECORDING_STARTED: "audio:recordingStarted",
@@ -217,6 +218,7 @@ export class AudioService {
         }
       };
 
+      await wakeLockService.request();
       this.mediaRecorder.start(1000);
       this.stateManager.setState(AudioStates.RECORDING);
 
@@ -269,6 +271,7 @@ export class AudioService {
 
       // Check recorder state - attempt to stop even if internal state doesn't match
       if (!this.mediaRecorder || this.mediaRecorder.state === "inactive") {
+        wakeLockService.release();
         this.stateManager.setState(AudioStates.IDLE);
         resolve(null); // No active recording to stop
         return;
@@ -278,6 +281,8 @@ export class AudioService {
       const mimeType = this.mediaRecorder.mimeType || "audio/webm";
 
       this.mediaRecorder.onstop = () => {
+        wakeLockService.release();
+
         // Create the Blob from this.audioChunks, which now contains all chunks
         // including the final one from the last dataavailable event.
         const audioBlob = new Blob(this.audioChunks, { type: mimeType });
@@ -317,6 +322,7 @@ export class AudioService {
         }
 
         // Force state reset on error
+        wakeLockService.release();
         this.stateManager.setState(AudioStates.IDLE);
         resolve(null);
       }
@@ -441,6 +447,7 @@ export class AudioService {
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
     } finally {
+      wakeLockService.release();
       this.stateManager.setState(AudioStates.IDLE);
     }
   }

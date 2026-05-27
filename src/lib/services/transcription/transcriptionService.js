@@ -10,7 +10,6 @@ import {
   uiActions,
 } from "../infrastructure/stores";
 import { COPY_MESSAGES, ATTRIBUTION, getRandomFromArray } from "$lib/constants";
-import { get } from "svelte/store";
 
 export const TranscriptionEvents = {
   TRANSCRIPTION_STARTED: "transcription:started",
@@ -46,6 +45,7 @@ export class TranscriptionService {
       const activeList = storeState.lists.find(
         (l) => l.id === storeState.activeListId,
       );
+      const targetListId = activeList?.id || storeState.activeListId;
       const existingItems = activeList
         ? activeList.items
             .filter((item) => !item.checked)
@@ -58,14 +58,24 @@ export class TranscriptionService {
         audioBlob,
         existingItems,
       );
-      const transcriptText = transcriptResult.text || "";
-      const aiComplete = transcriptResult.complete || [];
+      const normalizedTranscript =
+        typeof transcriptResult === "string"
+          ? { text: transcriptResult, complete: [] }
+          : transcriptResult || {};
+      const transcriptText = normalizedTranscript.text || "";
+      const aiComplete = normalizedTranscript.complete || [];
+      const hasStructuredResult = normalizedTranscript.structured === true;
+      const parsedResult = hasStructuredResult
+        ? {
+            items: Array.isArray(normalizedTranscript.items)
+              ? normalizedTranscript.items
+              : [],
+            commands: [],
+          }
+        : listParser.parse(transcriptText);
 
       // Complete progress animation with smooth transition
       this.completeProgressAnimation();
-
-      // Parse the transcript for list items and commands
-      const parsedResult = listParser.parse(transcriptText);
 
       // Update transcription state with completed text and parsed data
       transcriptionActions.completeTranscription({
@@ -79,6 +89,7 @@ export class TranscriptionService {
         ...parsedResult,
         complete: aiComplete,
         existingItems,
+        targetListId,
       });
 
       return { rawText: transcriptText, ...parsedResult, complete: aiComplete };

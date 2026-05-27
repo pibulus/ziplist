@@ -84,7 +84,7 @@ function normalizeItemText(text) {
   return clipped.charAt(0).toUpperCase() + clipped.slice(1);
 }
 
-function getItemDedupeKey(text) {
+export function getItemDedupeKey(text) {
   return normalizeItemText(text)
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, " ")

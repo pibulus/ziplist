@@ -7,6 +7,7 @@
 import PartySocket from "partysocket";
 import { getContributorTokenSnapshot } from "$lib";
 import { getOrCreateAvatar } from "./avatarService.js";
+import { LIVE_MESSAGE_TYPES } from "./liveListProtocol.js";
 
 const PARTYKIT_PLACEHOLDER_HOST = "ziplist.your-username.partykit.dev";
 
@@ -15,7 +16,22 @@ function getConfiguredPartyKitHost() {
   if (!host || host === PARTYKIT_PLACEHOLDER_HOST) {
     return "";
   }
-  return host;
+  return normalizePartyKitHost(host);
+}
+
+function normalizePartyKitHost(host) {
+  return host.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+}
+
+function isLocalNetworkHost(hostname) {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "0.0.0.0" ||
+    hostname.startsWith("192.168.") ||
+    hostname.startsWith("10.") ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+  );
 }
 
 /**
@@ -27,12 +43,9 @@ function getPartyKitHost() {
     return getConfiguredPartyKitHost();
   }
 
-  // Development: use localhost
-  if (
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
-  ) {
-    return "localhost:1999";
+  // Development: match the current host so LAN devices can reach PartyKit too.
+  if (import.meta.env.DEV && isLocalNetworkHost(window.location.hostname)) {
+    return `${window.location.hostname}:1999`;
   }
 
   return getConfiguredPartyKitHost();
@@ -117,21 +130,17 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
       const message = JSON.parse(event.data);
 
       switch (message.type) {
-        case "init":
+        case LIVE_MESSAGE_TYPES.INIT:
           callbacks.onInit?.(message.data);
           break;
 
-        case "presence":
+        case LIVE_MESSAGE_TYPES.PRESENCE:
           callbacks.onPresence?.(message.data);
           break;
 
-        case "list_update":
-        case "item_add":
-        case "item_update":
-        case "item_delete":
-        case "item_toggle":
-        case "typing_start":
-        case "typing_stop":
+        case LIVE_MESSAGE_TYPES.LIST_UPDATE:
+        case LIVE_MESSAGE_TYPES.TYPING_START:
+        case LIVE_MESSAGE_TYPES.TYPING_STOP:
           callbacks.onUpdate?.(message);
           break;
 
@@ -149,13 +158,14 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
     callbacks.onConnect?.();
   });
 
-  socket.addEventListener("close", () => {
+  socket.addEventListener("close", (event) => {
     console.log("[PartyService] Disconnected from room:", roomId);
-    callbacks.onDisconnect?.();
+    callbacks.onDisconnect?.(event);
   });
 
   socket.addEventListener("error", (error) => {
     console.error("[PartyService] WebSocket error:", error);
+    callbacks.onError?.(error);
   });
 
   return socket;
@@ -170,7 +180,7 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
 export function sendUpdate(socket, type, data) {
   if (socket.readyState !== PartySocket.OPEN) {
     console.warn("[PartyService] Cannot send update, socket not open");
-    return;
+    return false;
   }
 
   socket.send(
@@ -179,6 +189,7 @@ export function sendUpdate(socket, type, data) {
       data,
     }),
   );
+  return true;
 }
 
 /**

@@ -84,11 +84,23 @@ export const geminiService = {
           text: parsedResponse.items.join("\n"),
           items: parsedResponse.items,
           complete: parsedResponse.complete || [],
+          structured: true,
+          raw: parsedResponse.raw,
         };
+      } else if (parsedResponse.structuredResponse) {
+        // JSON-looking responses that fail parsing should not be reparsed as
+        // plain commands/items; fail closed to avoid destructive commands.
+        console.warn("Structured Gemini response could not be parsed");
+        return { text: "", items: [], complete: [], structured: true };
       } else {
         // Fallback to raw text if parsing fails completely
         console.warn("Unable to extract structured items from response");
-        return { text: responseText, items: [], complete: [] };
+        return {
+          text: responseText,
+          items: [],
+          complete: [],
+          structured: false,
+        };
       }
     } catch (error) {
       console.error("❌ Error transcribing audio:", error);

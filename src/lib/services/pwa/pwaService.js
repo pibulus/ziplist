@@ -114,6 +114,57 @@ export class PwaService {
     });
   }
 
+  isDevelopmentEnvironment() {
+    if (!browser) return false;
+
+    return (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.port === "5173" ||
+      window.location.port === "4173"
+    );
+  }
+
+  getPlatformInfo() {
+    if (!browser) {
+      return {
+        isIOS: false,
+        isAndroid: false,
+        isMobile: false,
+        isStandalone: false,
+        isSafari: false,
+        isChrome: false,
+      };
+    }
+
+    const userAgent = navigator.userAgent || "";
+    const ua = userAgent.toLowerCase();
+    const isIOS =
+      /iphone|ipad|ipod/.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isAndroid = /android/.test(ua);
+    const isChrome = /chrome|chromium|crios/.test(ua) && !/edg/.test(ua);
+    const isSafari = /safari/.test(ua) && !isChrome;
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      window.matchMedia("(display-mode: minimal-ui)").matches ||
+      navigator.standalone === true;
+
+    return {
+      isIOS,
+      isAndroid,
+      isMobile: isIOS || isAndroid,
+      isStandalone,
+      isSafari,
+      isChrome,
+    };
+  }
+
+  isRunningStandalone() {
+    return this.getPlatformInfo().isStandalone;
+  }
+
   getTranscriptionCount() {
     return StorageUtils.getNumberItem(STORAGE_KEYS.TRANSCRIPTION_COUNT, 0);
   }
@@ -268,32 +319,16 @@ export class PwaService {
 
     try {
       // Skip PWA detection in development environments
-      const isDevelopment =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1" ||
-        window.location.port === "5173" ||
-        window.location.port === "4173";
-
-      if (isDevelopment) {
+      if (this.isDevelopmentEnvironment()) {
         this.log("Development environment detected, bypassing PWA detection");
         return false;
       }
 
-      const isStandalone = window.matchMedia(
-        "(display-mode: standalone)",
-      ).matches;
-      const isFullscreen = window.matchMedia(
-        "(display-mode: fullscreen)",
-      ).matches;
-      const isMinimalUi = window.matchMedia(
-        "(display-mode: minimal-ui)",
-      ).matches;
-      const iOSStandalone = navigator.standalone === true;
-      const isPWA =
-        isStandalone || isFullscreen || isMinimalUi || iOSStandalone;
+      const platform = this.getPlatformInfo();
+      const isPWA = platform.isStandalone;
 
       this.log(
-        `PWA detection: standalone=${isStandalone}, fullscreen=${isFullscreen}, minimalUi=${isMinimalUi}, iosStandalone=${iOSStandalone}`,
+        `PWA detection: standalone=${platform.isStandalone}, ios=${platform.isIOS}, android=${platform.isAndroid}`,
       );
 
       if (isPWA) {
@@ -312,6 +347,78 @@ export class PwaService {
   dismissPrompt() {
     // Simply update the store value to control component visibility
     showPwaInstallPrompt.set(false);
+  }
+
+  async requestPersistentStorage() {
+    if (!browser || !navigator.storage?.persist) {
+      return { supported: false, persisted: false, granted: false };
+    }
+
+    try {
+      const alreadyPersisted = navigator.storage.persisted
+        ? await navigator.storage.persisted()
+        : false;
+
+      if (alreadyPersisted) {
+        return { supported: true, persisted: true, granted: true };
+      }
+
+      const granted = await navigator.storage.persist();
+      return { supported: true, persisted: granted, granted };
+    } catch (error) {
+      console.warn("Persistent storage request failed:", error);
+      return {
+        supported: true,
+        persisted: false,
+        granted: false,
+        error: error?.message || "Persistent storage request failed",
+      };
+    }
+  }
+
+  isDeviceSetupComplete() {
+    return StorageUtils.getBooleanItem(
+      STORAGE_KEYS.PWA_DEVICE_SETUP_COMPLETE,
+      false,
+    );
+  }
+
+  markDeviceSetupComplete() {
+    StorageUtils.setItem(STORAGE_KEYS.PWA_DEVICE_SETUP_COMPLETE, "true");
+    StorageUtils.removeItem(STORAGE_KEYS.PWA_DEVICE_SETUP_DISMISSED_AT);
+  }
+
+  snoozeDeviceSetup() {
+    StorageUtils.setItem(
+      STORAGE_KEYS.PWA_DEVICE_SETUP_DISMISSED_AT,
+      new Date().toISOString(),
+    );
+  }
+
+  isDeviceSetupSnoozed() {
+    const dismissedAt = StorageUtils.getItem(
+      STORAGE_KEYS.PWA_DEVICE_SETUP_DISMISSED_AT,
+    );
+
+    if (!dismissedAt) return false;
+
+    const elapsedMs = Date.now() - new Date(dismissedAt).getTime();
+    const snoozeMs = 24 * 60 * 60 * 1000;
+
+    return elapsedMs >= 0 && elapsedMs < snoozeMs;
+  }
+
+  shouldShowDeviceSetup() {
+    if (!browser) return false;
+
+    const platform = this.getPlatformInfo();
+
+    return (
+      platform.isStandalone &&
+      platform.isMobile &&
+      !this.isDeviceSetupComplete() &&
+      !this.isDeviceSetupSnoozed()
+    );
   }
 }
 

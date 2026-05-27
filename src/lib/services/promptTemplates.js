@@ -1,24 +1,21 @@
 // Collection of different prompt templates organized by style
 
-export const promptTemplates = {
-  // Standard prompt style (current implementation)
-  standard: {
-    transcribeAudio: {
-      text: `Process this audio into a structured JSON response.
+function buildTranscribePrompt({ intro, itemStyleRule, exampleItems }) {
+  return `${intro}
 
 {{existingItemsContext}}
 
 The response MUST be valid JSON with ONLY this structure:
 
 {
-  "items": ["new item 1", "new item 2"],
+  "items": ${JSON.stringify(exampleItems)},
   "complete": ["exact text of existing item to tick off"]
 }
 
 Rules for "items" (new things to add):
 1. Extract distinct checklist items from the audio
 2. Remove filler words, repeated starts, and duplicates
-3. Format with plain wording and proper capitalization
+3. ${itemStyleRule}
 4. Convert "I need to" / "I want to" phrases into clean items
 5. Do NOT add items that match something the user said they already did
 
@@ -26,12 +23,21 @@ Rules for "complete" (things to tick off):
 1. If the speaker says they did, bought, finished, got, or completed something — and it matches an existing list item — include the EXACT text of that existing item in "complete"
 2. Match semantically: "I bought the milk" → complete "Buy milk". "picked up dog food" → complete "Dog food"
 3. Only include items that exist in the current list. Do not invent completions.
-4. If nothing was completed, return "complete": []
+4. Do not stylize or rewrite "complete" entries; they must match the current list text.
+5. If nothing was completed, return "complete": []
 
-Return ONLY raw JSON. No explanation, no markdown, no code blocks.
+Return ONLY raw JSON. No explanation, no markdown, no code blocks.`;
+}
 
-Example: existing list has ["Buy milk", "Call dentist"], audio says "I got the milk, also need to book a haircut"
-Response: {"items":["Book a haircut"],"complete":["Buy milk"]}`,
+export const promptTemplates = {
+  // Standard prompt style (current implementation)
+  standard: {
+    transcribeAudio: {
+      text: buildTranscribePrompt({
+        intro: "Process this audio into a structured JSON response.",
+        itemStyleRule: "Format with plain wording and proper capitalization",
+        exampleItems: ["Book a haircut", "Buy groceries"],
+      }),
     },
     generateAnimation: {
       text: `Generate a CSS animation for a ghost SVG based on this description: '{{description}}'.
@@ -72,93 +78,63 @@ Critical requirements:
   // Surly pirate prompt style
   surlyPirate: {
     transcribeAudio: {
-      text: `Process this audio into a structured JSON list of pirate-style items.
-Format response as valid JSON with the following structure:
-
-{
-  "items": [
-    "First pirate item",
-    "Second pirate item"
-  ]
-}
-
-Use pirate slang, expressions, and attitude (arr, matey, ye, scallywag, etc.).
-Return ONLY raw JSON, no additional text or formatting.`,
+      text: buildTranscribePrompt({
+        intro: "Process this audio into a structured JSON response.",
+        itemStyleRule:
+          "For new items only, use pirate slang, expressions, and attitude",
+        exampleItems: ["Fetch the milk, matey", "Call the dentist, arr"],
+      }),
     },
   },
 
   // L33T Sp34k prompt style
   leetSpeak: {
     transcribeAudio: {
-      text: `Pr0c355 th15 4ud10 1nt0 4 5tructur3d J50N l15t 0f l33t 5p34k 1t3m5.
-F0rm4t r35p0n53 45 v4l1d J50N w1th th15 5tructur3:
-
-{
-  "items": [
-    "F1r5t l33t 1t3m",
-    "53c0nd l33t 1t3m"
-  ]
-}
-
-U53 num3r1c 5ub5t1tut10n5 (3=e, 4=a, 1=i, 0=o, 5=s, 7=t) 4nd h4ck3r j4rg0n.
-R3turn 0NLY r4w J50N, n0 4dd1t10n4l t3xt.`,
+      text: buildTranscribePrompt({
+        intro: "Process this audio into a structured JSON response.",
+        itemStyleRule:
+          "For new items only, use l33t numeric substitutions and hacker jargon",
+        exampleItems: ["Buy m1lk", "Call d3nt15t"],
+      }),
     },
   },
 
   // Sparkle Pop prompt style
   sparklePop: {
     transcribeAudio: {
-      text: `OMG!!! Process this audio into a structured JSON list of SUPER bubbly items!!!
-Format response as valid JSON with this structure:
-
-{
-  "items": [
-    "First AMAZING item ✨💖",
-    "Second TOTALLY CUTE item 🌈✨"
-  ]
-}
-
-Make each item EXTRA bubbly with emojis, excitement, and teen slang!!!
-Use words like 'literally,' 'totally,' 'sooo,' 'vibes,' and 'obsessed'!!!
-Return ONLY raw JSON, no additional text or formatting!!!`,
+      text: buildTranscribePrompt({
+        intro: "Process this audio into a structured JSON response.",
+        itemStyleRule:
+          "For new items only, make each item bubbly with emojis, excitement, and teen slang",
+        exampleItems: ["Buy milk ✨", "Book a haircut 💖"],
+      }),
     },
   },
 
   // Code Whisperer (formerly Prompt Engineer)
   codeWhisperer: {
     transcribeAudio: {
-      text: `Process this audio into a structured JSON list of technical, precise items.
-Format response as valid JSON with the following structure:
-
-{
-  "items": [
-    "First technical item",
-    "Second technical item" 
-  ]
-}
-
-Use clear, structured, technical language suitable for a coding prompt.
-Remove redundancies, organize logically, use precise terminology.
-Return ONLY raw JSON, no additional text or formatting.`,
+      text: buildTranscribePrompt({
+        intro: "Process this audio into a structured JSON response.",
+        itemStyleRule:
+          "For new items only, use clear, structured, technical language",
+        exampleItems: ["Document API behavior", "Refactor settings module"],
+      }),
     },
   },
 
   // Quill & Ink (formerly Victorian Author)
   quillAndInk: {
     transcribeAudio: {
-      text: `Process this audio into a structured JSON list of eloquent Victorian-style items.
-Format response as valid JSON with the following structure:
-
-{
-  "items": [
-    "First eloquent Victorian item",
-    "Second ornate Victorian item"
-  ]
-}
-
-Employ the eloquence and stylistic flourishes of a 19th century Victorian novelist.
-Use elaborate sentences, period-appropriate vocabulary, and literary devices.
-Return ONLY raw JSON, no additional text or formatting.`,
+      text: buildTranscribePrompt({
+        intro: "Process this audio into a structured JSON response.",
+        itemStyleRule:
+          "For new items only, use eloquent Victorian-inspired wording",
+        exampleItems: [
+          "Procure a bottle of milk",
+          "Arrange an appointment with the dentist",
+        ],
+      }),
     },
   },
 };

@@ -1,7 +1,22 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onDestroy } from "svelte";
 
   const dispatch = createEventDispatcher();
+  let shareStatus = "";
+  let shareStatusTimer = null;
+
+  onDestroy(() => {
+    if (shareStatusTimer) clearTimeout(shareStatusTimer);
+  });
+
+  function setShareStatus(message) {
+    if (shareStatusTimer) clearTimeout(shareStatusTimer);
+    shareStatus = message;
+    shareStatusTimer = setTimeout(() => {
+      shareStatus = "";
+      shareStatusTimer = null;
+    }, 2500);
+  }
 
   function showAbout() {
     dispatch("showAbout");
@@ -20,19 +35,27 @@
   }
 
   async function shareApp() {
+    const url =
+      typeof window !== "undefined" ? window.location.href : "https://ziplist.app";
     const shareData = {
       title: "ZipList",
       text: "Make a checklist by talking. Quick, warm, and simple.",
-      url: "https://ziplist.app",
+      url,
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
+        setShareStatus("Shared ZipList");
+      } else if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareData.url);
+        setShareStatus("ZipList link copied");
+      } else {
+        setShareStatus("Share unavailable");
       }
     } catch (err) {
+      if (err?.name === "AbortError") return;
+      setShareStatus("Share failed");
       console.error("Error sharing:", err);
     }
   }
@@ -81,4 +104,5 @@
   >
     Share
   </button>
+  <span class="sr-only" role="status" aria-live="polite">{shareStatus}</span>
 </nav>

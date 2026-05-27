@@ -238,6 +238,7 @@
     type="button"
     class="zl-modal-backdrop"
     aria-label="Close settings modal"
+    tabindex="-1"
     on:click={handleModalClose}
   ></button>
 </dialog>

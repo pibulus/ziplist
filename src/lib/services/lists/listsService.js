@@ -1,4 +1,4 @@
-import { listsStore, activeList, activeListItems } from "./listsStore";
+import { listsStore, activeList, getItemDedupeKey } from "./listsStore";
 import { get } from "svelte/store";
 
 /**
@@ -44,23 +44,23 @@ export class ListsService {
   processTranscription(transcriptionResult) {
     if (!transcriptionResult) return;
 
-    const { items, commands, complete } = transcriptionResult;
+    const { items, commands, complete, targetListId } = transcriptionResult;
 
     // Process commands first
     if (commands && commands.length > 0) {
       for (const command of commands) {
-        this._processCommand(command);
+        this._processCommand(command, targetListId);
       }
     }
 
     // Tick off items the user said they've completed
     if (complete && complete.length > 0) {
-      this._completeItemsByText(complete);
+      this._completeItemsByText(complete, targetListId);
     }
 
     // Add any new items to the active list
     if (items && items.length > 0) {
-      this._addItemsToActiveList(items);
+      this._addItemsToActiveList(items, targetListId);
     }
   }
 
@@ -68,24 +68,39 @@ export class ListsService {
    * Mark items as complete by matching their text against the active list.
    * Uses case-insensitive exact match then falls back to substring match.
    * @param {string[]} completedTexts - Item texts Gemini identified as done
+   * @param {string} [listId] - Optional target list ID
    * @private
    */
-  _completeItemsByText(completedTexts) {
+  _completeItemsByText(completedTexts, listId = null) {
     const state = get(listsStore);
-    const activeList = state.lists.find((l) => l.id === state.activeListId);
+    const targetListId = listId || state.activeListId;
+    const activeList = state.lists.find((l) => l.id === targetListId);
     if (!activeList) return;
 
+    const normalize = (text) => getItemDedupeKey(text);
+    const completedItemIds = new Set();
+
     for (const completedText of completedTexts) {
-      const needle = completedText.toLowerCase().trim();
-      const match = activeList.items.find(
-        (item) =>
-          !item.checked &&
-          (item.text.toLowerCase() === needle ||
-            item.text.toLowerCase().includes(needle) ||
-            needle.includes(item.text.toLowerCase())),
+      const needle = normalize(completedText);
+      if (!needle) continue;
+
+      const uncheckedItems = activeList.items.filter(
+        (item) => !item.checked && !completedItemIds.has(item.id),
       );
+      const exactMatch = uncheckedItems.find(
+        (item) => normalize(item.text) === needle,
+      );
+      const substringMatches = uncheckedItems.filter((item) => {
+        const haystack = normalize(item.text);
+        return haystack.includes(needle) || needle.includes(haystack);
+      });
+      const substringMatch =
+        substringMatches.length === 1 ? substringMatches[0] : null;
+      const match = exactMatch || substringMatch;
+
       if (match) {
-        listsStore.toggleItem(match.id, activeList.id);
+        completedItemIds.add(match.id);
+        listsStore.toggleItem(match.id, targetListId);
       }
     }
   }
@@ -95,7 +110,7 @@ export class ListsService {
    * @param {Object} command - Command object from listParser
    * @private
    */
-  _processCommand(command) {
+  _processCommand(command, targetListId = null) {
     if (!command || !command.command) return;
 
     switch (command.command) {
@@ -108,11 +123,11 @@ export class ListsService {
       }
 
       case "CLEAR_LIST":
-        this.clearActiveList();
+        this.clearActiveList(targetListId);
         break;
 
       case "REMOVE_LAST_ITEM":
-        this.removeLastItem();
+        this.removeLastItem(targetListId);
         break;
 
       case "ADD_ITEM":
@@ -203,8 +218,8 @@ export class ListsService {
    * @param {Array<string>} items - Array of item text strings
    * @private
    */
-  _addItemsToActiveList(items) {
-    const result = listsStore.addItems(items);
+  _addItemsToActiveList(items, listId = null) {
+    const result = listsStore.addItems(items, listId);
     this._announceListNotice(result);
     return result;
   }
@@ -260,13 +275,14 @@ export class ListsService {
   /**
    * Remove the last item from the active list
    */
-  removeLastItem() {
-    const items = get(activeListItems);
+  removeLastItem(listId = null) {
+    const state = get(listsStore);
+    const targetListId = listId || state.activeListId;
+    const targetList = state.lists.find((list) => list.id === targetListId);
+    const items = targetList?.items || [];
     if (items.length > 0) {
       const lastItem = items[items.length - 1];
-      // Note: removeLastItem currently only works on active list via activeListItems store
-      // If needed for specific lists, we'd need to fetch that list first
-      listsStore.removeItem(lastItem.id);
+      listsStore.removeItem(lastItem.id, targetListId);
     }
   }
 

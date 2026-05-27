@@ -1,8 +1,49 @@
 <script>
+  import { browser } from "$app/environment";
   import { createEventDispatcher } from "svelte";
+  import { pwaService } from "$lib/services/pwa";
 
   // Event handling
   const dispatch = createEventDispatcher();
+
+  let title = "Microphone Access Denied";
+  let description =
+    "ZipList needs microphone access to transcribe your speech. Please update your browser settings to allow microphone access.";
+  let steps = [
+    "Click the microphone or lock icon in your address bar",
+    'Select "Allow" for microphone access',
+    "Refresh the page and try again",
+  ];
+
+  if (browser) {
+    const platform = pwaService.getPlatformInfo();
+
+    if (platform.isIOS) {
+      title = "Microphone Is Blocked";
+      description =
+        "ZipList needs microphone access for voice lists. iPhone permissions are managed outside the app when access is blocked.";
+      steps = platform.isStandalone
+        ? [
+            "Open iOS Settings",
+            "Find ZipList or Safari",
+            "Allow Microphone, then reopen ZipList",
+          ]
+        : [
+            "Open iOS Settings",
+            "Go to Safari, then Microphone",
+            "Allow access, then reopen ZipList",
+          ];
+    } else if (platform.isAndroid) {
+      title = "Microphone Is Blocked";
+      description =
+        "ZipList needs microphone access for voice lists. Update this site's microphone permission and try again.";
+      steps = [
+        "Open site settings from your browser menu",
+        'Set Microphone to "Allow"',
+        "Refresh ZipList and try again",
+      ];
+    }
+  }
 
   // Close the modal when clicked
   function closeModal() {
@@ -39,29 +80,22 @@
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
       </div>
-      <h3 id="permission_error_title">Microphone Access Denied</h3>
+      <h3 id="permission_error_title">{title}</h3>
     </div>
 
     <!-- Permission error message -->
     <p id="permission_error_description">
-      ZipList needs microphone access to transcribe your speech. Please update
-      your browser settings to allow microphone access.
+      {description}
     </p>
 
     <!-- Solution steps -->
     <div class="error-steps">
-      <div class="step">
-        <div class="step-number">1</div>
-        <p>Click the microphone or lock icon in your address bar</p>
-      </div>
-      <div class="step">
-        <div class="step-number">2</div>
-        <p>Select "Allow" for microphone access</p>
-      </div>
-      <div class="step">
-        <div class="step-number">3</div>
-        <p>Refresh the page and try again</p>
-      </div>
+      {#each steps as step, index}
+        <div class="step">
+          <div class="step-number">{index + 1}</div>
+          <p>{step}</p>
+        </div>
+      {/each}
     </div>
 
     <!-- Dismiss button -->

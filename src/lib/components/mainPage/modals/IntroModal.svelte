@@ -81,7 +81,7 @@
     </div>
   </div>
   <form method="dialog" class="modal-backdrop">
-    <button type="submit" class="text-[0]" aria-label="Close intro">close</button>
+    <button type="submit" class="text-[0]" aria-label="Close intro" tabindex="-1">close</button>
   </form>
 </dialog>
 

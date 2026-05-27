@@ -70,6 +70,13 @@ export function extractJSON(text) {
   return null;
 }
 
+function looksLikeStructuredResponse(text) {
+  const cleaned = cleanResponseText(text);
+  return (
+    /^\s*(?:\{|\[)/.test(cleaned) && /"?(items|complete)"?\s*:/i.test(cleaned)
+  );
+}
+
 function normalizeParsedItem(item) {
   if (typeof item === "string") return item;
 
@@ -81,22 +88,34 @@ function normalizeParsedItem(item) {
   return "";
 }
 
+function normalizeParsedArray(value) {
+  return Array.isArray(value)
+    ? value
+        .map(normalizeParsedItem)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+}
+
 /**
  * Parse items from a model response, with fallbacks for different formats
  * @param {string} responseText - Raw response text from the model
+ * @param {object|null} [parsedJSON] - Already parsed JSON, when available
  * @returns {string[]} Array of extracted items
  */
-export function parseItemsFromResponse(responseText) {
+export function parseItemsFromResponse(responseText, parsedJSON = undefined) {
   if (!responseText) return [];
 
   // Try to extract items from JSON structure first
-  const jsonData = extractJSON(responseText);
+  const jsonData =
+    parsedJSON === undefined ? extractJSON(responseText) : parsedJSON;
 
   if (jsonData && jsonData.items && Array.isArray(jsonData.items)) {
-    return jsonData.items
-      .map(normalizeParsedItem)
-      .map((item) => item.trim())
-      .filter(Boolean);
+    return normalizeParsedArray(jsonData.items);
+  }
+
+  if (looksLikeStructuredResponse(responseText)) {
+    return [];
   }
 
   // Fallback: If JSON parsing fails, try to extract items line by line
@@ -119,7 +138,7 @@ export function parseItemsFromResponse(responseText) {
     })
     .filter((line) => line.length > 0)
     .filter((line) => !/^[{}[\],]+$/.test(line))
-    .filter((line) => !/^"?items"?\s*:/i.test(line));
+    .filter((line) => !/^"?(items|complete)"?\s*:/i.test(line));
 
   return lines;
 }
@@ -130,19 +149,17 @@ export function parseItemsFromResponse(responseText) {
  * @returns {object} Structured data with parsed items and metadata
  */
 export function parseModelResponse(responseText) {
-  const items = parseItemsFromResponse(responseText);
-
-  // Extract the complete array if present
   const jsonData = extractJSON(responseText);
-  const complete =
-    jsonData && jsonData.complete && Array.isArray(jsonData.complete)
-      ? jsonData.complete.map((t) => t.trim()).filter(Boolean)
-      : [];
+  const items = parseItemsFromResponse(responseText, jsonData);
+  const complete = jsonData ? normalizeParsedArray(jsonData.complete) : [];
+  const structuredResponse =
+    Boolean(jsonData) || looksLikeStructuredResponse(responseText);
 
   return {
     success: items.length > 0 || complete.length > 0,
     items,
     complete,
+    structuredResponse,
     raw: responseText,
     timestamp: new Date().toISOString(),
   };

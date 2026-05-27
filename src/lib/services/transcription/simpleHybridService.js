@@ -9,6 +9,11 @@ import { browser } from "$app/environment";
 // Lazy-loaded whisper modules — avoids bundling @xenova/transformers in main chunk
 let whisperService = null;
 let whisperStatus = null;
+const GEMINI_COMPLETION_FALLBACK_MS = parseInt(
+  import.meta.env.VITE_COMPLETION_API_FALLBACK_MS || "7000",
+  10,
+);
+const FALLBACK_TO_WHISPER = Symbol("fallback-to-whisper");
 
 async function loadWhisper() {
   if (!whisperService) {
@@ -36,6 +41,31 @@ class SimpleHybridService {
     localStorage.setItem(key, value);
   }
 
+  async transcribeWithWhisper(audioBlob) {
+    this.setLocalFlag("last_transcription_method", "whisper");
+    const text = await whisperService.transcribeAudio(audioBlob);
+    return { text, items: [], complete: [], structured: false };
+  }
+
+  waitForGeminiCompletionFallback() {
+    return new Promise((resolve) => {
+      setTimeout(resolve, GEMINI_COMPLETION_FALLBACK_MS, FALLBACK_TO_WHISPER);
+    });
+  }
+
+  waitForWhisperLoadFallback() {
+    return new Promise((resolve) => {
+      if (!this.whisperLoadPromise) return;
+      this.whisperLoadPromise
+        .then((result) => {
+          if (result.success && whisperService) {
+            resolve(FALLBACK_TO_WHISPER);
+          }
+        })
+        .catch(() => {});
+    });
+  }
+
   shouldLoadWhisperInBackground() {
     if (!browser) return false;
 
@@ -59,8 +89,12 @@ class SimpleHybridService {
    * Start loading Whisper in the background
    */
   async startBackgroundLoad({ force = false } = {}) {
-    if (this.whisperLoadPromise || this.whisperReady) {
-      return; // Already loading or loaded
+    if (this.whisperReady) {
+      return { success: true };
+    }
+
+    if (this.whisperLoadPromise) {
+      return this.whisperLoadPromise;
     }
 
     if (!force && !this.shouldLoadWhisperInBackground()) {
@@ -89,9 +123,12 @@ class SimpleHybridService {
           console.warn("Whisper load failed, will continue with API:", err);
           return { success: false, error: err };
         });
+
+      return this.whisperLoadPromise;
     } catch (err) {
       console.warn("Failed to load whisper module:", err);
       this.whisperLoadPromise = Promise.resolve({ success: false, error: err });
+      return this.whisperLoadPromise;
     }
   }
 
@@ -101,6 +138,7 @@ class SimpleHybridService {
   async transcribeAudio(audioBlob, existingItems = []) {
     // Check privacy mode preference
     const privacyMode = this.getLocalFlag("ziplist_privacy_mode") === "true";
+    const hasCompletionContext = existingItems.length > 0;
 
     if (privacyMode) {
       await this.startBackgroundLoad({ force: true });
@@ -112,15 +150,11 @@ class SimpleHybridService {
     // Whisper returns plain text so wrap in consistent shape
     if (privacyMode) {
       if (this.whisperReady && whisperService) {
-        this.setLocalFlag("last_transcription_method", "whisper");
-        const text = await whisperService.transcribeAudio(audioBlob);
-        return { text, items: [], complete: [] };
+        return await this.transcribeWithWhisper(audioBlob);
       } else if (this.whisperLoadPromise) {
         const result = await this.whisperLoadPromise;
         if (result.success && whisperService) {
-          this.setLocalFlag("last_transcription_method", "whisper");
-          const text = await whisperService.transcribeAudio(audioBlob);
-          return { text, items: [], complete: [] };
+          return await this.transcribeWithWhisper(audioBlob);
         }
         throw new Error(
           "Privacy mode enabled but offline model failed to load",
@@ -130,33 +164,104 @@ class SimpleHybridService {
       }
     }
 
-    // Normal mode: If Whisper is ready, use it (offline, fast, free)
-    if (this.whisperReady && whisperService) {
-      this.setLocalFlag("last_transcription_method", "whisper");
-      const text = await whisperService.transcribeAudio(audioBlob);
-      return { text, items: [], complete: [] };
+    // Normal mode: use Gemini when list context is present so completion
+    // detection can run. Privacy mode above remains Whisper-only.
+    if (this.whisperReady && whisperService && !hasCompletionContext) {
+      return await this.transcribeWithWhisper(audioBlob);
+    }
+
+    if (hasCompletionContext && this.whisperReady && whisperService) {
+      const geminiPromise = this.transcribeWithGemini(
+        audioBlob,
+        existingItems,
+        {
+          allowWhisperFallback: false,
+        },
+      );
+
+      try {
+        const result = await Promise.race([
+          geminiPromise,
+          this.waitForGeminiCompletionFallback(),
+        ]);
+
+        if (result !== FALLBACK_TO_WHISPER) {
+          return result;
+        }
+      } catch (error) {
+        console.warn("Gemini completion pass failed, using Whisper:", error);
+      }
+
+      geminiPromise.catch(() => {});
+      return await this.transcribeWithWhisper(audioBlob);
+    }
+
+    if (hasCompletionContext && this.whisperLoadPromise && whisperService) {
+      const geminiPromise = this.transcribeWithGemini(
+        audioBlob,
+        existingItems,
+        {
+          allowWhisperFallback: false,
+        },
+      );
+
+      try {
+        const result = await Promise.race([
+          geminiPromise,
+          this.waitForWhisperLoadFallback(),
+        ]);
+
+        if (result !== FALLBACK_TO_WHISPER) {
+          return result;
+        }
+      } catch (error) {
+        console.warn(
+          "Gemini completion pass failed, waiting for Whisper:",
+          error,
+        );
+        const loadResult = await this.whisperLoadPromise;
+        if (!loadResult.success || !whisperService) throw error;
+      }
+
+      geminiPromise.catch(() => {});
+      return await this.transcribeWithWhisper(audioBlob);
     }
 
     // Otherwise use Gemini API for instant results (passes context for completion detection)
-    this.setLocalFlag("last_transcription_method", "gemini");
     return await this.transcribeWithGemini(audioBlob, existingItems);
   }
 
   /**
    * Transcribe using Gemini service (ZipList's direct integration)
    */
-  async transcribeWithGemini(audioBlob, existingItems = []) {
+  async transcribeWithGemini(
+    audioBlob,
+    existingItems = [],
+    { allowWhisperFallback = true } = {},
+  ) {
+    this.setLocalFlag("last_transcription_method", "gemini");
+
     try {
-      const transcription = await geminiService.transcribeAudio(audioBlob, existingItems);
+      const transcription = await geminiService.transcribeAudio(
+        audioBlob,
+        existingItems,
+      );
       return transcription;
     } catch (error) {
       console.error("Gemini transcription error:", error);
+      if (!allowWhisperFallback) throw error;
+
+      // If Gemini fails, fall back to Whisper when available. This preserves
+      // basic transcription even though semantic completion detection is lost.
+      if (this.whisperReady && whisperService) {
+        return await this.transcribeWithWhisper(audioBlob);
+      }
 
       // If Gemini fails and Whisper is still loading, wait for it
       if (this.whisperLoadPromise && !this.whisperReady) {
         const result = await this.whisperLoadPromise;
         if (result.success && whisperService) {
-          return await whisperService.transcribeAudio(audioBlob);
+          return await this.transcribeWithWhisper(audioBlob);
         }
       }
 

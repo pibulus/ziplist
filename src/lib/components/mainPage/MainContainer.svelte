@@ -1,14 +1,19 @@
 <script>
-  import { onMount, onDestroy, tick } from 'svelte';
-  import { get } from 'svelte/store';
-  import { browser } from '$app/environment';
-  import ContentContainer from './ContentContainer.svelte';
-  import FooterComponent from './FooterComponent.svelte';
-  import { geminiService } from '$lib/services/geminiService';
-  import { modalService } from '$lib/services/modals';
-  import { transcriptionService } from '$lib/services/transcription/transcriptionService.js';
-  import { firstVisitService } from '$lib/services/first-visit';
-  import { pwaService, deferredInstallPrompt, showPwaInstallPrompt } from '$lib/services/pwa';
+  import { onMount, onDestroy, tick } from "svelte";
+  import { get } from "svelte/store";
+  import { browser } from "$app/environment";
+  import ContentContainer from "./ContentContainer.svelte";
+  import FooterComponent from "./FooterComponent.svelte";
+  import { geminiService } from "$lib/services/geminiService";
+  import { modalService } from "$lib/services/modals";
+  import { transcriptionService } from "$lib/services/transcription/transcriptionService.js";
+  import { firstVisitService } from "$lib/services/first-visit";
+  import {
+    pwaService,
+    deferredInstallPrompt,
+    showPwaInstallPrompt,
+    wakeLockService,
+  } from "$lib/services/pwa";
   import {
     isRecording,
     isTranscribing,
@@ -17,28 +22,28 @@
     audioState,
     audioActions,
     uiState,
-    uiActions
-  } from '$lib/services/infrastructure/stores.js';
-  import { AudioStates } from '$lib/services/audio/audioStates.js';
-  import { PageLayout } from '$lib/components/layout';
-  import { listsStore } from '$lib/services/lists/listsStore';
-  import SwipeableLists from '../list/SwipeableLists.svelte';
-  import RecordButtonWithTimer from './audio-transcript/RecordButtonWithTimer.svelte';
-  import { fade } from 'svelte/transition';
-  import { StorageUtils } from '$lib/services/infrastructure/storageUtils';
-  import { STORAGE_KEYS } from '$lib/constants';
+    uiActions,
+  } from "$lib/services/infrastructure/stores.js";
+  import { AudioStates } from "$lib/services/audio/audioStates.js";
+  import { PageLayout } from "$lib/components/layout";
+  import { listsStore } from "$lib/services/lists/listsStore";
+  import SwipeableLists from "../list/SwipeableLists.svelte";
+  import RecordButtonWithTimer from "./audio-transcript/RecordButtonWithTimer.svelte";
+  import { fade } from "svelte/transition";
+  import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
+  import { STORAGE_KEYS } from "$lib/constants";
 
-  import { AboutModal, ExtensionModal, IntroModal } from './modals';
+  import { AboutModal, ExtensionModal, IntroModal } from "./modals";
 
   const AUDIO_CAPTURE_CONSTRAINTS = {
     audio: {
       echoCancellation: true,
       noiseSuppression: true,
-      autoGainControl: true
-    }
+      autoGainControl: true,
+    },
   };
   const RECORDER_CHUNK_INTERVAL_MS = 1000;
-  const LAUNCH_RECORD_ACTION = 'record';
+  const LAUNCH_RECORD_ACTION = "record";
 
   // Lazy load settings modal - only import when needed
   let SettingsModal;
@@ -51,6 +56,9 @@
   // PWA Install Prompt component - lazy loaded
   let PwaInstallPrompt;
   let loadingPwaPrompt = false;
+  let PwaDeviceSetup;
+  let loadingPwaDeviceSetup = false;
+  let showPwaDeviceSetup = false;
 
   let speechModelPreloaded = false;
   let mediaRecorder = null;
@@ -71,6 +79,7 @@
 
   function resetRecordingSession() {
     stopWaveformMonitoring();
+    wakeLockService.release();
     stopStream(activeStream);
     activeStream = null;
     mediaRecorder = null;
@@ -81,16 +90,16 @@
 
   function getRecorderOptions() {
     if (
-      typeof MediaRecorder === 'undefined' ||
+      typeof MediaRecorder === "undefined" ||
       !MediaRecorder.isTypeSupported
     ) {
       return {};
     }
 
     const supportedMimeType = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/mp4'
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
     ].find((mimeType) => MediaRecorder.isTypeSupported(mimeType));
 
     return supportedMimeType ? { mimeType: supportedMimeType } : {};
@@ -98,15 +107,14 @@
 
   // Modal functions
   function showAboutModal() {
-    modalService.openModal('about_modal');
+    modalService.openModal("about_modal");
   }
 
   function showExtensionModal() {
-    modalService.openModal('extension_modal');
+    modalService.openModal("extension_modal");
   }
 
   async function openSettingsModal() {
-
     // First, ensure any open dialogs are closed
     if (modalService.isModalOpen()) {
       modalService.closeModal();
@@ -124,10 +132,10 @@
 
       try {
         // Import the component dynamically
-        const module = await import('./settings/SettingsModal.svelte');
+        const module = await import("./settings/SettingsModal.svelte");
         SettingsModal = module.default;
       } catch (err) {
-        console.error('Error loading SettingsModal:', err);
+        console.error("Error loading SettingsModal:", err);
         loadingSettingsModal = false;
         return; // Don't proceed if loading failed
       } finally {
@@ -138,7 +146,7 @@
     await tick();
 
     // Open the settings modal
-    modalService.openModal('settings_modal');
+    modalService.openModal("settings_modal");
   }
 
   function closeSettingsModal() {
@@ -159,10 +167,10 @@
       loadingContributorModal = true;
 
       try {
-        const module = await import('./modals/ContributorModal.svelte');
+        const module = await import("./modals/ContributorModal.svelte");
         ContributorModal = module.default;
       } catch (err) {
-        console.error('Error loading ContributorModal:', err);
+        console.error("Error loading ContributorModal:", err);
         loadingContributorModal = false;
         return;
       } finally {
@@ -172,7 +180,7 @@
 
     await tick();
 
-    modalService.openModal('contributor_modal');
+    modalService.openModal("contributor_modal");
   }
 
   function closeContributorModal() {
@@ -193,19 +201,17 @@
         geminiService.setPromptStyle(savedStyle);
       }
 
-      geminiService
-        .preloadModel()
-        .catch((err) => {
-          // Just log the error, don't block UI
-          console.error('Error preloading speech model:', err);
-          // Reset so we can try again
-          speechModelPreloaded = false;
-        });
+      geminiService.preloadModel().catch((err) => {
+        // Just log the error, don't block UI
+        console.error("Error preloading speech model:", err);
+        // Reset so we can try again
+        speechModelPreloaded = false;
+      });
     }
   }
 
   function handleSettingChanged(event) {
-    if (event.detail && event.detail.setting === 'promptStyle') {
+    if (event.detail && event.detail.setting === "promptStyle") {
       geminiService.setPromptStyle(event.detail.value);
     }
   }
@@ -217,7 +223,7 @@
   function hasLaunchRecordIntent() {
     if (!browser) return false;
     return (
-      new URLSearchParams(window.location.search).get('action') ===
+      new URLSearchParams(window.location.search).get("action") ===
       LAUNCH_RECORD_ACTION
     );
   }
@@ -226,12 +232,12 @@
     preloadSpeechModel();
 
     autoRecordTimeout = window.setTimeout(() => {
-      const recordButton = document.querySelector('[data-record-button]');
+      const recordButton = document.querySelector("[data-record-button]");
 
-      recordButton?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      recordButton?.scrollIntoView({ behavior: "smooth", block: "center" });
       recordButton?.focus({ preventScroll: true });
       uiActions.setScreenReaderMessage(
-        'Recorder ready. Tap the record button to allow microphone access.'
+        "Recorder ready. Tap the record button to allow microphone access.",
       );
 
       autoRecordTimeout = null;
@@ -258,7 +264,7 @@
       AudioStates.IDLE,
       AudioStates.ERROR,
       AudioStates.PERMISSION_DENIED,
-      AudioStates.NO_INPUT_DETECTED
+      AudioStates.NO_INPUT_DETECTED,
     ].includes(state);
   }
 
@@ -266,9 +272,10 @@
     if (isStoppingRecording) return;
     isStoppingRecording = true;
 
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
       audioActions.updateState(AudioStates.STOPPING);
       mediaRecorder.stop();
+      wakeLockService.release();
       return;
     }
 
@@ -285,7 +292,7 @@
     try {
       visualizerAudioContext = new AudioContextCtor();
 
-      if (visualizerAudioContext.state === 'suspended') {
+      if (visualizerAudioContext.state === "suspended") {
         await visualizerAudioContext.resume();
       }
 
@@ -294,7 +301,9 @@
       visualizerAnalyser.fftSize = 128;
       source.connect(visualizerAnalyser);
 
-      const waveformBuffer = new Uint8Array(visualizerAnalyser.frequencyBinCount);
+      const waveformBuffer = new Uint8Array(
+        visualizerAnalyser.frequencyBinCount,
+      );
 
       const pumpWaveform = () => {
         if (!visualizerAnalyser) return;
@@ -306,13 +315,13 @@
 
       pumpWaveform();
     } catch (error) {
-      console.warn('Waveform monitoring unavailable:', error);
+      console.warn("Waveform monitoring unavailable:", error);
       stopWaveformMonitoring();
     }
   }
 
   onDestroy(() => {
-    if (typeof preloadCleanup === 'function') {
+    if (typeof preloadCleanup === "function") {
       preloadCleanup();
     }
 
@@ -332,11 +341,11 @@
       mediaRecorder.onstop = null;
       mediaRecorder.onerror = null;
 
-      if (mediaRecorder.state !== 'inactive') {
+      if (mediaRecorder.state !== "inactive") {
         try {
           mediaRecorder.stop();
         } catch (error) {
-          console.warn('Error stopping recorder during teardown:', error);
+          console.warn("Error stopping recorder during teardown:", error);
         }
       }
     }
@@ -344,9 +353,15 @@
     resetRecordingSession();
 
     if (browser) {
-      window.removeEventListener('ziplist-setting-changed', handleSettingChanged);
-      window.removeEventListener('ziplist-storage-error', handleStorageError);
-      window.removeEventListener('ziplist-open-contributor', openContributorModal);
+      window.removeEventListener(
+        "ziplist-setting-changed",
+        handleSettingChanged,
+      );
+      window.removeEventListener("ziplist-storage-error", handleStorageError);
+      window.removeEventListener(
+        "ziplist-open-contributor",
+        openContributorModal,
+      );
     }
   });
 
@@ -372,17 +387,21 @@
 
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          console.error('getUserMedia not supported on this browser!');
-          audioActions.updateState(AudioStates.ERROR, 'getUserMedia is not supported.');
+          console.error("getUserMedia not supported on this browser!");
+          isStartingRecording = false;
+          audioActions.updateState(
+            AudioStates.ERROR,
+            "getUserMedia is not supported.",
+          );
           uiActions.setErrorMessage(
-            'Audio recording is not supported on this browser.'
+            "Audio recording is not supported on this browser.",
           );
           return;
         }
 
         audioActions.updateState(AudioStates.REQUESTING_PERMISSIONS);
         stream = await navigator.mediaDevices.getUserMedia(
-          AUDIO_CAPTURE_CONSTRAINTS
+          AUDIO_CAPTURE_CONSTRAINTS,
         );
         activeStream = stream;
 
@@ -390,6 +409,7 @@
         const recorder = new MediaRecorder(stream, recorderOptions);
         mediaRecorder = recorder;
         await startWaveformMonitoring(stream);
+        await wakeLockService.request();
 
         recorder.onstart = () => {
           isStartingRecording = false;
@@ -407,13 +427,14 @@
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
           isStoppingRecording = false;
           stopWaveformMonitoring();
+          wakeLockService.release();
           stopStream(stream);
           if (activeStream === stream) {
             activeStream = null;
           }
 
           const audioBlob = new Blob(audioChunks, {
-            type: recorder.mimeType || recorderOptions.mimeType || 'audio/webm'
+            type: recorder.mimeType || recorderOptions.mimeType || "audio/webm",
           });
           audioChunks = [];
 
@@ -428,7 +449,10 @@
             // Auto-scroll to lists after successful transcription to show new items
             setTimeout(scrollToLists, 100);
           } catch (transcriptionError) {
-            console.error('Transcription failed in onstop:', transcriptionError);
+            console.error(
+              "Transcription failed in onstop:",
+              transcriptionError,
+            );
           } finally {
             resetRecordingSession();
             if (get(audioState).state === AudioStates.PROCESSING) {
@@ -436,36 +460,49 @@
             }
           }
         };
-        
+
         recorder.onerror = (event) => {
           isStartingRecording = false;
           isStoppingRecording = false;
-          console.error('MediaRecorder error:', event.error);
-          audioActions.updateState(AudioStates.ERROR, event.error.message || 'MediaRecorder error');
+          console.error("MediaRecorder error:", event.error);
+          audioActions.updateState(
+            AudioStates.ERROR,
+            event.error.message || "MediaRecorder error",
+          );
           uiActions.setErrorMessage(`Recording error: ${event.error.name}`);
           resetRecordingSession();
         };
 
         recorder.start(RECORDER_CHUNK_INTERVAL_MS);
-
       } catch (err) {
         isStartingRecording = false;
         isStoppingRecording = false;
         stopWaveformMonitoring();
+        wakeLockService.release();
         stopStream(stream);
         if (activeStream === stream) {
           activeStream = null;
         }
         mediaRecorder = null;
         audioChunks = [];
-        console.error('Error starting recording (getUserMedia or MediaRecorder setup):', err);
-        let errorMessage = 'Could not start recording.';
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        console.error(
+          "Error starting recording (getUserMedia or MediaRecorder setup):",
+          err,
+        );
+        let errorMessage = "Could not start recording.";
+        if (
+          err.name === "NotAllowedError" ||
+          err.name === "PermissionDeniedError"
+        ) {
           audioActions.updateState(AudioStates.PERMISSION_DENIED);
-          errorMessage = 'Audio permission denied. Please allow microphone access.';
-        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          errorMessage =
+            "Audio permission denied. Please allow microphone access.";
+        } else if (
+          err.name === "NotFoundError" ||
+          err.name === "DevicesNotFoundError"
+        ) {
           audioActions.updateState(AudioStates.NO_INPUT_DETECTED);
-          errorMessage = 'No microphone found. Please connect a microphone.';
+          errorMessage = "No microphone found. Please connect a microphone.";
         } else {
           audioActions.updateState(AudioStates.ERROR, err.message);
           errorMessage = `Error: ${err.message}`;
@@ -481,19 +518,45 @@
       $isTranscribing ||
       !isStartableAudioState($audioState.state));
 
-  
   // Scroll to lists container
   function scrollToLists() {
     if (browser) {
-      const listsContainer = document.getElementById('lists-container');
+      const listsContainer = document.getElementById("lists-container");
       if (listsContainer) {
-        listsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        listsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
   }
 
   function closePwaInstallPrompt() {
     pwaService.dismissPrompt();
+  }
+
+  async function maybeLoadPwaDeviceSetup() {
+    if (!browser || !pwaService.shouldShowDeviceSetup()) {
+      showPwaDeviceSetup = false;
+      return;
+    }
+
+    showPwaDeviceSetup = true;
+
+    if (PwaDeviceSetup || loadingPwaDeviceSetup) return;
+
+    loadingPwaDeviceSetup = true;
+
+    try {
+      const module = await import("./pwa/PwaDeviceSetup.svelte");
+      PwaDeviceSetup = module.default;
+    } catch (err) {
+      console.error("Error loading PWA device setup:", err);
+      showPwaDeviceSetup = false;
+    } finally {
+      loadingPwaDeviceSetup = false;
+    }
+  }
+
+  function handlePwaDeviceSetupDone() {
+    showPwaDeviceSetup = false;
   }
 
   // Lifecycle hooks
@@ -504,19 +567,21 @@
     if (browser) {
       const preloadOnInteraction = () => {
         preloadSpeechModel();
-        window.removeEventListener('pointerdown', preloadOnInteraction);
-        window.removeEventListener('keydown', preloadOnInteraction);
+        window.removeEventListener("pointerdown", preloadOnInteraction);
+        window.removeEventListener("keydown", preloadOnInteraction);
       };
 
-      window.addEventListener('pointerdown', preloadOnInteraction, { once: true });
-      window.addEventListener('keydown', preloadOnInteraction, { once: true });
+      window.addEventListener("pointerdown", preloadOnInteraction, {
+        once: true,
+      });
+      window.addEventListener("keydown", preloadOnInteraction, { once: true });
 
       const preloadTimeout = window.setTimeout(preloadSpeechModel, 1500);
 
       preloadCleanup = () => {
         window.clearTimeout(preloadTimeout);
-        window.removeEventListener('pointerdown', preloadOnInteraction);
-        window.removeEventListener('keydown', preloadOnInteraction);
+        window.removeEventListener("pointerdown", preloadOnInteraction);
+        window.removeEventListener("keydown", preloadOnInteraction);
       };
     }
 
@@ -525,11 +590,11 @@
       if (!SettingsModal && !loadingSettingsModal) {
         try {
           loadingSettingsModal = true;
-          const module = await import('./settings/SettingsModal.svelte');
+          const module = await import("./settings/SettingsModal.svelte");
           SettingsModal = module.default;
           loadingSettingsModal = false;
         } catch (err) {
-          console.error('Error pre-loading SettingsModal:', err);
+          console.error("Error pre-loading SettingsModal:", err);
           loadingSettingsModal = false;
         }
       }
@@ -548,9 +613,10 @@
 
     // Listen for settings changes
     if (browser) {
-      window.addEventListener('ziplist-setting-changed', handleSettingChanged);
-      window.addEventListener('ziplist-storage-error', handleStorageError);
-      window.addEventListener('ziplist-open-contributor', openContributorModal);
+      window.addEventListener("ziplist-setting-changed", handleSettingChanged);
+      window.addEventListener("ziplist-storage-error", handleStorageError);
+      window.addEventListener("ziplist-open-contributor", openContributorModal);
+      maybeLoadPwaDeviceSetup();
     }
 
     // Keep the first-visit state current without auto-opening a native
@@ -559,19 +625,28 @@
   });
 
   // Auto-stop recording when time limit is reached
-  $: if ($audioState.timeLimit && mediaRecorder && mediaRecorder.state === 'recording') {
+  $: if (
+    $audioState.timeLimit &&
+    mediaRecorder &&
+    mediaRecorder.state === "recording"
+  ) {
     mediaRecorder.stop();
   }
 
   // Reactive statement for lazy loading PWA Install Prompt
-  $: if (browser && $showPwaInstallPrompt && !PwaInstallPrompt && !loadingPwaPrompt) {
+  $: if (
+    browser &&
+    $showPwaInstallPrompt &&
+    !PwaInstallPrompt &&
+    !loadingPwaPrompt
+  ) {
     (async () => {
       loadingPwaPrompt = true;
       try {
-        const module = await import('./pwa/PwaInstallPrompt.svelte');
+        const module = await import("./pwa/PwaInstallPrompt.svelte");
         PwaInstallPrompt = module.default;
       } catch (err) {
-        console.error('Error loading PWA install prompt:', err);
+        console.error("Error loading PWA install prompt:", err);
       } finally {
         loadingPwaPrompt = false;
       }
@@ -595,6 +670,16 @@
       on:preload={preloadSpeechModel}
     />
   </div>
+
+  {#if showPwaDeviceSetup && PwaDeviceSetup && !loadingPwaDeviceSetup}
+    <div class="mb-3 px-4" transition:fade={{ duration: 180 }}>
+      <svelte:component
+        this={PwaDeviceSetup}
+        on:complete={handlePwaDeviceSetupDone}
+        on:dismiss={handlePwaDeviceSetupDone}
+      />
+    </div>
+  {/if}
 
   <!-- Swipeable lists container -->
   <div class="mt-0 w-full max-w-full sm:mt-2" id="lists-container">
@@ -622,11 +707,19 @@
 
 <!-- Settings Modal - lazy loaded -->
 {#if SettingsModal}
-  <svelte:component this={SettingsModal} closeModal={closeSettingsModal} on:close={closeSettingsModal} />
+  <svelte:component
+    this={SettingsModal}
+    closeModal={closeSettingsModal}
+    on:close={closeSettingsModal}
+  />
 {/if}
 
 {#if ContributorModal}
-  <svelte:component this={ContributorModal} closeModal={closeContributorModal} on:close={closeContributorModal} />
+  <svelte:component
+    this={ContributorModal}
+    closeModal={closeContributorModal}
+    on:close={closeContributorModal}
+  />
 {/if}
 
 <!-- PWA Install Prompt -->

@@ -19,7 +19,13 @@ more whenever. Drag things around. Tick them off. That is the whole point.
 - **Three local lists by default** - swipe between color-coded list cards
 - **Fast local storage** - your everyday lists stay on your device
 - **Drag, drop, check off** - desktop drag plus touch-native reorder on mobile
+- **Say what is done** - phrases like "I bought the milk" can tick matching
+  unchecked items when Gemini has list context
+- **Optional live lists** - PartyKit rooms let a couple, band, family, or
+  housemate group share one changing list
 - **Installable web app** - save it to your home screen, no app store needed
+- **Installed-device setup** - the mobile PWA can ready mic permission, storage,
+  and the offline model in one guided step
 - **No task-manager pressure** - no dates, priorities, streaks, or dashboard
 
 ## Use It Anywhere
@@ -27,12 +33,15 @@ more whenever. Drag things around. Tick them off. That is the whole point.
 **As a PWA**: Save to your home screen and use it like a tiny checklist app.
 Good for groceries, packing, gear, chores, set lists, and housemate runs.
 
-**Chrome Extension**: Install once and turn text fields into quick list capture
-spots when you need them.
+**Live sharing**: Contributor mode can turn a list into a live link so multiple
+people see the same checklist update.
+
+**Chrome Extension**: The app includes an extension info modal, but the packaged
+extension bundle is not currently part of this repo.
 
 ## Getting Started
 
-Need Node.js 20+ and your terminal skills.
+Need Node.js 20.18.1+ and npm 10.8.0+.
 
 ```bash
 # Grab it
@@ -54,6 +63,7 @@ npm run build
 - `npm run dev` - Start the show
 - `npm run build` - Make it production-ready
 - `npm run preview` - Test your build
+- `npm run dev:party` - Start local PartyKit on port `1999`
 - `npm run format` - Clean up the code (Prettier)
 - `npm run lint` - Catch the rough edges (ESLint)
 - `npm run lighthouse` - Performance check
@@ -77,6 +87,8 @@ PARTYKIT_CREATE_SECRET=long_random_secret_also_set_in_partykit
 ```
 
 Leave it unset for solo/demo deployments and ZipList will stay in clean solo mode.
+For local two-device testing, run `npm run dev:party`; Vite dev clients on
+your LAN will use port `1999`.
 
 Contributor checkout and unlock codes use:
 
@@ -97,10 +109,12 @@ SQUARE_WEBHOOK_NOTIFICATION_URL=https://ziplist.app/api/square/webhook
 ├── lib/components/list/         # List cards and checklist controls
 ├── lib/components/mainPage/     # Voice recording UI + modals
 ├── lib/services/lists/          # List state and item logic
+├── lib/services/realtime/       # PartyKit live-list bridge
 ├── lib/services/transcription/  # Audio processing flow
 ├── lib/services/theme/          # Color personality system
 ├── lib/services/pwa/            # PWA installation support
-└── routes/                      # SvelteKit pages
+├── routes/                      # SvelteKit pages and server endpoints
+└── ../party/listRoom.ts         # PartyKit room server
 ```
 
 ## Tech Stack
@@ -108,8 +122,12 @@ SQUARE_WEBHOOK_NOTIFICATION_URL=https://ziplist.app/api/square/webhook
 - **SvelteKit** - Fast, modern, feels snappy
 - **Tailwind CSS + DaisyUI** - Pretty without the pain
 - **Local Storage** - Your lists stay yours, offline-first
-- **PWA Ready** - Full Progressive Web App with manifest and service worker
-- **Chrome Extension** - Voice-to-lists in any text field on any website
+- **Gemini + local Whisper** - Server-side Gemini first, local Whisper when ready
+- **PartyKit** - Optional live shared lists
+- **PWA Ready** - Manifest, service worker, installed-device setup, and recording
+  wake lock where supported
+- **Extension modal** - Placeholder/help path for a future packaged browser
+  extension
 
 ## The Five Personalities
 
@@ -127,22 +145,22 @@ Choose once, it remembers. Because good tools should feel like they know you.
 
 - **Install to home screen** - Works like a native app
 - **Offline support** - No internet required after first load
+- **Offline model setup** - Installed mobile users can preload Whisper with
+  progress feedback
+- **Recording wake lock** - Supported browsers keep the screen awake while
+  recording
 - **Fast startup** - Cached and optimized for speed
 - **Mobile-first design** - Thumb-friendly, responsive everywhere
 - **App shortcuts** - Jump straight to recording from your home screen
 
 ## Chrome Extension
 
-Install the extension to make quick lists in text fields around the web:
+The app has an extension info modal, but this repo does not currently include a
+packaged extension bundle. Treat the extension as a future/placeholder surface
+until the files are added.
 
-1. Download extension files (link in app)
-2. Unzip to a folder
-3. Open `chrome://extensions`
-4. Enable "Developer mode"
-5. Click "Load unpacked" and select the folder
-
-Now you can create voice lists directly in Gmail, Slack, social fields, or any
-other text field.
+When that ships, keep install instructions next to the actual downloadable
+extension artifact.
 
 ---
 

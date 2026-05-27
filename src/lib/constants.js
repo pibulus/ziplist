@@ -34,6 +34,8 @@ export const STORAGE_KEYS = {
   PWA_PROMPT_COUNT: "ziplist-pwa-prompt-count",
   PWA_LAST_PROMPT_DATE: "ziplist-pwa-last-prompt-date",
   PWA_INSTALLED: "ziplist-pwa-installed",
+  PWA_DEVICE_SETUP_COMPLETE: "ziplist-pwa-device-setup-complete",
+  PWA_DEVICE_SETUP_DISMISSED_AT: "ziplist-pwa-device-setup-dismissed-at",
 
   // Lists Related
   LISTS: "ziplist-lists",

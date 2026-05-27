@@ -3,6 +3,7 @@
 ## Build & Development
 
 - `npm run dev` - Start development server (runs on http://localhost:3001)
+- `npm run dev:party` - Start local PartyKit server (runs on http://localhost:1999)
 - `npm run build` - Create production build
 - `npm run preview` - Preview production build
 - `npm run format` - Run Prettier formatter
@@ -23,7 +24,10 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - PartyKit real-time collaboration (optional — works without server)
 - Canvas confetti celebrations, particle effects
 
-**Current State**: ~85% complete. Core functionality solid, deployed to Pi. Needs: real screenshots, PartyKit production deploy.
+**Current State**: ~92% complete. Core functionality builds and lints. Recent
+work hardened AI completion detection and PartyKit live-list plumbing. Needs:
+real-device iPhone pass, PartyKit production deploy/env, production screenshots,
+and final deploy verification.
 
 ## Code Style Guidelines
 
@@ -45,24 +49,57 @@ ZipList is a minimal voice-to-list todo app. Core features:
 
 - **geminiService.js**: Wrapper for audio transcription via Gemini API
 - **geminiApiService.js**: Low-level Gemini API calls (REQUIRED - do not delete)
-- **transcriptionService.js**: Manages transcription flow with progress animation
-- **listsService.js**: Processes transcription results into list items
+- **transcriptionService.js**: Manages recording-to-list transcription flow,
+  target-list locking, and progress animation
+- **simpleHybridService.js**: Chooses Gemini or local Whisper and handles
+  fallback timing
+- **responseParser.js**: Parses structured model responses into new items and
+  completed-item matches
+- **promptTemplates.js**: Prompt styles and existing-item context for completion
+  detection
+- **listsService.js**: Processes transcription results, commands, and completion
+  matches into list mutations
 - **listsStore.js**: Svelte store for list state and local storage (default lists + palette-safe list creation)
 - **themeService.js**: Theme switching and persistence
+- **pwa/pwaService.js**: Install prompt state, standalone/mobile detection,
+  persistent storage requests, and installed-device setup completion
+- **pwa/wakeLockService.js**: Feature-detected Screen Wake Lock wrapper used
+  while recording
 - **infrastructure/stores.js**: Central reactive state (audio, recording, transcription, UI)
 - **infrastructure/hapticService.js**: Haptic feedback for touch interactions
+- **realtime/liveListProtocol.js**: Shared PartyKit room ids, message names,
+  limits, and validators
 - **realtime/**: PartyKit live collaboration (liveListsService, partyService, presenceStore, typingStore, avatarService)
+- **party/listRoom.ts**: PartyKit room server for validated live-list snapshots
+  and ephemeral presence
 
 ### Component Structure
 
 - **MainContainer.svelte**: Top-level orchestrator, handles recording state and lifecycle
 - **ContentContainer.svelte**: Thin wrapper for AnimatedTitle (32 lines)
 - **AnimatedTitle.svelte**: Title with staggered animation + floating "Dude" record button
-- **SingleList.svelte**: Rich list component (1300+ lines) — CRUD, rename/add-list header controls, drag/drop, particles, live collab
+- **SingleList.svelte**: Rich list component — CRUD, rename/add-list header controls, drag/drop, move actions, static share, live share, particles
 - **RecordButtonWithTimer.svelte**: Voice recording button with waveform visualization
+- **PwaDeviceSetup.svelte**: Installed mobile PWA setup pill for mic permission,
+  persistent storage, and offline model preload
 - **SwipeableLists.svelte**: Horizontal list navigation with touch/swipe
 - **Ghost.svelte**: Lightweight themed SVG icon (used in copy button)
 - **PageLayout.svelte**: App shell with responsive layout and fixed footer
+
+### Live Sharing
+
+- Live sharing is optional and hidden unless PartyKit host config is present or
+  the app is running in local dev.
+- Create flow: `SingleList` -> `liveListsService.makeLive()` ->
+  `/api/live/create` -> PartyKit `/parties/main/:roomId`.
+- PartyKit room ids use high-entropy `zl_...` ids.
+- The live protocol intentionally uses full-list snapshots plus typing events.
+  Keep it simple unless real usage proves conflict handling needs to become more
+  granular.
+- Presence is ephemeral; do not persist collaborator presence into durable room
+  storage.
+- Production deploy requires matching `PARTYKIT_CREATE_SECRET` in the app env and
+  PartyKit env.
 
 ## Text Animation System
 

@@ -119,6 +119,7 @@
   }
 
   $: isDefaultName = DEFAULT_LIST_NAMES.has(list.name);
+  $: accessibleListName = list.name || "Your List";
 
   $: moveTargets = showListManagement
     ? allLists.filter((candidate) => candidate.id !== list.id)
@@ -194,8 +195,59 @@
     showListStatus(event.detail.message, !!event.detail.success);
   }
 
+  async function copyText(text) {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+      return false;
+    }
+
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+
+  async function handleShareLiveList(shareUrl = null) {
+    const liveUrl = shareUrl || liveListsService.getShareUrl(list.id);
+    if (!liveUrl) {
+      showListStatus("Live link is not ready yet");
+      return;
+    }
+
+    const sharePayload = {
+      title: "Live ZipList",
+      text: "Join my live ZipList.",
+      url: liveUrl,
+    };
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(sharePayload);
+        showListStatus("Live link shared!", true);
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      const copied = await copyText(liveUrl);
+      showListStatus(
+        copied
+          ? "Live link copied!"
+          : "Live link ready, but copying is blocked",
+        copied,
+      );
+    } catch (error) {
+      console.error("Failed to copy live link:", error);
+      showListStatus("Live link ready, but copying is blocked");
+    }
+  }
+
   // Share list function
   async function handleShareList() {
+    if (isLive) {
+      await handleShareLiveList();
+      return;
+    }
+
     if (!list || !list.items || list.items.length === 0) {
       showListStatus("Cannot share an empty list");
       return;
@@ -247,12 +299,19 @@
       const { shareUrl } = await liveListsService.makeLive(list.id);
       isLive = true;
 
-      // Copy to clipboard
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
+      let copied = false;
+      try {
+        copied = await copyText(shareUrl);
+      } catch (error) {
+        console.warn("Live link could not be copied:", error);
       }
 
-      showListStatus("🔴 List is now LIVE! Link copied!", true);
+      showListStatus(
+        copied
+          ? "Live list ready. Link copied!"
+          : "Live list ready. Tap Share to send the link.",
+        true,
+      );
 
       // Clean up any existing subscriptions before re-subscribing
       if (presenceUnsubscribe) presenceUnsubscribe();
@@ -1277,6 +1336,9 @@
   inert={!!actionSheetItem}
   aria-labelledby="list-title-{list.id || 'active'}"
 >
+  <span id="list-title-{list.id || 'active'}" class="zl-visually-hidden">
+    {accessibleListName}
+  </span>
   <div class="card-content">
     <!-- List Header with Live Collaboration Toggle -->
     <div class="zl-list-header">
@@ -1305,23 +1367,24 @@
                 >
                   <span class="zl-list-title-inner">
                     <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
-                    {#if !isDefaultName}
-                      <span
-                        id="list-title-{list.id || 'active'}"
-                        class="zl-list-title"
-                      >
+                    {#if isDefaultName}
+                      <span class="zl-list-title-hint" aria-hidden="true">Edit</span>
+                    {:else}
+                      <span class="zl-list-title">
                         {list.name}
                       </span>
                     {/if}
                   </span>
                 </button>
               </h2>
+            {:else if isDefaultName}
+              <div class="zl-list-title-inner" aria-hidden="true">
+                <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
+              </div>
             {:else}
               <h2 class="zl-list-title-inner">
                 <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
-                {#if !isDefaultName}
-                  <span id="list-title-{list.id || 'active'}" class="zl-list-title">{list.name}</span>
-                {/if}
+                <span class="zl-list-title">{list.name}</span>
               </h2>
             {/if}
           </div>
@@ -1397,8 +1460,10 @@
           type="button"
           class="zl-share-button"
           on:click={handleShareList}
-          title="Share list link"
-          aria-label={`Share ${list.name || "this list"}`}
+          title={isLive ? "Share live list link" : "Share list link"}
+          aria-label={isLive
+            ? `Share live link for ${list.name || "this list"}`
+            : `Share ${list.name || "this list"}`}
         >
           <span class="share-icon" aria-hidden="true">🔗</span>
         </button>

@@ -1,8 +1,9 @@
 /**
  * Live Lists Service
  *
- * Layers live collaboration on top of the existing listsStore.
- * Manages PartyKit connections and syncs changes bidirectionally.
+ * Layers PartyKit live collaboration on top of the existing listsStore.
+ * ZipList syncs compact full-list snapshots; that keeps the protocol simple
+ * and portable while the product list sizes stay intentionally small.
  */
 
 import { get } from "svelte/store";
@@ -17,19 +18,12 @@ import {
 } from "./partyService.js";
 import { getPresenceStore, cleanupPresenceStore } from "./presenceStore.js";
 import { getTypingStore, cleanupTypingStore } from "./typingStore.js";
+import { LIVE_MESSAGE_TYPES } from "./liveListProtocol.js";
 
-/**
- * Active PartySocket connections
- * Map of listId -> socket
- */
 const activeConnections = new Map();
+const remoteSyncingLists = new Set();
 
-/**
- * Flag to prevent sync loops (when we apply remote changes, don't broadcast them back)
- */
-let isSyncingRemoteChange = false;
-
-function createPlaceholderList(listId, seedList = null) {
+function createPlaceholderList(listId, seedList = null, roomId = null) {
   const fallbackList = get(listsStore).lists[0] ?? {};
 
   return {
@@ -44,238 +38,246 @@ function createPlaceholderList(listId, seedList = null) {
     items: Array.isArray(seedList?.items) ? seedList.items : [],
     createdAt: seedList?.createdAt || new Date().toISOString(),
     updatedAt: seedList?.updatedAt || new Date().toISOString(),
+    liveRoomId: roomId,
+    isLive: true,
   };
 }
 
+function getListSnapshot(listId) {
+  return get(listsStore).lists.find((list) => list.id === listId) || null;
+}
+
+function getTimestamp(value) {
+  const timestamp = Date.parse(value || "");
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function isLocalSnapshotNewer(localList, serverList) {
+  return (
+    getTimestamp(localList?.updatedAt) > getTimestamp(serverList?.updatedAt)
+  );
+}
+
+function withRemoteSync(listId, callback) {
+  remoteSyncingLists.add(listId);
+  try {
+    callback();
+  } finally {
+    remoteSyncingLists.delete(listId);
+  }
+}
+
+function upsertLiveList(listId, roomId, listData) {
+  if (!listData) return;
+
+  listsStore.upsertList(
+    {
+      ...listData,
+      id: listId,
+      liveRoomId: roomId,
+      isLive: true,
+    },
+    listId,
+  );
+}
+
+function sendListSnapshot(listId, socket) {
+  const list = getListSnapshot(listId);
+  if (!list) return false;
+  return sendUpdate(socket, LIVE_MESSAGE_TYPES.LIST_UPDATE, list);
+}
+
+function getJoinError(event) {
+  return (
+    event?.reason ||
+    "Could not join that live list. Check the link and try again."
+  );
+}
+
 /**
- * Make a list "live" by creating a PartyKit room and connecting to it
- * @param {string} listId - The list ID to make live
- * @param {string} [password] - Optional password for the room
+ * Make a list live by creating a PartyKit room and connecting to it.
+ * @param {string} listId
+ * @param {string} [password]
  * @returns {Promise<{roomId: string, shareUrl: string}>}
  */
 export async function makeLive(listId, password = null) {
-  // Get the list data from the store
-  const state = get(listsStore);
-  const listData = state.lists.find((list) => list.id === listId);
+  const listData = getListSnapshot(listId);
 
   if (!listData) {
     throw new Error(`List ${listId} not found`);
   }
 
-  // Create the PartyKit room
   const { roomId } = await createLiveList(listData, password);
-
-  // Connect to the room
   await connectToLive(listId, roomId, password);
 
-  // Generate share URL
-  const shareUrl = generateShareUrl(roomId, password);
-
-  return { roomId, shareUrl };
+  return {
+    roomId,
+    shareUrl: generateShareUrl(roomId, password),
+  };
 }
 
 /**
- * Connect to an existing live list room
- * @param {string} listId - The local list ID
- * @param {string} roomId - The PartyKit room ID
- * @param {string} [password] - Optional password
+ * Connect a local list record to an existing live room.
+ * Resolves only after the room sends its initial list state.
+ * @param {string} listId
+ * @param {string} roomId
+ * @param {string} [password]
  * @returns {Promise<void>}
  */
 export async function connectToLive(listId, roomId, password = null) {
-  // Don't connect twice to the same room
-  if (activeConnections.has(listId)) {
-    console.warn(`[LiveListsService] Already connected to list ${listId}`);
-    return;
+  const existingConnection = activeConnections.get(listId);
+  if (existingConnection) {
+    return existingConnection.readyPromise || Promise.resolve();
   }
 
-  const existingList = get(listsStore).lists.find((list) => list.id === listId);
-  if (!existingList) {
-    listsStore.upsertList(createPlaceholderList(listId));
+  if (!getListSnapshot(listId)) {
+    listsStore.upsertList(createPlaceholderList(listId, null, roomId), listId);
   }
 
-  // Get presence and typing stores for this list
   const presenceStore = getPresenceStore(listId);
   const typingStore = getTypingStore(listId);
+  const connection = {
+    socket: null,
+    roomId,
+    unsubscribe: null,
+    initialized: false,
+    readyPromise: null,
+  };
 
-  // Connect to PartyKit room
-  const socket = connectToLiveList(
+  let socket;
+  let settleReady;
+  let failReady;
+
+  const readyPromise = new Promise((resolve, reject) => {
+    settleReady = resolve;
+    failReady = reject;
+  });
+
+  connection.readyPromise = readyPromise;
+
+  socket = connectToLiveList(
     roomId,
     {
-      /**
-       * Called when we receive initial list state from server
-       */
       onInit: (serverListData) => {
-        console.log(
-          "[LiveListsService] Received initial state from server",
-          serverListData,
-        );
-        if (!serverListData) return;
-
-        // Apply server state to local store (merge strategy: server wins)
-        isSyncingRemoteChange = true;
-        listsStore.upsertList({ ...serverListData, id: listId }, listId);
-        isSyncingRemoteChange = false;
-      },
-
-      /**
-       * Called when remote changes arrive
-       */
-      onUpdate: (message) => {
-        console.log(
-          "[LiveListsService] Received update from",
-          message.sender?.avatar,
-          message.type,
-        );
-
-        isSyncingRemoteChange = true;
-
-        switch (message.type) {
-          case "list_update":
-            // Full list update
-            if (message.data) {
-              listsStore.upsertList({ ...message.data, id: listId }, listId);
-            }
-            break;
-
-          case "item_add":
-            listsStore.addItem(message.data.text, listId, message.data.id);
-            break;
-
-          case "item_toggle":
-            listsStore.toggleItem(message.data.id, listId);
-            break;
-
-          case "item_update":
-            listsStore.editItem(message.data.id, message.data.text, listId);
-            break;
-
-          case "item_delete":
-            listsStore.removeItem(message.data.id, listId);
-            break;
-
-          case "typing_start":
-            if (message.sender) {
-              typingStore.startTyping(message.sender);
-            }
-            break;
-
-          case "typing_stop":
-            if (message.sender) {
-              typingStore.stopTyping(message.sender.id);
-            }
-            break;
+        if (!serverListData) {
+          failReady(new Error("Live list not found."));
+          return;
         }
 
-        isSyncingRemoteChange = false;
+        const localList = getListSnapshot(listId);
+        const shouldPushLocal =
+          connection.initialized &&
+          isLocalSnapshotNewer(localList, serverListData);
+
+        if (shouldPushLocal) {
+          sendListSnapshot(listId, socket);
+        } else {
+          withRemoteSync(listId, () => {
+            upsertLiveList(listId, roomId, serverListData);
+          });
+        }
+
+        connection.initialized = true;
+        settleReady();
       },
 
-      /**
-       * Called when presence updates
-       */
+      onUpdate: (message) => {
+        withRemoteSync(listId, () => {
+          switch (message.type) {
+            case LIVE_MESSAGE_TYPES.LIST_UPDATE:
+              upsertLiveList(listId, roomId, message.data);
+              break;
+
+            case LIVE_MESSAGE_TYPES.TYPING_START:
+              if (message.sender) {
+                typingStore.startTyping(message.sender);
+              }
+              break;
+
+            case LIVE_MESSAGE_TYPES.TYPING_STOP:
+              if (message.sender) {
+                typingStore.stopTyping(message.sender.id);
+              }
+              break;
+          }
+        });
+      },
+
       onPresence: (users) => {
-        console.log(
-          "[LiveListsService] Presence update:",
-          users.map((u) => u.avatar).join(", "),
-        );
-        presenceStore.setUsers(users);
+        presenceStore.setUsers(Array.isArray(users) ? users : []);
       },
 
-      onConnect: () => {
-        console.log("[LiveListsService] Connected to room", roomId);
+      onDisconnect: (event) => {
+        if (!connection.initialized) {
+          failReady(new Error(getJoinError(event)));
+        }
       },
 
-      onDisconnect: () => {
-        console.log("[LiveListsService] Disconnected from room", roomId);
+      onError: () => {
+        if (!connection.initialized) {
+          failReady(
+            new Error("Could not connect to that live list. Try again soon."),
+          );
+        }
       },
     },
     password,
   );
 
-  // Store the connection
-  activeConnections.set(listId, { socket, roomId });
+  connection.socket = socket;
+  activeConnections.set(listId, connection);
 
-  // Set up local change broadcasting
-  setupLocalChangeSync(listId, socket);
-}
-
-/**
- * Set up a listener to broadcast local changes to PartyKit
- */
-function setupLocalChangeSync(listId, socket) {
-  // Subscribe to list changes
-  const unsubscribe = listsStore.subscribe((state) => {
-    // Don't broadcast if we're applying a remote change (avoid loops)
-    if (isSyncingRemoteChange) return;
-
-    // Find the list
-    const list = state.lists.find((l) => l.id === listId);
-    if (!list) return;
-
-    // Broadcast the full list state
-    // In a production app, you'd want to send only diffs, but for simplicity we send everything
-    sendUpdate(socket, "list_update", list);
-  });
-
-  // Store the unsubscribe function for cleanup
-  const connection = activeConnections.get(listId);
-  if (connection) {
-    connection.unsubscribe = unsubscribe;
+  try {
+    await readyPromise;
+    setupLocalChangeSync(listId, socket);
+  } catch (error) {
+    disconnectFromLive(listId);
+    throw error;
   }
 }
 
-/**
- * Disconnect from a live list
- * @param {string} listId - The list ID to disconnect
- */
+function setupLocalChangeSync(listId, socket) {
+  const connection = activeConnections.get(listId);
+  if (!connection || connection.unsubscribe) return;
+
+  connection.unsubscribe = listsStore.subscribe((state) => {
+    if (remoteSyncingLists.has(listId)) return;
+
+    const list = state.lists.find((candidate) => candidate.id === listId);
+    if (!list) return;
+
+    sendUpdate(socket, LIVE_MESSAGE_TYPES.LIST_UPDATE, list);
+  });
+}
+
 export function disconnectFromLive(listId) {
   const connection = activeConnections.get(listId);
   if (!connection) return;
 
-  // Disconnect from PartyKit
-  disconnectFromLiveList(connection.socket);
-
-  // Clean up presence and typing
-  cleanupPresenceStore(listId);
-  cleanupTypingStore(listId);
-
-  // Clean up subscription
   if (connection.unsubscribe) {
     connection.unsubscribe();
   }
 
-  // Remove from active connections
+  disconnectFromLiveList(connection.socket);
+  cleanupPresenceStore(listId);
+  cleanupTypingStore(listId);
   activeConnections.delete(listId);
-
-  console.log("[LiveListsService] Disconnected from list", listId);
 }
 
-/**
- * Broadcast typing start event
- * @param {string} listId
- */
 export function broadcastTypingStart(listId) {
   const connection = activeConnections.get(listId);
   if (!connection) return;
 
-  sendUpdate(connection.socket, "typing_start", {});
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.TYPING_START, {});
 }
 
-/**
- * Broadcast typing stop event
- * @param {string} listId
- */
 export function broadcastTypingStop(listId) {
   const connection = activeConnections.get(listId);
   if (!connection) return;
 
-  sendUpdate(connection.socket, "typing_stop", {});
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.TYPING_STOP, {});
 }
 
-/**
- * Check if a list is currently live
- * @param {string} listId
- * @returns {boolean}
- */
 export function isLive(listId) {
   return activeConnections.has(listId);
 }
@@ -284,22 +286,10 @@ export function isLiveCollaborationAvailable() {
   return isPartyKitAvailable();
 }
 
-/**
- * Get the room ID for a live list
- * @param {string} listId
- * @returns {string | null}
- */
 export function getRoomId(listId) {
-  const connection = activeConnections.get(listId);
-  return connection?.roomId || null;
+  return activeConnections.get(listId)?.roomId || null;
 }
 
-/**
- * Get the share URL for a live list
- * @param {string} listId
- * @param {string} [password]
- * @returns {string | null}
- */
 export function getShareUrl(listId, password = null) {
   const roomId = getRoomId(listId);
   if (!roomId) return null;

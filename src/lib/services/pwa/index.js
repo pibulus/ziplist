@@ -6,3 +6,5 @@ export {
   isPwaInstalled,
   shouldShowPrompt,
 } from "./pwaService";
+
+export { wakeLockService, wakeLockStatus } from "./wakeLockService";
