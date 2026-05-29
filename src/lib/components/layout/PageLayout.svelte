@@ -203,6 +203,17 @@
     }
   }
 
+  @media (min-width: 768px) {
+    .footer-component {
+      position: static !important;
+      margin-top: 2rem;
+    }
+
+    .page-shell {
+      padding-bottom: 2.5rem !important;
+    }
+  }
+
   /* Desktop layout - start from top */
   @media (min-width: 1024px) {
     .page-shell {
@@ -210,7 +221,7 @@
       flex-direction: column;
       justify-content: flex-start;
       padding-top: 15vh !important;
-      padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
+      padding-bottom: 2.5rem !important;
     }
   }
 </style>
