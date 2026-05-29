@@ -112,11 +112,14 @@ npx partykit deploy --with-vars
 ```
 
 5. Deploy/restart the ZipList app.
-6. Run the two-device test against production.
+6. On a fresh production device, redeem a contributor code before tapping
+   `Make Live`; room creation is intentionally contributor-gated.
+7. Run the two-device test against production.
 
 ## Test Checklist
 
 - Create live list A and live list B; confirm no cross-room bleed.
+- On a fresh phone install, redeem contributor access before creating a room.
 - Join from a second device; confirm initial state appears before loading ends.
 - Add item on device A; confirm device B updates.
 - Tick item on device B; confirm device A updates.

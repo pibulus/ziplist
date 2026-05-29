@@ -29,6 +29,75 @@ remote_bash() {
   "${ssh_cmd[@]}" "$REMOTE" bash -s -- "$@"
 }
 
+extract_partykit_host() {
+  local env_file="$1"
+  local key
+  local value
+
+  [[ -f "$env_file" ]] || return 0
+
+  for key in VITE_PARTYKIT_HOST PARTYKIT_HOST; do
+    value="$(
+      awk -F= -v key="$key" '$1 == key {print substr($0, length(key) + 2)}' "$env_file" | tail -n 1
+    )"
+
+    if [[ -n "$value" ]]; then
+      value="${value%%#*}"
+      value="${value%\"}"
+      value="${value#\"}"
+      value="${value%\'}"
+      value="${value#\'}"
+      printf '%s\n' "$value"
+      return 0
+    fi
+  done
+}
+
+configure_build_partykit_host() {
+  local host="${VITE_PARTYKIT_HOST:-}"
+
+  if [[ -z "$host" ]]; then
+    host="$(extract_partykit_host ".env" || true)"
+  fi
+
+  if [[ -z "$host" ]]; then
+    host="$(
+      remote_bash "$APP_DIR" <<'REMOTE'
+set -euo pipefail
+
+app_dir="$1"
+env_file="$app_dir/.env"
+
+if [[ ! -f "$env_file" ]]; then
+  exit 0
+fi
+
+for key in VITE_PARTYKIT_HOST PARTYKIT_HOST; do
+  value="$(awk -F= -v key="$key" '$1 == key {print substr($0, length(key) + 2)}' "$env_file" | tail -n 1)"
+  if [[ -n "$value" ]]; then
+    value="${value%%#*}"
+    value="${value%\"}"
+    value="${value#\"}"
+    value="${value%\'}"
+    value="${value#\'}"
+    printf '%s\n' "$value"
+    exit 0
+  fi
+done
+REMOTE
+    )"
+  fi
+
+  if [[ -n "$host" ]]; then
+    export VITE_PARTYKIT_HOST="$host"
+    printf 'build_partykit_host=%s\n' "$VITE_PARTYKIT_HOST"
+  else
+    printf 'warning: VITE_PARTYKIT_HOST is empty; live controls will be hidden in this build\n' >&2
+  fi
+}
+
+configure_build_partykit_host
+
 npm run build
 
 remote_bash "$STAGING_DIR" "$BACKUP_DIR" <<'REMOTE'

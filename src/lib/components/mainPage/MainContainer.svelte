@@ -28,6 +28,7 @@
   import { PageLayout } from "$lib/components/layout";
   import { listsStore } from "$lib/services/lists/listsStore";
   import SwipeableLists from "../list/SwipeableLists.svelte";
+  import PermissionError from "./audio-transcript/PermissionError.svelte";
   import RecordButtonWithTimer from "./audio-transcript/RecordButtonWithTimer.svelte";
   import { fade } from "svelte/transition";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
@@ -283,6 +284,15 @@
     audioActions.updateState(AudioStates.IDLE);
   }
 
+  function closePermissionError() {
+    uiActions.setPermissionError(false);
+    uiActions.clearErrorMessage();
+
+    if (get(audioState).state === AudioStates.PERMISSION_DENIED) {
+      audioActions.updateState(AudioStates.IDLE);
+    }
+  }
+
   async function startWaveformMonitoring(stream) {
     stopWaveformMonitoring();
 
@@ -380,6 +390,8 @@
 
       // Guard against rapid double-taps spawning multiple streams
       isStartingRecording = true;
+      uiActions.clearErrorMessage();
+      uiActions.setPermissionError(false);
 
       audioChunks = []; // Clear previous chunks
 
@@ -495,6 +507,7 @@
           err.name === "PermissionDeniedError"
         ) {
           audioActions.updateState(AudioStates.PERMISSION_DENIED);
+          uiActions.setPermissionError(true);
           errorMessage =
             "Audio permission denied. Please allow microphone access.";
         } else if (
@@ -502,9 +515,11 @@
           err.name === "DevicesNotFoundError"
         ) {
           audioActions.updateState(AudioStates.NO_INPUT_DETECTED);
+          uiActions.setPermissionError(false);
           errorMessage = "No microphone found. Please connect a microphone.";
         } else {
           audioActions.updateState(AudioStates.ERROR, err.message);
+          uiActions.setPermissionError(false);
           errorMessage = `Error: ${err.message}`;
         }
         uiActions.setErrorMessage(errorMessage);
@@ -670,6 +685,27 @@
       on:preload={preloadSpeechModel}
     />
   </div>
+
+  {#if $uiState.showPermissionError || $audioState.state === AudioStates.PERMISSION_DENIED}
+    <div class="mb-3 px-4" transition:fade={{ duration: 180 }}>
+      <PermissionError on:close={closePermissionError} />
+    </div>
+  {:else if $uiState.errorMessage}
+    <div
+      class="mx-auto mb-3 flex w-[min(100%,30rem)] items-center justify-between gap-3 rounded-xl border border-red-200 bg-white/80 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm backdrop-blur"
+      role="alert"
+      transition:fade={{ duration: 180 }}
+    >
+      <span>{$uiState.errorMessage}</span>
+      <button
+        class="shrink-0 rounded-lg bg-red-50 px-3 py-2 text-xs font-black uppercase tracking-normal text-red-700"
+        type="button"
+        on:click={uiActions.clearErrorMessage}
+      >
+        Dismiss
+      </button>
+    </div>
+  {/if}
 
   {#if showPwaDeviceSetup && PwaDeviceSetup && !loadingPwaDeviceSetup}
     <div class="mb-3 px-4" transition:fade={{ duration: 180 }}>

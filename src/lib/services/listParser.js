@@ -53,7 +53,7 @@ export class ListParser {
     );
 
     const lines = potentialLines
-      .map((line) => line.trim())
+      .flatMap((line) => this._splitConjunctionList(line.trim()))
       .filter((line) => line.length > 0);
     this.log(`Potential lines after split: ${JSON.stringify(lines)}`);
 
@@ -127,6 +127,55 @@ export class ListParser {
     }
 
     return cleanedText;
+  }
+
+  /**
+   * Splits plain fallback transcripts like "milk and eggs and bread" without
+   * breaking common paired phrases such as "peanut butter and jelly".
+   * @param {string} line
+   * @returns {Array<string>}
+   * @private
+   */
+  _splitConjunctionList(line) {
+    if (!line || !/\s+(?:and|plus)\s+/i.test(line)) {
+      return [line];
+    }
+
+    const hasListIntent =
+      /^(?:add(?: item)?|add to my list|put on my list|please add|buy|get|grab|pick up|need|i need|i want)\s+/i.test(
+        line,
+      );
+
+    const normalized = line
+      .replace(
+        /^(?:add(?: item)?|add to my list|put on my list|please add|buy|get|grab|pick up|need|i need|i want)\s+/i,
+        "",
+      )
+      .trim();
+
+    const parts = normalized
+      .split(/\s+(?:and|plus)\s+/i)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length < 2 || parts.length > 8) {
+      return [line];
+    }
+
+    if (parts.length === 2 && !hasListIntent) {
+      return [line];
+    }
+
+    const hasActionPhrase =
+      /\b(?:call|text|email|ask|tell|book|schedule|meet|finish|fix|clean|wash|write|read|watch|pay|cancel)\b/i.test(
+        normalized,
+      );
+
+    if (hasActionPhrase || parts.some((part) => part.split(/\s+/).length > 4)) {
+      return [line];
+    }
+
+    return parts;
   }
 
   /**

@@ -456,17 +456,22 @@
   color: var(--zl-text-color-secondary);
 }
 
+.zl-live-button:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+
 .zl-add-list-button .add-icon {
   font-size: 1rem;
   line-height: 1;
 }
 
-.zl-add-list-button:hover,
-.zl-add-list-button:focus-visible,
-.zl-live-button:hover,
-.zl-share-button:hover,
-.zl-live-button:focus-visible,
-.zl-share-button:focus-visible {
+.zl-add-list-button:hover:not(:disabled),
+.zl-add-list-button:focus-visible:not(:disabled),
+.zl-live-button:hover:not(:disabled),
+.zl-share-button:hover:not(:disabled),
+.zl-live-button:focus-visible:not(:disabled),
+.zl-share-button:focus-visible:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 188, 212, 0.35);

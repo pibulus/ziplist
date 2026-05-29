@@ -22,6 +22,7 @@ import { LIVE_MESSAGE_TYPES } from "./liveListProtocol.js";
 
 const activeConnections = new Map();
 const remoteSyncingLists = new Set();
+const LIVE_JOIN_TIMEOUT_MS = 12000;
 
 function createPlaceholderList(listId, seedList = null, roomId = null) {
   const fallbackList = get(listsStore).lists[0] ?? {};
@@ -147,13 +148,30 @@ export async function connectToLive(listId, roomId, password = null) {
   let socket;
   let settleReady;
   let failReady;
+  let readySettled = false;
+  let readyTimeoutId;
+
+  function finishReady(callback) {
+    if (readySettled) return;
+
+    readySettled = true;
+    clearTimeout(readyTimeoutId);
+    callback();
+  }
 
   const readyPromise = new Promise((resolve, reject) => {
-    settleReady = resolve;
-    failReady = reject;
+    settleReady = () => finishReady(resolve);
+    failReady = (error) => finishReady(() => reject(error));
   });
 
   connection.readyPromise = readyPromise;
+  readyTimeoutId = setTimeout(() => {
+    failReady(
+      new Error(
+        "Live list took too long to respond. Check the link and retry.",
+      ),
+    );
+  }, LIVE_JOIN_TIMEOUT_MS);
 
   socket = connectToLiveList(
     roomId,

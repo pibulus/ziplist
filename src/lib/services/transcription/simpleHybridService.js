@@ -94,7 +94,23 @@ class SimpleHybridService {
     }
 
     if (this.whisperLoadPromise) {
-      return this.whisperLoadPromise;
+      if (!force) {
+        return this.whisperLoadPromise;
+      }
+
+      const previousPromise = this.whisperLoadPromise;
+      const previousResult = await previousPromise.catch((error) => ({
+        success: false,
+        error,
+      }));
+
+      if (previousResult?.success) {
+        return previousResult;
+      }
+
+      if (this.whisperLoadPromise === previousPromise) {
+        this.whisperLoadPromise = null;
+      }
     }
 
     if (!force && !this.shouldLoadWhisperInBackground()) {
@@ -111,24 +127,30 @@ class SimpleHybridService {
         });
       }
 
-      this.whisperLoadPromise = ws
+      const loadPromise = ws
         .preloadModel()
         .then((result) => {
           if (result.success) {
             console.log("Whisper model ready for offline use");
+          } else if (this.whisperLoadPromise === loadPromise) {
+            this.whisperLoadPromise = null;
           }
           return result;
         })
         .catch((err) => {
           console.warn("Whisper load failed, will continue with API:", err);
+          if (this.whisperLoadPromise === loadPromise) {
+            this.whisperLoadPromise = null;
+          }
           return { success: false, error: err };
         });
 
-      return this.whisperLoadPromise;
+      this.whisperLoadPromise = loadPromise;
+      return loadPromise;
     } catch (err) {
       console.warn("Failed to load whisper module:", err);
-      this.whisperLoadPromise = Promise.resolve({ success: false, error: err });
-      return this.whisperLoadPromise;
+      this.whisperLoadPromise = null;
+      return { success: false, error: err };
     }
   }
 
@@ -164,12 +186,8 @@ class SimpleHybridService {
       }
     }
 
-    // Normal mode: use Gemini when list context is present so completion
-    // detection can run. Privacy mode above remains Whisper-only.
-    if (this.whisperReady && whisperService && !hasCompletionContext) {
-      return await this.transcribeWithWhisper(audioBlob);
-    }
-
+    // Normal mode uses Gemini first so prompt styling, item splitting, and
+    // completion detection stay consistent. Privacy mode above is Whisper-only.
     if (hasCompletionContext && this.whisperReady && whisperService) {
       const geminiPromise = this.transcribeWithGemini(
         audioBlob,

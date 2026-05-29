@@ -4,6 +4,9 @@
   import { pwaService } from "$lib/services/pwa";
 
   const dispatch = createEventDispatcher();
+  const OFFLINE_MODEL_TIMEOUT_MS = 90000;
+  const OFFLINE_MODEL_TIMEOUT_MESSAGE =
+    "Offline model is still downloading. ZipList works online; try setup again later.";
 
   let isRunning = false;
   let isComplete = false;
@@ -12,6 +15,8 @@
   let errorMessage = "";
   let unsubscribeWhisperStatus = null;
   let completeTimeout = null;
+  let isDismissed = false;
+  let setupRunId = 0;
 
   function stopStream(stream) {
     stream?.getTracks().forEach((track) => track.stop());
@@ -41,6 +46,8 @@
 
     unsubscribeWhisperStatus?.();
     unsubscribeWhisperStatus = whisperStatus.subscribe((status) => {
+      if (isDismissed) return;
+
       if (status.isLoading || status.progress > 0) {
         progress = Math.max(10, Math.round(status.progress || 0));
         statusText = `Loading offline model ${progress}%`;
@@ -50,9 +57,26 @@
     return simpleHybridService.startBackgroundLoad({ force: true });
   }
 
+  function withTimeout(promise, timeoutMs, message) {
+    let timeoutId;
+
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = window.setTimeout(
+        () => reject(new Error(message)),
+        timeoutMs,
+      );
+    });
+
+    return Promise.race([promise, timeoutPromise]).finally(() => {
+      window.clearTimeout(timeoutId);
+    });
+  }
+
   async function runSetup() {
     if (!browser || isRunning) return;
 
+    const runId = ++setupRunId;
+    isDismissed = false;
     isRunning = true;
     errorMessage = "";
     progress = 0;
@@ -60,12 +84,19 @@
     try {
       statusText = "Checking microphone...";
       await primeMicrophone();
+      if (isDismissed || runId !== setupRunId) return;
 
       statusText = "Protecting local storage...";
       await pwaService.requestPersistentStorage();
+      if (isDismissed || runId !== setupRunId) return;
 
       statusText = "Loading offline model...";
-      const modelResult = await preloadOfflineModel();
+      const modelResult = await withTimeout(
+        preloadOfflineModel(),
+        OFFLINE_MODEL_TIMEOUT_MS,
+        OFFLINE_MODEL_TIMEOUT_MESSAGE,
+      );
+      if (isDismissed || runId !== setupRunId) return;
 
       if (!modelResult?.success) {
         throw modelResult?.error || new Error("Offline model failed to load");
@@ -77,17 +108,34 @@
       pwaService.markDeviceSetupComplete();
 
       completeTimeout = window.setTimeout(() => {
-        dispatch("complete");
+        if (!isDismissed && runId === setupRunId) {
+          dispatch("complete");
+        }
       }, 1200);
     } catch (error) {
+      if (isDismissed || runId !== setupRunId) return;
+
       errorMessage = error?.message || "Device setup failed";
       statusText = "Setup paused. Try again when you have a steady connection.";
     } finally {
-      isRunning = false;
+      if (!isDismissed && runId === setupRunId) {
+        isRunning = false;
+      }
     }
   }
 
   function dismiss() {
+    isDismissed = true;
+    setupRunId += 1;
+    isRunning = false;
+    unsubscribeWhisperStatus?.();
+    unsubscribeWhisperStatus = null;
+
+    if (completeTimeout) {
+      window.clearTimeout(completeTimeout);
+      completeTimeout = null;
+    }
+
     pwaService.snoozeDeviceSetup();
     dispatch("dismiss");
   }
@@ -147,7 +195,6 @@
       <button
         aria-label="Set up later"
         class="later-button"
-        disabled={isRunning}
         type="button"
         on:click={dismiss}
       >

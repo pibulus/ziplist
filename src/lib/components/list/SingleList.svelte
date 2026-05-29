@@ -1,8 +1,13 @@
 <script>
   import { onMount, onDestroy, tick } from "svelte";
-  import { listsStore, LIST_COLOR_PRESETS } from "$lib/services/lists/listsStore";
+  import {
+    listsStore,
+    LIST_COLOR_PRESETS,
+  } from "$lib/services/lists/listsStore";
 
-  const DEFAULT_LIST_NAMES = new Set(LIST_COLOR_PRESETS.map((p) => p.defaultName));
+  const DEFAULT_LIST_NAMES = new Set(
+    LIST_COLOR_PRESETS.map((p) => p.defaultName),
+  );
   import { listsService } from "$lib/services/lists/listsService";
   import { shareList } from "$lib/services/share";
   import { fade, fly } from "svelte/transition";
@@ -40,6 +45,7 @@
   let previousListIdentity = null;
   let isLive = false; // Track if this list is live
   let liveFeatureAvailable = false;
+  let isMakingLive = false;
   let presence = []; // Who's online
   let typingUsers = []; // Who's typing
   let recentlyEditedItems = new Set(); // Track items just edited by others
@@ -295,6 +301,13 @@
       return;
     }
 
+    if (isMakingLive) {
+      showListStatus("Starting live list...", false, 1600);
+      return;
+    }
+
+    isMakingLive = true;
+
     try {
       const { shareUrl } = await liveListsService.makeLive(list.id);
       isLive = true;
@@ -331,6 +344,8 @@
     } catch (error) {
       console.error("Failed to make list live:", error);
       showListStatus("Failed to make list live: " + error.message, false, 5000);
+    } finally {
+      isMakingLive = false;
     }
   }
 
@@ -1366,9 +1381,15 @@
                   title="Tap to rename"
                 >
                   <span class="zl-list-title-inner">
-                    <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
+                    <span
+                      class="zl-list-color-dot"
+                      style="background: {list.primaryColor};"
+                      aria-hidden="true"
+                    ></span>
                     {#if isDefaultName}
-                      <span class="zl-list-title-hint" aria-hidden="true">Edit</span>
+                      <span class="zl-list-title-hint" aria-hidden="true"
+                        >Edit</span
+                      >
                     {:else}
                       <span class="zl-list-title">
                         {list.name}
@@ -1379,11 +1400,19 @@
               </h2>
             {:else if isDefaultName}
               <div class="zl-list-title-inner" aria-hidden="true">
-                <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
+                <span
+                  class="zl-list-color-dot"
+                  style="background: {list.primaryColor};"
+                  aria-hidden="true"
+                ></span>
               </div>
             {:else}
               <h2 class="zl-list-title-inner">
-                <span class="zl-list-color-dot" style="background: {list.primaryColor};" aria-hidden="true"></span>
+                <span
+                  class="zl-list-color-dot"
+                  style="background: {list.primaryColor};"
+                  aria-hidden="true"
+                ></span>
                 <span class="zl-list-title">{list.name}</span>
               </h2>
             {/if}
@@ -1433,15 +1462,23 @@
               type="button"
               class="zl-live-button"
               class:locked={!$isContributor}
+              disabled={isMakingLive}
               on:click={handleMakeLive}
               title={$isContributor
-                ? "Enable real-time collaboration"
+                ? isMakingLive
+                  ? "Starting live list"
+                  : "Enable real-time collaboration"
                 : "Contributor opens live shared lists"}
-              aria-label={`Make Live. Enable real-time collaboration for ${
-                list.name || "this list"
-              }`}
+              aria-busy={isMakingLive}
+              aria-label={isMakingLive
+                ? "Starting live list"
+                : `Make Live. Enable real-time collaboration for ${
+                    list.name || "this list"
+                  }`}
             >
-              <span class="live-icon" aria-hidden="true">{$isContributor ? "🔴" : "↗"}</span>
+              <span class="live-icon" aria-hidden="true"
+                >{$isContributor ? (isMakingLive ? "..." : "🔴") : "↗"}</span
+              >
             </button>
           {:else}
             <div
