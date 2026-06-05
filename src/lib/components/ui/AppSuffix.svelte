@@ -1,6 +1,6 @@
 <script>
-  import { theme as themeStore, CONSTANTS } from '$lib';
-  import { onMount } from 'svelte';
+  import { theme as themeStore, CONSTANTS } from "$lib";
+  import { onMount } from "svelte";
 
   /**
    * AppSuffix Component
@@ -19,32 +19,35 @@
 
   // Keep current theme in sync with the global theme
   $: currentTheme = $themeStore || CONSTANTS.DEFAULT_THEME;
-  
+
   // Listen for theme change events (for when theme changes from settings panel)
   onMount(() => {
     const handleThemeChange = (event) => {
-      if (event.detail && event.detail.setting === 'theme') {
+      if (event.detail && event.detail.setting === "theme") {
         // Theme changed, force component to update
         currentTheme = event.detail.value;
       }
     };
-    
+
     // Listen for custom events
-    if (typeof window !== 'undefined') {
-      window.addEventListener('ziplist-setting-changed', handleThemeChange);
+    if (typeof window !== "undefined") {
+      window.addEventListener("ziplist-setting-changed", handleThemeChange);
     }
-    
+
     return () => {
       // Clean up listener
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('ziplist-setting-changed', handleThemeChange);
+      if (typeof window !== "undefined") {
+        window.removeEventListener(
+          "ziplist-setting-changed",
+          handleThemeChange,
+        );
       }
     };
   });
 </script>
 
-<span 
-  class="app-suffix {customClass} {position} theme-{currentTheme}" 
+<span
+  class="app-suffix {customClass} {position} theme-{currentTheme}"
   style="--suffix-color: {color}; --suffix-size: {size}; --offset-x: {offsetX}; --offset-y: {offsetY};"
   aria-hidden="true"
 >
@@ -58,7 +61,7 @@
     font-size: var(--suffix-size, 30%);
     font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     font-kerning: normal;
     position: absolute;
     bottom: 0.15em;
@@ -69,18 +72,18 @@
     transform: translateY(var(--offset-y, 0));
     opacity: 0.9;
     z-index: 1;
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.12));
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.12));
     transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     background: transparent;
     border: none;
     padding: 0;
   }
-  
+
   .app-text {
     background-clip: text !important;
     -webkit-background-clip: text !important;
     color: transparent !important;
-    text-shadow: 0 1px 1px rgba(0,0,0,0.03);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
     transition: all 0.3s ease;
     display: inline-block;
     position: relative;
@@ -88,7 +91,7 @@
     padding: 0.1em 0; /* Add some padding for hover effect */
     will-change: transform;
   }
-  
+
   /* Theme-specific gradients - darker for AA contrast */
   .theme-focus .app-text {
     background-image: linear-gradient(to bottom right, #ff82ca, #ffb060);
@@ -103,20 +106,36 @@
   }
 
   .theme-neo .app-text {
-    background-image: linear-gradient(to right, #FFD700, #FF6B6B, #4ECDC4); /* Miami Gradient */
-    -webkit-text-stroke: 0.5px rgba(0,0,0,0.1);
+    background-image: linear-gradient(
+      to right,
+      #ffd700,
+      #ff6b6b,
+      #4ecdc4
+    ); /* Miami Gradient */
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.1);
     filter: drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3));
   }
-  
+
   .theme-nocturne .app-text {
-    background-image: linear-gradient(to right, #ff0080, #ff8c00, #ffed00, #00ff80, #00bfff);
+    background-image: linear-gradient(
+      to right,
+      #ff0080,
+      #ff8c00,
+      #ffed00,
+      #00ff80,
+      #00bfff
+    );
     background-size: 200% auto;
     animation: rainbow-shift 3s linear infinite;
   }
-  
+
   @keyframes rainbow-shift {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
+    0% {
+      background-position: 0% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -129,7 +148,7 @@
   .app-suffix:hover {
     box-shadow: 0 0 15px var(--suffix-color, rgba(255, 107, 107, 0.4));
     transform: translateY(calc(var(--offset-y, 0) - 2px)) rotate(-2deg);
-    border-color: var(--suffix-color, #FF6B6B);
+    border-color: var(--suffix-color, #ff6b6b);
   }
 
   .app-suffix:hover .app-text {
@@ -137,61 +156,65 @@
     transform: scale(1.05);
     transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   }
-  
+
   /* Position variations */
   /* Bottom positions */
   .bottom-right,
   .bottom-left {
     bottom: -0.92em;
   }
-  
+
   /* Top positions */
   .top-right,
   .top-left {
     top: -0.5em;
     bottom: auto;
   }
-  
+
   /* Right positions */
   .bottom-right,
   .top-right {
     right: var(--offset-x, -0.2em);
   }
-  
+
   /* Left positions */
   .bottom-left,
   .top-left {
     left: var(--offset-x, -0.2em);
     right: auto;
   }
-  
+
   /* Simple responsive adjustments */
   @media (max-width: 640px) {
     .app-suffix {
       font-size: calc(var(--suffix-size) * 0.95);
     }
   }
-  
+
   @media (max-width: 480px) {
     .app-suffix {
       font-size: calc(var(--suffix-size) * 0.9);
     }
-    
-    .bottom-right, .bottom-left {
+
+    .bottom-right,
+    .bottom-left {
       bottom: -0.8em;
     }
-    
-    .top-right, .top-left {
+
+    .top-right,
+    .top-left {
       top: -0.48em;
     }
   }
-  
+
   @media (min-width: 1024px) {
-    .bottom-right, .bottom-left {
+    .bottom-right,
+    .bottom-left {
       bottom: -0.8em;
     }
-    
-    .top-right, .top-left {
+
+    .top-right,
+    .top-left {
       top: -0.52em;
     }
   }
