@@ -67,8 +67,7 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component fixed bottom-0 left-0 right-0 z-10 box-border pb-2 pt-3 text-center text-xs text-gray-600 backdrop-blur-[8px] sm:pb-4 sm:pt-4"
-    style="background: transparent;"
+    class="footer-component fixed bottom-0 left-0 right-0 z-10 box-border pb-2 pt-3 text-center text-xs text-gray-600 sm:pb-4 sm:pt-4"
   >
     <div
       class="container mx-auto flex flex-row items-center justify-center gap-1 sm:justify-between sm:gap-3"
@@ -171,6 +170,8 @@
   }
 
   footer {
+    --footer-surface-rgb: 255, 246, 230;
+    background: transparent;
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
   }
 
@@ -186,7 +187,15 @@
     }
 
     footer {
-      padding-top: 0.5rem;
+      background: linear-gradient(
+        to top,
+        rgba(var(--footer-surface-rgb), 0.98) 0%,
+        rgba(var(--footer-surface-rgb), 0.94) 68%,
+        rgba(var(--footer-surface-rgb), 0) 100%
+      );
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      padding-top: 0.75rem;
       padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
     }
 
@@ -201,6 +210,18 @@
     footer .container > div:last-child {
       margin-right: 1rem;
     }
+  }
+
+  :global(html[data-theme="chill"]) footer {
+    --footer-surface-rgb: 229, 249, 246;
+  }
+
+  :global(html[data-theme="zen"]) footer {
+    --footer-surface-rgb: 244, 238, 255;
+  }
+
+  :global(html[data-theme="nocturne"]) footer {
+    --footer-surface-rgb: 219, 234, 243;
   }
 
   @media (min-width: 768px) {

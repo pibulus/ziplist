@@ -219,9 +219,7 @@
               aria-label={`Use ${vibe.name} vibe`}
               aria-pressed={selectedVibe === vibe.id}
             >
-              <span
-                class="zl-vibe-swatch vibe-{vibe.id}"
-                aria-hidden="true"
+              <span class="zl-vibe-swatch vibe-{vibe.id}" aria-hidden="true"
               ></span>
               <span class="zl-vibe-name">{vibe.name}</span>
               {#if selectedVibe === vibe.id}
@@ -317,10 +315,15 @@
   }
 
   .zl-settings-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin: -0.25rem 0 1.5rem;
+    padding: 0.25rem 0 0.75rem;
+    background: var(--zl-card-bg-gradient-color-start, #fff);
   }
 
   .zl-settings-title {
@@ -591,7 +594,7 @@
     }
 
     .zl-settings-header {
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
     .zl-setting-row {
