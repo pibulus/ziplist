@@ -1,6 +1,7 @@
 // Import services for local usage in initialization function
 import { eventBus as eventBusInstance } from "./infrastructure/index";
 import { hapticService as hapticServiceInstance } from "./infrastructure/index";
+import { soundService as soundServiceInstance } from "./infrastructure/index";
 import { audioService as audioServiceInstance } from "./audio/audioService";
 import { transcriptionService as transcriptionServiceInstance } from "./transcription/transcriptionService";
 import { themeService as themeServiceInstance } from "./theme/themeService";
@@ -10,7 +11,12 @@ import { pwaService as pwaServiceInstance } from "./pwa/pwaService";
 import { resetStores } from "./infrastructure/stores";
 
 // Re-export services for external usage
-export { eventBus, hapticService, StorageUtils } from "./infrastructure/index";
+export {
+  eventBus,
+  hapticService,
+  soundService,
+  StorageUtils,
+} from "./infrastructure/index";
 export { themeService } from "./theme/themeService";
 export { modalService } from "./modals/modalService";
 export {
@@ -59,7 +65,7 @@ export {
 
 // Convenience function to initialize all services
 export function initializeServices(options = {}) {
-  const { debug = false, haptic = true } = options;
+  const { debug = false, haptic = true, sound = true } = options;
 
   // Reset stores to initial state
   resetStores();
@@ -74,11 +80,18 @@ export function initializeServices(options = {}) {
     hapticServiceInstance.disable();
   }
 
+  if (sound) {
+    soundServiceInstance.enable();
+  } else {
+    soundServiceInstance.disable();
+  }
+
   return {
     eventBus: eventBusInstance,
     audioService: audioServiceInstance,
     transcriptionService: transcriptionServiceInstance,
     hapticService: hapticServiceInstance,
+    soundService: soundServiceInstance,
     themeService: themeServiceInstance,
     modalService: modalServiceInstance,
     firstVisitService: firstVisitServiceInstance,

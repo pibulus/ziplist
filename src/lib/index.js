@@ -59,6 +59,12 @@ export const autoRecord = createLocalStorageStore(
   "false",
 );
 
+// Store for tactile audio cue preference
+export const soundCues = createLocalStorageStore(
+  CONSTANTS.STORAGE_KEYS.SOUND_CUES,
+  "true",
+);
+
 // Store for prompt style preference
 export const promptStyle = createLocalStorageStore(
   CONSTANTS.STORAGE_KEYS.PROMPT_STYLE,

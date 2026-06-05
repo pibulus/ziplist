@@ -3,6 +3,7 @@
   import { spring } from "svelte/motion";
   import { listsStore } from "$lib/services/lists/listsStore";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
+  import { soundService } from "$lib/services/infrastructure/soundService";
   import SingleList from "./SingleList.svelte";
 
   // Subscribe to lists store
@@ -156,6 +157,7 @@
 
       // Haptic feedback on successful switch
       hapticService.impact("medium");
+      soundService.select();
     }
   }
 

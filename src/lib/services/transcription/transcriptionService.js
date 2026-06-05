@@ -9,6 +9,7 @@ import {
   transcriptionActions,
   uiActions,
 } from "../infrastructure/stores";
+import { soundService } from "../infrastructure/soundService";
 import { COPY_MESSAGES, ATTRIBUTION, getRandomFromArray } from "$lib/constants";
 
 export const TranscriptionEvents = {
@@ -151,6 +152,7 @@ export class TranscriptionService {
 
     if (!text || text.trim() === "") {
       uiActions.setErrorMessage("No text available to copy");
+      soundService.locked();
       return false;
     }
 
@@ -163,6 +165,7 @@ export class TranscriptionService {
         await navigator.clipboard.writeText(textWithAttribution);
         uiActions.showClipboardSuccess();
         uiActions.setScreenReaderMessage("Transcript copied to clipboard");
+        soundService.copySuccess({ force: true });
         return true;
       }
 
@@ -181,10 +184,12 @@ export class TranscriptionService {
       if (success) {
         uiActions.showClipboardSuccess();
         uiActions.setScreenReaderMessage("Transcript copied to clipboard");
+        soundService.copySuccess({ force: true });
       } else {
         uiActions.setScreenReaderMessage(
           "Unable to copy. Please try clicking in the window first.",
         );
+        soundService.locked({ force: true });
       }
 
       return success;
@@ -197,6 +202,7 @@ export class TranscriptionService {
       uiActions.setScreenReaderMessage(
         "Unable to copy. Please try clicking in the window first.",
       );
+      soundService.error({ force: true });
 
       return false;
     }
@@ -209,6 +215,7 @@ export class TranscriptionService {
 
     if (!text || text.trim() === "") {
       uiActions.setErrorMessage("No text available to share");
+      soundService.locked();
       return false;
     }
 
@@ -229,6 +236,7 @@ export class TranscriptionService {
 
       uiActions.showClipboardSuccess();
       uiActions.setScreenReaderMessage("Transcript shared successfully");
+      soundService.copySuccess({ force: true });
       return true;
     } catch (error) {
       // Don't treat user cancellation as an error
@@ -246,6 +254,7 @@ export class TranscriptionService {
       uiActions.setErrorMessage(
         `Share failed: ${error.message || "Unknown error"}`,
       );
+      soundService.error({ force: true });
       return false;
     }
   }

@@ -1,6 +1,7 @@
 <script>
   import { promptStyle } from "$lib";
   import { geminiService } from "$lib/services/geminiService";
+  import { soundService } from "$lib/services/infrastructure/soundService";
   import { PROMPT_STYLES } from "$lib/constants";
 
   // Props
@@ -58,6 +59,7 @@
   export let changePromptStyle = (style) => {
     // Simply set the selected style
     selectedPromptStyle = style;
+    soundService.select();
 
     // Update the service
     geminiService.setPromptStyle(style);

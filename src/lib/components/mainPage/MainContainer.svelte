@@ -26,7 +26,9 @@
   } from "$lib/services/infrastructure/stores.js";
   import { AudioStates } from "$lib/services/audio/audioStates.js";
   import { PageLayout } from "$lib/components/layout";
+  import { soundCues } from "$lib";
   import { listsStore } from "$lib/services/lists/listsStore";
+  import { soundService } from "$lib/services/infrastructure/soundService";
   import SwipeableLists from "../list/SwipeableLists.svelte";
   import PermissionError from "./audio-transcript/PermissionError.svelte";
   import RecordButtonWithTimer from "./audio-transcript/RecordButtonWithTimer.svelte";
@@ -73,6 +75,7 @@
   let visualizerFrameId = null;
   let settingsModalPreloadTimeout = null;
   let autoRecordTimeout = null;
+  let soundCuesUnsubscribe = null;
 
   function stopStream(stream) {
     stream?.getTracks().forEach((track) => track.stop());
@@ -108,10 +111,12 @@
 
   // Modal functions
   function showAboutModal() {
+    soundService.open();
     modalService.openModal("about_modal");
   }
 
   function showExtensionModal() {
+    soundService.open();
     modalService.openModal("extension_modal");
   }
 
@@ -147,10 +152,12 @@
     await tick();
 
     // Open the settings modal
+    soundService.open();
     modalService.openModal("settings_modal");
   }
 
   function closeSettingsModal() {
+    soundService.close();
     modalService.closeModal();
   }
 
@@ -181,14 +188,17 @@
 
     await tick();
 
+    soundService.open();
     modalService.openModal("contributor_modal");
   }
 
   function closeContributorModal() {
+    soundService.close();
     modalService.closeModal();
   }
 
   function closeModal() {
+    soundService.close();
     modalService.closeModal();
   }
 
@@ -272,6 +282,7 @@
   function stopActiveRecording() {
     if (isStoppingRecording) return;
     isStoppingRecording = true;
+    soundService.stopRecording({ force: true });
 
     if (mediaRecorder && mediaRecorder.state === "recording") {
       audioActions.updateState(AudioStates.STOPPING);
@@ -285,6 +296,7 @@
   }
 
   function closePermissionError() {
+    soundService.close();
     uiActions.setPermissionError(false);
     uiActions.clearErrorMessage();
 
@@ -330,6 +342,23 @@
     }
   }
 
+  function playTranscriptionResultCue(result) {
+    const addedCount = Array.isArray(result?.items) ? result.items.length : 0;
+    const completedCount = Array.isArray(result?.complete)
+      ? result.complete.length
+      : 0;
+
+    if (addedCount > 0 && completedCount > 0) {
+      soundService.complete({ force: true });
+    } else if (completedCount > 0) {
+      soundService.check({ force: true });
+    } else if (addedCount > 0) {
+      soundService.add({ force: true });
+    } else {
+      soundService.select();
+    }
+  }
+
   onDestroy(() => {
     if (typeof preloadCleanup === "function") {
       preloadCleanup();
@@ -343,6 +372,11 @@
     if (autoRecordTimeout) {
       clearTimeout(autoRecordTimeout);
       autoRecordTimeout = null;
+    }
+
+    if (soundCuesUnsubscribe) {
+      soundCuesUnsubscribe();
+      soundCuesUnsubscribe = null;
     }
 
     if (mediaRecorder) {
@@ -385,6 +419,7 @@
         $isTranscribing ||
         !isStartableAudioState($audioState.state)
       ) {
+        soundService.locked();
         return;
       }
 
@@ -401,6 +436,7 @@
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.error("getUserMedia not supported on this browser!");
           isStartingRecording = false;
+          soundService.error({ force: true });
           audioActions.updateState(
             AudioStates.ERROR,
             "getUserMedia is not supported.",
@@ -411,6 +447,7 @@
           return;
         }
 
+        soundService.startRecording({ force: true });
         audioActions.updateState(AudioStates.REQUESTING_PERMISSIONS);
         stream = await navigator.mediaDevices.getUserMedia(
           AUDIO_CAPTURE_CONSTRAINTS,
@@ -453,10 +490,13 @@
           try {
             if (audioBlob.size === 0) {
               audioActions.updateState(AudioStates.IDLE);
+              soundService.locked({ force: true });
               return;
             }
 
-            await transcriptionService.transcribeAudio(audioBlob);
+            const transcriptionResult =
+              await transcriptionService.transcribeAudio(audioBlob);
+            playTranscriptionResultCue(transcriptionResult);
             pwaService.incrementTranscriptionCount();
             // Auto-scroll to lists after successful transcription to show new items
             setTimeout(scrollToLists, 100);
@@ -465,6 +505,7 @@
               "Transcription failed in onstop:",
               transcriptionError,
             );
+            soundService.error({ force: true });
           } finally {
             resetRecordingSession();
             if (get(audioState).state === AudioStates.PROCESSING) {
@@ -477,6 +518,7 @@
           isStartingRecording = false;
           isStoppingRecording = false;
           console.error("MediaRecorder error:", event.error);
+          soundService.error({ force: true });
           audioActions.updateState(
             AudioStates.ERROR,
             event.error.message || "MediaRecorder error",
@@ -501,6 +543,7 @@
           "Error starting recording (getUserMedia or MediaRecorder setup):",
           err,
         );
+        soundService.error({ force: true });
         let errorMessage = "Could not start recording.";
         if (
           err.name === "NotAllowedError" ||
@@ -544,6 +587,7 @@
   }
 
   function closePwaInstallPrompt() {
+    soundService.close();
     pwaService.dismissPrompt();
   }
 
@@ -571,6 +615,12 @@
   }
 
   function handlePwaDeviceSetupDone() {
+    soundService.success();
+    showPwaDeviceSetup = false;
+  }
+
+  function handlePwaDeviceSetupDismissed() {
+    soundService.close();
     showPwaDeviceSetup = false;
   }
 
@@ -580,6 +630,10 @@
     listsStore.initialize();
 
     if (browser) {
+      soundCuesUnsubscribe = soundCues.subscribe((value) => {
+        soundService.setEnabled(value !== "false");
+      });
+
       const preloadOnInteraction = () => {
         preloadSpeechModel();
         window.removeEventListener("pointerdown", preloadOnInteraction);
@@ -645,6 +699,7 @@
     mediaRecorder &&
     mediaRecorder.state === "recording"
   ) {
+    soundService.stopRecording({ force: true });
     mediaRecorder.stop();
   }
 
@@ -712,7 +767,7 @@
       <svelte:component
         this={PwaDeviceSetup}
         on:complete={handlePwaDeviceSetupDone}
-        on:dismiss={handlePwaDeviceSetupDone}
+        on:dismiss={handlePwaDeviceSetupDismissed}
       />
     </div>
   {/if}

@@ -8,7 +8,8 @@ instead of reaching into those details directly.
 
 - `audio/` - Microphone recording lifecycle and audio states.
 - `first-visit/` - First-run/onboarding state.
-- `infrastructure/` - Event bus, shared Svelte stores, haptics, storage helpers.
+- `infrastructure/` - Event bus, shared Svelte stores, haptics, sound cues,
+  storage helpers.
 - `lists/` - List store, list mutations, command processing, local persistence.
 - `modals/` - Dialog open/close helpers.
 - `pwa/` - Install prompt, installed-device setup, persistent storage, and wake

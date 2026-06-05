@@ -13,6 +13,7 @@
   import { fade, fly } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
+  import { soundService } from "$lib/services/infrastructure/soundService";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
   import { getTypingStore } from "$lib/services/realtime/typingStore";
@@ -214,6 +215,7 @@
     const liveUrl = shareUrl || liveListsService.getShareUrl(list.id);
     if (!liveUrl) {
       showListStatus("Live link is not ready yet");
+      soundService.locked();
       return;
     }
 
@@ -227,6 +229,7 @@
       try {
         await navigator.share(sharePayload);
         showListStatus("Live link shared!", true);
+        soundService.copySuccess({ force: true });
         return;
       } catch (error) {
         if (error?.name === "AbortError") return;
@@ -241,9 +244,15 @@
           : "Live link ready, but copying is blocked",
         copied,
       );
+      if (copied) {
+        soundService.copySuccess({ force: true });
+      } else {
+        soundService.locked({ force: true });
+      }
     } catch (error) {
       console.error("Failed to copy live link:", error);
       showListStatus("Live link ready, but copying is blocked");
+      soundService.error({ force: true });
     }
   }
 
@@ -256,6 +265,7 @@
 
     if (!list || !list.items || list.items.length === 0) {
       showListStatus("Cannot share an empty list");
+      soundService.locked();
       return;
     }
 
@@ -269,12 +279,15 @@
           true,
           result.urlTooLong ? 5000 : 3000,
         );
+        soundService.copySuccess({ force: true });
       } else {
         showListStatus("Failed to share list");
+        soundService.error({ force: true });
       }
     } catch (error) {
       console.error("Failed to share list:", error);
       showListStatus("Failed to share list");
+      soundService.error({ force: true });
     }
   }
 
@@ -286,23 +299,27 @@
         false,
         4000,
       );
+      soundService.locked();
       return;
     }
 
     if (!$isContributor) {
       showListStatus("Contributor opens live shared lists.", false, 4200);
       hapticService.notification("warning");
+      soundService.locked({ force: true });
       requestContributorUnlock();
       return;
     }
 
     if (!list || !list.id) {
       showListStatus("Cannot make list live");
+      soundService.locked();
       return;
     }
 
     if (isMakingLive) {
       showListStatus("Starting live list...", false, 1600);
+      soundService.select();
       return;
     }
 
@@ -325,6 +342,7 @@
           : "Live list ready. Tap Share to send the link.",
         true,
       );
+      soundService.success({ force: true });
 
       // Clean up any existing subscriptions before re-subscribing
       if (presenceUnsubscribe) presenceUnsubscribe();
@@ -344,6 +362,7 @@
     } catch (error) {
       console.error("Failed to make list live:", error);
       showListStatus("Failed to make list live: " + error.message, false, 5000);
+      soundService.error({ force: true });
     } finally {
       isMakingLive = false;
     }
@@ -354,6 +373,7 @@
     if (!result.ok) {
       showListStatus(result.message);
       hapticService.notification("warning");
+      soundService.locked();
       if (result.reason === "max-lists") {
         requestContributorUnlock();
       }
@@ -361,6 +381,7 @@
     }
 
     hapticService.notification("success");
+    soundService.add({ force: true });
   }
 
   function requestContributorUnlock() {
@@ -373,6 +394,7 @@
     editingListName = true;
     editedListName = list.name || "";
     hapticService.selection();
+    soundService.select();
   }
 
   function saveListName() {
@@ -388,11 +410,13 @@
 
     listsStore.renameList(nextName, list.id);
     hapticService.impact("light");
+    soundService.select();
   }
 
   function cancelListNameEdit() {
     editingListName = false;
     editedListName = list.name || "";
+    soundService.close();
   }
 
   function handleListNameKeyDown(event) {
@@ -412,6 +436,7 @@
     actionSheetItemId = itemId;
     setActionSheetScrollLock(true);
     hapticService.selection();
+    soundService.open();
 
     await tick();
     focusInitialActionSheetControl();
@@ -469,6 +494,7 @@
 
     if (event.key === "Escape") {
       event.preventDefault();
+      soundService.close();
       closeItemActions();
       return;
     }
@@ -502,6 +528,12 @@
   }
 
   function handleActionSheetBackdropClick() {
+    soundService.close();
+    closeItemActions();
+  }
+
+  function handleActionSheetCancel() {
+    soundService.close();
     closeItemActions();
   }
 
@@ -513,11 +545,13 @@
     if (!result.ok) {
       showListStatus(result.message || "Could not move that item");
       hapticService.notification("warning");
+      soundService.locked();
       return;
     }
 
     showListStatus(result.message || "Moved item.", true);
     hapticService.notification("success");
+    soundService.success({ force: true });
   }
 
   function deleteItemFromActions(itemId) {
@@ -847,6 +881,7 @@
     }
 
     hapticService.dragStart();
+    soundService.select();
   }
 
   function handleTouchGrabStart(event, itemId) {
@@ -914,6 +949,7 @@
     if (commitChange && didMove && touchDragPreviewItems) {
       listsService.reorderItems(touchDragPreviewItems, list.id);
       hapticService.dragEnd();
+      soundService.drop();
       markItemSettling(touchDragItemId);
     } else {
       hapticService.selection();
@@ -959,6 +995,7 @@
 
     // Haptic feedback
     hapticService.impact("light");
+    soundService.select();
   }
 
   function handleDragEnd() {
@@ -1070,6 +1107,7 @@
         list.id,
       );
       markItemSettling(draggedItemId);
+      soundService.drop();
     }
 
     dragOverPosition = "before";
@@ -1085,6 +1123,7 @@
       destinationIndex >= activeItems.length
     ) {
       hapticService.selection();
+      soundService.locked();
       return;
     }
 
@@ -1098,6 +1137,7 @@
     );
     markItemSettling(itemId);
     hapticService.selection();
+    soundService.drop();
   }
 
   function handleReorderKeyDown(event, itemId) {
@@ -1130,10 +1170,22 @@
   // Handle item toggle with sparkle animation
   async function toggleItem(itemId, event) {
     const itemToToggle = list.items.find((item) => item.id === itemId);
+    const willCheckItem = itemToToggle && !itemToToggle.checked;
+    const willCompleteList =
+      willCheckItem &&
+      list.items.length > 0 &&
+      list.items.filter((item) => item.id !== itemId).every((item) => item.checked);
 
     // Apply haptic feedback
     if (itemToToggle) {
       hapticService.impact(itemToToggle.checked ? "light" : "medium");
+      if (willCompleteList) {
+        soundService.complete({ force: true });
+      } else if (willCheckItem) {
+        soundService.check();
+      } else {
+        soundService.uncheck();
+      }
     }
 
     // Toggle the item state
@@ -1169,7 +1221,7 @@
 
           // Check if we've completed all items
           const allCompleted =
-            list.items.length > 1 &&
+            list.items.length > 0 &&
             list.items.filter((i) => i.id !== itemId).every((i) => i.checked);
 
           // If this completes the list, trigger haptic feedback but no message
@@ -1197,6 +1249,7 @@
     draftItemText = "";
     editingItemId = item.id;
     editedItemText = item.text;
+    soundService.select();
   }
 
   function saveItemEdit() {
@@ -1208,6 +1261,7 @@
     if (nextText) {
       listsService.editItem(itemId, nextText, list.id);
       hapticService.selection();
+      soundService.select();
       editingItemId = null;
       editedItemText = "";
     } else {
@@ -1237,6 +1291,7 @@
     const originalIndex = list.items.findIndex((item) => item.id === itemId);
 
     hapticService.impact("light");
+    soundService.delete();
     listsService.removeItem(itemId, list.id);
 
     if (deletedItem) {
@@ -1279,6 +1334,7 @@
     );
 
     hapticService.selection();
+    soundService.add({ force: true });
     undoDelete = null;
 
     if (undoDeleteTimer) {
@@ -1289,6 +1345,7 @@
 
   async function startDraftItem() {
     hapticService.selection();
+    soundService.select();
     editingItemId = null;
     editedItemText = "";
     draftItemActive = true;
@@ -1307,12 +1364,14 @@
       if (!result.ok) {
         showListStatus(result.message || "Could not add that item");
         hapticService.notification("warning");
+        soundService.locked();
         return;
       }
 
       if (result.message) {
         showListStatus(result.message, true);
       }
+      soundService.add({ force: true });
     }
 
     hapticService.selection();
@@ -1324,6 +1383,7 @@
     draftItemActive = false;
     draftItemText = "";
     hapticService.selection();
+    soundService.close();
   }
 
   function handleDraftItemKeyDown(event) {
@@ -1769,7 +1829,7 @@
         <button
           type="button"
           class="zl-action-cancel-button"
-          on:click={closeItemActions}
+          on:click={handleActionSheetCancel}
         >
           Cancel
         </button>

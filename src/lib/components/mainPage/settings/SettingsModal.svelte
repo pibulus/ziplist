@@ -1,9 +1,16 @@
 <script>
   import { onMount } from "svelte";
-  import { theme, autoRecord, applyTheme, isContributor } from "$lib";
+  import {
+    theme,
+    autoRecord,
+    soundCues,
+    applyTheme,
+    isContributor,
+  } from "$lib";
   import { STORAGE_KEYS, THEMES } from "$lib/constants";
   import { PRICING } from "$lib/config/pricing.js";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
+  import { soundService } from "$lib/services/infrastructure/soundService";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -11,6 +18,7 @@
   // Theme/vibe selection
   let selectedVibe;
   let autoRecordValue = false;
+  let soundCuesValue = true;
   let chunkyModeValue = false;
   let contributorUnlocked = false;
 
@@ -22,6 +30,11 @@
   // Subscribe to autoRecord store
   const unsubscribeAutoRecord = autoRecord.subscribe((value) => {
     autoRecordValue = value === "true";
+  });
+
+  const unsubscribeSoundCues = soundCues.subscribe((value) => {
+    soundCuesValue = value !== "false";
+    soundService.setEnabled(soundCuesValue);
   });
 
   const unsubscribeContributor = isContributor.subscribe((value) => {
@@ -56,6 +69,7 @@
     return () => {
       unsubscribeTheme();
       unsubscribeAutoRecord();
+      unsubscribeSoundCues();
       unsubscribeContributor();
       if (dialog) {
         dialog.removeEventListener("close", onDialogClose);
@@ -66,6 +80,7 @@
   // Handle chunky mode toggle
   function toggleChunkyMode() {
     chunkyModeValue = !chunkyModeValue;
+    soundService.select();
 
     if (chunkyModeValue) {
       document.documentElement.classList.add("mode-neo-brutalist");
@@ -87,6 +102,7 @@
     if (!vibeOptions.some((vibe) => vibe.id === vibeId)) return;
 
     selectedVibe = vibeId;
+    soundService.select();
     applyTheme(vibeId);
 
     // Dispatch a custom event that other components can listen for
@@ -100,11 +116,28 @@
   // Handle auto-record toggle
   function toggleAutoRecord() {
     autoRecordValue = !autoRecordValue;
+    soundService.select();
     autoRecord.set(autoRecordValue.toString());
 
     window.dispatchEvent(
       new CustomEvent("ziplist-setting-changed", {
         detail: { setting: "autoRecord", value: autoRecordValue },
+      }),
+    );
+  }
+
+  function toggleSoundCues() {
+    soundCuesValue = !soundCuesValue;
+    soundService.setEnabled(soundCuesValue);
+    soundCues.set(soundCuesValue.toString());
+
+    if (soundCuesValue) {
+      soundService.select({ force: true });
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("ziplist-setting-changed", {
+        detail: { setting: "soundCues", value: soundCuesValue },
       }),
     );
   }
@@ -185,6 +218,22 @@
               checked={chunkyModeValue}
               on:change={toggleChunkyMode}
               aria-label="Chunky Mode"
+            />
+            <span class="zl-toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="zl-setting-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Sound Cues</span>
+            <p class="zl-setting-desc">Soft taps, checklist pops, and finishes</p>
+          </div>
+          <label class="zl-toggle">
+            <input
+              type="checkbox"
+              checked={soundCuesValue}
+              on:change={toggleSoundCues}
+              aria-label="Sound Cues"
             />
             <span class="zl-toggle-slider"></span>
           </label>

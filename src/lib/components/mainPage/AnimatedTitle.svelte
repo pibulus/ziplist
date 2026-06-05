@@ -14,7 +14,7 @@
   export let showAppSuffix = true;
 
   function handleDudeClick() {
-    hapticService.medium(); // Tactile feedback
+    hapticService.impact("medium");
     dispatch("toggleRecording");
   }
 

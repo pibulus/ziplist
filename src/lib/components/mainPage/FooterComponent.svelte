@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher, onDestroy } from "svelte";
+  import { soundService } from "$lib/services/infrastructure/soundService";
 
   const dispatch = createEventDispatcher();
   let shareStatus = "";
@@ -35,6 +36,8 @@
   }
 
   async function shareApp() {
+    soundService.select();
+
     const url =
       typeof window !== "undefined" ? window.location.href : "https://ziplist.app";
     const shareData = {
@@ -47,15 +50,19 @@
       if (navigator.share) {
         await navigator.share(shareData);
         setShareStatus("Shared ZipList");
+        soundService.copySuccess({ force: true });
       } else if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareData.url);
         setShareStatus("ZipList link copied");
+        soundService.copySuccess({ force: true });
       } else {
         setShareStatus("Share unavailable");
+        soundService.locked({ force: true });
       }
     } catch (err) {
       if (err?.name === "AbortError") return;
       setShareStatus("Share failed");
+      soundService.error({ force: true });
       console.error("Error sharing:", err);
     }
   }
