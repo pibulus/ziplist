@@ -43,7 +43,7 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "@google/genai": "1.52.0",
     "@huggingface/transformers": "4.2.0",
     "canvas-confetti": "1.9.4",
     "daisyui": "^4.12.23",

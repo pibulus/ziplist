@@ -6,48 +6,73 @@ function preloadModel() {
   return Promise.resolve();
 }
 
+const DEFAULT_AUDIO_MIME_TYPE = "audio/webm";
+
+function getSafeMimeType(blob) {
+  return typeof blob?.type === "string" && blob.type.trim()
+    ? blob.type.trim()
+    : DEFAULT_AUDIO_MIME_TYPE;
+}
+
+function getAudioExtension(mimeType) {
+  if (mimeType.includes("mp4")) return "m4a";
+  if (mimeType.includes("mpeg")) return "mp3";
+  if (mimeType.includes("ogg")) return "ogg";
+  if (mimeType.includes("wav")) return "wav";
+  if (mimeType.includes("aac")) return "aac";
+  return "webm";
+}
+
+function getAudioFileName(mimeType) {
+  return `ziplist-recording-${Date.now()}.${getAudioExtension(mimeType)}`;
+}
+
 function blobToGenerativePart(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64data = reader.result.split(",")[1];
-      resolve({
-        inlineData: {
-          data: base64data,
-          mimeType: blob.type,
-        },
-      });
-    };
-    reader.onerror = () => reject(new Error("Failed to read audio data"));
-    reader.onabort = () => reject(new Error("Audio read was aborted"));
-    reader.readAsDataURL(blob);
+  if (!(blob instanceof Blob) || blob.size <= 0) {
+    return Promise.reject(new Error("Invalid audio data"));
+  }
+
+  const mimeType = getSafeMimeType(blob);
+
+  return Promise.resolve({
+    audioFile: blob,
+    mimeType,
   });
 }
 
-/** @type {number} API timeout in milliseconds (default 30s) */
-const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "30000", 10);
+/** @type {number} API timeout in milliseconds (default 60s) */
+const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "60000", 10);
 
 async function generateContent(promptData) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
   try {
-    // promptData is [prompt, audioPart]
-    // audioPart is { inlineData: { data: ..., mimeType: ... } }
-
     const prompt = promptData[0];
     const audioPart = promptData[1];
+    const audioFile = audioPart?.audioFile;
+    const mimeType = audioPart?.mimeType || getSafeMimeType(audioFile);
+
+    if (typeof prompt !== "string" || !prompt.trim()) {
+      throw new Error("Missing transcription prompt");
+    }
+
+    if (!(audioFile instanceof Blob) || audioFile.size <= 0) {
+      throw new Error("Invalid audio data");
+    }
+
+    const formData = new FormData();
+    formData.append("prompt", prompt);
+    formData.append("mime_type", mimeType);
+    formData.append(
+      "audio_file",
+      audioFile,
+      audioFile.name || getAudioFileName(mimeType),
+    );
 
     const response = await fetch("/api/gemini", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        audioData: audioPart.inlineData.data,
-        mimeType: audioPart.inlineData.mimeType,
-      }),
+      body: formData,
       signal: controller.signal,
     });
 

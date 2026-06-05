@@ -46,8 +46,8 @@
   </button>
 
   <h1
-    class="mb-1 text-5xl font-black tracking-tight text-center cursor-default select-none staggered-text sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
-    style="font-weight: 900; letter-spacing: -0.02em; font-feature-settings: 'kern' 1; font-kerning: normal; font-variation-settings: 'wght' 900, 'opsz' 32;"
+    class="mb-1 text-5xl font-black tracking-normal text-center cursor-default select-none staggered-text sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
+    style="font-weight: 900; letter-spacing: 0; font-feature-settings: 'kern' 1; font-kerning: normal; font-variation-settings: 'wght' 900, 'opsz' 32;"
     aria-label={title}
   >
     <!-- Use aria-hidden for spans if H1 has aria-label -->
@@ -86,7 +86,7 @@
 <!-- Updated subheadline with improved typography and reduced bottom margin -->
 <p
   class="mx-auto mt-4 mb-3 text-base text-center cursor-default select-none slide-in-subtitle max-w-prose text-gray-700/85 sm:mt-5 sm:mb-4 sm:text-lg md:text-xl lg:text-2xl"
-  style="font-weight: 400; letter-spacing: 0.015em; line-height: 1.4; max-inline-size: 40ch; text-wrap: balance; font-variation-settings: 'wght' 400, 'opsz' 16;"
+  style="font-weight: 400; letter-spacing: 0; line-height: 1.4; max-inline-size: 40ch; text-wrap: balance; font-variation-settings: 'wght' 400, 'opsz' 16;"
 >
   {#each subtitle.split("\n") as line, i}
     {#if i > 0}<br />{/if}{line}
@@ -114,24 +114,41 @@
   .floating-dude::after {
     content: "";
     position: absolute;
-    inset: -10px;
-    border-radius: 42px;
-    border: 3px solid rgba(255, 176, 0, 0.5);
-    animation: dude-pulse 3s ease-in-out infinite;
+    inset: -16px;
+    border-radius: 36px;
+    background: radial-gradient(
+      circle at 50% 54%,
+      rgba(255, 204, 51, 0.18) 0%,
+      rgba(255, 106, 194, 0.12) 42%,
+      rgba(113, 201, 206, 0.08) 58%,
+      transparent 74%
+    );
+    filter: blur(1px);
+    animation: dude-aura 3.4s ease-in-out infinite;
     animation-delay: 2.2s;
     opacity: 0;
     pointer-events: none;
   }
 
-  @keyframes dude-pulse {
-    0%   { opacity: 0; transform: scale(0.92); }
-    30%  { opacity: 1; }
-    70%  { opacity: 1; }
-    100% { opacity: 0; transform: scale(1.08); }
+  @keyframes dude-aura {
+    0% {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    36% {
+      opacity: 0.72;
+    }
+    72% {
+      opacity: 0.38;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.06);
+    }
   }
 
   .floating-dude:focus-visible {
-    outline: 3px solid #ffb000;
+    outline: 3px solid #ff6ac2;
     outline-offset: 4px;
     border-radius: 28px;
   }
@@ -308,7 +325,7 @@
 
   /* Simple styles for the suffix in title context */
   :global(.title-suffix) {
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     font-variation-settings: inherit;
   }
 
@@ -342,8 +359,8 @@
     }
 
     .floating-dude::after {
-      inset: -8px;
-      border-radius: 32px;
+      inset: -12px;
+      border-radius: 30px;
     }
 
     .title-container {

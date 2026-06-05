@@ -1416,30 +1416,31 @@
                 <span class="zl-list-title">{list.name}</span>
               </h2>
             {/if}
-          </div>
-        {/if}
-        {#if isLive}
-          <div class="flex items-center gap-2 mt-1">
-            <div
-              class="zl-presence-dots"
-              aria-label="{presence.length} collaborators online"
-            >
-              {#each presence as user (user.id)}
-                <div
-                  class="zl-presence-dot"
-                  title={user.avatar}
-                  aria-hidden="true"
-                  style="background-color: {user.avatar.includes('Fox')
-                    ? '#ff6b6b'
-                    : user.avatar.includes('Frog')
-                      ? '#51cf66'
-                      : '#4dabf7'}"
-                ></div>
-              {/each}
-            </div>
-            <span class="text-xs font-bold text-red-500 animate-pulse"
-              >LIVE</span
-            >
+            {#if isLive}
+              <div
+                class="zl-live-presence"
+                aria-label="{presence.length} collaborators online"
+              >
+                <span class="zl-live-presence-pulse" aria-hidden="true"></span>
+                <span class="zl-live-presence-label">Live</span>
+                <span class="zl-live-presence-count">{presence.length}</span>
+                {#if presence.length > 0}
+                  <div class="zl-presence-dots" aria-hidden="true">
+                    {#each presence.slice(0, 3) as user (user.id)}
+                      <span
+                        class="zl-presence-dot"
+                        title={user.avatar}
+                        style="background-color: {user.avatar.includes('Fox')
+                          ? '#ff6b6b'
+                          : user.avatar.includes('Frog')
+                            ? '#51cf66'
+                            : '#4dabf7'}"
+                      ></span>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {/if}
           </div>
         {/if}
       </div>
@@ -1480,16 +1481,6 @@
                 >{$isContributor ? (isMakingLive ? "..." : "🔴") : "↗"}</span
               >
             </button>
-          {:else}
-            <div
-              class="zl-live-indicator"
-              role="status"
-              aria-live="polite"
-              aria-label="{presence.length} collaborators online"
-            >
-              <span class="live-pulse" aria-hidden="true">🔴</span>
-              <span class="live-count">{presence.length}</span>
-            </div>
           {/if}
         {/if}
 
