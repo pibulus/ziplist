@@ -15,7 +15,11 @@ function getBearerToken(request) {
   return header.toLowerCase().startsWith("bearer ") ? header.slice(7) : "";
 }
 
-function getPartyKitHost() {
+function getPartyKitHost(event) {
+  if (dev && isLocalPartyKitHost(event.url.hostname)) {
+    return `${event.url.hostname}:1999`;
+  }
+
   const configuredHost =
     env.PARTYKIT_HOST?.trim() ||
     env.VITE_PARTYKIT_HOST?.trim() ||
@@ -81,7 +85,7 @@ export async function POST(event) {
     );
   }
 
-  const host = getPartyKitHost();
+  const host = getPartyKitHost(event);
   if (!host) {
     return json(
       {

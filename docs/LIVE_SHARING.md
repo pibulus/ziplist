@@ -98,7 +98,9 @@ npm run dev:party
 
 `partykit.json` pins local PartyKit to port `1999`. In Vite dev, local/LAN app
 clients infer the current host with port `1999`, so an iPhone at
-`http://192.168.0.148:3001` can connect to `192.168.0.148:1999`.
+`http://192.168.0.148:3001` can connect to `192.168.0.148:1999`. The local
+room-create endpoint follows the same host in dev, even when production
+PartyKit env is present in `.env`.
 
 ## Production Deploy
 
