@@ -62,6 +62,33 @@ Current messages:
 The protocol intentionally avoids dormant partial item operations for now.
 Full-list snapshots are simpler and fine for small ZipList lists.
 
+## Live Feel Plan
+
+Live collaboration should feel like the list itself is alive, not like a chat
+or workspace. Keep remote activity spatial, soft, and tied to the item being
+touched.
+
+Near-term target:
+
+- replace the literal typing banner with remote draft rows inside the list
+- tint remote draft rows, item glows, and check ripples with the collaborator's
+  avatar color
+- keep draft text, focus/selection, presence, and voice-in-progress signals
+  ephemeral
+- store only committed list state and room metadata durably
+- let voice-added items pop in with the collaborator glow after transcription
+  resolves
+
+Possible protocol additions:
+
+- `draft_update` - remote user is typing a new item draft
+- `draft_clear` - draft was submitted, cancelled, timed out, or the user left
+- `item_focus` - remote user is editing or touching an existing item
+
+Avoid notification-panel language such as "Pablo is typing." Prefer ghost rows,
+colored glows, avatar dots, and item-level motion where the work is happening.
+Do not add CRDTs unless ZipList grows beyond small shared checklist rooms.
+
 ## PartyKit Room
 
 `party/listRoom.ts`:
