@@ -239,7 +239,11 @@ rm -rf "$previous_dir"
 mkdir -p "$backup_path"
 
 if [[ -e "$app_dir" || -L "$app_dir" ]]; then
-  rsync -a --delete "$app_dir/" "$backup_path/"
+  rsync -a --delete \
+    --exclude node_modules \
+    --exclude .partykit \
+    --exclude .smoke.log \
+    "$app_dir/" "$backup_path/"
   mv "$app_dir" "$previous_dir"
 fi
 
