@@ -36,7 +36,7 @@
       bind:this={inputNode}
       on:blur={onSaveDraft}
       on:keydown={onDraftKeyDown}
-      on:input={onTyping}
+      on:input={(event) => onTyping(event.currentTarget.value)}
       transition:fade={{ duration: 150 }}
       use:autoFocus
     />

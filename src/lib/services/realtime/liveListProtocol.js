@@ -6,6 +6,25 @@ export const LIVE_MESSAGE_TYPES = Object.freeze({
   LIST_UPDATE: "list_update",
   TYPING_START: "typing_start",
   TYPING_STOP: "typing_stop",
+  DRAFT_UPDATE: "draft_update",
+  DRAFT_CLEAR: "draft_clear",
+  ITEM_FOCUS: "item_focus",
+  VOICE_ACTIVITY: "voice_activity",
+});
+
+export const LIVE_CLOSE_CODES = Object.freeze({
+  ROOM_NOT_FOUND: 4004,
+  ROOM_EXPIRED: 4005,
+});
+
+export const LIVE_ROOM_TIERS = Object.freeze({
+  FREE: "free",
+  SUPPORTER: "supporter",
+});
+
+export const LIVE_ROOM_TTL_MS = Object.freeze({
+  [LIVE_ROOM_TIERS.FREE]: 24 * 60 * 60 * 1000,
+  [LIVE_ROOM_TIERS.SUPPORTER]: 365 * 24 * 60 * 60 * 1000,
 });
 
 export const LIVE_LIST_LIMITS = Object.freeze({
@@ -15,7 +34,9 @@ export const LIVE_LIST_LIMITS = Object.freeze({
   MAX_ID_LENGTH: 128,
   MAX_COLOR_VALUE_LENGTH: 80,
   MAX_AVATAR_LENGTH: 48,
+  MAX_ALIAS_LENGTH: 64,
   MAX_PASSWORD_LENGTH: 120,
+  MAX_VOICE_STAGE_LENGTH: 32,
 });
 
 function isRecord(value) {
@@ -96,6 +117,60 @@ export function sanitizeLivePassword(value) {
   return normalizeOptionalString(value, LIVE_LIST_LIMITS.MAX_PASSWORD_LENGTH);
 }
 
+function normalizeLiveRoomTier(value) {
+  return value === LIVE_ROOM_TIERS.SUPPORTER
+    ? LIVE_ROOM_TIERS.SUPPORTER
+    : LIVE_ROOM_TIERS.FREE;
+}
+
+function getRoomTtlMs(tier) {
+  return LIVE_ROOM_TTL_MS[normalizeLiveRoomTier(tier)];
+}
+
+export function createLiveRoomMetadata(input = {}) {
+  const now = new Date().toISOString();
+  const tier = normalizeLiveRoomTier(input.tier);
+  const createdAt = normalizeTimestamp(input.createdAt, now);
+  const lastActiveAt = normalizeTimestamp(input.lastActiveAt, now);
+  const updatedAt = normalizeTimestamp(input.updatedAt, lastActiveAt);
+  const fallbackExpiry = new Date(
+    new Date(lastActiveAt).getTime() + getRoomTtlMs(tier),
+  ).toISOString();
+  const expiresAt = normalizeTimestamp(input.expiresAt, fallbackExpiry);
+
+  return {
+    createdAt,
+    updatedAt,
+    lastActiveAt,
+    expiresAt,
+    tier,
+    alias: normalizeOptionalString(
+      input.alias,
+      LIVE_LIST_LIMITS.MAX_ALIAS_LENGTH,
+    ),
+  };
+}
+
+export function touchLiveRoomMetadata(input = {}) {
+  const now = new Date().toISOString();
+  const tier = normalizeLiveRoomTier(input.tier);
+
+  return createLiveRoomMetadata({
+    ...input,
+    tier,
+    updatedAt: now,
+    lastActiveAt: now,
+    expiresAt: new Date(Date.now() + getRoomTtlMs(tier)).toISOString(),
+  });
+}
+
+export function isLiveRoomExpired(metadata, now = Date.now()) {
+  if (!metadata?.expiresAt) return false;
+
+  const expiresAt = Date.parse(metadata.expiresAt);
+  return !Number.isNaN(expiresAt) && expiresAt <= now;
+}
+
 export function sanitizeLiveListData(input) {
   if (!isRecord(input) || !Array.isArray(input.items)) return null;
 
@@ -137,6 +212,49 @@ export function sanitizeLiveListData(input) {
   };
 }
 
+function normalizeDraftData(data) {
+  if (!isRecord(data)) return null;
+
+  const text = normalizeString(
+    data.text,
+    LIVE_LIST_LIMITS.MAX_ITEM_TEXT_LENGTH,
+  );
+  const mode = data.mode === "voice" ? "voice" : "typing";
+  const itemId = normalizeOptionalString(
+    data.itemId,
+    LIVE_LIST_LIMITS.MAX_ID_LENGTH,
+  );
+
+  return {
+    text,
+    mode,
+    itemId,
+  };
+}
+
+function normalizeItemFocusData(data) {
+  if (!isRecord(data)) return { itemId: null };
+
+  return {
+    itemId:
+      normalizeOptionalString(data.itemId, LIVE_LIST_LIMITS.MAX_ID_LENGTH) ||
+      null,
+  };
+}
+
+function normalizeVoiceActivityData(data) {
+  if (!isRecord(data)) return null;
+
+  return {
+    active: data.active === true,
+    stage:
+      normalizeOptionalString(
+        data.stage,
+        LIVE_LIST_LIMITS.MAX_VOICE_STAGE_LENGTH,
+      ) || "recording",
+  };
+}
+
 export function normalizeLiveMessage(input) {
   if (!isRecord(input)) return null;
 
@@ -151,6 +269,25 @@ export function normalizeLiveMessage(input) {
 
     case LIVE_MESSAGE_TYPES.TYPING_STOP:
       return { type: LIVE_MESSAGE_TYPES.TYPING_STOP, data: {} };
+
+    case LIVE_MESSAGE_TYPES.DRAFT_UPDATE: {
+      const data = normalizeDraftData(input.data);
+      return data ? { type: LIVE_MESSAGE_TYPES.DRAFT_UPDATE, data } : null;
+    }
+
+    case LIVE_MESSAGE_TYPES.DRAFT_CLEAR:
+      return { type: LIVE_MESSAGE_TYPES.DRAFT_CLEAR, data: {} };
+
+    case LIVE_MESSAGE_TYPES.ITEM_FOCUS:
+      return {
+        type: LIVE_MESSAGE_TYPES.ITEM_FOCUS,
+        data: normalizeItemFocusData(input.data),
+      };
+
+    case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY: {
+      const data = normalizeVoiceActivityData(input.data);
+      return data ? { type: LIVE_MESSAGE_TYPES.VOICE_ACTIVITY, data } : null;
+    }
 
     default:
       return null;

@@ -8,11 +8,15 @@
 
 import type * as Party from "partykit/server";
 import {
+  createLiveRoomMetadata,
+  isLiveRoomExpired,
+  LIVE_CLOSE_CODES,
   LIVE_MESSAGE_TYPES,
   normalizeLiveMessage,
   sanitizeAvatar,
   sanitizeLiveListData,
   sanitizeLivePassword,
+  touchLiveRoomMetadata,
 } from "../src/lib/services/realtime/liveListProtocol.js";
 
 export interface LiveListItem {
@@ -41,6 +45,15 @@ export interface PresenceUser {
   joinedAt: number;
 }
 
+export interface LiveRoomMetadata {
+  createdAt: string;
+  updatedAt: string;
+  lastActiveAt: string;
+  expiresAt: string;
+  tier: "free" | "supporter";
+  alias?: string;
+}
+
 type ConnectionState = {
   avatar: string;
   joinedAt: number;
@@ -63,12 +76,18 @@ export default class ListRoom implements Party.Server {
       return;
     }
 
-    const listData = await this.getListData();
-    if (!listData) {
-      conn.close(1008, "Live list not found");
+    const roomState = await this.getRoomState();
+    if (!roomState.listData) {
+      conn.close(LIVE_CLOSE_CODES.ROOM_NOT_FOUND, "Live list not found");
       return;
     }
 
+    if (roomState.expired) {
+      conn.close(LIVE_CLOSE_CODES.ROOM_EXPIRED, "Live list expired");
+      return;
+    }
+
+    const metadata = await this.touchRoomMetadata(roomState.metadata);
     const avatar = sanitizeAvatar(url.searchParams.get("avatar"));
     conn.setState({
       avatar,
@@ -78,7 +97,8 @@ export default class ListRoom implements Party.Server {
     conn.send(
       JSON.stringify({
         type: LIVE_MESSAGE_TYPES.INIT,
-        data: listData,
+        data: roomState.listData,
+        meta: metadata,
       }),
     );
 
@@ -90,9 +110,14 @@ export default class ListRoom implements Party.Server {
   }
 
   async onMessage(message: string, sender: Party.Connection) {
-    const listData = await this.getListData();
-    if (!listData) {
-      sender.close(1008, "Live list not found");
+    const roomState = await this.getRoomState();
+    if (!roomState.listData) {
+      sender.close(LIVE_CLOSE_CODES.ROOM_NOT_FOUND, "Live list not found");
+      return;
+    }
+
+    if (roomState.expired) {
+      sender.close(LIVE_CLOSE_CODES.ROOM_EXPIRED, "Live list expired");
       return;
     }
 
@@ -102,6 +127,7 @@ export default class ListRoom implements Party.Server {
 
     if (normalizedMessage.type === LIVE_MESSAGE_TYPES.LIST_UPDATE) {
       await this.saveListData(normalizedMessage.data as ListData);
+      await this.touchRoomMetadata(roomState.metadata);
     }
 
     this.room.broadcast(
@@ -125,12 +151,17 @@ export default class ListRoom implements Party.Server {
         return this.json({ error: "Invalid JSON." }, 400);
       }
 
-      const data = sanitizeLiveListData(payload) as ListData | null;
+      const createPayload = this.getCreatePayload(payload);
+      const data = sanitizeLiveListData(
+        createPayload.listData,
+      ) as ListData | null;
       if (!data) {
         return this.json({ error: "Invalid list data." }, 400);
       }
 
       await this.saveListData(data);
+      const metadata = createLiveRoomMetadata(createPayload.metadata);
+      await this.saveRoomMetadata(metadata);
 
       const url = new URL(req.url);
       const password = sanitizeLivePassword(url.searchParams.get("pwd"));
@@ -141,6 +172,8 @@ export default class ListRoom implements Party.Server {
       return this.json({
         roomId: this.room.id,
         listId: data.id,
+        tier: metadata.tier,
+        expiresAt: metadata.expiresAt,
       });
     }
 
@@ -150,12 +183,19 @@ export default class ListRoom implements Party.Server {
         return this.json({ error: "Forbidden" }, 403);
       }
 
-      const listData = await this.getListData();
-      if (!listData) {
+      const roomState = await this.getRoomState();
+      if (!roomState.listData) {
         return this.json({ error: "Live list not found" }, 404);
       }
 
-      return this.json(listData);
+      if (roomState.expired) {
+        return this.json(
+          { code: "room_expired", error: "This live room has popped." },
+          410,
+        );
+      }
+
+      return this.json(roomState.listData);
     }
 
     return new Response("Method not allowed", { status: 405 });
@@ -167,6 +207,24 @@ export default class ListRoom implements Party.Server {
     } catch {
       return null;
     }
+  }
+
+  private getCreatePayload(payload: unknown) {
+    if (this.isRecord(payload) && "listData" in payload) {
+      return {
+        listData: payload.listData,
+        metadata: this.isRecord(payload.metadata) ? payload.metadata : {},
+      };
+    }
+
+    return {
+      listData: payload,
+      metadata: {},
+    };
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
   }
 
   private authorizeCreateRequest(req: Party.Request) {
@@ -206,6 +264,59 @@ export default class ListRoom implements Party.Server {
 
   private async getListData(): Promise<ListData | null> {
     return (await this.room.storage.get<ListData>("listData")) || null;
+  }
+
+  private async getRoomMetadata(
+    listData: ListData | null = null,
+  ): Promise<LiveRoomMetadata> {
+    const storedMetadata =
+      (await this.room.storage.get<LiveRoomMetadata>("roomMetadata")) || null;
+
+    const metadata = createLiveRoomMetadata(
+      storedMetadata || {
+        tier: "supporter",
+        createdAt: listData?.createdAt,
+        updatedAt: listData?.updatedAt,
+        lastActiveAt: listData?.updatedAt || listData?.createdAt,
+      },
+    ) as LiveRoomMetadata;
+
+    if (!storedMetadata && listData) {
+      await this.saveRoomMetadata(metadata);
+    }
+
+    return metadata;
+  }
+
+  private async getRoomState() {
+    const listData = await this.getListData();
+    if (!listData) {
+      return {
+        listData: null,
+        metadata: null,
+        expired: false,
+      };
+    }
+
+    const metadata = await this.getRoomMetadata(listData);
+
+    return {
+      listData,
+      metadata,
+      expired: isLiveRoomExpired(metadata),
+    };
+  }
+
+  private async saveRoomMetadata(metadata: LiveRoomMetadata) {
+    await this.room.storage.put("roomMetadata", metadata);
+  }
+
+  private async touchRoomMetadata(metadata: LiveRoomMetadata | null) {
+    const nextMetadata = touchLiveRoomMetadata(
+      metadata || {},
+    ) as LiveRoomMetadata;
+    await this.saveRoomMetadata(nextMetadata);
+    return nextMetadata;
   }
 
   private async saveListData(data: ListData) {

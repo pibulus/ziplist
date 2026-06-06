@@ -5,7 +5,9 @@ import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter.js";
 import { verifyContributorToken } from "$lib/server/contributor/licenseCrypto.js";
 import {
+  createLiveRoomMetadata,
   generateLiveRoomId,
+  LIVE_ROOM_TIERS,
   sanitizeLiveListData,
   sanitizeLivePassword,
 } from "$lib/services/realtime/liveListProtocol.js";
@@ -106,6 +108,9 @@ export async function POST(event) {
     const roomId = generateLiveRoomId();
     const protocol = getPartyKitProtocol(host);
     const sanitizedPassword = sanitizeLivePassword(password);
+    const roomMetadata = createLiveRoomMetadata({
+      tier: tokenPayload ? LIVE_ROOM_TIERS.SUPPORTER : LIVE_ROOM_TIERS.FREE,
+    });
     const query = sanitizedPassword
       ? `?pwd=${encodeURIComponent(sanitizedPassword)}`
       : "";
@@ -119,7 +124,10 @@ export async function POST(event) {
             ? { Authorization: `Bearer ${getPartyKitCreateSecret()}` }
             : {}),
         },
-        body: JSON.stringify(sanitizedListData),
+        body: JSON.stringify({
+          listData: sanitizedListData,
+          metadata: roomMetadata,
+        }),
       },
     );
 
@@ -131,7 +139,11 @@ export async function POST(event) {
       );
     }
 
-    return json(payload);
+    return json({
+      ...payload,
+      tier: roomMetadata.tier,
+      expiresAt: roomMetadata.expiresAt,
+    });
   } catch (error) {
     console.error("[LiveCreate] Failed to create live list:", error);
     return json(

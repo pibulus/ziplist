@@ -35,6 +35,7 @@
   import { fade } from "svelte/transition";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { STORAGE_KEYS } from "$lib/constants";
+  import * as liveListsService from "$lib/services/realtime/liveListsService";
 
   import { AboutModal, ExtensionModal, IntroModal } from "./modals";
 
@@ -76,12 +77,35 @@
   let settingsModalPreloadTimeout = null;
   let autoRecordTimeout = null;
   let soundCuesUnsubscribe = null;
+  let recordingLiveListId = null;
 
   function stopStream(stream) {
     stream?.getTracks().forEach((track) => track.stop());
   }
 
+  function getActiveLiveListId() {
+    const activeListId = get(listsStore).activeListId;
+    return activeListId && liveListsService.isLive(activeListId)
+      ? activeListId
+      : null;
+  }
+
+  function broadcastLiveVoiceActivity(data) {
+    if (!recordingLiveListId) return;
+    liveListsService.broadcastVoiceActivity(recordingLiveListId, data);
+  }
+
+  function clearLiveVoiceActivity() {
+    if (!recordingLiveListId) return;
+
+    liveListsService.broadcastVoiceActivity(recordingLiveListId, {
+      active: false,
+    });
+    recordingLiveListId = null;
+  }
+
   function resetRecordingSession() {
+    clearLiveVoiceActivity();
     stopWaveformMonitoring();
     wakeLockService.release();
     stopStream(activeStream);
@@ -464,6 +488,11 @@
           isStartingRecording = false;
           isStoppingRecording = false;
           audioActions.updateState(AudioStates.RECORDING);
+          recordingLiveListId = getActiveLiveListId();
+          broadcastLiveVoiceActivity({
+            active: true,
+            stage: "recording",
+          });
         };
 
         recorder.ondataavailable = (event) => {
@@ -474,6 +503,10 @@
 
         recorder.onstop = async () => {
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
+          broadcastLiveVoiceActivity({
+            active: true,
+            stage: "transcribing",
+          });
           isStoppingRecording = false;
           stopWaveformMonitoring();
           wakeLockService.release();

@@ -141,6 +141,10 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
         case LIVE_MESSAGE_TYPES.LIST_UPDATE:
         case LIVE_MESSAGE_TYPES.TYPING_START:
         case LIVE_MESSAGE_TYPES.TYPING_STOP:
+        case LIVE_MESSAGE_TYPES.DRAFT_UPDATE:
+        case LIVE_MESSAGE_TYPES.DRAFT_CLEAR:
+        case LIVE_MESSAGE_TYPES.ITEM_FOCUS:
+        case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY:
           callbacks.onUpdate?.(message);
           break;
 

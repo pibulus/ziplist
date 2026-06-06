@@ -54,7 +54,7 @@
       bind:value={editedItemText}
       on:blur={onSaveEdit}
       on:keydown={onEditKeyDown}
-      on:input={onTyping}
+      on:input={(event) => onTyping(event.currentTarget.value, item.id)}
       transition:fade={{ duration: 150 }}
       use:autoFocus
     />

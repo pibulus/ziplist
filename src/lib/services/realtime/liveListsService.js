@@ -18,7 +18,11 @@ import {
 } from "./partyService.js";
 import { getPresenceStore, cleanupPresenceStore } from "./presenceStore.js";
 import { getTypingStore, cleanupTypingStore } from "./typingStore.js";
-import { LIVE_MESSAGE_TYPES } from "./liveListProtocol.js";
+import { LIVE_CLOSE_CODES, LIVE_MESSAGE_TYPES } from "./liveListProtocol.js";
+import {
+  getLiveActivityStore,
+  cleanupLiveActivityStore,
+} from "./liveActivityStore.js";
 
 const activeConnections = new Map();
 const remoteSyncingLists = new Set();
@@ -95,6 +99,19 @@ function getJoinError(event) {
   );
 }
 
+function createJoinError(event) {
+  const error = new Error(getJoinError(event));
+
+  if (event?.code === LIVE_CLOSE_CODES.ROOM_EXPIRED) {
+    error.code = "room_expired";
+    error.message = "This live room has popped.";
+  } else if (event?.code === LIVE_CLOSE_CODES.ROOM_NOT_FOUND) {
+    error.code = "room_not_found";
+  }
+
+  return error;
+}
+
 /**
  * Make a list live by creating a PartyKit room and connecting to it.
  * @param {string} listId
@@ -137,6 +154,7 @@ export async function connectToLive(listId, roomId, password = null) {
 
   const presenceStore = getPresenceStore(listId);
   const typingStore = getTypingStore(listId);
+  const activityStore = getLiveActivityStore(listId);
   const connection = {
     socket: null,
     roomId,
@@ -217,6 +235,30 @@ export async function connectToLive(listId, roomId, password = null) {
                 typingStore.stopTyping(message.sender.id);
               }
               break;
+
+            case LIVE_MESSAGE_TYPES.DRAFT_UPDATE:
+              if (message.sender) {
+                activityStore.updateDraft(message.sender, message.data);
+              }
+              break;
+
+            case LIVE_MESSAGE_TYPES.DRAFT_CLEAR:
+              if (message.sender) {
+                activityStore.clearDraft(message.sender.id);
+              }
+              break;
+
+            case LIVE_MESSAGE_TYPES.ITEM_FOCUS:
+              if (message.sender) {
+                activityStore.setItemFocus(message.sender, message.data);
+              }
+              break;
+
+            case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY:
+              if (message.sender) {
+                activityStore.setVoiceActivity(message.sender, message.data);
+              }
+              break;
           }
         });
       },
@@ -227,7 +269,7 @@ export async function connectToLive(listId, roomId, password = null) {
 
       onDisconnect: (event) => {
         if (!connection.initialized) {
-          failReady(new Error(getJoinError(event)));
+          failReady(createJoinError(event));
         }
       },
 
@@ -279,6 +321,7 @@ export function disconnectFromLive(listId) {
   disconnectFromLiveList(connection.socket);
   cleanupPresenceStore(listId);
   cleanupTypingStore(listId);
+  cleanupLiveActivityStore(listId);
   activeConnections.delete(listId);
 }
 
@@ -294,6 +337,34 @@ export function broadcastTypingStop(listId) {
   if (!connection) return;
 
   sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.TYPING_STOP, {});
+}
+
+export function broadcastDraftUpdate(listId, data = {}) {
+  const connection = activeConnections.get(listId);
+  if (!connection) return;
+
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.DRAFT_UPDATE, data);
+}
+
+export function broadcastDraftClear(listId) {
+  const connection = activeConnections.get(listId);
+  if (!connection) return;
+
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.DRAFT_CLEAR, {});
+}
+
+export function broadcastItemFocus(listId, itemId = null) {
+  const connection = activeConnections.get(listId);
+  if (!connection) return;
+
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.ITEM_FOCUS, { itemId });
+}
+
+export function broadcastVoiceActivity(listId, data = {}) {
+  const connection = activeConnections.get(listId);
+  if (!connection) return;
+
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.VOICE_ACTIVITY, data);
 }
 
 export function isLive(listId) {

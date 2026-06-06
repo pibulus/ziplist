@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import crypto from "node:crypto";
 import fs from "node:fs";
 
 const DEFAULT_APP_ORIGIN = "http://localhost:3001";
@@ -76,6 +77,14 @@ function getContributorToken() {
   ).trim();
 }
 
+function getPartyKitCreateSecret() {
+  return (
+    process.env.PARTYKIT_CREATE_SECRET ||
+    readDotEnvValue("PARTYKIT_CREATE_SECRET") ||
+    ""
+  ).trim();
+}
+
 function getPartyKitProtocol(host) {
   return isLocalHost(host.split(":")[0]) ? "http" : "https";
 }
@@ -138,7 +147,16 @@ async function createRoom({ appOrigin, token, label, itemText }) {
     throw new Error(`create ${label} did not return a roomId`);
   }
 
-  return { roomId: payload.roomId, listData };
+  if (!payload.tier || !payload.expiresAt) {
+    throw new Error(`create ${label} did not return room lifecycle metadata`);
+  }
+
+  return {
+    roomId: payload.roomId,
+    listData,
+    tier: payload.tier,
+    expiresAt: payload.expiresAt,
+  };
 }
 
 async function getRoom({ partyHost, roomId }) {
@@ -155,6 +173,61 @@ async function getRoom({ partyHost, roomId }) {
   }
 
   return payload;
+}
+
+async function createExpiredRoomDirect({ partyHost }) {
+  const protocol = getPartyKitProtocol(partyHost);
+  const roomId = `zl_smoke_expired_${crypto.randomUUID()}`;
+  const listData = createListData("expired", "Old note");
+  const expiredAt = new Date(Date.now() - 60_000).toISOString();
+  const createSecret = getPartyKitCreateSecret();
+  const response = await fetch(
+    `${protocol}://${partyHost}${ROOM_PATH}/${encodeURIComponent(roomId)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(createSecret ? { Authorization: `Bearer ${createSecret}` } : {}),
+      },
+      body: JSON.stringify({
+        listData,
+        metadata: {
+          tier: "free",
+          createdAt: expiredAt,
+          updatedAt: expiredAt,
+          lastActiveAt: expiredAt,
+          expiresAt: expiredAt,
+        },
+      }),
+    },
+  );
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    throw new Error(
+      `create expired room failed ${response.status}: ${JSON.stringify(
+        payload,
+      )}`,
+    );
+  }
+
+  return roomId;
+}
+
+async function assertExpiredRoom({ partyHost, roomId }) {
+  const protocol = getPartyKitProtocol(partyHost);
+  const response = await fetch(
+    `${protocol}://${partyHost}${ROOM_PATH}/${encodeURIComponent(roomId)}`,
+  );
+  const payload = await readJson(response);
+
+  if (response.status !== 410 || payload.code !== "room_expired") {
+    throw new Error(
+      `expired GET expected 410 room_expired, got ${response.status}: ${JSON.stringify(
+        payload,
+      )}`,
+    );
+  }
 }
 
 function waitForSocket(socket, eventName) {
@@ -181,6 +254,71 @@ function waitForSocket(socket, eventName) {
     }
 
     socket.addEventListener(eventName, onEvent);
+    socket.addEventListener("error", onError);
+  });
+}
+
+function waitForSocketMessage(socket, type, predicate = () => true) {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Timed out waiting for websocket message ${type}`));
+    }, TIMEOUT_MS);
+
+    const onMessage = (event) => {
+      let message;
+      try {
+        message = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+
+      if (message.type !== type || !predicate(message)) return;
+
+      cleanup();
+      resolve(message);
+    };
+
+    const onError = () => {
+      cleanup();
+      reject(new Error("WebSocket error"));
+    };
+
+    function cleanup() {
+      clearTimeout(timeout);
+      socket.removeEventListener("message", onMessage);
+      socket.removeEventListener("error", onError);
+    }
+
+    socket.addEventListener("message", onMessage);
+    socket.addEventListener("error", onError);
+  });
+}
+
+function waitForSocketClose(socket) {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Timed out waiting for websocket close"));
+    }, TIMEOUT_MS);
+
+    const onClose = (event) => {
+      cleanup();
+      resolve(event);
+    };
+
+    const onError = () => {
+      cleanup();
+      reject(new Error("WebSocket error"));
+    };
+
+    function cleanup() {
+      clearTimeout(timeout);
+      socket.removeEventListener("close", onClose);
+      socket.removeEventListener("error", onError);
+    }
+
+    socket.addEventListener("close", onClose);
     socket.addEventListener("error", onError);
   });
 }
@@ -227,6 +365,107 @@ async function updateRoomViaSocket({ partyHost, roomId, nextData }) {
     await new Promise((resolve) => setTimeout(resolve, 500));
   } finally {
     await closeSocket(socket);
+  }
+}
+
+async function openRoomSocket({ partyHost, roomId, avatar }) {
+  const protocol = getPartyKitWsProtocol(partyHost);
+  const socket = new WebSocket(
+    `${protocol}://${partyHost}${ROOM_PATH}/${encodeURIComponent(
+      roomId,
+    )}?avatar=${encodeURIComponent(avatar)}`,
+  );
+
+  const initPromise = waitForSocketMessage(socket, "init");
+  await waitForSocket(socket, "open");
+  await initPromise;
+
+  return socket;
+}
+
+async function assertEphemeralRelay({ partyHost, roomId }) {
+  const sender = await openRoomSocket({
+    partyHost,
+    roomId,
+    avatar: "Live Smoke Sender",
+  });
+  const receiver = await openRoomSocket({
+    partyHost,
+    roomId,
+    avatar: "Live Smoke Receiver",
+  });
+
+  try {
+    const fromSender = (message) =>
+      message.sender?.avatar === "Live Smoke Sender";
+
+    const draftPromise = waitForSocketMessage(
+      receiver,
+      "draft_update",
+      (message) => fromSender(message) && message.data?.text === "Olive oil",
+    );
+    sender.send(
+      JSON.stringify({
+        type: "draft_update",
+        data: { text: "Olive oil", mode: "typing" },
+      }),
+    );
+    await draftPromise;
+
+    const focusPromise = waitForSocketMessage(
+      receiver,
+      "item_focus",
+      (message) => fromSender(message) && message.data?.itemId === "a-item-1",
+    );
+    sender.send(
+      JSON.stringify({
+        type: "item_focus",
+        data: { itemId: "a-item-1" },
+      }),
+    );
+    await focusPromise;
+
+    const voicePromise = waitForSocketMessage(
+      receiver,
+      "voice_activity",
+      (message) =>
+        fromSender(message) &&
+        message.data?.active === true &&
+        message.data?.stage === "recording",
+    );
+    sender.send(
+      JSON.stringify({
+        type: "voice_activity",
+        data: { active: true, stage: "recording" },
+      }),
+    );
+    await voicePromise;
+
+    const clearPromise = waitForSocketMessage(
+      receiver,
+      "draft_clear",
+      fromSender,
+    );
+    sender.send(JSON.stringify({ type: "draft_clear", data: {} }));
+    await clearPromise;
+  } finally {
+    await Promise.all([closeSocket(sender), closeSocket(receiver)]);
+  }
+}
+
+async function assertExpiredSocket({ partyHost, roomId }) {
+  const protocol = getPartyKitWsProtocol(partyHost);
+  const socket = new WebSocket(
+    `${protocol}://${partyHost}${ROOM_PATH}/${encodeURIComponent(
+      roomId,
+    )}?avatar=Expired%20Smoke`,
+  );
+
+  const closeEvent = await waitForSocketClose(socket);
+  if (closeEvent.code !== 4005) {
+    throw new Error(
+      `expired socket expected close 4005, got ${closeEvent.code}`,
+    );
   }
 }
 
@@ -288,11 +527,20 @@ async function main() {
     nextData: nextA,
   });
 
+  await assertEphemeralRelay({ partyHost, roomId: roomA.roomId });
+
   const finalA = await getRoom({ partyHost, roomId: roomA.roomId });
   const finalB = await getRoom({ partyHost, roomId: roomB.roomId });
   assertItem(finalA, "Carrots");
   assertNoItem(finalB, "Carrots");
   assertItem(finalB, "Bananas");
+  assertNoItem(finalA, "Olive oil");
+
+  if (isLocalHost(partyHost.split(":")[0])) {
+    const expiredRoomId = await createExpiredRoomDirect({ partyHost });
+    await assertExpiredRoom({ partyHost, roomId: expiredRoomId });
+    await assertExpiredSocket({ partyHost, roomId: expiredRoomId });
+  }
 
   console.log(`room_a=${roomA.roomId}`);
   console.log(`room_b=${roomB.roomId}`);

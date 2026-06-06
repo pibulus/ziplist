@@ -48,6 +48,18 @@ const ANIMALS = [
 ];
 
 const STORAGE_KEY = "ziplist_user_avatar";
+const AVATAR_COLORS = [
+  "#ff6ac2",
+  "#00d4ff",
+  "#ffb000",
+  "#51cf66",
+  "#c978ff",
+  "#ff6b6b",
+  "#4dabf7",
+  "#20c997",
+  "#f783ac",
+  "#ffd43b",
+];
 
 /**
  * Get or create an avatar name for the current user
@@ -103,4 +115,15 @@ export function getAvatar() {
     return localStorage.getItem(STORAGE_KEY);
   }
   return null;
+}
+
+export function getAvatarColor(value) {
+  const key = String(value || "Guest");
+  let hash = 0;
+
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 31 + key.charCodeAt(index)) % 2147483647;
+  }
+
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }

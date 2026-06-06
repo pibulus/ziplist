@@ -15,12 +15,15 @@
   import { hapticService } from "$lib/services/infrastructure/hapticService";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
+  import { getAvatarColor } from "$lib/services/realtime/avatarService";
+  import { getLiveActivityStore } from "$lib/services/realtime/liveActivityStore";
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
   import { getTypingStore } from "$lib/services/realtime/typingStore";
   import { PRODUCT_LIMITS } from "$lib/constants";
   import { isContributor } from "$lib";
   import CompletedDivider from "./CompletedDivider.svelte";
   import DraftItemRow from "./DraftItemRow.svelte";
+  import LiveActivityRow from "./LiveActivityRow.svelte";
   import ListItemBody from "./ListItemBody.svelte";
   import "./SingleList.css";
 
@@ -49,9 +52,12 @@
   let isMakingLive = false;
   let presence = []; // Who's online
   let typingUsers = []; // Who's typing
+  let liveActivity = { drafts: [], focuses: [], voices: [] };
   let recentlyEditedItems = new Set(); // Track items just edited by others
   let settlingItemIds = new Set(); // Brief bounce after check, uncheck, or reorder
   let typingTimeout = null; // Debounce typing broadcasts
+  let draftBroadcastTimeout = null;
+  let pendingDraftBroadcast = null;
   let listContainerNode = null;
   const itemNodes = new Map();
   const settlingTimers = new Map();
@@ -112,6 +118,8 @@
   }
   $: if (list.id && previousListIdentity !== list.id) {
     if (previousListIdentity !== null) {
+      liveListsService.broadcastDraftClear(previousListIdentity);
+      liveListsService.broadcastItemFocus(previousListIdentity, null);
       draftItemActive = false;
       draftItemText = "";
       editingItemId = null;
@@ -123,6 +131,10 @@
       dragOverPosition = "before";
     }
     previousListIdentity = list.id;
+    isLive = liveListsService.isLive(list.id);
+    if (isLive) {
+      subscribeToLiveStores(list.id);
+    }
   }
 
   $: isDefaultName = DEFAULT_LIST_NAMES.has(list.name);
@@ -138,6 +150,7 @@
   // Subscribe to presence and typing for this list
   let presenceUnsubscribe = null;
   let typingUnsubscribe = null;
+  let activityUnsubscribe = null;
 
   onMount(() => {
     // Initialize the lists store
@@ -148,17 +161,7 @@
     if (list && list.id) {
       isLive = liveListsService.isLive(list.id);
       if (isLive) {
-        // Subscribe to presence
-        const presenceStore = getPresenceStore(list.id);
-        presenceUnsubscribe = presenceStore.subscribe((users) => {
-          presence = users;
-        });
-
-        // Subscribe to typing indicators
-        const typingStore = getTypingStore(list.id);
-        typingUnsubscribe = typingStore.subscribe((users) => {
-          typingUsers = users;
-        });
+        subscribeToLiveStores(list.id);
       }
     }
 
@@ -171,7 +174,13 @@
     if (unsubscribe) unsubscribe();
     if (presenceUnsubscribe) presenceUnsubscribe();
     if (typingUnsubscribe) typingUnsubscribe();
+    if (activityUnsubscribe) activityUnsubscribe();
     if (typingTimeout) clearTimeout(typingTimeout);
+    if (draftBroadcastTimeout) clearTimeout(draftBroadcastTimeout);
+    if (list?.id) {
+      liveListsService.broadcastDraftClear(list.id);
+      liveListsService.broadcastItemFocus(list.id, null);
+    }
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
     if (shareStatusTimer) clearTimeout(shareStatusTimer);
     setActionSheetScrollLock(false);
@@ -187,6 +196,29 @@
       window.removeEventListener("ziplist-list-notice", handleListNotice);
     }
   });
+
+  function subscribeToLiveStores(nextListId) {
+    if (!nextListId) return;
+
+    if (presenceUnsubscribe) presenceUnsubscribe();
+    if (typingUnsubscribe) typingUnsubscribe();
+    if (activityUnsubscribe) activityUnsubscribe();
+
+    const presenceStore = getPresenceStore(nextListId);
+    presenceUnsubscribe = presenceStore.subscribe((users) => {
+      presence = users;
+    });
+
+    const typingStore = getTypingStore(nextListId);
+    typingUnsubscribe = typingStore.subscribe((users) => {
+      typingUsers = users;
+    });
+
+    const activityStore = getLiveActivityStore(nextListId);
+    activityUnsubscribe = activityStore.subscribe((activity) => {
+      liveActivity = activity;
+    });
+  }
 
   function showListStatus(message, success = false, duration = 3500) {
     if (shareStatusTimer) clearTimeout(shareStatusTimer);
@@ -344,21 +376,7 @@
       );
       soundService.success({ force: true });
 
-      // Clean up any existing subscriptions before re-subscribing
-      if (presenceUnsubscribe) presenceUnsubscribe();
-      if (typingUnsubscribe) typingUnsubscribe();
-
-      // Subscribe to presence
-      const presenceStore = getPresenceStore(list.id);
-      presenceUnsubscribe = presenceStore.subscribe((users) => {
-        presence = users;
-      });
-
-      // Subscribe to typing indicators
-      const typingStore = getTypingStore(list.id);
-      typingUnsubscribe = typingStore.subscribe((users) => {
-        typingUsers = users;
-      });
+      subscribeToLiveStores(list.id);
     } catch (error) {
       console.error("Failed to make list live:", error);
       showListStatus("Failed to make list live: " + error.message, false, 5000);
@@ -567,6 +585,15 @@
   $: sortedItems = touchDragPreviewItems || [...activeItems, ...completedItems];
   $: renderedActiveItems = sortedItems.filter((item) => !item.checked);
   $: renderedCompletedItems = sortedItems.filter((item) => item.checked);
+  $: remoteDrafts = isLive
+    ? liveActivity.drafts.filter((draft) => !draft.itemId)
+    : [];
+  $: remoteVoices = isLive ? liveActivity.voices : [];
+  $: remoteFocusByItem = new Map(
+    isLive
+      ? liveActivity.focuses.map((focus) => [focus.itemId, focus])
+      : [],
+  );
   $: touchDraggedItem = touchDragItemId
     ? list.items.find((item) => item.id === touchDragItemId) || null
     : null;
@@ -600,7 +627,7 @@
     previousItemIds = currentItemIds;
   }
 
-  // Handle typing broadcast
+  // Handle live typing heartbeat for older clients plus richer draft activity.
   function handleTyping() {
     if (!isLive) return;
 
@@ -615,6 +642,57 @@
     }, 2000);
   }
 
+  function flushDraftBroadcast() {
+    if (!pendingDraftBroadcast || !isLive) return;
+
+    liveListsService.broadcastDraftUpdate(list.id, pendingDraftBroadcast);
+    pendingDraftBroadcast = null;
+  }
+
+  function broadcastDraftActivity(data = {}) {
+    if (!isLive) return;
+
+    pendingDraftBroadcast = data;
+    if (!draftBroadcastTimeout) {
+      flushDraftBroadcast();
+      draftBroadcastTimeout = setTimeout(() => {
+        draftBroadcastTimeout = null;
+        flushDraftBroadcast();
+      }, 160);
+    }
+  }
+
+  function clearDraftActivity() {
+    pendingDraftBroadcast = null;
+    if (draftBroadcastTimeout) {
+      clearTimeout(draftBroadcastTimeout);
+      draftBroadcastTimeout = null;
+    }
+
+    if (isLive) {
+      liveListsService.broadcastDraftClear(list.id);
+    }
+  }
+
+  function handleDraftTyping(text) {
+    handleTyping();
+    broadcastDraftActivity({ text, mode: "typing" });
+  }
+
+  function handleEditTyping(text, itemId) {
+    handleTyping();
+    if (!isLive) return;
+
+    liveListsService.broadcastItemFocus(list.id, itemId);
+    broadcastDraftActivity({ text, itemId, mode: "typing" });
+  }
+
+  function clearItemFocus() {
+    if (isLive) {
+      liveListsService.broadcastItemFocus(list.id, null);
+    }
+  }
+
   // Helper function to calculate staggered delay for animations
   function getStaggerDelay(index) {
     return index * 50; // 50ms between each item
@@ -624,6 +702,17 @@
     return draggedItemId === itemId || touchDragItemId === itemId
       ? "true"
       : "false";
+  }
+
+  function getRemoteFocus(itemId) {
+    return remoteFocusByItem.get(itemId) || null;
+  }
+
+  function getRemoteItemStyle(itemId) {
+    const remoteFocus = getRemoteFocus(itemId);
+    return remoteFocus
+      ? `--remote-color: ${remoteFocus.color}; --remote-glow: ${remoteFocus.color}33;`
+      : "";
   }
 
   // Action to auto-focus an input element when it's created
@@ -1245,10 +1334,19 @@
 
   function startEditingItem(item) {
     if (item.checked) return;
+    clearDraftActivity();
     draftItemActive = false;
     draftItemText = "";
     editingItemId = item.id;
     editedItemText = item.text;
+    if (isLive) {
+      liveListsService.broadcastItemFocus(list.id, item.id);
+      broadcastDraftActivity({
+        text: item.text,
+        itemId: item.id,
+        mode: "typing",
+      });
+    }
     soundService.select();
   }
 
@@ -1264,6 +1362,8 @@
       soundService.select();
       editingItemId = null;
       editedItemText = "";
+      clearDraftActivity();
+      clearItemFocus();
     } else {
       deleteItem(itemId);
     }
@@ -1272,6 +1372,8 @@
   function cancelItemEdit() {
     editingItemId = null;
     editedItemText = "";
+    clearDraftActivity();
+    clearItemFocus();
   }
 
   function handleEditItemKeyDown(event) {
@@ -1346,10 +1448,12 @@
   async function startDraftItem() {
     hapticService.selection();
     soundService.select();
+    clearItemFocus();
     editingItemId = null;
     editedItemText = "";
     draftItemActive = true;
     draftItemText = "";
+    broadcastDraftActivity({ text: "", mode: "typing" });
 
     await tick();
     draftInputNode?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -1377,11 +1481,13 @@
     hapticService.selection();
     draftItemActive = false;
     draftItemText = "";
+    clearDraftActivity();
   }
 
   function cancelDraftItem() {
     draftItemActive = false;
     draftItemText = "";
+    clearDraftActivity();
     hapticService.selection();
     soundService.close();
   }
@@ -1490,11 +1596,7 @@
                       <span
                         class="zl-presence-dot"
                         title={user.avatar}
-                        style="background-color: {user.avatar.includes('Fox')
-                          ? '#ff6b6b'
-                          : user.avatar.includes('Frog')
-                            ? '#51cf66'
-                            : '#4dabf7'}"
+                        style="background-color: {getAvatarColor(user.avatar)}"
                       ></span>
                     {/each}
                   </div>
@@ -1591,27 +1693,15 @@
       </div>
     {/if}
 
-    <!-- Typing indicator -->
     {#if isLive && typingUsers.length > 0}
-      <div
-        class="typing-indicator"
-        role="status"
-        aria-live="polite"
-        in:fade={{ duration: 200 }}
-      >
-        <span class="typing-avatar">{typingUsers[0].avatar}</span> is adding an
-        item
-        <span class="typing-dots">
-          <span class="dot">.</span><span class="dot">.</span><span class="dot"
-            >.</span
-          >
-        </span>
-      </div>
+      <span class="zl-visually-hidden" role="status" aria-live="polite">
+        Collaborator activity in this live list.
+      </span>
     {/if}
 
     <!-- List Items -->
     <div class="zl-list-container" bind:this={listContainerNode}>
-      {#if list.items.length > 0 || draftItemActive}
+      {#if list.items.length > 0 || draftItemActive || remoteDrafts.length > 0 || remoteVoices.length > 0}
         <ul
           class="zl-list"
           role="list"
@@ -1630,6 +1720,8 @@
               class:just-edited={recentlyEditedItems.has(item.id)}
               class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
+              class:remote-focused={!!getRemoteFocus(item.id)}
+              style={getRemoteItemStyle(item.id)}
               draggable={!item.checked &&
                 editingItemId !== item.id &&
                 !touchDragItemId}
@@ -1657,13 +1749,31 @@
                 onStartEdit={startEditingItem}
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
-                onTyping={handleTyping}
+                onTyping={handleEditTyping}
                 onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
                 onOpenActions={openItemActions}
               />
             </li>
+          {/each}
+
+          {#each remoteVoices as activity, index (activity.id)}
+            <LiveActivityRow
+              {activity}
+              type="voice"
+              staggerDelay={getStaggerDelay(renderedActiveItems.length + index)}
+            />
+          {/each}
+
+          {#each remoteDrafts as activity, index (activity.id)}
+            <LiveActivityRow
+              {activity}
+              type="draft"
+              staggerDelay={getStaggerDelay(
+                renderedActiveItems.length + remoteVoices.length + index,
+              )}
+            />
           {/each}
 
           {#if draftItemActive}
@@ -1674,7 +1784,7 @@
               staggerDelay={getStaggerDelay(renderedActiveItems.length)}
               onSaveDraft={saveDraftItem}
               onDraftKeyDown={handleDraftItemKeyDown}
-              onTyping={handleTyping}
+              onTyping={handleDraftTyping}
               onCancelDraft={cancelDraftItem}
             />
           {:else}
@@ -1707,6 +1817,8 @@
               class:just-edited={recentlyEditedItems.has(item.id)}
               class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
+              class:remote-focused={!!getRemoteFocus(item.id)}
+              style={getRemoteItemStyle(item.id)}
               draggable={!item.checked &&
                 editingItemId !== item.id &&
                 !touchDragItemId}
@@ -1738,7 +1850,7 @@
                 onStartEdit={startEditingItem}
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
-                onTyping={handleTyping}
+                onTyping={handleEditTyping}
                 onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}

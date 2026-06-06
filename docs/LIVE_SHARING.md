@@ -58,6 +58,10 @@ Current messages:
 - `list_update`
 - `typing_start`
 - `typing_stop`
+- `draft_update`
+- `draft_clear`
+- `item_focus`
+- `voice_activity`
 
 The protocol intentionally avoids dormant partial item operations for now.
 Full-list snapshots are simpler and fine for small ZipList lists.
@@ -70,20 +74,22 @@ touched.
 
 Near-term target:
 
-- replace the literal typing banner with remote draft rows inside the list
-- tint remote draft rows, item glows, and check ripples with the collaborator's
-  avatar color
+- keep remote draft rows inside the list instead of a literal typing banner
+- tint remote draft rows, item glows, and voice cues with the collaborator's
+  stable avatar color
 - keep draft text, focus/selection, presence, and voice-in-progress signals
   ephemeral
 - store only committed list state and room metadata durably
 - let voice-added items pop in with the collaborator glow after transcription
   resolves
 
-Possible protocol additions:
+Ephemeral protocol:
 
 - `draft_update` - remote user is typing a new item draft
 - `draft_clear` - draft was submitted, cancelled, timed out, or the user left
 - `item_focus` - remote user is editing or touching an existing item
+- `voice_activity` - remote user is recording or transcribing against the live
+  list
 
 Avoid notification-panel language such as "Pablo is typing." Prefer ghost rows,
 colored glows, avatar dots, and item-level motion where the work is happening.
@@ -97,19 +103,28 @@ Current behavior:
   URL hash and have no server-side expiry
 - local lists stay on the device until browser/PWA storage is cleared or the
   user deletes them
-- live rooms have no ZipList-level expiry yet; they remain available as long as
-  the PartyKit/Cloudflare room storage keeps them
+- live rooms store `roomMetadata` beside the durable list snapshot
+- live rooms lazily expire on open/read once `expiresAt` passes
 - presence, typing, draft text, focus, and voice-in-progress signals are
   ephemeral
 
-Before promising long-term live rooms, verify whether production is on the
-PartyKit Individual storage-retention path or deployed to our own Cloudflare
-account.
+Current implementation:
+
+- free room metadata uses a 24-hour sliding expiry window
+- supporter room metadata uses a 365-day sliding expiry window
+- room activity updates `lastActiveAt` and slides `expiresAt` on connect and
+  committed list updates, not on ephemeral draft/presence traffic
+- expired rooms return HTTP `410` with `room_expired` and WebSocket close code
+  `4005`
+- the join page shows a soft "This room popped" state for expired rooms
+- legacy rooms without metadata are backfilled as supporter rooms so old links
+  do not suddenly break
+- public live creation is still contributor-gated; free room policy exists in
+  the room layer for future product switches
 
 Product target:
 
-- free quick rooms should be temporary bubbles, probably 24 hours or 7 days
-  after last activity
+- free quick rooms should be temporary bubbles
 - expired free rooms should fail softly with a "bubble popped" state, not a
   broken link
 - supporter rooms can be durable for a year or while supporter status remains
@@ -180,11 +195,14 @@ ZipList cost model:
 `party/listRoom.ts`:
 
 - rejects joins to rooms that were never created
+- rejects expired rooms with a typed close code / HTTP 410
 - validates snapshots before storage
 - requires `PARTYKIT_CREATE_SECRET` for non-local room creation
 - stores one durable `listData` snapshot per room
+- stores durable `roomMetadata` beside the list snapshot
 - derives presence from active PartyKit connections
-- broadcasts valid list updates and typing events to everyone except sender
+- broadcasts valid list updates and ephemeral activity events to everyone except
+  sender
 
 ## Environment
 
@@ -235,7 +253,9 @@ npx partykit deploy --with-vars
 
 - Run `npm run smoke:live` with local Vite + PartyKit, or set
   `LIVE_SMOKE_APP_ORIGIN`, `LIVE_SMOKE_PARTYKIT_HOST`, and
-  `LIVE_SMOKE_CONTRIBUTOR_TOKEN` for production.
+  `LIVE_SMOKE_CONTRIBUTOR_TOKEN` for production. Local smoke also checks
+  lifecycle metadata, ephemeral draft/focus/voice relay, and expired-room
+  410/close-code behavior.
 - Create live list A and live list B; confirm no cross-room bleed.
 - On a fresh phone install, redeem contributor access before creating a room.
 - Join from a second device; confirm initial state appears before loading ends.
