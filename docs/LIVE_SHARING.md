@@ -147,6 +147,9 @@ npx partykit deploy --with-vars
 
 ## Test Checklist
 
+- Run `npm run smoke:live` with local Vite + PartyKit, or set
+  `LIVE_SMOKE_APP_ORIGIN`, `LIVE_SMOKE_PARTYKIT_HOST`, and
+  `LIVE_SMOKE_CONTRIBUTOR_TOKEN` for production.
 - Create live list A and live list B; confirm no cross-room bleed.
 - On a fresh phone install, redeem contributor access before creating a room.
 - Join from a second device; confirm initial state appears before loading ends.
