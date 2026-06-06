@@ -89,6 +89,92 @@ Avoid notification-panel language such as "Pablo is typing." Prefer ghost rows,
 colored glows, avatar dots, and item-level motion where the work is happening.
 Do not add CRDTs unless ZipList grows beyond small shared checklist rooms.
 
+## Room Lifetimes
+
+Current behavior:
+
+- static `/import#listdata=...` share links contain the list snapshot in the
+  URL hash and have no server-side expiry
+- local lists stay on the device until browser/PWA storage is cleared or the
+  user deletes them
+- live rooms have no ZipList-level expiry yet; they remain available as long as
+  the PartyKit/Cloudflare room storage keeps them
+- presence, typing, draft text, focus, and voice-in-progress signals are
+  ephemeral
+
+Before promising long-term live rooms, verify whether production is on the
+PartyKit Individual storage-retention path or deployed to our own Cloudflare
+account.
+
+Product target:
+
+- free quick rooms should be temporary bubbles, probably 24 hours or 7 days
+  after last activity
+- expired free rooms should fail softly with a "bubble popped" state, not a
+  broken link
+- supporter rooms can be durable for a year or while supporter status remains
+  active
+- supporter rooms may reserve a cute phrase/QR alias, hold multiple lists, use
+  passport/avatar identity, and be exportable/backed up to the Pi
+
+Possible room metadata:
+
+```js
+{
+  createdAt,
+  updatedAt,
+  lastActiveAt,
+  expiresAt,
+  tier: "free" | "supporter",
+  alias: "blue-lemon-disco",
+}
+```
+
+Start with lazy expiry: check `expiresAt` when a room is opened and show the
+expired state. Add scheduled cleanup only when storage hygiene actually needs
+it.
+
+Direct live URLs (`/live/zl_...`) point at one room. Cute aliases
+(`/r/blue-lemon-disco`) can outlive a room and point at the current room
+record. Free aliases can expire/recycle; supporter aliases should stay
+reserved.
+
+## Usage And Costs
+
+Pricing audit: 2026-06-06. Re-check the linked provider pages before committing
+to public pricing or durability promises.
+
+- [PartyKit pricing](https://www.partykit.io/) lists Individual as free for up
+  to 10 live projects, with storage cleared every 24 hours.
+- PartyKit Commercial is also listed as free when deployed to our own
+  Cloudflare account, with custom domains and unlimited projects; Cloudflare
+  usage is the cost surface.
+- [Cloudflare Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/)
+  says Workers Paid has a $5 USD/month account minimum and includes Workers,
+  Pages Functions, KV, Hyperdrive, and Durable Objects usage.
+- Workers Free currently includes 100,000 Worker requests/day. On Workers
+  billing, the initial WebSocket upgrade counts as a request; routed WebSocket
+  messages do not count as Worker requests.
+- [Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/)
+  currently lists Free-plan Durable Object allowances for SQLite-backed
+  objects, including 100,000 requests/day, 13,000 GB-s/day duration, 5 million
+  rows read/day, 100,000 rows written/day, and 5 GB total SQL stored data.
+- [Durable Objects limits](https://developers.cloudflare.com/durable-objects/platform/limits/)
+  allow unlimited SQLite-backed objects within the account, with 5 GB storage
+  per account on Free and 10 GB per object.
+
+ZipList cost model:
+
+- committed checklist snapshots are tiny; storage is not the scary part
+- durable writes should happen on room create, committed list changes, metadata
+  changes, and expiry/revive actions
+- draft typing, focus glow, voice-in-progress, and presence should stay
+  ephemeral so they feel magical without becoming write spam
+- if rooms become long-lived and busy, revisit WebSocket hibernation; regular
+  connected sockets can make Durable Object duration the meaningful cost
+- a free room can disappear by policy; a supporter room needs explicit
+  durability, export, and backup expectations
+
 ## PartyKit Room
 
 `party/listRoom.ts`:
