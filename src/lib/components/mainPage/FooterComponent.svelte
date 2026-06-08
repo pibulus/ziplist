@@ -3,6 +3,8 @@
   import { soundService } from "$lib/services/infrastructure/soundService";
 
   const dispatch = createEventDispatcher();
+  const footerButtonClass =
+    "footer-nav-button btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-colors duration-150 focus-visible:ring-0 sm:px-3 sm:text-base";
   let shareStatus = "";
   let shareStatusTimer = null;
 
@@ -39,7 +41,9 @@
     soundService.select();
 
     const url =
-      typeof window !== "undefined" ? window.location.href : "https://ziplist.app";
+      typeof window !== "undefined"
+        ? window.location.href
+        : "https://ziplist.app";
     const shareData = {
       title: "ZipList",
       text: "Make a checklist by talking. Quick, warm, and simple.",
@@ -68,10 +72,13 @@
   }
 </script>
 
-<nav class="flex items-center space-x-1 sm:space-x-2" aria-label="ZipList footer">
+<nav
+  class="flex items-center space-x-1 sm:space-x-2"
+  aria-label="ZipList footer"
+>
   <button
     type="button"
-    class="btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-all hover:opacity-80 hover:bg-[color:var(--zl-highlight-color,#fff6e6)] focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-2 sm:px-3 sm:text-base"
+    class={footerButtonClass}
     on:click={showAbout}
     aria-label="About Ziplist"
   >
@@ -79,7 +86,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-all hover:opacity-80 hover:bg-[color:var(--zl-highlight-color,#fff6e6)] focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-2 sm:px-3 sm:text-base"
+    class={footerButtonClass}
     on:click={showContributor}
     aria-label="Open Contributor unlock"
   >
@@ -88,7 +95,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-all hover:opacity-80 hover:bg-[color:var(--zl-highlight-color,#fff6e6)] focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-2 sm:px-3 sm:text-base"
+    class={footerButtonClass}
     on:click={showSettings}
     aria-label="Open Options"
   >
@@ -96,7 +103,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-all hover:opacity-80 hover:bg-[color:var(--zl-highlight-color,#fff6e6)] focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-2 sm:px-3 sm:text-base"
+    class={footerButtonClass}
     on:click={showExtension}
     aria-label="Open Chrome Extension info"
   >
@@ -105,7 +112,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-all hover:opacity-80 hover:bg-[color:var(--zl-highlight-color,#fff6e6)] focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-2 sm:px-3 sm:text-base"
+    class={footerButtonClass}
     on:click={shareApp}
     aria-label="Share ZipList"
   >
@@ -113,3 +120,21 @@
   </button>
   <span class="sr-only" role="status" aria-live="polite">{shareStatus}</span>
 </nav>
+
+<style>
+  .footer-nav-button {
+    border-radius: 0.75rem;
+  }
+
+  .footer-nav-button:hover {
+    background-color: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+    color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
+  }
+
+  .footer-nav-button:focus-visible {
+    outline: 2px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.58);
+    outline-offset: 2px;
+    background-color: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
+    color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
+  }
+</style>

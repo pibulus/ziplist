@@ -4,6 +4,25 @@
 @import "./lib/styles/typography.css";
 @import "./lib/styles/theme-variables.css";
 
+:root {
+  --zl-scrollbar-size: 0.625rem;
+  --zl-scrollbar-size-compact: 0.5rem;
+  --zl-scrollbar-thumb-color: rgba(
+    var(--zl-primary-color-rgb, 255, 176, 0),
+    0.62
+  );
+  --zl-scrollbar-thumb-bg: linear-gradient(
+    180deg,
+    rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.76),
+    rgba(var(--zl-accent-color-rgb, 255, 106, 194), 0.72)
+  );
+  --zl-scrollbar-thumb-hover-bg: linear-gradient(
+    180deg,
+    rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.88),
+    rgba(var(--zl-accent-color-rgb, 255, 106, 194), 0.84)
+  );
+}
+
 /* Remove outlines only when not using keyboard navigation */
 *:focus:not(:focus-visible) {
   outline: none;
@@ -20,16 +39,145 @@ body {
   overscroll-behavior-x: none;
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+  scrollbar-width: thin;
+  scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
 }
 
 /* Ensure pages don't jump when content changes */
 html {
   overflow-y: scroll; /* Prevent layout shift when content height changes */
+  scrollbar-width: thin;
+  scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
 }
 
 /* Prevent horizontal overflow */
 body {
   overflow-x: hidden;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: var(--zl-scrollbar-size);
+  height: var(--zl-scrollbar-size);
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  min-height: 3rem;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--zl-scrollbar-thumb-bg);
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--zl-scrollbar-thumb-hover-bg);
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+:where(
+  .modal-box,
+  .zl-scrollbar,
+  .zl-scrollbar-x,
+  .zl-settings-content,
+  .zl-list-container
+) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
+}
+
+:where(.modal-box, .zl-scrollbar, .zl-settings-content, .zl-list-container) {
+  scrollbar-gutter: stable;
+}
+
+:where(
+  .modal-box,
+  .zl-scrollbar,
+  .zl-scrollbar-x,
+  .zl-settings-content,
+  .zl-list-container
+)::-webkit-scrollbar {
+  width: var(--zl-scrollbar-size-compact);
+  height: var(--zl-scrollbar-size-compact);
+}
+
+:where(
+  .modal-box,
+  .zl-scrollbar,
+  .zl-scrollbar-x,
+  .zl-settings-content,
+  .zl-list-container
+)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:where(
+  .modal-box,
+  .zl-scrollbar,
+  .zl-scrollbar-x,
+  .zl-settings-content,
+  .zl-list-container
+)::-webkit-scrollbar-thumb {
+  min-height: 2.5rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--zl-scrollbar-thumb-bg);
+  background-clip: padding-box;
+}
+
+:where(
+    .modal-box,
+    .zl-scrollbar,
+    .zl-scrollbar-x,
+    .zl-settings-content,
+    .zl-list-container
+  )::-webkit-scrollbar-thumb:hover {
+  background: var(--zl-scrollbar-thumb-hover-bg);
+  background-clip: padding-box;
+}
+
+:where(
+  .modal-box,
+  .zl-scrollbar,
+  .zl-scrollbar-x,
+  .zl-settings-content,
+  .zl-list-container
+)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  :where(
+    .modal-box,
+    .zl-scrollbar,
+    .zl-scrollbar-x,
+    .zl-settings-content,
+    .zl-list-container
+  ) {
+    scrollbar-width: none;
+    scrollbar-gutter: auto;
+  }
+
+  :where(
+    .modal-box,
+    .zl-scrollbar,
+    .zl-scrollbar-x,
+    .zl-settings-content,
+    .zl-list-container
+  )::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Prevent service-managed modals from creating scroll issues. */

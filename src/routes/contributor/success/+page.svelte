@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { browser } from "$app/environment";
   import { setContributorStatus } from "$lib";
 
@@ -8,6 +8,8 @@
   let contributorCode = "";
   let checkoutId = "";
   let pollTimer;
+  let copyMessageTimer;
+  let copyMessage = "";
 
   function claimStorageKey(id) {
     return `ziplist_checkout_claim_${id}`;
@@ -39,7 +41,8 @@
 
       if (payload.status !== "paid") {
         status = "pending";
-        message = "Payment is being confirmed. This usually takes a few seconds.";
+        message =
+          "Payment is being confirmed. This usually takes a few seconds.";
         return;
       }
 
@@ -51,6 +54,36 @@
     } catch {
       status = "error";
       message = "Check your connection, then refresh this page.";
+    }
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function clearCopyMessageTimer() {
+    if (copyMessageTimer) {
+      clearTimeout(copyMessageTimer);
+      copyMessageTimer = null;
+    }
+  }
+
+  async function copyContributorCode() {
+    if (!browser || !contributorCode) return;
+
+    try {
+      await navigator.clipboard.writeText(contributorCode);
+      copyMessage = "Copied";
+      clearCopyMessageTimer();
+      copyMessageTimer = setTimeout(() => {
+        copyMessage = "";
+        copyMessageTimer = null;
+      }, 1800);
+    } catch {
+      copyMessage = "Tap the page, then try copy.";
     }
   }
 
@@ -73,15 +106,21 @@
         status === "error" ||
         status === "missing-claim"
       ) {
-        clearInterval(pollTimer);
+        stopPolling();
         return;
       }
       checkCheckout();
     }, 2500);
 
     return () => {
-      if (pollTimer) clearInterval(pollTimer);
+      stopPolling();
+      clearCopyMessageTimer();
     };
+  });
+
+  onDestroy(() => {
+    stopPolling();
+    clearCopyMessageTimer();
   });
 </script>
 
@@ -111,6 +150,13 @@
         <p>Your contributor code</p>
         <strong>{contributorCode}</strong>
         <span>Keep this code for unlocking ZipList on another device.</span>
+        <button
+          type="button"
+          class="zl-code-copy-button"
+          on:click={copyContributorCode}
+        >
+          {copyMessage || "Copy Code"}
+        </button>
       </div>
     {/if}
 
@@ -122,7 +168,11 @@
   .zl-success-page {
     align-items: center;
     background:
-      radial-gradient(circle at 50% 20%, rgba(255, 204, 77, 0.22), transparent 34rem),
+      radial-gradient(
+        circle at 50% 20%,
+        rgba(255, 204, 77, 0.22),
+        transparent 34rem
+      ),
       #fff6e6;
     color: #111827;
     display: flex;
@@ -164,7 +214,7 @@
     color: #db5f78;
     font-size: 0.72rem;
     font-weight: 900;
-    letter-spacing: 0.14em;
+    letter-spacing: 0;
     margin: 0 0 0.45rem;
     text-transform: uppercase;
   }
@@ -236,6 +286,30 @@
     width: 100%;
   }
 
+  .zl-code-copy-button {
+    background: rgba(255, 255, 255, 0.86);
+    border: 2px solid #000000;
+    border-radius: 14px;
+    box-shadow: 3px 3px 0 #000000;
+    color: #111827;
+    cursor: pointer;
+    font-family: "Space Mono", monospace;
+    font-size: 0.82rem;
+    font-weight: 900;
+    margin-top: 1rem;
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+    transition:
+      box-shadow 0.16s ease,
+      transform 0.16s ease;
+    width: 100%;
+  }
+
+  .zl-code-copy-button:hover {
+    box-shadow: 4px 4px 0 #000000;
+    transform: translate(-1px, -1px);
+  }
+
   @keyframes pulse-progress {
     0%,
     100% {
@@ -243,6 +317,21 @@
     }
     50% {
       transform: translateX(150%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zl-success-progress div {
+      animation: none;
+      transform: none;
+    }
+
+    .zl-code-copy-button {
+      transition: none;
+    }
+
+    .zl-code-copy-button:hover {
+      transform: none;
     }
   }
 </style>

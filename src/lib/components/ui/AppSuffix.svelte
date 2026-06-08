@@ -1,6 +1,5 @@
 <script>
   import { theme as themeStore, CONSTANTS } from "$lib";
-  import { onMount } from "svelte";
 
   /**
    * AppSuffix Component
@@ -19,31 +18,6 @@
 
   // Keep current theme in sync with the global theme
   $: currentTheme = $themeStore || CONSTANTS.DEFAULT_THEME;
-
-  // Listen for theme change events (for when theme changes from settings panel)
-  onMount(() => {
-    const handleThemeChange = (event) => {
-      if (event.detail && event.detail.setting === "theme") {
-        // Theme changed, force component to update
-        currentTheme = event.detail.value;
-      }
-    };
-
-    // Listen for custom events
-    if (typeof window !== "undefined") {
-      window.addEventListener("ziplist-setting-changed", handleThemeChange);
-    }
-
-    return () => {
-      // Clean up listener
-      if (typeof window !== "undefined") {
-        window.removeEventListener(
-          "ziplist-setting-changed",
-          handleThemeChange,
-        );
-      }
-    };
-  });
 </script>
 
 <span
@@ -73,7 +47,9 @@
     opacity: 0.9;
     z-index: 1;
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.12));
-    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition:
+      filter 0.2s ease,
+      transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     background: transparent;
     border: none;
     padding: 0;
@@ -84,12 +60,13 @@
     -webkit-background-clip: text !important;
     color: transparent !important;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
-    transition: all 0.3s ease;
+    transition:
+      filter 0.2s ease,
+      transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     display: inline-block;
     position: relative;
     transform-origin: center;
     padding: 0.1em 0; /* Add some padding for hover effect */
-    will-change: transform;
   }
 
   /* Theme-specific gradients - darker for AA contrast */
@@ -154,7 +131,6 @@
   .app-suffix:hover .app-text {
     filter: brightness(1.1) saturate(1.2);
     transform: scale(1.05);
-    transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   }
 
   /* Position variations */
@@ -216,6 +192,13 @@
     .top-right,
     .top-left {
       top: -0.52em;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-suffix:hover,
+    .app-suffix:hover .app-text {
+      transform: none;
     }
   }
 </style>

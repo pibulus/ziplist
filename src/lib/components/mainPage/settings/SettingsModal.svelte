@@ -155,12 +155,16 @@
   id="settings_modal"
   class="zl-settings-dialog"
   aria-labelledby="settings_modal_title"
+  aria-describedby="settings_modal_description"
   aria-modal="true"
 >
   <div class="zl-settings-card">
     <div class="zl-settings-content">
       <div class="zl-settings-header">
         <h3 id="settings_modal_title" class="zl-settings-title">Options</h3>
+        <p id="settings_modal_description" class="sr-only">
+          Adjust startup, sound, contributor, and theme settings.
+        </p>
         <form method="dialog">
           <button
             type="button"
@@ -186,8 +190,11 @@
         </form>
       </div>
 
-      <div class="zl-settings-section">
-        <h4 class="zl-section-label">General</h4>
+      <section
+        class="zl-settings-section"
+        aria-labelledby="settings_general_title"
+      >
+        <h4 id="settings_general_title" class="zl-section-label">General</h4>
 
         <div class="zl-setting-row">
           <div class="zl-setting-info">
@@ -226,7 +233,9 @@
         <div class="zl-setting-row">
           <div class="zl-setting-info">
             <span class="zl-setting-name">Sound Cues</span>
-            <p class="zl-setting-desc">Soft taps, checklist pops, and finishes</p>
+            <p class="zl-setting-desc">
+              Soft taps, checklist pops, and finishes
+            </p>
           </div>
           <label class="zl-toggle">
             <input
@@ -254,10 +263,15 @@
             {contributorUnlocked ? "Unlocked" : PRICING.displayPrice}
           </button>
         </div>
-      </div>
+      </section>
 
-      <div class="zl-settings-section">
-        <h4 class="zl-section-label">Choose Your Vibe</h4>
+      <section
+        class="zl-settings-section"
+        aria-labelledby="settings_vibe_title"
+      >
+        <h4 id="settings_vibe_title" class="zl-section-label">
+          Choose Your Vibe
+        </h4>
         <div class="zl-vibe-grid">
           {#each vibeOptions as vibe}
             <button
@@ -277,7 +291,7 @@
             </button>
           {/each}
         </div>
-      </div>
+      </section>
     </div>
   </div>
 
@@ -388,9 +402,9 @@
     border: none;
     cursor: pointer;
     color: var(--zl-text-color-secondary, #666);
-    padding: 0.5rem;
-    min-width: 44px;
-    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     border-radius: 50%;
     transition: all 0.2s;
     display: inline-flex;
@@ -421,7 +435,7 @@
     text-transform: uppercase;
     color: var(--zl-text-color-disabled, #999);
     margin-bottom: 1rem;
-    letter-spacing: 1px;
+    letter-spacing: 0;
   }
 
   .zl-setting-row {

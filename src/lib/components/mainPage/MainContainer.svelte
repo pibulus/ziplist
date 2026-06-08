@@ -76,6 +76,7 @@
   let visualizerFrameId = null;
   let settingsModalPreloadTimeout = null;
   let autoRecordTimeout = null;
+  let postTranscriptionScrollTimeout = null;
   let soundCuesUnsubscribe = null;
   let recordingLiveListId = null;
 
@@ -279,6 +280,21 @@
     }, 500);
   }
 
+  function clearPostTranscriptionScroll() {
+    if (postTranscriptionScrollTimeout) {
+      clearTimeout(postTranscriptionScrollTimeout);
+      postTranscriptionScrollTimeout = null;
+    }
+  }
+
+  function schedulePostTranscriptionScroll() {
+    clearPostTranscriptionScroll();
+    postTranscriptionScrollTimeout = setTimeout(() => {
+      scrollToLists();
+      postTranscriptionScrollTimeout = null;
+    }, 100);
+  }
+
   function stopWaveformMonitoring() {
     if (visualizerFrameId) {
       cancelAnimationFrame(visualizerFrameId);
@@ -398,6 +414,8 @@
       autoRecordTimeout = null;
     }
 
+    clearPostTranscriptionScroll();
+
     if (soundCuesUnsubscribe) {
       soundCuesUnsubscribe();
       soundCuesUnsubscribe = null;
@@ -419,6 +437,9 @@
     }
 
     resetRecordingSession();
+    firstVisitService.cancelPendingIntroModal();
+    modalService.cleanup();
+    pwaService.cleanup();
 
     if (browser) {
       window.removeEventListener(
@@ -532,7 +553,7 @@
             playTranscriptionResultCue(transcriptionResult);
             pwaService.incrementTranscriptionCount();
             // Auto-scroll to lists after successful transcription to show new items
-            setTimeout(scrollToLists, 100);
+            schedulePostTranscriptionScroll();
           } catch (transcriptionError) {
             console.error(
               "Transcription failed in onstop:",
@@ -718,6 +739,8 @@
       window.addEventListener("ziplist-setting-changed", handleSettingChanged);
       window.addEventListener("ziplist-storage-error", handleStorageError);
       window.addEventListener("ziplist-open-contributor", openContributorModal);
+      pwaService.setupEventListeners();
+      void pwaService.checkIfRunningAsPwa();
       maybeLoadPwaDeviceSetup();
     }
 

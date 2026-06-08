@@ -13,6 +13,8 @@
   // AppSuffix configuration
   export let showAppSuffix = true;
 
+  $: titleCharacters = Array.from(title);
+
   function handleDudeClick() {
     hapticService.impact("medium");
     dispatch("toggleRecording");
@@ -20,14 +22,23 @@
 
   onMount(() => {
     // Set up animation sequence timing (for title/subtitle)
-    setTimeout(() => {
+    const titleTimer = setTimeout(() => {
       dispatch("titleAnimationComplete");
     }, 1200); // After staggered animation
 
-    setTimeout(() => {
+    const subtitleTimer = setTimeout(() => {
       dispatch("subtitleAnimationComplete");
     }, 2000); // After subtitle slide-in
+
+    return () => {
+      clearTimeout(titleTimer);
+      clearTimeout(subtitleTimer);
+    };
   });
+
+  function getLetterDelay(index) {
+    return `${0.05 + index * 0.05}s`;
+  }
 </script>
 
 <!-- Typography with improved kerning and weight using font-variation-settings -->
@@ -52,21 +63,19 @@
   >
     <!-- Use aria-hidden for spans if H1 has aria-label -->
     <span class="ziplist-main-word">
-      <span class="stagger-letter mr-[-0.01em]" aria-hidden="true">Z</span><span
-        class="stagger-letter ml-[0.01em]"
-        aria-hidden="true">i</span
-      ><span class="stagger-letter mr-[-0.02em]" aria-hidden="true">p</span
-      ><span class="stagger-letter mr-[-0.02em]" aria-hidden="true">L</span
-      ><span class="stagger-letter" aria-hidden="true">i</span><span
-        class="stagger-letter ml-[0.01em]"
-        aria-hidden="true">s</span
-      ><span class="stagger-letter" aria-hidden="true">t</span>
+      {#each titleCharacters as character, index}
+        <span
+          class="stagger-letter"
+          style={`--letter-delay:${getLetterDelay(index)}`}
+          aria-hidden="true">{character}</span
+        >
+      {/each}
     </span>
 
     {#if showAppSuffix}
       <span
         class="app-suffix-container stagger-letter"
-        style="animation-delay: 0.45s; position: relative;"
+        style={`--letter-delay:${getLetterDelay(titleCharacters.length)}; position: relative;`}
       >
         <span class="suffix-wrapper">
           <AppSuffix
@@ -221,35 +230,11 @@
   .stagger-letter {
     display: inline-block;
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(15px) translateZ(0);
     animation: staggerFadeIn 0.6s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    animation-delay: var(--letter-delay, 0s);
     will-change: transform, opacity;
-  }
-
-  /* Apply different delays to each letter */
-  .stagger-letter:nth-child(1) {
-    animation-delay: 0.05s;
-  }
-  .stagger-letter:nth-child(2) {
-    animation-delay: 0.1s;
-  }
-  .stagger-letter:nth-child(3) {
-    animation-delay: 0.15s;
-  }
-  .stagger-letter:nth-child(4) {
-    animation-delay: 0.2s;
-  }
-  .stagger-letter:nth-child(5) {
-    animation-delay: 0.25s;
-  }
-  .stagger-letter:nth-child(6) {
-    animation-delay: 0.3s;
-  }
-  .stagger-letter:nth-child(7) {
-    animation-delay: 0.35s;
-  }
-  .stagger-letter:nth-child(8) {
-    animation-delay: 0.4s;
+    backface-visibility: hidden;
   }
 
   @keyframes staggerFadeIn {
@@ -384,6 +369,7 @@
       animation: none;
       opacity: 1;
       transform: none;
+      will-change: auto;
     }
     .dude-wrapper {
       animation: none;

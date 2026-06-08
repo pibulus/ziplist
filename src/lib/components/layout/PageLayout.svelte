@@ -67,7 +67,7 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component fixed bottom-0 left-0 right-0 z-10 box-border pb-2 pt-3 text-center text-xs text-gray-600 sm:pb-4 sm:pt-4"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs text-gray-600 backdrop-blur-[3px] sm:pb-4 sm:pt-4"
   >
     <div
       class="container mx-auto flex flex-row items-center justify-center gap-1 sm:justify-between sm:gap-3"
@@ -75,14 +75,14 @@
       <div
         class="copyright ml-4 hidden flex-wrap items-center justify-center sm:ml-6 sm:flex md:ml-8"
       >
-        <span class="mr-1 text-sm font-medium tracking-tight text-gray-500">
+        <span class="mr-1 text-sm font-medium tracking-normal text-gray-500">
           © {footerYear} ZipList
         </span>
-        <span class="mx-2 text-pink-300">•</span>
+        <span class="footer-dot mx-2">•</span>
         <span class="text-sm font-light text-gray-600">
           Made with
           <span
-            class="mx-0.5 inline-block transform animate-pulse text-pink-500 transition-transform duration-300 hover:scale-110"
+            class="footer-heart mx-0.5 inline-block transform animate-pulse transition-transform duration-300 hover:scale-110"
             aria-label="love">♥</span
           >
           in Melbourne
@@ -171,8 +171,37 @@
 
   footer {
     --footer-surface-rgb: 255, 246, 230;
-    background: transparent;
+    --zl-footer-border-color: rgba(
+      var(--zl-primary-color-rgb, 255, 176, 0),
+      0.26
+    );
+    --zl-footer-shadow: 0 -4px 15px
+      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
+    --zl-footer-dot-color: rgba(
+      var(--zl-accent-color-rgb, 255, 106, 194),
+      0.78
+    );
+    --zl-footer-heart-color: var(--zl-accent-color, #ff6ac2);
+    background: linear-gradient(
+      to top,
+      rgba(var(--footer-surface-rgb), 0.96) 0%,
+      rgba(var(--footer-surface-rgb), 0.9) 72%,
+      rgba(var(--footer-surface-rgb), 0) 100%
+    );
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+
+  .zl-app-footer {
+    border-color: var(--zl-footer-border-color);
+    box-shadow: var(--zl-footer-shadow);
+  }
+
+  .footer-dot {
+    color: var(--zl-footer-dot-color);
+  }
+
+  .footer-heart {
+    color: var(--zl-footer-heart-color);
   }
 
   /* Media queries for mobile optimization */
@@ -187,12 +216,7 @@
     }
 
     footer {
-      background: linear-gradient(
-        to top,
-        rgba(var(--footer-surface-rgb), 0.98) 0%,
-        rgba(var(--footer-surface-rgb), 0.94) 68%,
-        rgba(var(--footer-surface-rgb), 0) 100%
-      );
+      background: rgba(var(--footer-surface-rgb), 0.98);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
       padding-top: 0.75rem;
@@ -232,6 +256,12 @@
 
     .page-shell {
       padding-bottom: 2.5rem !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .footer-heart {
+      animation: none;
     }
   }
 

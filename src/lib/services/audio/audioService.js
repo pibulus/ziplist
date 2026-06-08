@@ -22,6 +22,7 @@ export class AudioService {
     this.analyser = null;
     this.cleanupPromise = null;
     this.animationFrameId = null;
+    this.visibilityChangeHandler = null;
 
     this.stateManager = new AudioStateManager();
 
@@ -29,6 +30,43 @@ export class AudioService {
       // Update the store instead of emitting event
       audioActions.updateState(newState, error);
     });
+
+    this.ensureVisibilityListener();
+  }
+
+  ensureVisibilityListener() {
+    if (typeof document === "undefined" || this.visibilityChangeHandler) {
+      return;
+    }
+
+    this.visibilityChangeHandler = () => {
+      if (document.visibilityState !== "visible") return;
+
+      this.initializeAudioContext().catch((error) => {
+        console.warn(
+          "Failed to resume audio context on visibility change:",
+          error,
+        );
+      });
+
+      if (this.stateManager.getState() === AudioStates.RECORDING) {
+        void wakeLockService.request();
+      }
+    };
+
+    document.addEventListener("visibilitychange", this.visibilityChangeHandler);
+  }
+
+  removeVisibilityListener() {
+    if (typeof document === "undefined" || !this.visibilityChangeHandler) {
+      return;
+    }
+
+    document.removeEventListener(
+      "visibilitychange",
+      this.visibilityChangeHandler,
+    );
+    this.visibilityChangeHandler = null;
   }
 
   async initializeAudioContext() {
@@ -154,6 +192,7 @@ export class AudioService {
         await this.cleanup();
       }
 
+      this.ensureVisibilityListener();
       this.stateManager.setState(AudioStates.INITIALIZING);
       this.stateManager.setState(AudioStates.REQUESTING_PERMISSIONS);
 
@@ -448,6 +487,7 @@ export class AudioService {
       }
     } finally {
       wakeLockService.release();
+      this.removeVisibilityListener();
       this.stateManager.setState(AudioStates.IDLE);
     }
   }

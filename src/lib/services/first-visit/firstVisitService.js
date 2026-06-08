@@ -1,6 +1,7 @@
 import { browser } from "$app/environment";
 import { writable } from "svelte/store";
 import { StorageUtils } from "../infrastructure/storageUtils";
+import { modalService } from "../modals/modalService";
 import { STORAGE_KEYS } from "../../constants";
 
 // Store to track first visit status
@@ -9,6 +10,10 @@ export const isFirstVisit = writable(false);
 export class FirstVisitService {
   constructor() {
     this.debug = false;
+    this.introTimer = null;
+    this.introModal = null;
+    this.introCloseHandler = null;
+    this.pendingIntroResolve = null;
   }
 
   setDebug(value) {
@@ -42,34 +47,64 @@ export class FirstVisitService {
   }
 
   showIntroModal(modalId = "intro_modal", delay = 500) {
-    if (!browser || !this.checkFirstVisit()) return null;
+    if (!browser || !this.checkFirstVisit()) return Promise.resolve(false);
 
+    this.cancelPendingIntroModal();
     this.log("Scheduling intro modal to appear");
 
     return new Promise((resolve) => {
-      setTimeout(() => {
+      this.pendingIntroResolve = resolve;
+      this.introTimer = setTimeout(() => {
+        this.introTimer = null;
         const modal = document.getElementById(modalId);
         if (modal) {
           this.log("Opening intro modal on first visit");
-          modal.showModal();
 
           // Set up event listener to handle modal close
           const handleClose = () => {
             this.log("Intro modal closed, marking intro as seen");
             this.markIntroAsSeen();
-            modal.removeEventListener("close", handleClose);
+            this.clearIntroModalListener();
+            this.pendingIntroResolve = null;
             resolve(true);
           };
 
+          this.introModal = modal;
+          this.introCloseHandler = handleClose;
           modal.addEventListener("close", handleClose, { once: true });
-          resolve(modal);
+          modalService.openModal(modalId);
         } else {
           console.error("Intro modal element not found");
           this.log("Intro modal element not found");
-          resolve(null);
+          this.pendingIntroResolve = null;
+          resolve(false);
         }
       }, delay);
     });
+  }
+
+  clearIntroModalListener() {
+    if (this.introModal && this.introCloseHandler) {
+      this.introModal.removeEventListener("close", this.introCloseHandler);
+    }
+
+    this.introModal = null;
+    this.introCloseHandler = null;
+  }
+
+  cancelPendingIntroModal() {
+    if (this.introTimer) {
+      clearTimeout(this.introTimer);
+      this.introTimer = null;
+    }
+
+    this.clearIntroModalListener();
+
+    if (this.pendingIntroResolve) {
+      const resolve = this.pendingIntroResolve;
+      this.pendingIntroResolve = null;
+      resolve(false);
+    }
   }
 }
 

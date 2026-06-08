@@ -66,10 +66,17 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 3).map((palette) => ({
 
 // Current schema version
 const CURRENT_VERSION = 2;
+
+function normalizeFreeformText(text) {
+  return String(text ?? "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\u00a0/g, " ");
+}
+
 function normalizeItemText(text) {
-  const normalized = String(text || "")
+  const normalized = normalizeFreeformText(text)
     .replace(/\s+/g, " ")
-    .replace(/^[-\u2022*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\]/i, "")
+    .replace(/^(?:[-\u2022*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\])\s*/i, "")
     .replace(/^["']|["']$/g, "")
     .replace(/^(?:and|then|also)\s+/i, "")
     .replace(/[.!?]+$/g, "")

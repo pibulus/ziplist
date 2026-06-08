@@ -14,6 +14,14 @@ export class ModalService {
     const modal = document.getElementById(modalId);
     if (!modal) return;
 
+    if (this.modalOpen && this.activeModal === modal && modal.open) {
+      return modal;
+    }
+
+    if (this.modalOpen && this.activeModal && this.activeModal !== modal) {
+      this.closeModal();
+    }
+
     // Save scroll position and lock body
     this.scrollPosition = window.scrollY;
     const width = document.body.clientWidth;
@@ -33,7 +41,7 @@ export class ModalService {
     modal.addEventListener("close", this.handleNativeClose, { once: true });
 
     // Show the modal
-    if (typeof modal.showModal === "function") {
+    if (typeof modal.showModal === "function" && !modal.open) {
       modal.showModal();
     }
 
@@ -55,6 +63,20 @@ export class ModalService {
     this.unlockScroll();
   }
 
+  cleanup() {
+    if (!browser) return;
+
+    this.detachNativeCloseHandler();
+
+    document.querySelectorAll("dialog[open]").forEach((dialog) => {
+      if (dialog && typeof dialog.close === "function") {
+        dialog.close();
+      }
+    });
+
+    this.unlockScroll({ force: true });
+  }
+
   detachNativeCloseHandler() {
     if (this.activeModal && this.handleNativeClose) {
       this.activeModal.removeEventListener("close", this.handleNativeClose);
@@ -62,8 +84,8 @@ export class ModalService {
     this.handleNativeClose = null;
   }
 
-  unlockScroll() {
-    if (!browser || !this.modalOpen) return;
+  unlockScroll({ force = false } = {}) {
+    if (!browser || (!this.modalOpen && !force)) return;
 
     this.detachNativeCloseHandler();
 
@@ -77,7 +99,7 @@ export class ModalService {
     document.body.style.height = "";
 
     // Restore scroll position
-    window.scrollTo(0, this.scrollPosition);
+    window.scrollTo(0, this.scrollPosition || 0);
 
     this.modalOpen = false;
     this.activeModal = null;

@@ -2155,21 +2155,25 @@
 
   .zl-empty-state {
     min-height: 190px;
+    justify-content: flex-start;
     margin: 0.65rem 0 0.25rem;
-    padding: 1.15rem 0.8rem;
+    padding: 0.8rem 0.8rem 1rem;
   }
 
   .zl-empty-title {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     font-size: 1.35rem;
   }
 
   .zl-empty-description {
     font-size: 0.92rem;
+    line-height: 1.3;
+    margin-bottom: 0;
   }
 
   .zl-empty-hint {
     font-size: 0.84rem;
+    margin-top: 0.35rem;
   }
 }
 

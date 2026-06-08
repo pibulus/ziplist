@@ -31,6 +31,7 @@ const WHISPER_TINY_MODEL = {
 };
 
 const SAMPLE_RATE = 16000;
+const MODEL_LOAD_TIMEOUT_MS = 5 * 60 * 1000;
 
 // ============================================================================
 // STEP 3: Audio Conversion Pipeline
@@ -174,7 +175,7 @@ class WhisperTranscriber {
       );
 
       // Create pipeline with progress tracking
-      this.transcriber = await pipeline(
+      const loadPromise = pipeline(
         "automatic-speech-recognition",
         WHISPER_TINY_MODEL.id,
         {
@@ -191,6 +192,26 @@ class WhisperTranscriber {
           },
         },
       );
+
+      let loadTimeoutId;
+      const timeoutPromise = new Promise((_, reject) => {
+        loadTimeoutId = setTimeout(
+          () =>
+            reject(
+              new Error(
+                "Model download timed out. Check your connection and try again.",
+              ),
+            ),
+          MODEL_LOAD_TIMEOUT_MS,
+        );
+      });
+
+      this.transcriber = await Promise.race([
+        loadPromise,
+        timeoutPromise,
+      ]).finally(() => {
+        clearTimeout(loadTimeoutId);
+      });
 
       // Warmup: Run silent audio to JIT-compile WASM kernels
       await this.warmup();

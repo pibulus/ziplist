@@ -2,6 +2,7 @@
   import { browser } from "$app/environment";
   import { createEventDispatcher, onDestroy } from "svelte";
   import { pwaService } from "$lib/services/pwa";
+  import { hapticService } from "$lib/services/infrastructure/hapticService";
 
   const dispatch = createEventDispatcher();
   const OFFLINE_MODEL_TIMEOUT_MS = 90000;
@@ -20,6 +21,17 @@
 
   function stopStream(stream) {
     stream?.getTracks().forEach((track) => track.stop());
+  }
+
+  function clearCompleteTimeout() {
+    if (completeTimeout) {
+      window.clearTimeout(completeTimeout);
+      completeTimeout = null;
+    }
+  }
+
+  function clampProgress(value) {
+    return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
   }
 
   async function primeMicrophone() {
@@ -49,8 +61,12 @@
       if (isDismissed) return;
 
       if (status.isLoading || status.progress > 0) {
-        progress = Math.max(10, Math.round(status.progress || 0));
+        progress = Math.max(10, clampProgress(status.progress));
         statusText = `Loading offline model ${progress}%`;
+      }
+
+      if (status.error) {
+        errorMessage = status.error;
       }
     });
 
@@ -78,8 +94,11 @@
     const runId = ++setupRunId;
     isDismissed = false;
     isRunning = true;
+    isComplete = false;
     errorMessage = "";
     progress = 0;
+    clearCompleteTimeout();
+    hapticService.selection();
 
     try {
       statusText = "Checking microphone...";
@@ -106,6 +125,7 @@
       isComplete = true;
       statusText = "ZipList is ready on this device.";
       pwaService.markDeviceSetupComplete();
+      hapticService.notification("success");
 
       completeTimeout = window.setTimeout(() => {
         if (!isDismissed && runId === setupRunId) {
@@ -117,7 +137,11 @@
 
       errorMessage = error?.message || "Device setup failed";
       statusText = "Setup paused. Try again when you have a steady connection.";
+      hapticService.notification("warning");
     } finally {
+      unsubscribeWhisperStatus?.();
+      unsubscribeWhisperStatus = null;
+
       if (!isDismissed && runId === setupRunId) {
         isRunning = false;
       }
@@ -131,10 +155,7 @@
     unsubscribeWhisperStatus?.();
     unsubscribeWhisperStatus = null;
 
-    if (completeTimeout) {
-      window.clearTimeout(completeTimeout);
-      completeTimeout = null;
-    }
+    clearCompleteTimeout();
 
     pwaService.snoozeDeviceSetup();
     dispatch("dismiss");
@@ -143,9 +164,7 @@
   onDestroy(() => {
     unsubscribeWhisperStatus?.();
 
-    if (completeTimeout) {
-      window.clearTimeout(completeTimeout);
-    }
+    clearCompleteTimeout();
   });
 </script>
 
@@ -187,7 +206,7 @@
       {:else if errorMessage}
         Retry
       {:else}
-        Ready
+        Start
       {/if}
     </button>
 

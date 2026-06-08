@@ -19,7 +19,7 @@
   import { getLiveActivityStore } from "$lib/services/realtime/liveActivityStore";
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
   import { getTypingStore } from "$lib/services/realtime/typingStore";
-  import { PRODUCT_LIMITS } from "$lib/constants";
+  import { ANIMATION, PRODUCT_LIMITS } from "$lib/constants";
   import { isContributor } from "$lib";
   import CompletedDivider from "./CompletedDivider.svelte";
   import DraftItemRow from "./DraftItemRow.svelte";
@@ -79,6 +79,7 @@
   let touchDragAutoScrollFrame = null;
   let touchDragListenersAttached = false;
   let shareStatusTimer = null;
+  const celebrationTimers = new Set();
 
   // Props
   export let listId = null;
@@ -183,6 +184,7 @@
     }
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
     if (shareStatusTimer) clearTimeout(shareStatusTimer);
+    clearCelebrationTimers();
     setActionSheetScrollLock(false);
     clearTouchDragLongPressTimer();
     stopTouchDragAutoScroll();
@@ -227,6 +229,32 @@
       shareStatus = null;
       shareStatusTimer = null;
     }, duration);
+  }
+
+  function scheduleCelebration(callback, delay) {
+    const timer = setTimeout(() => {
+      celebrationTimers.delete(timer);
+      callback();
+    }, delay);
+
+    celebrationTimers.add(timer);
+    return timer;
+  }
+
+  function clearCelebrationTimers() {
+    celebrationTimers.forEach((timer) => clearTimeout(timer));
+    celebrationTimers.clear();
+  }
+
+  function getConfettiOrigin(event) {
+    if (typeof window === "undefined" || !event?.clientX || !event?.clientY) {
+      return { x: 0.5, y: 0.62 };
+    }
+
+    return {
+      x: Math.max(0.08, Math.min(0.92, event.clientX / window.innerWidth)),
+      y: Math.max(0.12, Math.min(0.86, event.clientY / window.innerHeight)),
+    };
   }
 
   function handleListNotice(event) {
@@ -590,9 +618,7 @@
     : [];
   $: remoteVoices = isLive ? liveActivity.voices : [];
   $: remoteFocusByItem = new Map(
-    isLive
-      ? liveActivity.focuses.map((focus) => [focus.itemId, focus])
-      : [],
+    isLive ? liveActivity.focuses.map((focus) => [focus.itemId, focus]) : [],
   );
   $: touchDraggedItem = touchDragItemId
     ? list.items.find((item) => item.id === touchDragItemId) || null
@@ -1263,7 +1289,9 @@
     const willCompleteList =
       willCheckItem &&
       list.items.length > 0 &&
-      list.items.filter((item) => item.id !== itemId).every((item) => item.checked);
+      list.items
+        .filter((item) => item.id !== itemId)
+        .every((item) => item.checked);
 
     // Apply haptic feedback
     if (itemToToggle) {
@@ -1283,26 +1311,22 @@
 
     // If checking the item (not unchecking), add sparkle animation
     if (!itemToToggle?.checked) {
-      // Get click coordinates if available for origin
-      let origin = { y: 0.6 };
-      if (event && event.clientX && event.clientY) {
-        origin = {
-          x: event.clientX / window.innerWidth,
-          y: event.clientY / window.innerHeight,
-        };
-      }
+      const origin = getConfettiOrigin(event);
 
       const confetti = (await import("canvas-confetti")).default;
       confetti({
-        particleCount: 60,
-        spread: 60,
+        particleCount: Math.max(
+          24,
+          Math.round(ANIMATION.CONFETTI.PIECE_COUNT * 0.7),
+        ),
+        spread: 54,
         origin: origin,
         colors: ["#FFB000", "#FF6AC2", "#00D4FF"], // Use app colors
         disableForReducedMotion: true,
       });
 
       // Add sparkle animation after a small delay
-      setTimeout(() => {
+      scheduleCelebration(() => {
         const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
         if (checkbox) {
           // Force reflow to restart animation
@@ -1318,12 +1342,13 @@
             hapticService.notification("success");
 
             // Extra confetti for finishing the list!
-            setTimeout(() => {
+            scheduleCelebration(() => {
               confetti({
-                particleCount: 150,
-                spread: 100,
-                origin: { y: 0.6 },
+                particleCount: ANIMATION.CONFETTI.PIECE_COUNT,
+                spread: 82,
+                origin: { x: 0.5, y: 0.62 },
                 colors: ["#FFB000", "#FF6AC2", "#00D4FF"],
+                disableForReducedMotion: true,
               });
             }, 300);
           }
