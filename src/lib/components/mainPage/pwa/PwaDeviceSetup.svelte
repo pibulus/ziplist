@@ -118,7 +118,7 @@
       if (isDismissed || runId !== setupRunId) return;
 
       if (!modelResult?.success) {
-        throw modelResult?.error || new Error("Offline model failed to load");
+        throw modelResult?.error || new Error("Offline model needs one more try");
       }
 
       progress = 100;
@@ -135,7 +135,7 @@
     } catch (error) {
       if (isDismissed || runId !== setupRunId) return;
 
-      errorMessage = error?.message || "Device setup failed";
+      errorMessage = error?.message || "Device setup needs one more try";
       statusText = "Setup paused. Try again when you have a steady connection.";
       hapticService.notification("warning");
     } finally {
@@ -245,7 +245,7 @@
   }
 
   .pwa-device-setup.has-error {
-    border-color: rgba(239, 68, 68, 0.45);
+    border-color: rgba(255, 176, 0, 0.5);
   }
 
   .setup-copy {

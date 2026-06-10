@@ -13,6 +13,7 @@
   export let ogImageAlt = "ZipList warm voice checklist app preview";
   export let ogType = "website";
   export let footerYear = new Date().getFullYear();
+  export let listFirst = false;
 
   $: resolvedOgTitle = ogTitle || title;
   $: resolvedOgDescription = ogDescription || description;
@@ -57,6 +58,7 @@
 
 <div
   class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10"
+  class:list-first-shell={listFirst}
 >
   <main
     id="main-content"
@@ -67,7 +69,7 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs text-gray-600 backdrop-blur-[3px] sm:pb-4 sm:pt-4"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs text-gray-600 backdrop-blur-[3px] sm:pb-4 sm:pt-6"
   >
     <div
       class="container mx-auto flex flex-row items-center justify-center gap-1 sm:justify-between sm:gap-3"
@@ -80,12 +82,7 @@
         </span>
         <span class="footer-dot mx-2">•</span>
         <span class="text-sm font-light text-gray-600">
-          Made with
-          <span
-            class="footer-heart mx-0.5 inline-block transform animate-pulse transition-transform duration-300 hover:scale-110"
-            aria-label="love">♥</span
-          >
-          in Melbourne
+          Melbourne
         </span>
       </div>
       <div class="flex items-center sm:mr-6 md:mr-8">
@@ -169,6 +166,11 @@
     padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
   }
 
+  .page-shell.list-first-shell {
+    gap: 1.25rem;
+    padding-top: max(env(safe-area-inset-top), clamp(2rem, 6svh, 4rem));
+  }
+
   footer {
     --footer-surface-rgb: 255, 246, 230;
     --zl-footer-border-color: rgba(
@@ -177,18 +179,18 @@
     );
     --zl-footer-shadow: 0 -4px 15px
       rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
+    --zl-footer-bg-image: linear-gradient(
+      90deg,
+      rgba(var(--footer-surface-rgb), 0.92),
+      rgba(var(--footer-surface-rgb), 0.88),
+      rgba(var(--footer-surface-rgb), 0.92)
+    );
     --zl-footer-dot-color: rgba(
       var(--zl-accent-color-rgb, 255, 106, 194),
       0.78
     );
-    --zl-footer-heart-color: var(--zl-accent-color, #ff6ac2);
-    background: linear-gradient(
-      to top,
-      rgba(var(--footer-surface-rgb), 0.96) 0%,
-      rgba(var(--footer-surface-rgb), 0.9) 72%,
-      rgba(var(--footer-surface-rgb), 0) 100%
-    );
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    background: var(--zl-footer-bg-image);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .zl-app-footer {
@@ -200,31 +202,40 @@
     color: var(--zl-footer-dot-color);
   }
 
-  .footer-heart {
-    color: var(--zl-footer-heart-color);
-  }
-
   /* Media queries for mobile optimization */
   @media (max-width: 640px) {
     .page-shell {
-      padding-top: 6vh !important;
-      padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)) !important;
-      min-height: 100vh;
+      padding-top: max(
+        env(safe-area-inset-top),
+        clamp(4rem, 10svh, 5.5rem)
+      ) !important;
+      padding-bottom: max(
+        6rem,
+        calc(env(safe-area-inset-bottom) + 5.5rem)
+      ) !important;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
     }
 
+    .page-shell.list-first-shell {
+      padding-top: max(
+        env(safe-area-inset-top),
+        clamp(1.5rem, 5svh, 2.75rem)
+      ) !important;
+      gap: 1rem;
+    }
+
     footer {
-      background: rgba(var(--footer-surface-rgb), 0.98);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-      padding-top: 0.75rem;
-      padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
     }
 
     footer .container {
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     footer .container > div.copyright {
@@ -248,23 +259,6 @@
     --footer-surface-rgb: 219, 234, 243;
   }
 
-  @media (min-width: 768px) {
-    .footer-component {
-      position: static !important;
-      margin-top: 2rem;
-    }
-
-    .page-shell {
-      padding-bottom: 2.5rem !important;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .footer-heart {
-      animation: none;
-    }
-  }
-
   /* Desktop layout - start from top */
   @media (min-width: 1024px) {
     .page-shell {
@@ -272,7 +266,11 @@
       flex-direction: column;
       justify-content: flex-start;
       padding-top: 15vh !important;
-      padding-bottom: 2.5rem !important;
+      padding-bottom: 10vh !important;
+    }
+
+    .page-shell.list-first-shell {
+      padding-top: 7vh !important;
     }
   }
 </style>

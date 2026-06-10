@@ -618,8 +618,8 @@ html[data-theme="neo"] {
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-bg: #ff6b6b;
-  --zl-delete-button-hover-bg: #ff4757;
+  --zl-delete-button-bg: rgba(255, 255, 255, 0.9);
+  --zl-delete-button-hover-bg: #fff7d6;
   --zl-delete-button-text-color: #000000;
 
   /* Drop indicator styling */

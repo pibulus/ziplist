@@ -700,11 +700,11 @@
     linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.88),
-      rgba(255, 238, 238, 0.72)
+      rgba(255, 247, 217, 0.72)
     ),
-    rgba(255, 244, 244, 0.92);
-  border: 2px solid rgba(255, 68, 68, 0.26);
-  color: #b42334;
+    rgba(255, 251, 235, 0.92);
+  border: 2px solid rgba(255, 176, 0, 0.32);
+  color: #624500;
 }
 
 /* List container */
@@ -919,21 +919,21 @@
 .zl-item.just-edited {
   animation: item-glow 2s ease-out;
   box-shadow:
-    0 0 20px rgba(255, 107, 107, 0.6),
-    0 0 40px rgba(255, 107, 107, 0.3);
+    0 0 20px rgba(255, 176, 0, 0.48),
+    0 0 40px rgba(0, 188, 212, 0.24);
 }
 
 @keyframes item-glow {
   0% {
     box-shadow:
-      0 0 30px rgba(255, 107, 107, 0.8),
-      0 0 50px rgba(255, 107, 107, 0.5);
+      0 0 30px rgba(255, 176, 0, 0.62),
+      0 0 50px rgba(0, 188, 212, 0.32);
     transform: scale(1.02);
   }
   50% {
     box-shadow:
-      0 0 20px rgba(255, 107, 107, 0.6),
-      0 0 40px rgba(255, 107, 107, 0.3);
+      0 0 20px rgba(255, 176, 0, 0.48),
+      0 0 40px rgba(0, 188, 212, 0.24);
   }
   100% {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
@@ -1615,366 +1615,49 @@
   margin-left: 0.5rem;
 }
 
-.zl-item-actions-trigger {
+.zl-item-delete-button {
+  align-items: center;
   background: var(--zl-delete-button-bg, rgba(255, 255, 255, 0.8));
   border: var(--zl-delete-button-border, 1px solid rgba(0, 188, 212, 0.4));
+  border-radius: 50%;
   color: var(--zl-delete-button-text-color, rgba(0, 188, 212, 0.9));
   cursor: pointer;
-  opacity: 0;
-  transition: all 0.2s;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border-radius: 50%;
   display: flex;
-  align-items: center;
+  font-family: "Space Mono", monospace;
+  font-size: 1.25rem;
+  font-weight: 900;
+  height: 44px;
   justify-content: center;
-  gap: 3px;
-}
-
-.zl-action-dot {
-  background: currentColor;
-  border-radius: 50%;
-  display: block;
-  height: 4px;
+  line-height: 1;
+  opacity: 0.76;
+  padding: 0;
   transition:
-    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.2s ease;
-  width: 4px;
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  width: 44px;
 }
 
-.zl-item:hover .zl-item-actions-trigger,
-.zl-item-actions-trigger:focus-visible {
+.zl-item:hover .zl-item-delete-button,
+.zl-item-delete-button:focus-visible {
   opacity: 1;
 }
 
-.zl-item-actions-trigger:hover,
-.zl-item-actions-trigger:focus-visible {
+.zl-item-delete-button:hover,
+.zl-item-delete-button:focus-visible {
   background-color: rgba(255, 255, 255, 0.96);
   border-color: rgba(0, 188, 212, 0.68);
   box-shadow: 0 6px 14px rgba(0, 151, 167, 0.16);
   outline: none;
-  transform: translateY(-1px);
+  transform: translateY(-1px) rotate(6deg) scale(1.04);
 }
 
-.zl-item-actions-trigger:hover .zl-action-dot:first-child,
-.zl-item-actions-trigger:focus-visible .zl-action-dot:first-child {
-  transform: translate3d(-2px, -4px, 0) scale(1.16);
-}
-
-.zl-item-actions-trigger:hover .zl-action-dot:nth-child(2),
-.zl-item-actions-trigger:focus-visible .zl-action-dot:nth-child(2) {
-  transform: translate3d(0, 3px, 0) scale(0.9);
-}
-
-.zl-item-actions-trigger:hover .zl-action-dot:last-child,
-.zl-item-actions-trigger:focus-visible .zl-action-dot:last-child {
-  transform: translate3d(2px, -4px, 0) scale(1.16);
-}
-
-.zl-item-actions-trigger:active {
+.zl-item-delete-button:active {
   transform: translateY(1px) scale(0.94);
   transition-duration: 80ms;
-}
-
-.zl-item-action-layer {
-  align-items: flex-end;
-  display: flex;
-  inset: 0;
-  justify-content: center;
-  padding: 1rem max(1rem, env(safe-area-inset-right))
-    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
-  position: fixed;
-  z-index: 1100;
-}
-
-.zl-item-action-backdrop {
-  appearance: none;
-  background:
-    radial-gradient(
-      circle at 50% 78%,
-      rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.18),
-      rgba(18, 18, 24, 0) 36%
-    ),
-    rgba(18, 18, 24, 0.3);
-  border: 0;
-  cursor: default;
-  inset: 0;
-  padding: 0;
-  position: absolute;
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
-}
-
-.zl-item-action-sheet {
-  animation: action-sheet-rise 0.46s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.98),
-      rgba(255, 247, 252, 0.96) 48%,
-      rgba(244, 253, 255, 0.94)
-    ),
-    rgba(255, 255, 255, 0.97);
-  border: 2px solid rgba(24, 24, 27, 0.82);
-  border-radius: 22px;
-  box-shadow:
-    0 18px 42px rgba(24, 24, 27, 0.22),
-    0 4px 0 rgba(24, 24, 27, 0.12),
-    0 0 30px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.1);
-  box-sizing: border-box;
-  color: var(--zl-text-color-primary);
-  display: flex;
-  flex-direction: column;
-  font-family: "Space Mono", monospace;
-  gap: 0.9rem;
-  max-height: min(82vh, 520px);
-  overflow-y: auto;
-  padding: 1rem;
-  position: relative;
-  transform-origin: 50% 100%;
-  width: min(100%, 420px);
-  z-index: 1;
-}
-
-.zl-item-action-sheet::before {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.55),
-    rgba(255, 255, 255, 0)
-  );
-  content: "";
-  height: 150%;
-  left: 0;
-  opacity: 0.65;
-  pointer-events: none;
-  position: absolute;
-  top: -25%;
-  transform: translateX(-120%) rotate(8deg);
-  width: 42%;
-  animation: sheet-sheen 0.8s ease 0.12s both;
-}
-
-.zl-item-action-sheet::after {
-  background: rgba(24, 24, 27, 0.24);
-  border-radius: 999px;
-  content: "";
-  height: 4px;
-  left: 50%;
-  position: absolute;
-  top: 0.58rem;
-  transform: translateX(-50%);
-  width: 42px;
-}
-
-.zl-item-action-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding-top: 0.55rem;
-  position: relative;
-  z-index: 1;
-}
-
-.zl-item-action-title,
-.zl-action-section-label {
-  color: var(--zl-text-color-secondary);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0;
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.zl-item-action-title::after {
-  color: rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.72);
-  content: "✦";
-  display: inline-block;
-  margin-left: 0.45rem;
-  transform: translateY(-1px);
-}
-
-.zl-item-action-text {
-  color: var(--zl-text-color-primary);
-  font-size: 1rem;
-  font-weight: 900;
-  line-height: 1.35;
-  margin: 0;
-  overflow-wrap: break-word;
-}
-
-.zl-move-targets,
-.zl-action-sheet-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  position: relative;
-  z-index: 1;
-}
-
-.zl-move-targets {
-  max-height: min(42vh, 290px);
-  overflow-y: auto;
-  padding-right: 0.1rem;
-}
-
-.zl-action-sheet-footer {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.96) 18%
-  );
-  bottom: -1rem;
-  margin: 0 -1rem -1rem;
-  padding: 0.75rem 1rem 1rem;
-  position: sticky;
-}
-
-.zl-move-target-button,
-.zl-action-delete-button,
-.zl-action-cancel-button {
-  align-items: center;
-  border-radius: 16px;
-  cursor: pointer;
-  display: inline-flex;
-  font-family: "Space Mono", monospace;
-  font-size: 0.88rem;
-  font-weight: 900;
-  gap: 0.7rem;
-  justify-content: flex-start;
-  letter-spacing: 0;
-  min-height: 48px;
-  padding: 0.7rem 0.85rem;
-  text-align: left;
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease,
-    border-color 0.16s ease,
-    background 0.16s ease;
-  width: 100%;
-}
-
-.zl-move-target-button {
-  animation: action-row-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(80ms + var(--move-index, 0) * 45ms);
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.84),
-      rgba(255, 255, 255, 0.62)
-    ),
-    rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(0, 188, 212, 0.2);
-  color: var(--zl-text-color-primary);
-  overflow: hidden;
-  position: relative;
-}
-
-.zl-move-target-button::before {
-  background: linear-gradient(
-    to bottom,
-    var(--target-color),
-    rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.55)
-  );
-  border-radius: 999px;
-  content: "";
-  inset: 0 auto 0 0;
-  position: absolute;
-  transform: scaleY(0);
-  transform-origin: 50% 50%;
-  transition: transform 0.2s ease;
-  width: 4px;
-}
-
-.zl-move-target-button::after {
-  background: radial-gradient(
-    circle at 12% 50%,
-    var(--target-glow),
-    rgba(255, 255, 255, 0) 45%
-  );
-  content: "";
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  transition: opacity 0.2s ease;
-}
-
-.zl-move-target-button:hover,
-.zl-move-target-button:focus-visible {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: rgba(0, 188, 212, 0.45);
-  box-shadow: 0 8px 18px rgba(0, 151, 167, 0.12);
-  outline: none;
-  transform: translate3d(0, -2px, 0) scale(1.01);
-}
-
-.zl-move-target-button:hover::before,
-.zl-move-target-button:focus-visible::before {
-  transform: scaleY(1);
-}
-
-.zl-move-target-button:hover::after,
-.zl-move-target-button:focus-visible::after {
-  opacity: 1;
-}
-
-.zl-list-swatch {
-  animation: swatch-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  animation-delay: calc(120ms + var(--move-index, 0) * 45ms);
-  background: var(--target-color);
-  border: 2px solid rgba(24, 24, 27, 0.72);
-  border-radius: 50%;
-  box-shadow: 0 4px 12px var(--target-glow);
-  flex-shrink: 0;
-  height: 18px;
-  position: relative;
-  width: 18px;
-  z-index: 1;
-}
-
-.zl-move-target-name {
-  min-width: 0;
-  overflow: hidden;
-  position: relative;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  z-index: 1;
-}
-
-.zl-action-delete-button {
-  animation: action-row-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 160ms;
-  background: rgba(255, 244, 244, 0.95);
-  border: 1px solid rgba(255, 68, 68, 0.28);
-  color: #d02f3f;
-}
-
-.zl-action-delete-button:hover,
-.zl-action-delete-button:focus-visible {
-  background: rgba(255, 236, 236, 1);
-  border-color: rgba(255, 68, 68, 0.5);
-  box-shadow: 0 8px 18px rgba(208, 47, 63, 0.12);
-  outline: none;
-  transform: translate3d(0, -1px, 0) rotate(-0.35deg);
-}
-
-.zl-action-cancel-button {
-  animation: action-row-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 205ms;
-  background: rgba(24, 24, 27, 0.92);
-  border: 1px solid rgba(24, 24, 27, 0.92);
-  color: #ffffff;
-  justify-content: center;
-}
-
-.zl-action-cancel-button:hover,
-.zl-action-cancel-button:focus-visible {
-  background: rgba(24, 24, 27, 1);
-  box-shadow: 0 8px 18px rgba(24, 24, 27, 0.18);
-  outline: none;
-  transform: translate3d(0, -1px, 0);
 }
 
 .zl-touch-ghost {
@@ -2178,14 +1861,14 @@
 }
 
 @media (hover: none) {
-  .zl-item-actions-trigger {
+  .zl-item-delete-button {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 188, 212, 0.24);
     color: rgba(0, 151, 167, 0.86);
     opacity: 1;
   }
 
-  .zl-item.checked .zl-item-actions-trigger {
+  .zl-item.checked .zl-item-delete-button {
     opacity: 0.78;
   }
 
@@ -2200,13 +1883,7 @@
 @media (prefers-reduced-motion: reduce) {
   .zl-item.settling:not(.touch-placeholder),
   .animate-pop,
-  .zl-share-notification,
-  .zl-item-action-sheet,
-  .zl-item-action-sheet::before,
-  .zl-move-target-button,
-  .zl-list-swatch,
-  .zl-action-delete-button,
-  .zl-action-cancel-button {
+  .zl-share-notification {
     animation: none;
   }
 
@@ -2217,22 +1894,12 @@
     animation: none;
   }
 
-  .zl-item-actions-trigger,
-  .zl-action-dot,
-  .zl-move-target-button,
-  .zl-action-delete-button,
-  .zl-action-cancel-button {
+  .zl-item-delete-button {
     transition-duration: 0.01ms;
   }
 
-  .zl-item-actions-trigger:hover .zl-action-dot,
-  .zl-item-actions-trigger:focus-visible .zl-action-dot,
-  .zl-move-target-button:hover,
-  .zl-move-target-button:focus-visible,
-  .zl-action-delete-button:hover,
-  .zl-action-delete-button:focus-visible,
-  .zl-action-cancel-button:hover,
-  .zl-action-cancel-button:focus-visible {
+  .zl-item-delete-button:hover,
+  .zl-item-delete-button:focus-visible {
     transform: none;
   }
 }
@@ -2240,11 +1907,6 @@
 body.zl-touch-dragging {
   user-select: none;
   -webkit-user-select: none;
-}
-
-body.zl-action-sheet-open {
-  overflow: hidden;
-  touch-action: none;
 }
 
 /* Presence Dots */

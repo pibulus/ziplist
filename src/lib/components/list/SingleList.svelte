@@ -39,10 +39,6 @@
   let draftInputNode = null;
   let editingListName = false;
   let editedListName = "";
-  let allLists = [];
-  let actionSheetItemId = null;
-  let actionSheetNode = null;
-  let actionSheetOpener = null;
   let shareStatus = null; // To track share operation status
   let undoDelete = null;
   let undoDeleteTimer = null;
@@ -98,13 +94,11 @@
     if (unsubscribe) unsubscribe();
     if (nextListId) {
       unsubscribe = listsStore.subscribe((state) => {
-        allLists = state.lists;
         const foundList = state.lists.find((l) => l.id === nextListId);
         if (foundList) list = foundList;
       });
     } else {
       unsubscribe = listsStore.subscribe((state) => {
-        allLists = state.lists;
         const activeListData = state.lists.find(
           (l) => l.id === state.activeListId,
         );
@@ -125,7 +119,6 @@
       draftItemText = "";
       editingItemId = null;
       editedItemText = "";
-      closeItemActions({ restoreFocus: false });
       // Clear drag state so a mid-drag list switch doesn't leave a phantom indicator
       draggedItemId = null;
       dragOverItemId = null;
@@ -140,13 +133,6 @@
 
   $: isDefaultName = DEFAULT_LIST_NAMES.has(list.name);
   $: accessibleListName = list.name || "Your List";
-
-  $: moveTargets = showListManagement
-    ? allLists.filter((candidate) => candidate.id !== list.id)
-    : [];
-  $: actionSheetItem = actionSheetItemId
-    ? list.items.find((item) => item.id === actionSheetItemId) || null
-    : null;
 
   // Subscribe to presence and typing for this list
   let presenceUnsubscribe = null;
@@ -185,7 +171,6 @@
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
     if (shareStatusTimer) clearTimeout(shareStatusTimer);
     clearCelebrationTimers();
-    setActionSheetScrollLock(false);
     clearTouchDragLongPressTimer();
     stopTouchDragAutoScroll();
     removeTouchDragListeners();
@@ -301,7 +286,7 @@
       showListStatus(
         copied
           ? "Live link copied!"
-          : "Live link ready, but copying is blocked",
+          : "Live link ready. Copying needs browser permission.",
         copied,
       );
       if (copied) {
@@ -311,7 +296,7 @@
       }
     } catch (error) {
       console.error("Failed to copy live link:", error);
-      showListStatus("Live link ready, but copying is blocked");
+      showListStatus("Live link ready. Copying needs browser permission.");
       soundService.error({ force: true });
     }
   }
@@ -324,7 +309,7 @@
     }
 
     if (!list || !list.items || list.items.length === 0) {
-      showListStatus("Cannot share an empty list");
+      showListStatus("Add an item before sharing.");
       soundService.locked();
       return;
     }
@@ -341,12 +326,12 @@
         );
         soundService.copySuccess({ force: true });
       } else {
-        showListStatus("Failed to share list");
+        showListStatus("Share needs one more try.");
         soundService.error({ force: true });
       }
     } catch (error) {
       console.error("Failed to share list:", error);
-      showListStatus("Failed to share list");
+      showListStatus("Share needs one more try.");
       soundService.error({ force: true });
     }
   }
@@ -372,7 +357,7 @@
     }
 
     if (!list || !list.id) {
-      showListStatus("Cannot make list live");
+      showListStatus("Open a list before starting live sharing.");
       soundService.locked();
       return;
     }
@@ -407,7 +392,7 @@
       subscribeToLiveStores(list.id);
     } catch (error) {
       console.error("Failed to make list live:", error);
-      showListStatus("Failed to make list live: " + error.message, false, 5000);
+      showListStatus("Live sharing needs one more try.", false, 5000);
       soundService.error({ force: true });
     } finally {
       isMakingLive = false;
@@ -473,136 +458,6 @@
       event.preventDefault();
       cancelListNameEdit();
     }
-  }
-
-  async function openItemActions(itemId, event = null) {
-    if (editingItemId === itemId) return;
-
-    actionSheetOpener = event?.currentTarget || null;
-    actionSheetItemId = itemId;
-    setActionSheetScrollLock(true);
-    hapticService.selection();
-    soundService.open();
-
-    await tick();
-    focusInitialActionSheetControl();
-  }
-
-  function closeItemActions({ restoreFocus = true } = {}) {
-    const opener = actionSheetOpener;
-    actionSheetItemId = null;
-    actionSheetNode = null;
-    actionSheetOpener = null;
-    setActionSheetScrollLock(false);
-
-    if (
-      restoreFocus &&
-      opener &&
-      typeof document !== "undefined" &&
-      document.contains(opener)
-    ) {
-      opener.focus();
-    }
-  }
-
-  function setActionSheetScrollLock(locked) {
-    if (typeof document === "undefined") return;
-    document.body.classList.toggle("zl-action-sheet-open", locked);
-  }
-
-  function getActionSheetFocusableControls() {
-    if (!actionSheetNode) return [];
-
-    return Array.from(
-      actionSheetNode.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      ),
-    ).filter(
-      (element) =>
-        !element.disabled &&
-        element.getAttribute("aria-hidden") !== "true" &&
-        element.offsetParent !== null,
-    );
-  }
-
-  function focusInitialActionSheetControl() {
-    const [firstControl] = getActionSheetFocusableControls();
-    if (firstControl) {
-      firstControl.focus();
-      return;
-    }
-
-    actionSheetNode?.focus();
-  }
-
-  function handleActionSheetKeyDown(event) {
-    if (!actionSheetItemId) return;
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      soundService.close();
-      closeItemActions();
-      return;
-    }
-
-    if (event.key !== "Tab") return;
-
-    const focusableControls = getActionSheetFocusableControls();
-    if (focusableControls.length === 0) {
-      event.preventDefault();
-      actionSheetNode?.focus();
-      return;
-    }
-
-    const firstControl = focusableControls[0];
-    const lastControl = focusableControls[focusableControls.length - 1];
-    const activeElement = document.activeElement;
-
-    if (!actionSheetNode?.contains(activeElement)) {
-      event.preventDefault();
-      firstControl.focus();
-      return;
-    }
-
-    if (event.shiftKey && activeElement === firstControl) {
-      event.preventDefault();
-      lastControl.focus();
-    } else if (!event.shiftKey && activeElement === lastControl) {
-      event.preventDefault();
-      firstControl.focus();
-    }
-  }
-
-  function handleActionSheetBackdropClick() {
-    soundService.close();
-    closeItemActions();
-  }
-
-  function handleActionSheetCancel() {
-    soundService.close();
-    closeItemActions();
-  }
-
-  function moveItemToList(itemId, targetListId) {
-    const result = listsService.moveItem(itemId, list.id, targetListId);
-
-    closeItemActions({ restoreFocus: false });
-
-    if (!result.ok) {
-      showListStatus(result.message || "Could not move that item");
-      hapticService.notification("warning");
-      soundService.locked();
-      return;
-    }
-
-    showListStatus(result.message || "Moved item.", true);
-    hapticService.notification("success");
-    soundService.success({ force: true });
-  }
-
-  function deleteItemFromActions(itemId) {
-    closeItemActions({ restoreFocus: false });
-    deleteItem(itemId);
   }
 
   // Separated active and completed items
@@ -1491,7 +1346,7 @@
     if (newText) {
       const result = listsService.addItem(newText, list.id);
       if (!result.ok) {
-        showListStatus(result.message || "Could not add that item");
+        showListStatus(result.message || "That item needs one more try.");
         hapticService.notification("warning");
         soundService.locked();
         return;
@@ -1534,12 +1389,8 @@
   }
 </script>
 
-<svelte:window on:keydown={handleActionSheetKeyDown} />
-
 <section
   class="zl-card"
-  aria-hidden={actionSheetItem ? "true" : undefined}
-  inert={!!actionSheetItem}
   aria-labelledby="list-title-{list.id || 'active'}"
 >
   <span id="list-title-{list.id || 'active'}" class="zl-visually-hidden">
@@ -1778,7 +1629,7 @@
                 onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
-                onOpenActions={openItemActions}
+                onDelete={deleteItem}
               />
             </li>
           {/each}
@@ -1879,7 +1730,7 @@
                 onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
-                onOpenActions={openItemActions}
+                onDelete={deleteItem}
               />
             </li>
           {/each}
@@ -1905,75 +1756,6 @@
     </div>
   </div>
 </section>
-
-{#if actionSheetItem}
-  <div class="zl-item-action-layer" role="presentation">
-    <button
-      type="button"
-      class="zl-item-action-backdrop"
-      aria-label="Close item actions"
-      on:click={handleActionSheetBackdropClick}
-    ></button>
-    <div
-      bind:this={actionSheetNode}
-      class="zl-item-action-sheet"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="item-action-title-{list.id}-{actionSheetItem.id}"
-      aria-describedby="item-action-text-{list.id}-{actionSheetItem.id}"
-      tabindex="-1"
-    >
-      <div class="zl-item-action-header">
-        <p
-          id="item-action-title-{list.id}-{actionSheetItem.id}"
-          class="zl-item-action-title"
-        >
-          Move or delete
-        </p>
-        <p
-          id="item-action-text-{list.id}-{actionSheetItem.id}"
-          class="zl-item-action-text"
-        >
-          {actionSheetItem.text}
-        </p>
-      </div>
-
-      {#if moveTargets.length > 0}
-        <div class="zl-move-targets" aria-label="Move to list">
-          <p class="zl-action-section-label">Move to</p>
-          {#each moveTargets as targetList, index (targetList.id)}
-            <button
-              type="button"
-              class="zl-move-target-button"
-              style="--move-index: {index}; --target-color: {targetList.primaryColor}; --target-glow: {targetList.glowColor}"
-              on:click={() => moveItemToList(actionSheetItem.id, targetList.id)}
-            >
-              <span class="zl-list-swatch" aria-hidden="true"></span>
-              <span class="zl-move-target-name">{targetList.name}</span>
-            </button>
-          {/each}
-        </div>
-      {/if}
-
-      <div class="zl-action-sheet-footer">
-        <button
-          type="button"
-          class="zl-action-delete-button"
-          on:click={() => deleteItemFromActions(actionSheetItem.id)}
-        >
-          Delete item
-        </button>
-        <button
-          type="button"
-          class="zl-action-cancel-button"
-          on:click={handleActionSheetCancel}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-{/if}
 
 {#if touchDraggedItem && touchDragGhostRect}
   <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">

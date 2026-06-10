@@ -39,7 +39,7 @@
   // Share list
   async function handleShare() {
     if (!list || !list.items || list.items.length === 0) {
-      shareStatus = { success: false, message: 'Cannot share an empty list' };
+      shareStatus = { success: false, message: 'Add an item before sharing.' };
       setTimeout(() => shareStatus = null, 3000);
       return;
     }
@@ -53,13 +53,13 @@
         };
         // postHogService.trackListShared(list.items.length, true);
       } else {
-        shareStatus = { success: false, message: 'Failed to share list' };
+        shareStatus = { success: false, message: 'Share needs one more try.' };
         // postHogService.trackListShared(list.items.length, false);
       }
       setTimeout(() => shareStatus = null, 3000);
     } catch (error) {
       console.error('Share error:', error);
-      shareStatus = { success: false, message: 'Failed to share list' };
+      shareStatus = { success: false, message: 'Share needs one more try.' };
       // postHogService.trackListShared(list.items.length, false);
       setTimeout(() => shareStatus = null, 3000);
     }

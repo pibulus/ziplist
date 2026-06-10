@@ -38,7 +38,7 @@
 
 <button
   type="button"
-  class="modal-close-btn absolute {position} z-50 flex {sizeClass} items-center justify-center rounded-full border border-pink-200 bg-pink-100 text-pink-500 shadow-sm transition-all duration-200 ease-in-out hover:bg-pink-200 hover:text-pink-700"
+  class="modal-close-btn absolute {position} z-50 flex {sizeClass} items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-slate-600 shadow-sm transition-all duration-200 ease-in-out hover:bg-amber-100 hover:text-slate-900"
   aria-label={label}
   on:click|preventDefault={handleClick}
 >

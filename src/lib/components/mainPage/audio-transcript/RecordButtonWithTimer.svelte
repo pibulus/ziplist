@@ -193,9 +193,9 @@
       aria-valuemin="0"
       aria-valuemax="100"
       aria-valuetext={`Making list ${Math.round(progress)} percent complete`}
-    >
-      <div
-        class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-rose-300"
+      >
+        <div
+        class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-cyan-300"
         style="width: {progress}%;"
       >
         <span class="text-white font-bold z-10 relative">Ziplisting...</span>
@@ -593,13 +593,13 @@
     z-index: 5; /* Increased z-index for text to appear above effects */
   }
 
-  /* Warning/danger gradients - tangerine with pink accents */
+  /* Time-limit gradients stay bright without stressful red states. */
   .recording-warning {
     background-image: linear-gradient(
       to right,
       rgb(251, 191, 36) var(--progress, 0%),
       rgba(251, 191, 36, 0.7) var(--progress, 0%),
-      rgba(249, 168, 212, 0.6) 100%
+      rgba(34, 211, 238, 0.58) 100%
     );
     box-shadow:
       0 4px 15px -1px rgba(251, 191, 36, 0.3),
@@ -612,27 +612,27 @@
       to right,
       rgb(251, 191, 36) var(--progress, 0%),
       rgba(251, 191, 36, 0.7) var(--progress, 0%),
-      rgba(244, 114, 182, 0.7) 100%
+      rgba(45, 212, 191, 0.72) 100%
     );
     box-shadow:
-      0 4px 15px -1px rgba(244, 114, 182, 0.3),
-      inset 0 0 10px rgba(244, 114, 182, 0.2),
-      0 0 20px rgba(244, 114, 182, 0.2);
+      0 4px 15px -1px rgba(45, 212, 191, 0.28),
+      inset 0 0 10px rgba(45, 212, 191, 0.22),
+      0 0 20px rgba(45, 212, 191, 0.2);
     animation: danger-pulse 1s infinite alternate ease-in-out;
   }
 
   @keyframes danger-pulse {
     0% {
       box-shadow:
-        0 4px 15px -1px rgba(244, 114, 182, 0.3),
-        inset 0 0 10px rgba(244, 114, 182, 0.2),
-        0 0 20px rgba(244, 114, 182, 0.2);
+        0 4px 15px -1px rgba(45, 212, 191, 0.28),
+        inset 0 0 10px rgba(45, 212, 191, 0.22),
+        0 0 20px rgba(45, 212, 191, 0.2);
     }
     100% {
       box-shadow:
-        0 4px 15px -1px rgba(244, 114, 182, 0.4),
-        inset 0 0 15px rgba(244, 114, 182, 0.25),
-        0 0 25px rgba(244, 114, 182, 0.25);
+        0 4px 15px -1px rgba(45, 212, 191, 0.38),
+        inset 0 0 15px rgba(45, 212, 191, 0.26),
+        0 0 25px rgba(45, 212, 191, 0.24);
     }
   }
 

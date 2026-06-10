@@ -27,7 +27,7 @@
   };
 
   const styleGlyphClasses = {
-    standard: "text-pink-500 border-pink-200 bg-pink-50",
+    standard: "text-teal-700 border-teal-200 bg-teal-50",
     surlyPirate: "text-amber-600 border-amber-200 bg-amber-50",
     codeWhisperer: "text-cyan-600 border-cyan-200 bg-cyan-50",
     quillAndInk: "text-violet-600 border-violet-200 bg-violet-50",
@@ -129,7 +129,7 @@
         <!-- Selected indicator (matching vibe selector above) -->
         {#if selectedPromptStyle === style}
           <div
-            class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-pink-400 text-xs text-white shadow-sm"
+            class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-teal-500 text-xs text-white shadow-sm"
             aria-hidden="true"
           >
             ✓

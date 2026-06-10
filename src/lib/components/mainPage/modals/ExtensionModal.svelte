@@ -61,14 +61,14 @@
         >
           <li class="pb-1">
             Download the extension files <span
-              class="text-pink-600 font-medium"
+              class="text-teal-700 font-medium"
               aria-disabled="true">here</span
             >
           </li>
           <li class="pb-1">Unzip the files to a folder on your computer</li>
           <li class="pb-1">
             Open Chrome and go to <code
-              class="rounded-md bg-pink-100 px-1.5 py-0.5 font-mono text-pink-700"
+              class="rounded-md bg-amber-100 px-1.5 py-0.5 font-mono text-slate-800"
               >chrome://extensions</code
             >
           </li>

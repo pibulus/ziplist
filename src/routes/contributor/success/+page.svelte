@@ -211,7 +211,7 @@
 
   .zl-success-copy p,
   .zl-code-card p {
-    color: #db5f78;
+    color: #11776d;
     font-size: 0.72rem;
     font-weight: 900;
     letter-spacing: 0;

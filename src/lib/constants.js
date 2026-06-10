@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
   THEME: "ziplist-vibe",
   FIRST_VISIT: "hasSeenZiplistIntro",
   AUTO_RECORD: "ziplist-autoRecord",
+  LIST_FIRST_MODE: "ziplist-list-first-mode",
   SOUND_CUES: "ziplist-sound-cues",
   PROMPT_STYLE: "ziplist-prompt-style",
   DEBUG_MODE: "ziplist-debug-mode",

@@ -6,9 +6,9 @@
   // Event handling
   const dispatch = createEventDispatcher();
 
-  let title = "Microphone Access Denied";
+  let title = "Microphone Needs Access";
   let description =
-    "ZipList needs microphone access to transcribe your speech. Please update your browser settings to allow microphone access.";
+    "ZipList needs microphone access for voice lists. Update your browser settings when you are ready.";
   let steps = [
     "Click the microphone or lock icon in your address bar",
     'Select "Allow" for microphone access',
@@ -19,9 +19,9 @@
     const platform = pwaService.getPlatformInfo();
 
     if (platform.isIOS) {
-      title = "Microphone Is Blocked";
+      title = "Microphone Needs Access";
       description =
-        "ZipList needs microphone access for voice lists. iPhone permissions are managed outside the app when access is blocked.";
+        "ZipList needs microphone access for voice lists. iPhone permissions are managed outside the app.";
       steps = platform.isStandalone
         ? [
             "Open iOS Settings",
@@ -34,9 +34,9 @@
             "Allow access, then reopen ZipList",
           ];
     } else if (platform.isAndroid) {
-      title = "Microphone Is Blocked";
+      title = "Microphone Needs Access";
       description =
-        "ZipList needs microphone access for voice lists. Update this site's microphone permission and try again.";
+        "ZipList needs microphone access for voice lists. Update this site's microphone permission when you are ready.";
       steps = [
         "Open site settings from your browser menu",
         'Set Microphone to "Allow"',

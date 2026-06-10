@@ -66,7 +66,7 @@
       {:else}
         <div class="error-message">
           <p id="import-dialog-error">
-            Unable to decode shared list. The link may be invalid or corrupted.
+            That shared list needs a fresh link.
           </p>
         </div>
       {/if}
@@ -230,11 +230,11 @@
   }
 
   .error-message {
-    background: rgba(255, 240, 240, 0.7);
-    border: 1px solid rgba(255, 100, 100, 0.3);
+    background: rgba(255, 251, 235, 0.78);
+    border: 1px solid rgba(255, 176, 0, 0.32);
     padding: 1rem;
     border-radius: 12px;
-    color: #7b2c2c;
+    color: #4b5563;
     font-family: "Space Mono", monospace;
     text-align: center;
   }

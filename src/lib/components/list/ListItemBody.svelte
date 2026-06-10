@@ -17,7 +17,7 @@
   export let onReorderClick = () => {};
   export let onReorderKeyDown = () => {};
   export let onTouchGrabStart = () => {};
-  export let onOpenActions = () => {};
+  export let onDelete = () => {};
 
   function autoFocus(node) {
     node.focus();
@@ -100,14 +100,11 @@
 <div class="zl-item-actions">
   <button
     type="button"
-    class="zl-item-actions-trigger"
+    class="zl-item-delete-button"
     data-swipe-ignore="true"
-    on:click|stopPropagation={(event) => onOpenActions(item.id, event)}
-    aria-label={`Move or delete ${item.text}`}
-    aria-haspopup="dialog"
+    on:click|stopPropagation={() => onDelete(item.id)}
+    aria-label={`Delete ${item.text}`}
   >
-    <span class="zl-action-dot"></span>
-    <span class="zl-action-dot"></span>
-    <span class="zl-action-dot"></span>
+    <span aria-hidden="true">×</span>
   </button>
 </div>

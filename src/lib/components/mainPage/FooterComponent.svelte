@@ -65,7 +65,7 @@
       }
     } catch (err) {
       if (err?.name === "AbortError") return;
-      setShareStatus("Share failed");
+      setShareStatus("Share needs one more try");
       soundService.error({ force: true });
       console.error("Error sharing:", err);
     }

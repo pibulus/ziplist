@@ -43,7 +43,7 @@
       } else {
         console.error("Failed to join live list:", err);
       }
-      error = err.message || "Failed to join live list";
+      error = err.message || "That live link needs one more try.";
       isLoading = false;
     }
   });
@@ -109,7 +109,9 @@
         {errorCode === "room_expired" ? "✦" : "!"}
       </div>
       <h2>
-        {errorCode === "room_expired" ? "This room popped" : "Failed to Join"}
+        {errorCode === "room_expired"
+          ? "This room popped"
+          : "Live link needs another try"}
       </h2>
       <p>
         {errorCode === "room_expired"
@@ -153,8 +155,8 @@
   .spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid rgba(255, 107, 107, 0.2);
-    border-top-color: #ff6b6b;
+    border: 4px solid rgba(255, 176, 0, 0.22);
+    border-top-color: #ffb000;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1.5rem;
@@ -219,8 +221,8 @@
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    color: white;
+    background: linear-gradient(135deg, #ffb000 0%, #2dd4bf 100%);
+    color: #111111;
     border: none;
     border-radius: 16px;
     padding: 0.75rem 1.5rem;
@@ -228,7 +230,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
+    box-shadow: 0 3px 8px rgba(255, 176, 0, 0.24);
   }
 
   .btn-primary:hover {

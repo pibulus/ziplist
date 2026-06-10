@@ -8,7 +8,8 @@
 
   // Component props
   export let title = "ZipList";
-  export let subtitle = "Make a list by talking.\nAdd more, tick things off.";
+  export let subtitle =
+    "Speak up a list, lickety split.\nThe shareable voice list thing.";
 
   // AppSuffix configuration
   export let showAppSuffix = true;
@@ -105,12 +106,10 @@
 <style>
   /* Floating Dude Styles */
   .floating-dude {
-    position: absolute;
-    top: -172px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 156px;
-    height: 156px;
+    position: relative;
+    width: 176px;
+    height: 176px;
+    margin-bottom: 1rem;
     background: none;
     border: none;
     cursor: pointer;
@@ -282,7 +281,6 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-    margin-top: 152px;
   }
 
   /* Container to visually center the main "Ziplist" word */
@@ -317,7 +315,7 @@
   /* Media queries for mobile optimization */
   @media (max-width: 640px) {
     h1.staggered-text {
-      font-size: 2.85rem;
+      font-size: 3rem;
       line-height: 1.1;
     }
 
@@ -330,17 +328,15 @@
 
     .slide-in-subtitle {
       max-inline-size: 28ch !important;
-      margin-top: 0.6rem !important;
-      margin-bottom: 0.4rem !important;
-      font-size: 0.95rem;
-      line-height: 1.45;
+      font-size: 1rem;
+      line-height: 1.6;
       text-wrap: balance;
     }
 
     .floating-dude {
-      width: 104px;
-      height: 104px;
-      top: -116px;
+      width: 176px;
+      height: 176px;
+      margin-bottom: 1rem;
     }
 
     .floating-dude::after {
@@ -348,8 +344,27 @@
       border-radius: 30px;
     }
 
-    .title-container {
-      margin-top: 116px;
+  }
+
+  @media (min-width: 640px) {
+    .floating-dude {
+      width: 192px;
+      height: 192px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .floating-dude {
+      width: 224px;
+      height: 224px;
+      margin-bottom: 0;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .floating-dude {
+      width: 256px;
+      height: 256px;
     }
   }
 

@@ -41,42 +41,44 @@
         id="intro_modal_title"
         class="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-gray-900"
       >
-        Talk it into a list. <br /> Tick it off.
+        Speak up a list, <br /> lickety split.
       </h1>
 
       <div class="space-y-3 sm:space-y-4">
         <p
           class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
         >
-          No setup. No dates. No priorities.
+          The shareable voice list thing. Talk stuff in, type stuff in, tap
+          the tiny bits into place.
         </p>
 
         <p
           class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
         >
-          Tap the mic, say the pile, and get a clean checklist.
+          Tell ZipList what you did and watch the boxes tick themselves. Add a
+          few things while you're at it.
         </p>
 
         <p
           class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
         >
-          Add more whenever. Swipe between lists. Drag things around when the
-          order matters.
+          Shopping list, band set list, gear list, chores list, forever list.
+          Last box ticked, confetti in the air.
         </p>
       </div>
 
       <p
-        class="text-center text-pink-600 font-bold text-base sm:text-lg md:text-xl py-2"
+        class="text-center text-teal-700 font-bold text-base sm:text-lg md:text-xl py-2"
       >
-        Small enough to stay out of your way.
+        Talk. List. Tick.
       </p>
 
       <button
         type="button"
-        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-yellow-400 to-pink-400 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
+        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-yellow-400 to-cyan-300 text-slate-950 shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
         on:click={handleActionButton}
       >
-        Start a list
+        Zip it up
       </button>
     </div>
   </div>

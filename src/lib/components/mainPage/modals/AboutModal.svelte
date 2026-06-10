@@ -32,7 +32,7 @@
           id="about_modal_title"
           class="font-black text-xl text-gray-800 tracking-tight"
         >
-          About Ziplist
+          The shareable voice list thing
         </h3>
       </div>
 
@@ -40,26 +40,26 @@
         class="bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 rounded-lg border border-pink-200/60 shadow-sm"
       >
         <p class="text-sm leading-relaxed text-gray-700">
-          ZipList is a warm little voice checklist. Talk into one active list,
-          add more whenever, and tick things off without dates, priorities, or
-          setup.
+          ZipList is a quick shareable voice list thing. Talk stuff in, type
+          stuff in, tap the tiny bits into place, share a list live with
+          someone else. Tell it what you did and the boxes can tick themselves.
         </p>
       </div>
 
       <div>
-        <h4 class="font-bold text-sm text-gray-700 mb-2">Why we made this:</h4>
+        <h4 class="font-bold text-sm text-gray-700 mb-2">What it does:</h4>
         <ul class="space-y-1.5 text-sm text-gray-600">
           <li class="flex items-start gap-2">
-            <span class="text-pink-500 text-lg">⬩</span>
-            <span>Sometimes you need the list before you need an app</span>
+            <span class="text-teal-600 text-lg">⬩</span>
+            <span>Shopping lists, set lists, gear lists, forever lists</span>
           </li>
           <li class="flex items-start gap-2">
-            <span class="text-pink-500 text-lg">⬩</span>
-            <span>Talking is the fastest way to get the pile out</span>
+            <span class="text-teal-600 text-lg">⬩</span>
+            <span>Talk stuff in, type stuff in, edit the bits</span>
           </li>
           <li class="flex items-start gap-2">
-            <span class="text-pink-500 text-lg">⬩</span>
-            <span>Checking things off should feel simple and satisfying</span>
+            <span class="text-teal-600 text-lg">⬩</span>
+            <span>Tell ZipList what you did; boxes can tick themselves</span>
           </li>
         </ul>
       </div>
@@ -75,9 +75,9 @@
           href="https://ko-fi.com/madebypablo"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-xs text-pink-500 hover:text-pink-600 font-medium transition-colors"
+          class="text-xs text-teal-700 hover:text-teal-900 font-medium transition-colors"
         >
-          ☕ Buy us a coffee
+          ☕ Coffee jar
         </a>
         <a
           href="https://github.com/pibulus/ziplist"
@@ -91,12 +91,10 @@
 
       <div class="flex justify-between items-end pt-2">
         <div>
-          <p class="text-xs text-gray-500">
-            Made with ☕ in Melbourne, Australia
-          </p>
+          <p class="text-xs text-gray-500">Melbourne, Australia</p>
         </div>
         <div class="flex items-center gap-2 text-xs font-medium text-gray-600">
-          <span class="animate-pulse text-pink-500">❤️</span> Dennis & Pabs
+          Pablo
         </div>
       </div>
     </div>

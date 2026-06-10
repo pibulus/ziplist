@@ -148,7 +148,7 @@
 			</div>
 			<div class="app-info">
 				<h2 id="pwa-prompt-title">Install ZipList</h2>
-				<p class="tagline">Talk a list. Tick it off.</p>
+				<p class="tagline">Zip it up. Tick it off.</p>
 			</div>
 		</div>
 		

@@ -22,7 +22,7 @@
         const encodedData = extractListDataFromUrl(window.location.href);
 
         if (!encodedData) {
-          error = "No list data found in the URL";
+          error = "That share link is missing its list details.";
           isLoading = false;
           return;
         }
@@ -31,7 +31,7 @@
         sharedList = decodeSharedList(encodedData);
 
         if (!sharedList) {
-          error = "Unable to decode the shared list";
+          error = "That share link needs a fresh copy.";
           isLoading = false;
           return;
         }
@@ -41,7 +41,7 @@
         showDialog = true;
       } catch (err) {
         console.error("Error processing shared list:", err);
-        error = "An error occurred while processing the shared list";
+        error = "That shared list needs one more try.";
         isLoading = false;
       }
     }
@@ -71,7 +71,7 @@
       </div>
     {:else if error}
       <div class="error-container" role="alert">
-        <h2>Something went wrong</h2>
+        <h2>That link needs another try</h2>
         <p class="error-message">{error}</p>
         <button type="button" class="back-button" on:click={() => goto("/")}>
           Go back home
@@ -134,20 +134,20 @@
     text-align: center;
     max-width: 480px;
     padding: 2rem;
-    background: rgba(255, 240, 240, 0.8);
+    background: rgba(255, 251, 235, 0.86);
     border-radius: 24px;
-    border: 2px solid rgba(255, 100, 100, 0.3);
+    border: 2px solid rgba(255, 176, 0, 0.32);
   }
 
   .error-container h2 {
     font-family: "Space Mono", monospace;
-    color: #7b2c2c;
+    color: #2f3a45;
     margin-top: 0;
   }
 
   .error-message {
     font-family: "Space Mono", monospace;
-    color: #7b2c2c;
+    color: #4b5563;
     margin-bottom: 2rem;
   }
 

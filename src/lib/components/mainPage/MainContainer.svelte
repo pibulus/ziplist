@@ -26,7 +26,7 @@
   } from "$lib/services/infrastructure/stores.js";
   import { AudioStates } from "$lib/services/audio/audioStates.js";
   import { PageLayout } from "$lib/components/layout";
-  import { soundCues } from "$lib";
+  import { listFirstMode, soundCues } from "$lib";
   import { listsStore } from "$lib/services/lists/listsStore";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import SwipeableLists from "../list/SwipeableLists.svelte";
@@ -487,7 +487,7 @@
             "getUserMedia is not supported.",
           );
           uiActions.setErrorMessage(
-            "Audio recording is not supported on this browser.",
+            "Voice recording needs a browser with microphone support.",
           );
           return;
         }
@@ -598,7 +598,7 @@
           err,
         );
         soundService.error({ force: true });
-        let errorMessage = "Could not start recording.";
+        let errorMessage = "Recording needs one more try.";
         if (
           err.name === "NotAllowedError" ||
           err.name === "PermissionDeniedError"
@@ -606,18 +606,18 @@
           audioActions.updateState(AudioStates.PERMISSION_DENIED);
           uiActions.setPermissionError(true);
           errorMessage =
-            "Audio permission denied. Please allow microphone access.";
+            "Microphone access needs a quick settings change before recording.";
         } else if (
           err.name === "NotFoundError" ||
           err.name === "DevicesNotFoundError"
         ) {
           audioActions.updateState(AudioStates.NO_INPUT_DETECTED);
           uiActions.setPermissionError(false);
-          errorMessage = "No microphone found. Please connect a microphone.";
+          errorMessage = "ZipList needs a microphone before recording.";
         } else {
           audioActions.updateState(AudioStates.ERROR, err.message);
           uiActions.setPermissionError(false);
-          errorMessage = `Error: ${err.message}`;
+          errorMessage = err.message || "Recording needs one more try.";
         }
         uiActions.setErrorMessage(errorMessage);
       }
@@ -780,11 +780,16 @@
   }
 </script>
 
-<PageLayout>
-  <ContentContainer on:toggleRecording={handleToggleRecording} />
+<PageLayout listFirst={$listFirstMode === "true"}>
+  {#if $listFirstMode !== "true"}
+    <ContentContainer on:toggleRecording={handleToggleRecording} />
+  {/if}
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->
-  <div class="flex justify-center my-3 sm:my-4">
+  <div
+    class="my-3 flex justify-center sm:my-4"
+    class:list-first-record-button={$listFirstMode === "true"}
+  >
     <RecordButtonWithTimer
       recording={$isRecording}
       transcribing={$isTranscribing}
@@ -803,13 +808,13 @@
     </div>
   {:else if $uiState.errorMessage}
     <div
-      class="mx-auto mb-3 flex w-[min(100%,30rem)] items-center justify-between gap-3 rounded-xl border border-red-200 bg-white/80 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm backdrop-blur"
+      class="mx-auto mb-3 flex w-[min(100%,30rem)] items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white/85 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur"
       role="alert"
       transition:fade={{ duration: 180 }}
     >
       <span>{$uiState.errorMessage}</span>
       <button
-        class="shrink-0 rounded-lg bg-red-50 px-3 py-2 text-xs font-black uppercase tracking-normal text-red-700"
+        class="shrink-0 rounded-lg bg-amber-50 px-3 py-2 text-xs font-black uppercase tracking-normal text-slate-700"
         type="button"
         on:click={uiActions.clearErrorMessage}
       >
@@ -860,6 +865,13 @@
     on:close={closeSettingsModal}
   />
 {/if}
+
+<style>
+  .list-first-record-button {
+    margin-bottom: 1.25rem;
+    margin-top: 0;
+  }
+</style>
 
 {#if ContributorModal}
   <svelte:component

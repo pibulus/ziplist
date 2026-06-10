@@ -3,6 +3,7 @@
   import {
     theme,
     autoRecord,
+    listFirstMode,
     soundCues,
     applyTheme,
     isContributor,
@@ -18,6 +19,7 @@
   // Theme/vibe selection
   let selectedVibe;
   let autoRecordValue = false;
+  let listFirstModeValue = false;
   let soundCuesValue = true;
   let chunkyModeValue = false;
   let contributorUnlocked = false;
@@ -30,6 +32,10 @@
   // Subscribe to autoRecord store
   const unsubscribeAutoRecord = autoRecord.subscribe((value) => {
     autoRecordValue = value === "true";
+  });
+
+  const unsubscribeListFirstMode = listFirstMode.subscribe((value) => {
+    listFirstModeValue = value === "true";
   });
 
   const unsubscribeSoundCues = soundCues.subscribe((value) => {
@@ -69,6 +75,7 @@
     return () => {
       unsubscribeTheme();
       unsubscribeAutoRecord();
+      unsubscribeListFirstMode();
       unsubscribeSoundCues();
       unsubscribeContributor();
       if (dialog) {
@@ -122,6 +129,18 @@
     window.dispatchEvent(
       new CustomEvent("ziplist-setting-changed", {
         detail: { setting: "autoRecord", value: autoRecordValue },
+      }),
+    );
+  }
+
+  function toggleListFirstMode() {
+    listFirstModeValue = !listFirstModeValue;
+    soundService.select();
+    listFirstMode.set(listFirstModeValue.toString());
+
+    window.dispatchEvent(
+      new CustomEvent("ziplist-setting-changed", {
+        detail: { setting: "listFirstMode", value: listFirstModeValue },
       }),
     );
   }
@@ -225,6 +244,24 @@
               checked={chunkyModeValue}
               on:change={toggleChunkyMode}
               aria-label="Chunky Mode"
+            />
+            <span class="zl-toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="zl-setting-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">List First</span>
+            <p class="zl-setting-desc">
+              Hide the mascot and title when you want the working view
+            </p>
+          </div>
+          <label class="zl-toggle">
+            <input
+              type="checkbox"
+              checked={listFirstModeValue}
+              on:change={toggleListFirstMode}
+              aria-label="List First mode"
             />
             <span class="zl-toggle-slider"></span>
           </label>

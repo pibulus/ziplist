@@ -47,9 +47,6 @@
     opacity: 0.9;
     z-index: 1;
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.12));
-    transition:
-      filter 0.2s ease,
-      transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     background: transparent;
     border: none;
     padding: 0;
@@ -86,11 +83,11 @@
     background-image: linear-gradient(
       to right,
       #ffd700,
-      #ff6b6b,
+      #ffb000,
       #4ecdc4
     ); /* Miami Gradient */
     -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.1);
-    filter: drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(255, 176, 0, 0.24));
   }
 
   .theme-nocturne .app-text {
@@ -122,15 +119,9 @@
   }
 
   /* Playful hover effects */
-  .app-suffix:hover {
-    box-shadow: 0 0 15px var(--suffix-color, rgba(255, 107, 107, 0.4));
-    transform: translateY(calc(var(--offset-y, 0) - 2px)) rotate(-2deg);
-    border-color: var(--suffix-color, #ff6b6b);
-  }
-
   .app-suffix:hover .app-text {
-    filter: brightness(1.1) saturate(1.2);
-    transform: scale(1.05);
+    filter: brightness(1.05) saturate(1.05);
+    transform: rotate(-2deg) scale(1.05);
   }
 
   /* Position variations */

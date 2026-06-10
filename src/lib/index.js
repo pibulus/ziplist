@@ -59,6 +59,12 @@ export const autoRecord = createLocalStorageStore(
   "false",
 );
 
+// Store for a list-first working view that hides the mascot/title hero.
+export const listFirstMode = createLocalStorageStore(
+  CONSTANTS.STORAGE_KEYS.LIST_FIRST_MODE,
+  "false",
+);
+
 // Store for tactile audio cue preference
 export const soundCues = createLocalStorageStore(
   CONSTANTS.STORAGE_KEYS.SOUND_CUES,

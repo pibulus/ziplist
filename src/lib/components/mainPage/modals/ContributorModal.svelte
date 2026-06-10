@@ -292,7 +292,7 @@
   }
 
   .zl-contributor-eyebrow {
-    color: var(--zl-accent-color, #db5f78);
+    color: #11776d;
     font-size: 0.72rem;
     font-weight: 900;
     letter-spacing: 0.14em;
@@ -450,7 +450,7 @@
   }
 
   .zl-code-panel summary strong {
-    color: #db5f78;
+    color: #11776d;
     font-size: 0.78rem;
   }
 

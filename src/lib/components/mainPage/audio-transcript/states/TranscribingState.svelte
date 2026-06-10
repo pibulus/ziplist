@@ -10,8 +10,8 @@
 	aria-valuemin="0"
 	aria-valuemax="100"
 >
-	<div
-		class="flex h-full items-center justify-center bg-gradient-to-r from-amber-400 to-rose-300 transition-all duration-300"
+		<div
+			class="flex h-full items-center justify-center bg-gradient-to-r from-amber-400 to-cyan-300 transition-all duration-300"
 		style="width: {progress}%;"
 	>
 		<span class="relative z-10 font-bold text-white">Ziplisting...</span>
