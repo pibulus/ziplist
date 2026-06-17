@@ -1,19 +1,10 @@
+import { Weightless } from "./weightless";
 import { STORAGE_KEYS } from "$lib/constants";
 
-const MASTER_LEVEL = 0.68;
-const MIN_GAIN = 0.0001;
-const DEFAULT_VOLUME = 0.8;
-const DEFAULT_MAX_VOICES = 16;
-
-const CUE_ALIASES = {
-  tap: "select",
-  done: "complete",
-  success: "copy",
-  deny: "locked",
-  move: "drop",
-};
-
-const VOICE_PRESETS = {
+/**
+ * Ziplist Specific Voice Presets
+ */
+const ZIPLIST_VOICES = {
   tap: {
     type: "triangle",
     lowpass: 2800,
@@ -52,13 +43,14 @@ const VOICE_PRESETS = {
   },
 };
 
-export const DEFAULT_SOUND_CUES = {
+/**
+ * Ziplist Specific Sound Cues
+ */
+const ZIPLIST_CUES = {
   select: {
     cooldownMs: 45,
     detuneCents: 7,
     gainJitter: 0.1,
-    timeJitter: 0.004,
-    panJitter: 0.06,
     variants: [
       [{ frequency: 620, duration: 0.046, gain: 0.022, voice: "tap" }],
       [{ frequency: 700, duration: 0.04, gain: 0.019, voice: "bloom" }],
@@ -68,8 +60,6 @@ export const DEFAULT_SOUND_CUES = {
     cooldownMs: 90,
     detuneCents: 8,
     gainJitter: 0.1,
-    timeJitter: 0.006,
-    panJitter: 0.08,
     variants: [
       [
         { frequency: 430, duration: 0.045, gain: 0.02, voice: "tap" },
@@ -97,8 +87,6 @@ export const DEFAULT_SOUND_CUES = {
     cooldownMs: 70,
     detuneCents: 9,
     gainJitter: 0.12,
-    timeJitter: 0.005,
-    panJitter: 0.08,
     variants: [
       [
         { frequency: 740, duration: 0.036, gain: 0.021, voice: "sparkle" },
@@ -110,24 +98,11 @@ export const DEFAULT_SOUND_CUES = {
           voice: "bloom",
         },
       ],
-      [
-        { frequency: 660, duration: 0.038, gain: 0.02, voice: "bloom" },
-        {
-          frequency: 880,
-          offset: 0.036,
-          duration: 0.045,
-          gain: 0.017,
-          voice: "sparkle",
-        },
-      ],
     ],
   },
   uncheck: {
     cooldownMs: 80,
     detuneCents: 5,
-    gainJitter: 0.08,
-    timeJitter: 0.004,
-    panJitter: 0.04,
     variants: [
       [
         { frequency: 460, duration: 0.04, gain: 0.019, voice: "tap" },
@@ -144,9 +119,6 @@ export const DEFAULT_SOUND_CUES = {
   complete: {
     cooldownMs: 260,
     detuneCents: 8,
-    gainJitter: 0.12,
-    timeJitter: 0.006,
-    panJitter: 0.1,
     variants: [
       [
         { frequency: 520, duration: 0.045, gain: 0.022, voice: "tap" },
@@ -165,31 +137,10 @@ export const DEFAULT_SOUND_CUES = {
           voice: "sparkle",
         },
       ],
-      [
-        { frequency: 590, duration: 0.04, gain: 0.021, voice: "tap" },
-        {
-          frequency: 885,
-          offset: 0.042,
-          duration: 0.055,
-          gain: 0.019,
-          voice: "bloom",
-        },
-        {
-          frequency: 1320,
-          offset: 0.088,
-          duration: 0.075,
-          gain: 0.016,
-          voice: "sparkle",
-        },
-      ],
     ],
   },
   delete: {
     cooldownMs: 100,
-    detuneCents: 5,
-    gainJitter: 0.08,
-    timeJitter: 0.004,
-    panJitter: 0.04,
     variants: [
       [
         { frequency: 330, duration: 0.045, gain: 0.018, voice: "knock" },
@@ -203,23 +154,8 @@ export const DEFAULT_SOUND_CUES = {
       ],
     ],
   },
-  drop: {
-    cooldownMs: 100,
-    detuneCents: 6,
-    gainJitter: 0.08,
-    timeJitter: 0.004,
-    panJitter: 0.05,
-    variants: [
-      [{ frequency: 360, duration: 0.07, gain: 0.021, voice: "knock" }],
-      [{ frequency: 420, duration: 0.06, gain: 0.019, voice: "warm" }],
-    ],
-  },
   start: {
     cooldownMs: 120,
-    detuneCents: 7,
-    gainJitter: 0.1,
-    timeJitter: 0.006,
-    panJitter: 0.07,
     variants: [
       [
         { frequency: 392, duration: 0.058, gain: 0.027, voice: "tap" },
@@ -231,24 +167,10 @@ export const DEFAULT_SOUND_CUES = {
           voice: "bloom",
         },
       ],
-      [
-        { frequency: 440, duration: 0.046, gain: 0.024, voice: "tap" },
-        {
-          frequency: 660,
-          offset: 0.044,
-          duration: 0.066,
-          gain: 0.022,
-          voice: "bloom",
-        },
-      ],
     ],
   },
   stop: {
     cooldownMs: 120,
-    detuneCents: 6,
-    gainJitter: 0.1,
-    timeJitter: 0.006,
-    panJitter: 0.05,
     variants: [
       [
         { frequency: 620, duration: 0.046, gain: 0.024, voice: "tap" },
@@ -260,24 +182,10 @@ export const DEFAULT_SOUND_CUES = {
           voice: "knock",
         },
       ],
-      [
-        { frequency: 560, duration: 0.048, gain: 0.023, voice: "tap" },
-        {
-          frequency: 330,
-          offset: 0.044,
-          duration: 0.076,
-          gain: 0.02,
-          voice: "knock",
-        },
-      ],
     ],
   },
   copy: {
     cooldownMs: 140,
-    detuneCents: 9,
-    gainJitter: 0.14,
-    timeJitter: 0.005,
-    panJitter: 0.1,
     variants: [
       [
         { frequency: 740, duration: 0.038, gain: 0.021, voice: "sparkle" },
@@ -288,50 +196,17 @@ export const DEFAULT_SOUND_CUES = {
           gain: 0.019,
           voice: "bloom",
         },
-        {
-          frequency: 1175,
-          offset: 0.076,
-          duration: 0.052,
-          gain: 0.017,
-          voice: "sparkle",
-        },
-      ],
-      [
-        { frequency: 660, duration: 0.042, gain: 0.02, voice: "bloom" },
-        {
-          frequency: 990,
-          offset: 0.044,
-          duration: 0.05,
-          gain: 0.018,
-          voice: "sparkle",
-        },
-        {
-          frequency: 1320,
-          offset: 0.086,
-          duration: 0.05,
-          gain: 0.014,
-          voice: "sparkle",
-        },
       ],
     ],
   },
   locked: {
     cooldownMs: 120,
-    detuneCents: 5,
-    gainJitter: 0.08,
-    timeJitter: 0.004,
-    panJitter: 0.03,
     variants: [
       [{ frequency: 260, duration: 0.072, gain: 0.022, voice: "knock" }],
-      [{ frequency: 310, duration: 0.058, gain: 0.019, voice: "warn" }],
     ],
   },
   error: {
     cooldownMs: 160,
-    detuneCents: 4,
-    gainJitter: 0.08,
-    timeJitter: 0.004,
-    panJitter: 0.02,
     variants: [
       [
         { frequency: 250, duration: 0.06, gain: 0.02, voice: "warn" },
@@ -346,455 +221,67 @@ export const DEFAULT_SOUND_CUES = {
     ],
   },
   open: {
-    cooldownMs: 120,
-    detuneCents: 7,
-    gainJitter: 0.1,
-    timeJitter: 0.006,
-    panJitter: 0.06,
     variants: [[{ frequency: 520, duration: 0.05, gain: 0.022, voice: "tap" }]],
   },
   close: {
-    cooldownMs: 120,
-    detuneCents: 5,
-    gainJitter: 0.08,
-    timeJitter: 0.004,
-    panJitter: 0.04,
     variants: [
       [{ frequency: 430, duration: 0.06, gain: 0.02, voice: "knock" }],
     ],
   },
 };
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
+function getStoredEnabled() {
+  if (typeof localStorage === "undefined") return true;
+  return localStorage.getItem(STORAGE_KEYS.SOUND_CUES) !== "false";
 }
 
-function centsToRatio(cents) {
-  return 2 ** (cents / 1200);
-}
-
-function getDefaultHost() {
-  return typeof window !== "undefined" ? window : null;
-}
-
-function getStoredEnabled(host) {
-  try {
-    const storedValue = host?.localStorage?.getItem(STORAGE_KEYS.SOUND_CUES);
-    return storedValue !== "false";
-  } catch {
-    return true;
-  }
-}
-
-function mergeCues(overrides = {}) {
-  return {
-    ...DEFAULT_SOUND_CUES,
-    ...overrides,
-  };
-}
-
-export class SoundService {
-  constructor(options = {}) {
-    this.host = options.host ?? getDefaultHost();
-    this.enabled = options.enabled ?? getStoredEnabled(this.host);
-    this.volume = clamp(options.volume ?? DEFAULT_VOLUME, 0, 1);
-    this.randomness = clamp(options.randomness ?? 1, 0, 1.5);
-    this.maxVoices = options.maxVoices ?? DEFAULT_MAX_VOICES;
-    this.respectVisibility = options.respectVisibility ?? true;
-    this.contextFactory = options.contextFactory;
-    this.now = options.now || (() => Date.now());
-    this.random = options.random || (() => Math.random());
-    this.cues = mergeCues(options.cues);
-    this.context = null;
-    this.contextForChain = null;
-    this.masterGain = null;
-    this.activeVoices = 0;
-    this.lastPlayedAt = new Map();
-    this.cleanupTimers = new Set();
-  }
-
-  async getContext() {
-    if (!this.enabled || (!this.host && !this.contextFactory)) return null;
-
-    const AudioContextClass =
-      this.contextFactory ||
-      this.host?.AudioContext ||
-      this.host?.webkitAudioContext;
-    if (!AudioContextClass) return null;
-
-    try {
-      if (!this.context || this.context.state === "closed") {
-        this.context = new AudioContextClass();
-        this.contextForChain = null;
-      }
-
-      if (this.context.state === "suspended") {
-        await this.context.resume();
-      }
-
-      return this.context.state === "running" ? this.context : null;
-    } catch {
-      return null;
-    }
-  }
-
-  ensureMasterChain(context) {
-    if (this.masterGain && this.contextForChain === context) {
-      this.masterGain.gain.value = MASTER_LEVEL * this.volume;
-      return this.masterGain;
-    }
-
-    const masterGain = context.createGain();
-    masterGain.gain.value = MASTER_LEVEL * this.volume;
-
-    if (typeof context.createDynamicsCompressor === "function") {
-      const compressor = context.createDynamicsCompressor();
-      compressor.threshold?.setValueAtTime?.(-20, context.currentTime);
-      compressor.knee?.setValueAtTime?.(18, context.currentTime);
-      compressor.ratio?.setValueAtTime?.(4, context.currentTime);
-      compressor.attack?.setValueAtTime?.(0.003, context.currentTime);
-      compressor.release?.setValueAtTime?.(0.08, context.currentTime);
-      masterGain.connect(compressor);
-      compressor.connect(context.destination);
-    } else {
-      masterGain.connect(context.destination);
-    }
-
-    this.masterGain = masterGain;
-    this.contextForChain = context;
-    return masterGain;
-  }
-
-  canPlay(cueName, cue, options) {
-    if (!this.enabled) return false;
-    if (this.activeVoices >= this.maxVoices) return false;
-    if (this.respectVisibility && this.host?.document?.hidden) return false;
-
-    const cooldownMs = options.cooldownMs ?? cue.cooldownMs ?? 0;
-    if (cooldownMs <= 0 || options.force) return true;
-
-    const now = this.now();
-    const lastPlayedAt = this.lastPlayedAt.get(cueName) || 0;
-    return now - lastPlayedAt >= cooldownMs;
-  }
-
-  markPlayed(cueName) {
-    this.lastPlayedAt.set(cueName, this.now());
-  }
-
-  randomize(value, amount = 0) {
-    if (!amount || !this.randomness) return value;
-    return (
-      value *
-      this.randomBetween(
-        1 - amount * this.randomness,
-        1 + amount * this.randomness,
-      )
-    );
-  }
-
-  randomBetween(min, max) {
-    return min + this.random() * (max - min);
-  }
-
-  pick(array) {
-    if (!array?.length) return null;
-    const index = clamp(
-      Math.floor(this.random() * array.length),
-      0,
-      array.length - 1,
-    );
-    return array[index];
-  }
-
-  resolveCueName(cueName) {
-    return CUE_ALIASES[cueName] || cueName;
-  }
-
-  resolveCue(cueName) {
-    const resolvedName = this.resolveCueName(cueName);
-    return this.cues[resolvedName] || this.cues.select;
-  }
-
-  resolveVoice(note) {
-    if (!note.voice) return note;
-    return {
-      ...VOICE_PRESETS[note.voice],
-      ...note,
-      partials: note.partials || VOICE_PRESETS[note.voice]?.partials,
-    };
-  }
-
-  getOutputChain(context, note, masterNode) {
-    let output = masterNode;
-    const cleanupNodes = [];
-
-    if (typeof context.createStereoPanner === "function") {
-      const panner = context.createStereoPanner();
-      panner.pan.value = clamp(note.pan || 0, -0.35, 0.35);
-      panner.connect(output);
-      output = panner;
-      cleanupNodes.push(panner);
-    }
-
-    if (note.lowpass || note.highpass) {
-      const filter = context.createBiquadFilter();
-      filter.type = note.highpass ? "highpass" : "lowpass";
-      filter.frequency.value = note.highpass || note.lowpass;
-      if (filter.Q) filter.Q.value = note.q || 0.7;
-      filter.connect(output);
-      output = filter;
-      cleanupNodes.push(filter);
-    }
-
-    return { input: output, cleanupNodes };
-  }
-
-  scheduleTone(context, cue, note, masterNode) {
-    if (this.activeVoices >= this.maxVoices) return;
-
-    const voicedNote = this.resolveVoice(note);
-    const timeJitter = cue.timeJitter || 0;
-    const delay = Math.max(
-      0,
-      (voicedNote.offset || 0) + this.randomBetween(-timeJitter, timeJitter),
-    );
-    const startAt = context.currentTime + delay;
-    const duration = Math.max(
-      0.025,
-      this.randomize(voicedNote.duration || 0.05, cue.timeJitter || 0.004),
-    );
-    const attack = Math.max(0.004, voicedNote.attack || 0.008);
-    const frequency =
-      voicedNote.frequency *
-      centsToRatio(
-        this.randomBetween(-(cue.detuneCents || 0), cue.detuneCents || 0) *
-          this.randomness,
-      );
-    const gainValue = Math.max(
-      0.003,
-      this.randomize(voicedNote.gain || 0.02, cue.gainJitter || 0.08),
-    );
-    const pan =
-      (voicedNote.pan || 0) +
-      this.randomBetween(-(cue.panJitter || 0), cue.panJitter || 0) *
-        this.randomness;
-    const shapedNote = { ...voicedNote, pan };
-    const partials = [
-      { ratio: 1, gain: 1, type: shapedNote.type },
-      ...(shapedNote.partials || []),
-    ];
-
-    if (this.activeVoices + partials.length > this.maxVoices) return;
-
-    const noteGain = context.createGain();
-    const { input: outputNode, cleanupNodes } = this.getOutputChain(
-      context,
-      shapedNote,
-      masterNode,
-    );
-    noteGain.connect(outputNode);
-    noteGain.gain.setValueAtTime(MIN_GAIN, startAt);
-    noteGain.gain.exponentialRampToValueAtTime(gainValue, startAt + attack);
-    noteGain.gain.exponentialRampToValueAtTime(MIN_GAIN, startAt + duration);
-
-    this.activeVoices += partials.length;
-    let remainingPartials = partials.length;
-
-    partials.forEach((partial) => {
-      const oscillator = context.createOscillator();
-      const partialGain = context.createGain();
-      const partialFrequency = frequency * (partial.ratio || 1);
-      const partialGainValue = clamp(partial.gain ?? 1, 0, 1);
-
-      oscillator.type = partial.type || shapedNote.type || "sine";
-      oscillator.frequency.setValueAtTime(partialFrequency, startAt);
-      if (shapedNote.bendCents) {
-        oscillator.frequency.exponentialRampToValueAtTime(
-          partialFrequency * centsToRatio(shapedNote.bendCents),
-          startAt + duration,
-        );
-      }
-
-      partialGain.gain.value = partialGainValue;
-      oscillator.connect(partialGain);
-      partialGain.connect(noteGain);
-      oscillator.start(startAt);
-      oscillator.stop(startAt + duration + 0.03);
-
-      const cleanup = () => {
-        this.activeVoices = Math.max(0, this.activeVoices - 1);
-        remainingPartials = Math.max(0, remainingPartials - 1);
-        oscillator.disconnect?.();
-        partialGain.disconnect?.();
-        if (remainingPartials === 0) {
-          noteGain.disconnect?.();
-          cleanupNodes.forEach((node) => node.disconnect?.());
-        }
-      };
-
-      if (typeof oscillator.addEventListener === "function") {
-        oscillator.addEventListener("ended", cleanup, { once: true });
-      } else {
-        const timer = setTimeout(
-          () => {
-            this.cleanupTimers.delete(timer);
-            cleanup();
-          },
-          (delay + duration + 0.05) * 1000,
-        );
-        this.cleanupTimers.add(timer);
-      }
+/**
+ * The Ziplist Sound Service
+ * Powered by 🪶 Weightless
+ */
+class ZiplistSoundService extends Weightless {
+  constructor() {
+    super({
+      cues: ZIPLIST_CUES,
+      voices: ZIPLIST_VOICES,
+      enabled: getStoredEnabled(),
     });
   }
 
-  async play(cueName = "select", options = {}) {
-    const resolvedCueName = this.resolveCueName(cueName);
-    const cue = this.resolveCue(resolvedCueName);
-    if (!this.canPlay(resolvedCueName, cue, options)) return false;
-
-    try {
-      const context = await this.getContext();
-      if (!context) return false;
-
-      this.markPlayed(resolvedCueName);
-      const masterNode = this.ensureMasterChain(context);
-      const variant = this.pick(cue.variants || this.cues.select.variants);
-      if (!variant) return false;
-
-      variant.forEach((note) =>
-        this.scheduleTone(context, cue, note, masterNode),
-      );
-      return true;
-    } catch {
-      return false;
-    }
+  // Handle aliases not covered by Proxy automatically if needed
+  // (Proxy handles them if the cue name exists, but we want .success() to play 'copy')
+  success(opts) {
+    return this.play("copy", opts);
   }
-
-  select(options) {
-    return this.play("select", options);
+  copySuccess(opts) {
+    return this.play("copy", opts);
   }
-
-  add(options) {
-    return this.play("add", options);
+  startRecording(opts) {
+    return this.play("start", opts);
   }
-
-  check(options) {
-    return this.play("check", options);
-  }
-
-  uncheck(options) {
-    return this.play("uncheck", options);
-  }
-
-  complete(options) {
-    return this.play("complete", options);
-  }
-
-  delete(options) {
-    return this.play("delete", options);
-  }
-
-  drop(options) {
-    return this.play("drop", options);
-  }
-
-  locked(options) {
-    return this.play("locked", options);
-  }
-
-  startRecording(options) {
-    return this.play("start", options);
-  }
-
-  stopRecording(options) {
-    return this.play("stop", options);
-  }
-
-  copySuccess(options) {
-    return this.play("copy", options);
-  }
-
-  success(options) {
-    return this.play("copy", options);
-  }
-
-  error(options) {
-    return this.play("error", options);
-  }
-
-  open(options) {
-    return this.play("open", options);
-  }
-
-  close(options) {
-    return this.play("close", options);
-  }
-
-  setVolume(volume) {
-    this.volume = clamp(volume, 0, 1);
-    if (this.masterGain) {
-      this.masterGain.gain.value = MASTER_LEVEL * this.volume;
-    }
-  }
-
-  setRandomness(randomness) {
-    this.randomness = clamp(randomness, 0, 1.5);
-  }
-
-  setCue(name, cue) {
-    this.cues = {
-      ...this.cues,
-      [name]: cue,
-    };
-  }
-
-  enable() {
-    this.enabled = true;
-  }
-
-  disable() {
-    this.enabled = false;
-    try {
-      this.context?.suspend?.();
-    } catch {
-      // Sound is optional; disabling should never affect app logic.
-    }
+  stopRecording(opts) {
+    return this.play("stop", opts);
   }
 
   setEnabled(enabled) {
-    if (enabled) this.enable();
-    else this.disable();
-  }
-
-  async dispose({ closeContext = false } = {}) {
-    this.cleanupTimers.forEach((timer) => clearTimeout(timer));
-    this.cleanupTimers.clear();
-    this.activeVoices = 0;
-    this.masterGain?.disconnect?.();
-    this.masterGain = null;
-    this.contextForChain = null;
-
-    if (closeContext && this.context?.state !== "closed") {
-      try {
-        await this.context.close();
-      } catch {
-        // Closing is a cleanup nicety; never let it leak into app logic.
-      }
+    this.enabled = enabled;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEYS.SOUND_CUES, enabled.toString());
     }
-
-    if (closeContext) {
-      this.context = null;
+    if (!enabled && this.context) {
+      this.context.suspend().catch(() => {});
     }
   }
 
+  enable() {
+    this.setEnabled(true);
+  }
+  disable() {
+    this.setEnabled(false);
+  }
   isEnabled() {
     return this.enabled;
   }
 }
 
-export function createSoundService(options = {}) {
-  return new SoundService(options);
-}
-
-export const soundService = new SoundService();
+export const soundService = new ZiplistSoundService();

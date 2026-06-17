@@ -143,7 +143,7 @@
 
       <div class="zl-price-card">
         <span>{PRICING.displayPrice}</span>
-        <small>once</small>
+        <small>/year · no subscription</small>
       </div>
 
       <ul class="zl-benefit-grid">
@@ -165,7 +165,7 @@
         >
           {isStartingCheckout
             ? "Opening checkout..."
-            : `Contribute once - ${PRICING.displayPrice}`}
+            : `Contribute for a year - ${PRICING.displayPrice}`}
         </button>
       {/if}
 

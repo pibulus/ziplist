@@ -5,11 +5,12 @@
  */
 export const PRICING = {
   currentPrice: 9,
-  currency: "AUD",
+  currency: "AUD", // Square charge currency; displayed price is just "$9" (≈ same in USD)
   productName: "ZipList Contributor Pass",
+  termDays: 365,
 
   get displayPrice() {
-    return `$${this.currentPrice.toFixed(0)} ${this.currency}`;
+    return `$${this.currentPrice.toFixed(0)}`;
   },
 };
 
@@ -22,7 +23,7 @@ export const CONTRIBUTOR_BENEFITS = [
 
 export const CONTRIBUTOR_COPY = {
   summary:
-    "Pay once, get more room, and help keep the simple list bit free for everyone.",
+    "$9 a year, no subscription — get more room and help keep the simple list bit free for everyone.",
   checkoutError:
     "Checkout needs server setup first. Contributor codes still work.",
 };

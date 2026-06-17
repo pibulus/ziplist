@@ -45,14 +45,14 @@ For fully custom art, use the default slot instead of `baseSrc`/`eyesSrc`:
 
 #### Props
 
-| Prop          | Type    | Default | Description                                                |
-| ------------- | ------- | ------- | ---------------------------------------------------------- |
-| `baseSrc`     | string  | `""`    | Body / base SVG layer (optional if using the slot)         |
-| `eyesSrc`     | string  | `""`    | Eyes SVG layer; blinks on a timer (optional)               |
-| `ariaLabel`   | string  | `""`    | Accessible label; also gates button-vs-static rendering    |
-| `interactive` | boolean | `true`  | `true` renders a `<button>`; `false` a decorative `<div>`  |
-| `float`       | boolean | `true`  | Idle float bob                                             |
-| `aura`        | boolean | `true`  | Idle "tappable" aura ring (interactive only)               |
+| Prop          | Type    | Default | Description                                               |
+| ------------- | ------- | ------- | --------------------------------------------------------- |
+| `baseSrc`     | string  | `""`    | Body / base SVG layer (optional if using the slot)        |
+| `eyesSrc`     | string  | `""`    | Eyes SVG layer; blinks on a timer (optional)              |
+| `ariaLabel`   | string  | `""`    | Accessible label; also gates button-vs-static rendering   |
+| `interactive` | boolean | `true`  | `true` renders a `<button>`; `false` a decorative `<div>` |
+| `float`       | boolean | `true`  | Idle float bob                                            |
+| `aura`        | boolean | `true`  | Idle "tappable" aura ring (interactive only)              |
 
 Emits a `click` event when interactive.
 
@@ -61,12 +61,12 @@ Emits a `click` event when interactive.
 Override these CSS custom properties on any parent to resize — the responsive
 breakpoint logic stays in the component:
 
-| Token                  | Default | Breakpoint  |
-| ---------------------- | ------- | ----------- |
-| `--mascot-size-mobile` | `110px` | `< 640px`   |
-| `--mascot-size-sm`     | `120px` | `>= 640px`  |
-| `--mascot-size-md`     | `140px` | `>= 768px`  |
-| `--mascot-size-lg`     | `160px` | `>= 1024px` |
+| Token                  | Default    | Breakpoint     |
+| ---------------------- | ---------- | -------------- |
+| `--mascot-size-mobile` | `110px`    | `< 640px`      |
+| `--mascot-size-sm`     | `120px`    | `>= 640px`     |
+| `--mascot-size-md`     | `140px`    | `>= 768px`     |
+| `--mascot-size-lg`     | `160px`    | `>= 1024px`    |
 | `--mascot-gap`         | `0.625rem` | bottom spacing |
 
 Aura/glow/focus colors are also tokenized (`--mascot-aura-color-1..3`,

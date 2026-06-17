@@ -29,6 +29,7 @@ export const STORAGE_KEYS = {
   CHUNKY_MODE: "ziplist-chunky-mode",
   CONTRIBUTOR: "ziplist-contributor",
   CONTRIBUTOR_TOKEN: "ziplist-contributor-token",
+  CONTRIBUTOR_EXPIRES: "ziplist-contributor-expires",
 
   // PWA Related
   TRANSCRIPTION_COUNT: "ziplist-transcription-count",

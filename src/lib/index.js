@@ -91,8 +91,23 @@ function isForcedContributorMode() {
   return publicEnv.PUBLIC_FORCE_CONTRIBUTOR_MODE === "true";
 }
 
+const CONTRIBUTOR_TERM_DAYS = 365;
+const CONTRIBUTOR_TERM_MS = CONTRIBUTOR_TERM_DAYS * 24 * 60 * 60 * 1000;
+
+// Soft 1-year expiry (client-side localStorage — honest framing for a $9 app, not
+// DRM). Missing stamp = legacy unlock, treated as still valid so we never lock out
+// existing contributors.
+function contributorExpiryOk() {
+  if (!browser) return true;
+  const raw = localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_EXPIRES);
+  if (!raw) return true;
+  const expires = Number(raw);
+  return !Number.isFinite(expires) || Date.now() < expires;
+}
+
 export const isContributor = derived(contributor, ($contributor) => {
-  return isForcedContributorMode() || $contributor === "true";
+  if (isForcedContributorMode()) return true;
+  return $contributor === "true" && contributorExpiryOk();
 });
 
 export function setContributorStatus(isUnlocked, token = null) {
@@ -100,8 +115,18 @@ export function setContributorStatus(isUnlocked, token = null) {
 
   if (token) {
     contributorToken.set(token);
+    if (browser) {
+      // Stamp a 1-year expiry from now (the contributor pass lasts a year).
+      localStorage.setItem(
+        CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_EXPIRES,
+        String(Date.now() + CONTRIBUTOR_TERM_MS),
+      );
+    }
   } else if (!isUnlocked) {
     contributorToken.set("");
+    if (browser) {
+      localStorage.removeItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_EXPIRES);
+    }
   }
 }
 
@@ -109,10 +134,10 @@ export function getContributorSnapshot() {
   if (isForcedContributorMode()) return true;
   if (!browser) return false;
 
-  return (
+  const hasUnlock =
     localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR) === "true" ||
-    Boolean(localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_TOKEN))
-  );
+    Boolean(localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_TOKEN));
+  return hasUnlock && contributorExpiryOk();
 }
 
 export function getContributorTokenSnapshot() {
