@@ -207,8 +207,8 @@
   .zl-card {
     padding: 0.75rem 0.65rem 0.95rem;
     border-radius: 18px;
-    margin-top: 0.55rem;
-    margin-bottom: 1rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.35rem;
     max-width: 100%;
   }
 
@@ -1837,10 +1837,10 @@
   }
 
   .zl-empty-state {
-    min-height: 190px;
-    justify-content: flex-start;
-    margin: 0.65rem 0 0.25rem;
-    padding: 0.8rem 0.8rem 1rem;
+    min-height: 150px;
+    justify-content: center;
+    margin: 0.4rem 0 0.1rem;
+    padding: 0.7rem 0.8rem 0.85rem;
   }
 
   .zl-empty-title {

@@ -207,11 +207,11 @@
     .page-shell {
       padding-top: max(
         env(safe-area-inset-top),
-        clamp(4rem, 10svh, 5.5rem)
+        clamp(3rem, 7svh, 4.5rem)
       ) !important;
       padding-bottom: max(
-        6rem,
-        calc(env(safe-area-inset-bottom) + 5.5rem)
+        4.75rem,
+        calc(env(safe-area-inset-bottom) + 4.25rem)
       ) !important;
       min-height: 100dvh;
       display: flex;

@@ -107,9 +107,9 @@
   /* Floating Dude Styles */
   .floating-dude {
     position: relative;
-    width: 176px;
-    height: 176px;
-    margin-bottom: 1rem;
+    width: 110px;
+    height: 110px;
+    margin-bottom: 0.625rem;
     background: none;
     border: none;
     cursor: pointer;
@@ -122,7 +122,7 @@
   .floating-dude::after {
     content: "";
     position: absolute;
-    inset: -16px;
+    inset: -12px;
     border-radius: 36px;
     background: radial-gradient(
       circle at 50% 54%,
@@ -334,37 +334,37 @@
     }
 
     .floating-dude {
-      width: 176px;
-      height: 176px;
-      margin-bottom: 1rem;
+      width: 110px;
+      height: 110px;
+      margin-bottom: 0.625rem;
     }
 
     .floating-dude::after {
-      inset: -12px;
-      border-radius: 30px;
+      inset: -10px;
+      border-radius: 28px;
     }
 
   }
 
   @media (min-width: 640px) {
     .floating-dude {
-      width: 192px;
-      height: 192px;
+      width: 120px;
+      height: 120px;
     }
   }
 
   @media (min-width: 768px) {
     .floating-dude {
-      width: 224px;
-      height: 224px;
+      width: 140px;
+      height: 140px;
       margin-bottom: 0;
     }
   }
 
   @media (min-width: 1024px) {
     .floating-dude {
-      width: 256px;
-      height: 256px;
+      width: 160px;
+      height: 160px;
     }
   }
 

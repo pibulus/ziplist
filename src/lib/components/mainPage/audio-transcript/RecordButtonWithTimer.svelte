@@ -683,8 +683,8 @@
     }
 
     .fixed-button-container {
-      height: 60px;
-      margin: 0.55rem 0 0.75rem;
+      height: 58px;
+      margin: 0.25rem 0 0.45rem;
     }
 
     .button-content {

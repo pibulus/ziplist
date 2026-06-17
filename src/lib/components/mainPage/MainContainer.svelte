@@ -787,7 +787,7 @@
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->
   <div
-    class="my-3 flex justify-center sm:my-4"
+    class="my-1 flex justify-center sm:my-3"
     class:list-first-record-button={$listFirstMode === "true"}
   >
     <RecordButtonWithTimer
