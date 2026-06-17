@@ -265,12 +265,12 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      padding-top: 15vh !important;
-      padding-bottom: 10vh !important;
+      padding-top: clamp(1.5rem, 3.5vh, 3rem) !important;
+      padding-bottom: 7rem !important;
     }
 
     .page-shell.list-first-shell {
-      padding-top: 7vh !important;
+      padding-top: clamp(1.5rem, 4vh, 3rem) !important;
     }
   }
 </style>
