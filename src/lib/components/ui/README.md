@@ -4,6 +4,81 @@ This directory contains reusable UI components used throughout the ZipList appli
 
 ## Components
 
+### Mascot
+
+`Mascot.svelte` is the **portable SoftStack app-mascot/icon component** — the
+shared standard for app mascots across sister apps (ZipList dude, TalkType
+ghost, future apps). It encapsulates the float bob, blinking eyes, idle "tappable"
+aura, hover glow, focus ring, reduced-motion handling, and — most importantly —
+the **matched sizing scale**.
+
+#### Why this exists
+
+Sister apps should have matchy-matchy mascots. They're matched by _visible ink_,
+not box size: TalkType's ghost renders ~106px of actual art on mobile (in a
+larger box with internal padding). The Mascot defaults render the same ~105–110px
+of visible ink on mobile up to ~160px on large desktop, so the mascots read as
+the same size side by side. Don't eyeball a percentage — match the ink.
+
+#### Usage
+
+```svelte
+<script>
+  import { Mascot } from "$lib/components/ui";
+</script>
+
+<Mascot
+  baseSrc="/assets/ziplist-icon-base.svg"
+  eyesSrc="/assets/ziplist-icon-eyes.svg"
+  ariaLabel="Start recording"
+  on:click={handleClick}
+/>
+```
+
+For fully custom art, use the default slot instead of `baseSrc`/`eyesSrc`:
+
+```svelte
+<Mascot ariaLabel="Open" on:click={...}>
+  <MyCustomGhost />
+</Mascot>
+```
+
+#### Props
+
+| Prop          | Type    | Default | Description                                                |
+| ------------- | ------- | ------- | ---------------------------------------------------------- |
+| `baseSrc`     | string  | `""`    | Body / base SVG layer (optional if using the slot)         |
+| `eyesSrc`     | string  | `""`    | Eyes SVG layer; blinks on a timer (optional)               |
+| `ariaLabel`   | string  | `""`    | Accessible label; also gates button-vs-static rendering    |
+| `interactive` | boolean | `true`  | `true` renders a `<button>`; `false` a decorative `<div>`  |
+| `float`       | boolean | `true`  | Idle float bob                                             |
+| `aura`        | boolean | `true`  | Idle "tappable" aura ring (interactive only)               |
+
+Emits a `click` event when interactive.
+
+#### Sizing tokens (resize without forking breakpoints)
+
+Override these CSS custom properties on any parent to resize — the responsive
+breakpoint logic stays in the component:
+
+| Token                  | Default | Breakpoint  |
+| ---------------------- | ------- | ----------- |
+| `--mascot-size-mobile` | `110px` | `< 640px`   |
+| `--mascot-size-sm`     | `120px` | `>= 640px`  |
+| `--mascot-size-md`     | `140px` | `>= 768px`  |
+| `--mascot-size-lg`     | `160px` | `>= 1024px` |
+| `--mascot-gap`         | `0.625rem` | bottom spacing |
+
+Aura/glow/focus colors are also tokenized (`--mascot-aura-color-1..3`,
+`--mascot-hover-glow`, `--mascot-focus-ring`) so each app can match its palette.
+
+#### Porting to another app
+
+1. Copy `Mascot.svelte` into the target app's component tree.
+2. Drop in the app's two-layer icon SVGs (or pass custom art via the slot).
+3. Keep the default size tokens for cross-app consistency; only override if the
+   app's art has different internal padding (re-measure the visible ink).
+
 ### AppSuffix
 
 `AppSuffix.svelte` is a specialized component that adds the ".app" suffix to the ZipList brand name.

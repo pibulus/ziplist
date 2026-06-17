@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { createEventDispatcher } from "svelte";
-  import { AppSuffix } from "$lib/components/ui";
+  import { AppSuffix, Mascot } from "$lib/components/ui";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
 
   const dispatch = createEventDispatcher();
@@ -44,18 +44,13 @@
 
 <!-- Typography with improved kerning and weight using font-variation-settings -->
 <div class="relative title-container">
-  <!-- The Floating Dude -->
-  <button
-    type="button"
-    class="floating-dude"
+  <!-- The Floating Dude — shared Mascot component (SoftStack standard) -->
+  <Mascot
+    baseSrc="/assets/ziplist-icon-base.svg"
+    eyesSrc="/assets/ziplist-icon-eyes.svg"
+    ariaLabel="Start recording"
     on:click={handleDudeClick}
-    aria-label="Start recording"
-  >
-    <div class="dude-wrapper">
-      <img src="/assets/ziplist-icon-base.svg" alt="" class="dude-base" />
-      <img src="/assets/ziplist-icon-eyes.svg" alt="" class="dude-eyes" />
-    </div>
-  </button>
+  />
 
   <h1
     class="mb-1 text-5xl font-black tracking-normal text-center cursor-default select-none staggered-text sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
@@ -104,118 +99,7 @@
 </p>
 
 <style>
-  /* Floating Dude Styles */
-  .floating-dude {
-    position: relative;
-    width: 110px;
-    height: 110px;
-    margin-bottom: 0.625rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    z-index: 20;
-    padding: 0;
-    outline: none;
-  }
-
-  /* Idle pulse ring — appears after entrance animation, hints it's tappable */
-  .floating-dude::after {
-    content: "";
-    position: absolute;
-    inset: -12px;
-    border-radius: 36px;
-    background: radial-gradient(
-      circle at 50% 54%,
-      rgba(255, 204, 51, 0.18) 0%,
-      rgba(255, 106, 194, 0.12) 42%,
-      rgba(113, 201, 206, 0.08) 58%,
-      transparent 74%
-    );
-    filter: blur(1px);
-    animation: dude-aura 3.4s ease-in-out infinite;
-    animation-delay: 2.2s;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  @keyframes dude-aura {
-    0% {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    36% {
-      opacity: 0.72;
-    }
-    72% {
-      opacity: 0.38;
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1.06);
-    }
-  }
-
-  .floating-dude:focus-visible {
-    outline: 3px solid #ff6ac2;
-    outline-offset: 4px;
-    border-radius: 28px;
-  }
-
-  .dude-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    animation: float 6s ease-in-out infinite;
-    transition: filter 0.3s ease;
-  }
-
-  .floating-dude:hover .dude-wrapper {
-    filter: drop-shadow(0 0 15px rgba(255, 176, 0, 0.6));
-  }
-
-  .dude-base {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    object-fit: contain;
-  }
-
-  .dude-eyes {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transform-origin: center 34%;
-    animation: blink 4s infinite;
-  }
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-15px);
-    }
-  }
-
-  @keyframes blink {
-    0%,
-    48%,
-    52%,
-    100% {
-      transform: scaleY(1);
-    }
-    50% {
-      transform: scaleY(0.1);
-    }
-  }
+  /* Mascot styling lives in the shared Mascot component (ui/Mascot.svelte). */
 
   /* Staggered text animation for title - more reliable approach */
   .staggered-text {
@@ -332,40 +216,6 @@
       line-height: 1.6;
       text-wrap: balance;
     }
-
-    .floating-dude {
-      width: 110px;
-      height: 110px;
-      margin-bottom: 0.625rem;
-    }
-
-    .floating-dude::after {
-      inset: -10px;
-      border-radius: 28px;
-    }
-
-  }
-
-  @media (min-width: 640px) {
-    .floating-dude {
-      width: 120px;
-      height: 120px;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .floating-dude {
-      width: 140px;
-      height: 140px;
-      margin-bottom: 0;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .floating-dude {
-      width: 160px;
-      height: 160px;
-    }
   }
 
   /* Small mobile adjustments */
@@ -385,16 +235,6 @@
       opacity: 1;
       transform: none;
       will-change: auto;
-    }
-    .dude-wrapper {
-      animation: none;
-    }
-    .dude-eyes {
-      animation: none;
-    }
-    .floating-dude::after {
-      animation: none;
-      opacity: 0;
     }
   }
 </style>
