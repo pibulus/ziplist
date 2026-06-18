@@ -243,7 +243,7 @@ async function transcribeWithGemini({ prompt, file, mimeType, source }) {
 
     const result = await withRetry(() =>
       getGeminiClient().models.generateContent({
-        model: env.GEMINI_MODEL ?? "gemini-2.5-flash-lite",
+        model: env.GEMINI_MODEL ?? "gemini-flash-lite-latest",
         contents: [
           {
             parts: [
