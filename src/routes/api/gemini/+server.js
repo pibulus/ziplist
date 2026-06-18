@@ -54,6 +54,21 @@ function getGeminiClient() {
   return genAI;
 }
 
+async function withRetry(fn, { tries = 3, baseMs = 600 } = {}) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try { return await fn(); }
+    catch (err) {
+      const msg = String(err?.message || err);
+      const transient = /\b(503|429|overload|UNAVAILABLE|RESOURCE_EXHAUSTED)\b/i.test(msg);
+      lastErr = err;
+      if (!transient || i === tries - 1) throw err;
+      await new Promise((r) => setTimeout(r, baseMs * 2 ** i));
+    }
+  }
+  throw lastErr;
+}
+
 function transcriptionPayloadError(message, status = 400) {
   return Object.assign(new Error(message), {
     status,
@@ -226,23 +241,25 @@ async function transcribeWithGemini({ prompt, file, mimeType, source }) {
       }`,
     );
 
-    const result = await getGeminiClient().models.generateContent({
-      model: env.GEMINI_MODEL ?? "gemini-3.1-flash-lite-preview",
-      contents: [
-        {
-          parts: [
-            { text: prompt },
-            {
-              fileData: {
-                mimeType: uploadResult.mimeType || mimeType,
-                fileUri: uploadResult.uri,
+    const result = await withRetry(() =>
+      getGeminiClient().models.generateContent({
+        model: env.GEMINI_MODEL ?? "gemini-2.5-flash-lite",
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              {
+                fileData: {
+                  mimeType: uploadResult.mimeType || mimeType,
+                  fileUri: uploadResult.uri,
+                },
               },
-            },
-          ],
-        },
-      ],
-      config: GENERATION_CONFIG,
-    });
+            ],
+          },
+        ],
+        config: GENERATION_CONFIG,
+      }),
+    );
 
     return getTextFromGeminiResult(result);
   } finally {
