@@ -120,17 +120,17 @@ rsync -az --delete \
 
 rsync -az -e "$rsync_rsh" package.json package-lock.json "$REMOTE:$STAGING_DIR/"
 
-remote_bash "$APP_DIR" "$STAGING_DIR" <<'REMOTE'
+# ── KEYSTONE: do NOT carry .env into the deploy. ────────────────────────────
+# Secrets/config live in /etc/ziplist.env (systemd EnvironmentFile, root-owned,
+# deploy-independent — managed by ~/.claude/scripts/fleet/keys-sync). Copying an
+# app-dir .env forward here is exactly what re-poisoned the key on every deploy
+# (a stale .env would shadow /etc/ziplist.env). Leaving the app dir .env-free is
+# the fix. To change a key: edit ~/.config/fleet/keys.env → keys-sync ziplist.
+remote_bash "$APP_DIR" <<'REMOTE'
 set -euo pipefail
-
 app_dir="$1"
-staging_dir="$2"
-
-if [[ -d "$app_dir" ]]; then
-  while IFS= read -r env_file; do
-    cp -p "$env_file" "$staging_dir/"
-  done < <(find "$app_dir" -maxdepth 1 -type f \( -name ".env" -o -name ".env.*" \) -print)
-fi
+# belt-and-braces: ensure no stray .env survives in the app dir
+rm -f "$app_dir"/.env "$app_dir"/.env.* 2>/dev/null || true
 REMOTE
 
 remote_bash "$STAGING_DIR" "$SMOKE_HOST" "$SMOKE_PORT" <<'REMOTE'
