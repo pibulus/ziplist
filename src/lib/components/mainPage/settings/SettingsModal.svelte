@@ -12,6 +12,7 @@
   import { PRICING } from "$lib/config/pricing.js";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import ThemeMascot from "./ThemeMascot.svelte";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -52,7 +53,6 @@
     { id: THEMES.NEO, name: "Neo" },
     { id: THEMES.FOCUS, name: "Focus" },
     { id: THEMES.CHILL, name: "Chill" },
-    { id: THEMES.ZEN, name: "Zen" },
     { id: THEMES.NOCTURNE, name: "Nocturne" },
   ];
 
@@ -319,8 +319,9 @@
               aria-label={`Use ${vibe.name} vibe`}
               aria-pressed={selectedVibe === vibe.id}
             >
-              <span class="zl-vibe-swatch vibe-{vibe.id}" aria-hidden="true"
-              ></span>
+              <span class="zl-vibe-art" aria-hidden="true">
+                <ThemeMascot theme={vibe.id} size="38px" />
+              </span>
               <span class="zl-vibe-name">{vibe.name}</span>
               {#if selectedVibe === vibe.id}
                 <span class="zl-vibe-check" aria-hidden="true">✓</span>
@@ -594,7 +595,7 @@
   /* Vibe Grid */
   .zl-vibe-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
   }
 
@@ -617,37 +618,28 @@
     justify-content: center;
   }
 
-  .zl-vibe-swatch {
-    width: 2.4rem;
-    height: 1.1rem;
-    border: 2px solid rgba(0, 0, 0, 0.78);
-    border-radius: 999px;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18);
-  }
-
-  .vibe-neo {
-    background: linear-gradient(90deg, #ffb000, #ffd1dc 52%, #a0e7e5);
-  }
-
-  .vibe-focus {
-    background: linear-gradient(90deg, #fff9f5, #ffdbc5 48%, #ffab77);
-  }
-
-  .vibe-chill {
-    background: linear-gradient(90deg, #e5f9f6, #94d7dd 48%, #4da1a9);
-  }
-
-  .vibe-zen {
-    background: linear-gradient(90deg, #f4efff, #c4b5fd 48%, #8b5cf6);
-  }
-
-  .vibe-nocturne {
-    background: linear-gradient(90deg, #8db0c8, #7da9ad 48%, #c487d2);
+  .zl-vibe-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
   }
 
   .zl-vibe-option:hover {
     border-color: var(--zl-primary-color);
     transform: translateY(-2px);
+  }
+
+  .zl-vibe-option:hover .zl-vibe-art {
+    transform: scale(1.12);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zl-vibe-art,
+    .zl-vibe-option:hover .zl-vibe-art {
+      transition: none;
+      transform: none;
+    }
   }
 
   .zl-vibe-option.active {
@@ -706,8 +698,13 @@
       flex: 1;
     }
 
+    /* Canonical 4-up holds on mobile; tighten padding so tiles fit. */
     .zl-vibe-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .zl-vibe-option {
+      padding: 0.75rem 0.25rem;
     }
   }
 </style>
