@@ -73,6 +73,14 @@
   --zl-sparkle-scale-start: 0;
   --zl-sparkle-opacity-mid: 1;
   --zl-sparkle-scale-mid: 1;
+
+  /* AppSuffix (.app) token — defaults mirror DEFAULT_THEME (neo) so the
+     bare/pre-JS state renders the neo Miami gradient + flourishes. */
+  --app-suffix-gradient: linear-gradient(to right, #ffd700, #ffb000, #4ecdc4);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: 0.5px rgba(0, 0, 0, 0.1);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 176, 0, 0.24));
 }
 
 /**
@@ -195,6 +203,13 @@ html[data-theme="focus"] {
   --zl-new-item-input-border: 2px solid rgba(255, 204, 51, 0.4);
   --zl-new-item-input-focus-border: rgba(255, 204, 51, 0.7);
   --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(255, 204, 51, 0.1);
+
+  /* AppSuffix (.app) token */
+  --app-suffix-gradient: linear-gradient(to bottom right, #ff82ca, #ffb060);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: none;
+  --app-suffix-filter: none;
 }
 
 /**
@@ -312,6 +327,13 @@ html[data-theme="chill"] {
   --zl-new-item-input-border: 2px solid rgba(77, 208, 225, 0.4);
   --zl-new-item-input-focus-border: rgba(77, 208, 225, 0.7);
   --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
+
+  /* AppSuffix (.app) token */
+  --app-suffix-gradient: linear-gradient(to bottom right, #4ad8cb, #67e799);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: none;
+  --app-suffix-filter: none;
 }
 
 /**
@@ -434,6 +456,13 @@ html[data-theme="zen"] {
   --zl-new-item-input-border: 2px solid rgba(151, 117, 250, 0.4);
   --zl-new-item-input-focus-border: rgba(151, 117, 250, 0.7);
   --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(151, 117, 250, 0.1);
+
+  /* AppSuffix (.app) token */
+  --app-suffix-gradient: linear-gradient(to bottom right, #9f8fff, #8183f4);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: none;
+  --app-suffix-filter: none;
 }
 
 /**
@@ -556,6 +585,20 @@ html[data-theme="nocturne"] {
   --zl-new-item-input-border: 2px solid rgba(196, 135, 210, 0.4);
   --zl-new-item-input-focus-border: rgba(196, 135, 210, 0.6);
   --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(196, 135, 210, 0.2);
+
+  /* AppSuffix (.app) token — animated rainbow */
+  --app-suffix-gradient: linear-gradient(
+    to right,
+    #ff0080,
+    #ff8c00,
+    #ffed00,
+    #00ff80,
+    #00bfff
+  );
+  --app-suffix-bg-size: 200% auto;
+  --app-suffix-anim: rainbow-shift 3s linear infinite;
+  --app-suffix-stroke: none;
+  --app-suffix-filter: none;
 }
 
 /**
@@ -637,6 +680,14 @@ html[data-theme="neo"] {
   /* Empty state styling */
   --zl-empty-state-bg: #fff0f5;
   --zl-empty-title-color: #000000;
+
+  /* AppSuffix (.app) token — Miami gradient + neo flourishes (text-stroke +
+     amber drop-shadow). Mirrors :root since neo is the DEFAULT_THEME. */
+  --app-suffix-gradient: linear-gradient(to right, #ffd700, #ffb000, #4ecdc4);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: 0.5px rgba(0, 0, 0, 0.1);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 176, 0, 0.24));
 }
 
 /**

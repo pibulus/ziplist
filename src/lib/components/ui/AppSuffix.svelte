@@ -1,11 +1,14 @@
 <script>
-  import { theme as themeStore, CONSTANTS } from "$lib";
-
   /**
    * AppSuffix Component
    *
    * A small tag-like suffix that appears adjacent to a product name,
    * designed to feel like a printed label rather than a continuation of the title.
+   *
+   * Self-contained / token-driven: the per-theme gradient (and any animation,
+   * stroke, or filter flourish) is supplied by --app-suffix-* CSS custom
+   * properties defined per html[data-theme] in theme-variables.css. No theme
+   * store import needed — the tokens reach .app-text via the normal cascade.
    */
 
   // Props with defaults
@@ -15,13 +18,10 @@
   export let offsetX = "-0.2em"; // Horizontal positioning
   export let offsetY = "6px"; // Vertical positioning
   export let position = "bottom-right"; // Position preset
-
-  // Keep current theme in sync with the global theme
-  $: currentTheme = $themeStore || CONSTANTS.DEFAULT_THEME;
 </script>
 
 <span
-  class="app-suffix {customClass} {position} theme-{currentTheme}"
+  class="app-suffix {customClass} {position}"
   style="--suffix-color: {color}; --suffix-size: {size}; --offset-x: {offsetX}; --offset-y: {offsetY};"
   aria-hidden="true"
 >
@@ -44,7 +44,7 @@
     font-family: inherit;
     font-variation-settings: inherit;
     transform: translateY(var(--offset-y, 0));
-    opacity: 0.9;
+    opacity: 0.95;
     z-index: 1;
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.12));
     background: transparent;
@@ -53,10 +53,21 @@
   }
 
   .app-text {
+    /* Per-theme gradient + flourishes are supplied via --app-suffix-* tokens
+       defined per html[data-theme] in theme-variables.css. Fallback = the
+       DEFAULT_THEME (neo) Miami gradient, so the bare/pre-JS state matches. */
+    background-image: var(
+      --app-suffix-gradient,
+      linear-gradient(to right, #ffd700, #ffb000, #4ecdc4)
+    );
+    background-size: var(--app-suffix-bg-size, auto);
+    animation: var(--app-suffix-anim, none);
+    -webkit-text-stroke: var(--app-suffix-stroke, none);
     background-clip: text !important;
     -webkit-background-clip: text !important;
     color: transparent !important;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+    filter: var(--app-suffix-filter, none);
     transition:
       filter 0.2s ease,
       transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
@@ -64,43 +75,9 @@
     position: relative;
     transform-origin: center;
     padding: 0.1em 0; /* Add some padding for hover effect */
-  }
-
-  /* Theme-specific gradients - darker for AA contrast */
-  .theme-focus .app-text {
-    background-image: linear-gradient(to bottom right, #ff82ca, #ffb060);
-  }
-
-  .theme-chill .app-text {
-    background-image: linear-gradient(to bottom right, #4ad8cb, #67e799);
-  }
-
-  .theme-zen .app-text {
-    background-image: linear-gradient(to bottom right, #9f8fff, #8183f4);
-  }
-
-  .theme-neo .app-text {
-    background-image: linear-gradient(
-      to right,
-      #ffd700,
-      #ffb000,
-      #4ecdc4
-    ); /* Miami Gradient */
-    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.1);
-    filter: drop-shadow(0 2px 4px rgba(255, 176, 0, 0.24));
-  }
-
-  .theme-nocturne .app-text {
-    background-image: linear-gradient(
-      to right,
-      #ff0080,
-      #ff8c00,
-      #ffed00,
-      #00ff80,
-      #00bfff
-    );
-    background-size: 200% auto;
-    animation: rainbow-shift 3s linear infinite;
+    /* GPU hints for smooth animated (nocturne) gradient */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   @keyframes rainbow-shift {
@@ -113,7 +90,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .theme-nocturne .app-text {
+    .app-text {
       animation: none;
     }
   }
