@@ -81,6 +81,15 @@
   --zl-sparkle-opacity-mid: 1;
   --zl-sparkle-scale-mid: 1;
 
+  /* Mascot (the floating ZipList dude) gradient — 3 stops the hero silhouette
+     reads via fill="url(#themeGradient)". Defaults mirror DEFAULT_THEME (neo)
+     so the bare/pre-JS state renders the same Miami gradient as the old baked
+     icon. Overridden per-theme below so the hero RECOLORS with the vibe (was a
+     baked-in <img> that never themed). Matches the ThemeMascot swatch palettes. */
+  --zl-mascot-gradient-start: #ffe86b;
+  --zl-mascot-gradient-mid: #ff9a8c;
+  --zl-mascot-gradient-end: #76ead7;
+
   /* AppSuffix (.app) token — defaults mirror DEFAULT_THEME (neo) so the
      bare/pre-JS state renders the neo Miami gradient + flourishes. */
   --app-suffix-gradient: linear-gradient(to right, #ffd700, #ffb000, #4ecdc4);
@@ -97,6 +106,11 @@
  * creating a warm, classy, and inviting feel
  */
 html[data-theme="focus"] {
+  /* Mascot gradient — tangerine sunrise (matches ThemeMascot focus swatch) */
+  --zl-mascot-gradient-start: #fff9f5;
+  --zl-mascot-gradient-mid: #ffdbc5;
+  --zl-mascot-gradient-end: #ffab77;
+
   /* Card gradient - soft pastel tangerine sunrise with pink-yellow glow */
   --zl-card-bg-gradient-angle: 135deg;
   --zl-card-bg-gradient-color-start: #fff9f5;
@@ -229,6 +243,11 @@ html[data-theme="focus"] {
  * creating a calm, refreshing feel
  */
 html[data-theme="chill"] {
+  /* Mascot gradient — cool teal (matches ThemeMascot chill swatch) */
+  --zl-mascot-gradient-start: #e5f9f6;
+  --zl-mascot-gradient-mid: #94d7dd;
+  --zl-mascot-gradient-end: #4da1a9;
+
   /* Card gradient */
   --zl-card-bg-gradient-angle: 120deg;
   --zl-card-bg-gradient-color-start: #e5f9f6;
@@ -356,6 +375,11 @@ html[data-theme="chill"] {
  * creating a centered, calming atmosphere with sophisticated elegance
  */
 html[data-theme="zen"] {
+  /* Mascot gradient — soft violet (derived from zen's card gradient stops) */
+  --zl-mascot-gradient-start: #f4eeff;
+  --zl-mascot-gradient-mid: #b197fc;
+  --zl-mascot-gradient-end: #9775fa;
+
   /* Card gradient */
   --zl-card-bg-gradient-angle: 145deg;
   --zl-card-bg-gradient-color-start: #f4eeff;
@@ -488,6 +512,11 @@ html[data-theme="zen"] {
  * creating a peaceful night-time lo-fi vibe
  */
 html[data-theme="nocturne"] {
+  /* Mascot gradient — moonlit blue→orchid (matches ThemeMascot nocturne swatch) */
+  --zl-mascot-gradient-start: #8db0c8;
+  --zl-mascot-gradient-mid: #7da9ad;
+  --zl-mascot-gradient-end: #c487d2;
+
   /* Card gradient - soft pastel moonlight with blue-green tones */
   --zl-card-bg-gradient-angle: 135deg;
   --zl-card-bg-gradient-color-start: #8db0c8;
@@ -631,6 +660,11 @@ html[data-theme="nocturne"] {
  * Best used with "Chunky Mode" enabled.
  */
 html[data-theme="neo"] {
+  /* Mascot gradient — Miami neo (matches ThemeMascot neo swatch + old baked icon) */
+  --zl-mascot-gradient-start: #ffe86b;
+  --zl-mascot-gradient-mid: #ff9a8c;
+  --zl-mascot-gradient-end: #76ead7;
+
   /* Card gradient */
   --zl-card-bg-gradient-angle: 180deg;
   --zl-card-bg-gradient-color-start: #fff9f0;

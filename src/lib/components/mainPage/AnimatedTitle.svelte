@@ -45,12 +45,7 @@
 <!-- Typography with improved kerning and weight using font-variation-settings -->
 <div class="relative title-container">
   <!-- The Floating Dude — shared Mascot component (SoftStack standard) -->
-  <Mascot
-    baseSrc="/assets/ziplist-icon-base.svg"
-    eyesSrc="/assets/ziplist-icon-eyes.svg"
-    ariaLabel="Start recording"
-    on:click={handleDudeClick}
-  />
+  <Mascot ariaLabel="Start recording" on:click={handleDudeClick} />
 
   <h1
     class="mb-1 text-5xl font-black tracking-normal text-center cursor-default select-none staggered-text sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"

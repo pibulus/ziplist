@@ -26,12 +26,7 @@
       <div class="flex items-center gap-3 mb-1">
         <!-- Mascot slot (skeleton) — the real ZipList dude, not an emoji. -->
         <div class="about-mascot-slot shrink-0">
-          <Mascot
-            baseSrc="/assets/ziplist-icon-base.svg"
-            eyesSrc="/assets/ziplist-icon-eyes.svg"
-            interactive={false}
-            aura={false}
-          />
+          <Mascot interactive={false} aura={false} />
         </div>
         <h3
           id="about_modal_title"

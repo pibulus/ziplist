@@ -1,6 +1,6 @@
 <script>
   /**
-   * Mascot — portable app-icon/mascot component.
+   * Mascot — portable app-icon/mascot component (ZipList lite shell).
    *
    * The shared SoftStack standard for app mascots (ZipList dude, TalkType
    * ghost, future apps). Sizing is matched across apps by *visible ink*, not
@@ -8,28 +8,31 @@
    * ~174px on large desktop, matching the TalkType ghost so sister apps read
    * the same size side by side.
    *
+   * THEME-RECOLOR (bug fix): the hero silhouette is now an INLINE SVG whose
+   * body fills with `url(#<themeGradient>)`, where the gradient stops are CSS
+   * variables (`--zl-mascot-gradient-start/-mid/-end`) defined per-theme in
+   * theme-variables.css. So the dude RECOLORS with the active vibe instead of
+   * the old baked-in <img> that was frozen on the neo gradient. Each instance
+   * gets a unique gradient id so multiple mascots on a page don't collide.
+   *
    * Portable by design:
-   *  - Drop the file into any SvelteKit app's component tree.
-   *  - Pass `baseSrc` / `eyesSrc` (two-layer SVG: body + blinking eyes) OR a
-   *    default slot for fully custom art.
+   *  - Default render = the themed inline SVG (ZipList dude geometry).
+   *  - Or pass a default slot for fully custom art.
+   *  - `baseSrc` / `eyesSrc` are kept for backward-compat (renders the legacy
+   *    two-layer <img> pair) but do NOT theme-recolor — prefer the inline path.
    *  - Override any size with the `--mascot-size-*` CSS custom properties on a
    *    parent, no need to fork the breakpoint logic.
    *
    * @example
-   *   <Mascot
-   *     baseSrc="/assets/ziplist-icon-base.svg"
-   *     eyesSrc="/assets/ziplist-icon-eyes.svg"
-   *     ariaLabel="Start recording"
-   *     on:click={handleClick}
-   *   />
+   *   <Mascot ariaLabel="Start recording" on:click={handleClick} />
    */
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 
-  /** Body / base SVG layer. Optional if using the default slot. */
+  /** Legacy body / base SVG layer. Optional — does NOT theme-recolor. */
   export let baseSrc = "";
-  /** Eyes SVG layer (blinks on a timer). Optional. */
+  /** Legacy eyes SVG layer (blinks on a timer). Optional. */
   export let eyesSrc = "";
   /** Accessible label — also decides whether it renders as a button. */
   export let ariaLabel = "";
@@ -39,6 +42,12 @@
   export let float = true;
   /** Idle "tappable" aura ring (only meaningful when interactive). */
   export let aura = true;
+
+  // Unique gradient id per instance so hero + modal mascots don't share a fill.
+  const gid = `zlMascotGradient-${Math.random().toString(36).slice(2, 8)}`;
+
+  // Legacy <img> path only when an explicit baseSrc is passed AND no slot.
+  $: useLegacyImg = !!baseSrc;
 
   function handleClick(event) {
     if (!interactive) return;
@@ -59,13 +68,75 @@
   <div class="mascot-art" class:is-floating={float}>
     {#if $$slots.default}
       <slot />
-    {:else}
-      {#if baseSrc}
-        <img src={baseSrc} alt="" class="mascot-base" />
-      {/if}
+    {:else if useLegacyImg}
+      <!-- Legacy two-layer <img> pair (does not theme-recolor). -->
+      <img src={baseSrc} alt="" class="mascot-base" />
       {#if eyesSrc}
         <img src={eyesSrc} alt="" class="mascot-eyes" />
       {/if}
+    {:else}
+      <!-- Themed inline silhouette — body fills with the per-theme gradient so
+           it recolors with the active vibe. Eyes ride in their own <g> so the
+           blink scaleY animation applies. Geometry = canonical ZipList dude. -->
+      <svg
+        class="mascot-svg"
+        viewBox="96 56 832 872"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <linearGradient
+            id={gid}
+            x1="150"
+            y1="130"
+            x2="860"
+            y2="820"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop
+              offset="0"
+              stop-color="var(--zl-mascot-gradient-start, #ffe86b)"
+            />
+            <stop
+              offset="0.42"
+              stop-color="var(--zl-mascot-gradient-mid, #ff9a8c)"
+            />
+            <stop
+              offset="1"
+              stop-color="var(--zl-mascot-gradient-end, #76ead7)"
+            />
+          </linearGradient>
+        </defs>
+
+        <!-- Speech-bubble body, gradient-filled (the part that recolors). -->
+        <path
+          d="M308 118H716C815 118 878 181 878 280V574C878 673 815 736 716 736H600L542 846C529 870 495 870 482 846L424 736H308C209 736 146 673 146 574V280C146 181 209 118 308 118Z"
+          fill="url(#{gid})"
+          stroke="#000000"
+          stroke-width="54"
+          stroke-linejoin="round"
+        />
+
+        <!-- List rows. -->
+        <g
+          fill="none"
+          stroke="#000000"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="334" y="520" width="44" height="44" rx="6" stroke-width="18" />
+          <path d="M430 542H690" stroke-width="21" />
+          <rect x="334" y="598" width="44" height="44" rx="6" stroke-width="18" />
+          <path d="M430 620H690" stroke-width="21" />
+        </g>
+
+        <!-- Eyes (blink). -->
+        <g class="mascot-eyes-group">
+          <ellipse cx="424" cy="326" rx="39" ry="60" fill="#000000" />
+          <ellipse cx="600" cy="326" rx="39" ry="60" fill="#000000" />
+        </g>
+      </svg>
     {/if}
   </div>
 </svelte:element>
@@ -161,6 +232,21 @@
     filter: drop-shadow(0 0 15px var(--mascot-hover-glow));
   }
 
+  /* Inline themed SVG — fills the box, overflow visible for the stroke. */
+  .mascot-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* Eyes blink — same timing as the legacy two-layer version. */
+  .mascot-eyes-group {
+    transform-origin: center 34%;
+    animation: mascot-blink 4s infinite;
+  }
+
+  /* Legacy <img> layers (only when baseSrc/eyesSrc passed). */
   .mascot-base {
     position: absolute;
     top: 50%;
@@ -232,6 +318,7 @@
   @media (prefers-reduced-motion: reduce) {
     .mascot-art.is-floating,
     .mascot-eyes,
+    .mascot-eyes-group,
     .mascot.has-aura::after {
       animation: none;
     }

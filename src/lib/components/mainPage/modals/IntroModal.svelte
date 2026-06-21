@@ -43,12 +43,7 @@
       <!-- Mascot slot (skeleton) — the ZipList dude, decorative, smaller in
            the modal so it reads alongside the title without crowding it. -->
       <div class="flex justify-center intro-mascot-slot">
-        <Mascot
-          baseSrc="/assets/ziplist-icon-base.svg"
-          eyesSrc="/assets/ziplist-icon-eyes.svg"
-          interactive={false}
-          aura={false}
-        />
+        <Mascot interactive={false} aura={false} />
       </div>
 
       <h1
