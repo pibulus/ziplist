@@ -4,7 +4,6 @@ import { hapticService as hapticServiceInstance } from "./infrastructure/index";
 import { soundService as soundServiceInstance } from "./infrastructure/index";
 import { audioService as audioServiceInstance } from "./audio/audioService";
 import { transcriptionService as transcriptionServiceInstance } from "./transcription/transcriptionService";
-import { themeService as themeServiceInstance } from "./theme/themeService";
 import { modalService as modalServiceInstance } from "./modals/modalService";
 import { firstVisitService as firstVisitServiceInstance } from "./first-visit/firstVisitService";
 import { pwaService as pwaServiceInstance } from "./pwa/pwaService";
@@ -17,7 +16,6 @@ export {
   soundService,
   StorageUtils,
 } from "./infrastructure/index";
-export { themeService } from "./theme/themeService";
 export { modalService } from "./modals/modalService";
 export {
   firstVisitService,
@@ -92,7 +90,6 @@ export function initializeServices(options = {}) {
     transcriptionService: transcriptionServiceInstance,
     hapticService: hapticServiceInstance,
     soundService: soundServiceInstance,
-    themeService: themeServiceInstance,
     modalService: modalServiceInstance,
     firstVisitService: firstVisitServiceInstance,
     pwaService: pwaServiceInstance,
