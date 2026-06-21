@@ -13,6 +13,7 @@
   export let ogImageAlt = "ZipList warm voice checklist app preview";
   export let ogType = "website";
   export let footerYear = new Date().getFullYear();
+  export let appName = "ZipList";
   export let listFirst = false;
 
   $: resolvedOgTitle = ogTitle || title;
@@ -69,7 +70,7 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs text-gray-600 backdrop-blur-[3px] sm:pb-4 sm:pt-6"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs backdrop-blur-[3px] sm:pb-4 sm:pt-6"
   >
     <div
       class="container mx-auto flex flex-row items-center justify-center gap-1 sm:justify-between sm:gap-3"
@@ -77,12 +78,16 @@
       <div
         class="copyright ml-4 hidden flex-wrap items-center justify-center sm:ml-6 sm:flex md:ml-8"
       >
-        <span class="mr-1 text-sm font-medium tracking-normal text-gray-500">
-          © {footerYear} ZipList
+        <span class="mr-1 text-sm font-medium tracking-normal">
+          © {footerYear} {appName}
         </span>
         <span class="footer-dot mx-2">•</span>
-        <span class="text-sm font-light text-gray-600">
-          Melbourne
+        <span class="footer-meta text-sm font-light">
+          <span
+            class="footer-heart animate-pulse hover:scale-110"
+            aria-label="love"
+          >❤️</span>
+          in Melbourne
         </span>
       </div>
       <div class="flex items-center sm:mr-6 md:mr-8">
@@ -190,6 +195,10 @@
       0.78
     );
     background: var(--zl-footer-bg-image);
+    /* THE BUG FIX: resting text color is a TOKEN (defined per-theme in
+       theme-variables.css), not the hardcoded text-gray-600 Tailwind literal —
+       so it stays readable on every theme. */
+    color: var(--footer-text-color, #4b5563);
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
@@ -200,6 +209,17 @@
 
   .footer-dot {
     color: var(--zl-footer-dot-color);
+  }
+
+  .footer-heart {
+    color: var(--footer-heart-color, var(--zl-accent-color, #ff6ac2));
+    display: inline-block;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .footer-heart {
+      animation: none;
+    }
   }
 
   /* Media queries for mobile optimization */

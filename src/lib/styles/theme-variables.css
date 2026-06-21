@@ -30,6 +30,13 @@
   --zl-text-color-secondary: #666666;
   --zl-text-color-disabled: #9d9d9d;
 
+  /* Footer tokens — neutral --footer-* namespace. --footer-text-color is the
+     resting color for the footer chrome (replaces the old hardcoded
+     text-gray-600 literal). Defined per-theme below so it stays readable on
+     every theme; light themes get a muted dark value, dark themes a light one. */
+  --footer-text-color: #4b5563;
+  --footer-heart-color: var(--zl-accent-color);
+
   /* Default item and component styling */
   --zl-item-border-radius: 20px;
   --zl-checkbox-size: 32px;
@@ -127,6 +134,9 @@ html[data-theme="focus"] {
   --zl-text-color-primary: #5b4b41;
   --zl-text-color-secondary: #7d6b62;
   --zl-text-color-disabled: #a89a94;
+
+  /* Footer resting color — focus is LIGHT, use its muted warm ink */
+  --footer-text-color: #7d6b62;
 
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
@@ -251,6 +261,9 @@ html[data-theme="chill"] {
   --zl-accent-color-rgb: 77, 161, 169;
   --zl-highlight-color: #e5f9f6;
   --zl-text-hover-color: #4da1a9;
+
+  /* Footer resting color — chill is LIGHT, use a muted teal/slate ink */
+  --footer-text-color: #4a6e72;
 
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
@@ -380,6 +393,9 @@ html[data-theme="zen"] {
   --zl-text-color-primary: #382f66;
   --zl-text-color-secondary: #5d5393;
   --zl-text-color-disabled: #9a93c2;
+
+  /* Footer resting color — zen is LIGHT, use its muted violet ink */
+  --footer-text-color: #5d5393;
 
   /* List item styling */
   --zl-item-bg: rgba(255, 255, 255, 0.5);
@@ -518,6 +534,13 @@ html[data-theme="nocturne"] {
   --zl-text-color-secondary: #5a7a91;
   --zl-text-color-disabled: #a1b5c5;
 
+  /* Footer resting color — nocturne in THIS app renders on a LIGHT blue
+     background (#dbeaf3, see PageLayout .bg-gradient-mesh) with dark primary
+     text, so use its own dark muted ink, NOT a light value (a light footer
+     text would be unreadable here). Brief's "nocturne is DARK" does not match
+     ziplist's actual light-bg nocturne. */
+  --footer-text-color: #5a7a91;
+
   /* Checked item styling */
   --zl-item-checked-opacity: 0.75;
   --zl-item-checked-bg: rgba(235, 244, 250, 0.4);
@@ -629,6 +652,9 @@ html[data-theme="neo"] {
   --zl-text-color-primary: #000000;
   --zl-text-color-secondary: #333333;
   --zl-text-color-disabled: #777777;
+
+  /* Footer resting color — neo is LIGHT/high-contrast, use its dark ink */
+  --footer-text-color: #333333;
 
   /* List item styling */
   --zl-item-bg: #ffffff;
