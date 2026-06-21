@@ -1,5 +1,6 @@
 <script>
   import { ModalCloseButton } from "./index.js";
+  import { Mascot } from "$lib/components/ui";
   export let closeModal;
 </script>
 
@@ -23,10 +24,14 @@
 
     <div class="animate-fadeUp space-y-4">
       <div class="flex items-center gap-3 mb-1">
-        <div
-          class="w-9 h-9 bg-gradient-to-br from-white to-pink-50 rounded-full flex items-center justify-center shadow-sm border border-pink-200/60"
-        >
-          <span class="text-xl">👻</span>
+        <!-- Mascot slot (skeleton) — the real ZipList dude, not an emoji. -->
+        <div class="about-mascot-slot shrink-0">
+          <Mascot
+            baseSrc="/assets/ziplist-icon-base.svg"
+            eyesSrc="/assets/ziplist-icon-eyes.svg"
+            interactive={false}
+            aura={false}
+          />
         </div>
         <h3
           id="about_modal_title"
@@ -70,20 +75,25 @@
         "Talk. List. Tick."
       </div>
 
+      <!-- Privacy / local-first one-liner (skeleton link set) -->
+      <p class="text-xs text-gray-500 leading-relaxed">
+        Your lists live on your device, not our servers.
+      </p>
+
       <div class="flex items-center gap-3 pt-2">
         <a
           href="https://ko-fi.com/madebypablo"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-xs text-teal-700 hover:text-teal-900 font-medium transition-colors"
+          class="about-link text-xs text-teal-700 hover:text-teal-900 font-medium transition-colors"
         >
           ☕ Coffee jar
         </a>
         <a
-          href="https://github.com/pibulus/ziplist"
+          href="https://github.com/pibulus"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+          class="about-link text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
         >
           GitHub
         </a>
@@ -122,5 +132,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Mascot slot — shrink the shared Mascot to sit inline beside the title
+     without crowding it. The character art itself is untouched. */
+  .about-mascot-slot :global(.mascot) {
+    --mascot-size-mobile: 44px;
+    --mascot-size-sm: 48px;
+    --mascot-size-md: 48px;
+    --mascot-size-lg: 48px;
+    margin-bottom: 0;
+  }
+
+  /* Skeleton link set — ~44px tap target for thumbs. */
+  .about-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 </style>

@@ -3,7 +3,7 @@
    * A reusable modal close button component that provides consistent styling and behavior
    * across all modals in the application.
    */
-  export let position = 'right-3 top-3';
+  export let position = 'right-4 top-4';
   export let size = 'md';
   export let label = 'Close';
   export let closeModal;
@@ -19,19 +19,21 @@
   // Get size classes based on the size prop
   const sizeClass = sizeClasses[size] || sizeClasses.md;
   
-  // Handle click with both dialog closing and function call
+  // Handle click. Prefer the provided closeModal (which routes through
+  // modalService and plays the close-out animation). Only fall back to a
+  // direct dialog.close() when no closeModal handler was supplied, so the
+  // skeleton pop-out animation is never skipped.
   function handleClick() {
+    if (typeof closeModal === 'function') {
+      closeModal();
+      return;
+    }
+
     if (modalId) {
-      // Close the dialog by ID first
       const modal = document.getElementById(modalId);
       if (modal && typeof modal.close === 'function') {
         modal.close();
       }
-    }
-    
-    // Then call the provided closeModal function
-    if (typeof closeModal === 'function') {
-      closeModal();
     }
   }
 </script>
@@ -46,9 +48,11 @@
 </button>
 
 <style>
+  /* Skeleton X button: 44px circular tap target, top-right 1rem inset
+     (set via the `position` prop, default right-4 top-4), scale-hover,
+     visible focus ring for keyboard users. */
   .modal-close-btn {
     -webkit-tap-highlight-color: transparent;
-    outline: none;
     cursor: pointer;
     user-select: none;
     min-width: 44px;
@@ -61,5 +65,10 @@
 
   .modal-close-btn:active {
     transform: scale(0.95);
+  }
+
+  .modal-close-btn:focus-visible {
+    outline: 3px solid var(--zl-accent-color, #ff6ac2);
+    outline-offset: 2px;
   }
 </style>

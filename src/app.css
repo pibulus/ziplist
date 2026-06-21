@@ -205,16 +205,82 @@ body.modal-active {
 }
 
 dialog.modal::backdrop {
-  background-color: rgba(0, 0, 0, 0.4);
+  background: transparent;
 }
 
-/* Custom modal styling */
+/* Warm-dark blurred backdrop (skeleton: ~45% warm-dark + 2px blur, tap-to-close).
+   Targets the in-DOM .modal-backdrop button each modal renders; the native
+   ::backdrop above is left transparent so this one paints. */
+.modal > .modal-backdrop,
+.modal .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  border: 0;
+  cursor: pointer;
+  background-color: rgba(43, 38, 32, 0.46);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: zl-modal-backdrop-in 180ms ease-out both;
+}
+
+/* Custom modal styling — skeleton frame: 28rem max-width, 1.5rem radius,
+   fluid padding. modal-bottom (mobile bottom-sheet) -> sm:modal-middle is set
+   per-modal via DaisyUI classes; the box rules below apply to both. */
 .modal-box {
   max-height: 85vh !important;
   overflow-y: auto !important;
   margin: 1rem auto !important;
-  width: 95% !important;
+  width: min(95%, 28rem) !important;
+  max-width: 28rem !important;
+  padding: clamp(1.25rem, 4vw, 2rem) !important;
   border-radius: 1.5rem !important;
+  transform-origin: center;
+}
+
+/* OPEN animation — playful pop-in (skeleton). Scoped to open, NON-closing
+   dialogs so the entrance can't restart for a frame during teardown. */
+dialog.modal[open]:not(.zl-modal-closing) > .modal-box {
+  animation: zl-modal-pop-in 420ms cubic-bezier(0.18, 0.92, 0.2, 1.18) both;
+}
+
+/* CLOSE animation (skeleton's #1 win) — driven by modalService adding
+   .zl-modal-closing before the native dialog.close(). */
+dialog.modal.zl-modal-closing {
+  pointer-events: none;
+}
+
+dialog.modal.zl-modal-closing > .modal-box {
+  animation: zl-modal-pop-out 210ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+dialog.modal.zl-modal-closing > .modal-backdrop,
+dialog.modal.zl-modal-closing .modal-backdrop {
+  animation: zl-modal-backdrop-out 210ms ease-out both;
+}
+
+/* Mobile bottom-sheet polish — full-width docked sheet with safe-area inset
+   below 640px; centered card above (DaisyUI modal-bottom sm:modal-middle). */
+@media (max-width: 639px) {
+  .modal-bottom .modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    padding-bottom: calc(
+      clamp(1.25rem, 4vw, 2rem) + env(safe-area-inset-bottom, 0px)
+    ) !important;
+  }
+
+  /* Bottom-sheet slides up from the dock; pop-out slides back down. */
+  .modal-bottom[open]:not(.zl-modal-closing) > .modal-box {
+    animation: zl-modal-sheet-in 360ms cubic-bezier(0.18, 0.92, 0.2, 1.04) both;
+  }
+
+  .modal-bottom.zl-modal-closing > .modal-box {
+    animation: zl-modal-sheet-out 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
 }
 
 /* Ensure scrollbars don't cause layout shifts */
@@ -265,6 +331,94 @@ dialog.modal::backdrop {
   }
   100% {
     box-shadow: 0 0 5px rgba(255, 190, 60, 0.5);
+  }
+}
+
+/* ===================================================================
+   MODAL OPEN / CLOSE — skeleton pop-in + pop-out + backdrop fade
+   =================================================================== */
+@keyframes zl-modal-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.92) rotate(-1.2deg);
+  }
+  58% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.025) rotate(0.35deg);
+  }
+  78% {
+    opacity: 1;
+    transform: translateY(1px) scale(0.992) rotate(-0.12deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes zl-modal-pop-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96) rotate(0.35deg);
+  }
+}
+
+@keyframes zl-modal-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zl-modal-sheet-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes zl-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zl-modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Honor reduced-motion: modal enters/leaves instantly (skeleton requirement). */
+@media (prefers-reduced-motion: reduce) {
+  dialog.modal[open]:not(.zl-modal-closing) > .modal-box,
+  dialog.modal.zl-modal-closing > .modal-box,
+  .modal-bottom[open]:not(.zl-modal-closing) > .modal-box,
+  .modal-bottom.zl-modal-closing > .modal-box,
+  .modal > .modal-backdrop,
+  .modal .modal-backdrop,
+  dialog.modal.zl-modal-closing > .modal-backdrop,
+  dialog.modal.zl-modal-closing .modal-backdrop {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

@@ -1,14 +1,17 @@
 <script>
   import { ModalCloseButton } from "./index.js";
+  import { Mascot } from "$lib/components/ui";
 
   export let closeModal;
   export let markIntroAsSeen;
   export let triggerGhostClick;
 
+  // Route through the shared closeModal so the modal animates OUT (skeleton
+  // close-out) instead of vanishing via a direct dialog.close(). Mark the
+  // intro seen, then kick off the ghost tap once the pop-out has finished.
   function handleActionButton() {
-    const modal = document.getElementById("intro_modal");
-    if (modal) modal.close();
     markIntroAsSeen();
+    closeModal();
 
     setTimeout(() => {
       triggerGhostClick();
@@ -23,7 +26,7 @@
   aria-modal="true"
 >
   <div
-    class="modal-box relative bg-[#fff9ed] rounded-3xl p-6 sm:p-8 md:p-10 w-[95%] max-w-[90vw] sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto border-0"
+    class="modal-box relative bg-[#fff9ed] border-0"
     style="box-shadow: 0 10px 25px -5px rgba(249, 168, 212, 0.3), 0 8px 10px -6px rgba(249, 168, 212, 0.2), 0 0 15px rgba(249, 168, 212, 0.15);"
   >
     <form method="dialog">
@@ -37,6 +40,17 @@
     </form>
 
     <div class="space-y-5 sm:space-y-6 md:space-y-7 animate-fadeIn">
+      <!-- Mascot slot (skeleton) — the ZipList dude, decorative, smaller in
+           the modal so it reads alongside the title without crowding it. -->
+      <div class="flex justify-center intro-mascot-slot">
+        <Mascot
+          baseSrc="/assets/ziplist-icon-base.svg"
+          eyesSrc="/assets/ziplist-icon-eyes.svg"
+          interactive={false}
+          aura={false}
+        />
+      </div>
+
       <h1
         id="intro_modal_title"
         class="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-gray-900"
@@ -101,5 +115,16 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Mascot slot — shrink the shared Mascot to a modal-friendly size so it sits
+     above the title without crowding it. Overrides the SoftStack breakpoint
+     tokens locally; the character art itself is untouched. */
+  .intro-mascot-slot :global(.mascot) {
+    --mascot-size-mobile: 64px;
+    --mascot-size-sm: 72px;
+    --mascot-size-md: 80px;
+    --mascot-size-lg: 80px;
+    margin-bottom: 0;
   }
 </style>

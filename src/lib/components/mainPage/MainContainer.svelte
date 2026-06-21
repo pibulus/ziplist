@@ -744,9 +744,14 @@
       maybeLoadPwaDeviceSetup();
     }
 
-    // Keep the first-visit state current without auto-opening a native
-    // dialog, because showModal() hides the root scrollbar while it is open.
-    firstVisitService.checkFirstVisit();
+    // Auto-open the intro on first visit. The historic root-scrollbar jump
+    // (showModal() hiding the scrollbar mid-open) is now neutralised: app.css
+    // pins `html { overflow-y: scroll }` so the gutter is always reserved, and
+    // `html.modal-active { width: 100vw; padding-right: 0 }` holds width steady
+    // while the modalService body-locks. showIntroModal() no-ops for returning
+    // visitors and routes through modalService (so the skeleton open/close
+    // animations apply).
+    void firstVisitService.showIntroModal("intro_modal", 500);
   });
 
   // Auto-stop recording when time limit is reached

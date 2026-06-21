@@ -1,11 +1,16 @@
 import { browser } from "$app/environment";
 
+// Keep in sync with the zl-modal-pop-out / sheet-out durations in app.css.
+const MODAL_CLOSE_DURATION = 220;
+
 export class ModalService {
   constructor() {
     this.modalOpen = false;
     this.scrollPosition = 0;
     this.activeModal = null;
     this.handleNativeClose = null;
+    this.isClosing = false;
+    this.closeTimer = null;
   }
 
   openModal(modalId) {
@@ -21,6 +26,9 @@ export class ModalService {
     if (this.modalOpen && this.activeModal && this.activeModal !== modal) {
       this.closeModal();
     }
+
+    // Clear any leftover closing state so the pop-in can run cleanly.
+    modal.classList.remove("zl-modal-closing");
 
     // Save scroll position and lock body
     this.scrollPosition = window.scrollY;
@@ -49,26 +57,51 @@ export class ModalService {
   }
 
   closeModal() {
-    if (!browser || !this.modalOpen) return;
+    if (!browser || this.isClosing) return;
 
-    this.detachNativeCloseHandler();
+    const openDialogs = Array.from(document.querySelectorAll("dialog[open]"));
+    if (!this.modalOpen && openDialogs.length === 0) return;
 
-    // Close any open dialogs
-    document.querySelectorAll("dialog[open]").forEach((dialog) => {
-      if (dialog && typeof dialog.close === "function") {
-        dialog.close();
-      }
-    });
+    this.isClosing = true;
 
-    this.unlockScroll();
+    // Add the closing class so the pop-out / sheet-out animation runs, then
+    // close (and unlock scroll) after it finishes. This is the skeleton's
+    // #1 win — modals animate OUT instead of vanishing.
+    openDialogs.forEach((dialog) => dialog.classList.add("zl-modal-closing"));
+
+    const reduceMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const closeDelay = reduceMotion ? 0 : MODAL_CLOSE_DURATION;
+
+    this.closeTimer = window.setTimeout(() => {
+      this.closeTimer = null;
+      this.detachNativeCloseHandler();
+
+      openDialogs.forEach((dialog) => {
+        if (dialog && typeof dialog.close === "function" && dialog.open) {
+          dialog.close();
+        }
+        dialog.classList.remove("zl-modal-closing");
+      });
+
+      this.unlockScroll();
+      this.isClosing = false;
+    }, closeDelay);
   }
 
   cleanup() {
     if (!browser) return;
 
+    if (this.closeTimer) {
+      clearTimeout(this.closeTimer);
+      this.closeTimer = null;
+    }
+    this.isClosing = false;
+
     this.detachNativeCloseHandler();
 
     document.querySelectorAll("dialog[open]").forEach((dialog) => {
+      dialog.classList.remove("zl-modal-closing");
       if (dialog && typeof dialog.close === "function") {
         dialog.close();
       }
