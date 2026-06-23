@@ -6,14 +6,23 @@ const CODE_PREFIX = "ZL";
 const TOKEN_ALG = "HS256";
 const TOKEN_VERSION = 1;
 
-export function getContributorSecret() {
-  const secret =
-    env.CONTRIBUTOR_LICENSE_SECRET?.trim() ||
-    env.API_COOKIE_SECRET?.trim() ||
-    env.API_AUTH_TOKEN?.trim();
+// Server-side token lifetime. Mirrors the client soft-expiry so a leaked token
+// can't outlive the secret — it stops verifying a year after it was issued.
+const TOKEN_TTL_SECONDS = 365 * 24 * 60 * 60;
 
-  if (!secret || secret.length < 16) {
-    throw new Error("Contributor license secret is not configured");
+// Minimum signing-key length. 32 chars so the HMAC key carries real entropy
+// and isn't a short shared value reused from elsewhere.
+const MIN_SECRET_LENGTH = 32;
+
+export function getContributorSecret() {
+  // Only the dedicated secret — no fallback to unrelated cookie/auth secrets,
+  // which would silently let one credential sign contributor licenses.
+  const secret = env.CONTRIBUTOR_LICENSE_SECRET?.trim();
+
+  if (!secret || secret.length < MIN_SECRET_LENGTH) {
+    throw new Error(
+      `CONTRIBUTOR_LICENSE_SECRET must be set to at least ${MIN_SECRET_LENGTH} characters`,
+    );
   }
 
   return secret;
@@ -53,10 +62,12 @@ export function issueContributorToken(
   secret = getContributorSecret(),
 ) {
   const header = { alg: TOKEN_ALG, typ: "JWT" };
+  const issuedAt = Math.floor(Date.now() / 1000);
   const body = {
     ...payload,
     v: TOKEN_VERSION,
-    iat: Math.floor(Date.now() / 1000),
+    iat: issuedAt,
+    exp: issuedAt + TOKEN_TTL_SECONDS,
   };
 
   const encodedHeader = base64url(JSON.stringify(header));
@@ -88,9 +99,21 @@ export function verifyContributorToken(token, secret = getContributorSecret()) {
     return null;
   }
 
+  let body;
   try {
-    return JSON.parse(Buffer.from(encodedBody, "base64url").toString("utf8"));
+    body = JSON.parse(Buffer.from(encodedBody, "base64url").toString("utf8"));
   } catch {
     return null;
   }
+
+  // Reject expired tokens. Tokens issued before exp was introduced have no exp
+  // and stay valid until they age past the client soft-expiry and are reissued.
+  if (
+    typeof body?.exp === "number" &&
+    body.exp <= Math.floor(Date.now() / 1000)
+  ) {
+    return null;
+  }
+
+  return body;
 }
