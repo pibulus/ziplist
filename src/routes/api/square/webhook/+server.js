@@ -60,7 +60,19 @@ export async function POST(event) {
 
   const paidCheckout = await markCheckoutPaid(payment.order_id, payment);
   if (paidCheckout) {
-    await createLicenseForCheckout(paidCheckout);
+    // Never let a license-creation failure surface as a 500 to Square: the
+    // payment is already recorded as paid, so a thrown error here just causes
+    // Square to retry forever while the customer silently has no license.
+    // Log loudly instead so a paid-but-no-license checkout can be recovered.
+    try {
+      await createLicenseForCheckout(paidCheckout);
+    } catch (error) {
+      console.error(
+        "[SquareWebhook] Paid checkout but license creation failed:",
+        paidCheckout.id,
+        error,
+      );
+    }
   }
 
   return json({ received: true });

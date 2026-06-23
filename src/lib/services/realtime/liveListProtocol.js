@@ -233,7 +233,7 @@ function normalizeDraftData(data) {
 }
 
 function normalizeItemFocusData(data) {
-  if (!isRecord(data)) return { itemId: null };
+  if (!isRecord(data)) return null;
 
   return {
     itemId:
@@ -278,11 +278,10 @@ export function normalizeLiveMessage(input) {
     case LIVE_MESSAGE_TYPES.DRAFT_CLEAR:
       return { type: LIVE_MESSAGE_TYPES.DRAFT_CLEAR, data: {} };
 
-    case LIVE_MESSAGE_TYPES.ITEM_FOCUS:
-      return {
-        type: LIVE_MESSAGE_TYPES.ITEM_FOCUS,
-        data: normalizeItemFocusData(input.data),
-      };
+    case LIVE_MESSAGE_TYPES.ITEM_FOCUS: {
+      const data = normalizeItemFocusData(input.data);
+      return data ? { type: LIVE_MESSAGE_TYPES.ITEM_FOCUS, data } : null;
+    }
 
     case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY: {
       const data = normalizeVoiceActivityData(input.data);

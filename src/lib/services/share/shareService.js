@@ -56,7 +56,7 @@ export function decodeSharedList(encodedData) {
       name,
       items: validItems.map((item, index) => ({
         id: crypto.randomUUID(),
-        text: item.text.trim(),
+        text: item.text.trim().slice(0, PRODUCT_LIMITS.MAX_ITEM_TEXT_LENGTH),
         checked: !!item.checked,
         completedAt: item.checked ? new Date().toISOString() : null,
         order: index,
