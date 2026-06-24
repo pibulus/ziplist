@@ -574,9 +574,11 @@
     }
   }
 
-  // Helper function to calculate staggered delay for animations
+  // Helper function to calculate staggered delay for animations.
+  // Capped so long lists don't take seconds to finish animating in
+  // (120 items * 50ms would be a 6s cascade).
   function getStaggerDelay(index) {
-    return index * 50; // 50ms between each item
+    return Math.min(index * 50, 500); // 50ms between each item, max 500ms
   }
 
   function getItemGrabbedState(itemId) {

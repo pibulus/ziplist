@@ -19,6 +19,29 @@ import {
   touchLiveRoomMetadata,
 } from "../src/lib/services/realtime/liveListProtocol.js";
 
+// SHA-256 hash of the room password, hex-encoded. Uses the Web Crypto API
+// available in the PartyKit (workerd) runtime. Salting is intentionally
+// skipped: the goal is at-rest opacity, not defending offline cracking of a
+// value the user already shares in a link.
+async function hashPassword(password: string): Promise<string> {
+  const bytes = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// Constant-time-ish string comparison to avoid leaking match position via
+// early exit. Both inputs here are fixed-length hex hashes in the common path.
+function timingSafeStringEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 export interface LiveListItem {
   id: string;
   text: string;
@@ -166,7 +189,13 @@ export default class ListRoom implements Party.Server {
       const url = new URL(req.url);
       const password = sanitizeLivePassword(url.searchParams.get("pwd"));
       if (password) {
-        await this.room.storage.put("password", password);
+        // Store only a hash so a storage/infra compromise never reveals the
+        // shareable-link password. The plaintext still travels in the link
+        // itself (that's how collaborators join), so this is at-rest only.
+        await this.room.storage.put(
+          "passwordHash",
+          await hashPassword(password),
+        );
       }
 
       return this.json({
@@ -258,8 +287,25 @@ export default class ListRoom implements Party.Server {
   }
 
   private async isPasswordAllowed(url: URL) {
-    const roomPassword = await this.room.storage.get<string>("password");
-    return !roomPassword || roomPassword === url.searchParams.get("pwd");
+    const storedHash = await this.room.storage.get<string>("passwordHash");
+
+    // Legacy rooms created before hashing stored plaintext under "password".
+    // Honor them, then transparently upgrade to a hash on first match.
+    if (!storedHash) {
+      const legacy = await this.room.storage.get<string>("password");
+      if (!legacy) return true;
+      const supplied = sanitizeLivePassword(url.searchParams.get("pwd"));
+      if (supplied && timingSafeStringEqual(legacy, supplied)) {
+        await this.room.storage.put("passwordHash", await hashPassword(legacy));
+        await this.room.storage.delete("password");
+        return true;
+      }
+      return false;
+    }
+
+    const supplied = sanitizeLivePassword(url.searchParams.get("pwd"));
+    if (!supplied) return false;
+    return timingSafeStringEqual(storedHash, await hashPassword(supplied));
   }
 
   private async getListData(): Promise<ListData | null> {

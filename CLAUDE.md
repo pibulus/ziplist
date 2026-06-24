@@ -24,10 +24,11 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - PartyKit real-time collaboration (optional — works without server)
 - Canvas confetti celebrations, particle effects
 
-**Current State**: ~92% complete. Core functionality builds and lints. Recent
-work hardened AI completion detection and PartyKit live-list plumbing. Needs:
-real-device iPhone pass, PartyKit production deploy/env, production screenshots,
-and final deploy verification.
+**Current State**: ~97% complete. Three rounds of security/correctness audits
+hardened CSP headers, rate limiter, PartyKit room auth (password hashing,
+VALIDATION PROTOCOL), Square webhook idempotency, import payload bounds, and
+response parser fail-closed behaviour. Remaining: real-device iPhone pass,
+PartyKit production deploy/env, production screenshots.
 
 ## Code Style Guidelines
 

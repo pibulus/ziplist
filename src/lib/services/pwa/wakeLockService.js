@@ -23,6 +23,18 @@ class WakeLockService {
       });
     };
 
+    // Stored as a named reference (not an inline closure) so destroy() can
+    // remove it. Re-acquires the lock when the tab becomes visible again.
+    this.handleVisibilityChange = () => {
+      if (
+        this.shouldReacquire &&
+        this.supported &&
+        document.visibilityState === "visible"
+      ) {
+        this.request().catch(() => {});
+      }
+    };
+
     if (browser) {
       this.supported = Boolean(navigator.wakeLock?.request);
       wakeLockStatus.update((state) => ({
@@ -30,16 +42,25 @@ class WakeLockService {
         supported: this.supported,
       }));
 
-      document.addEventListener("visibilitychange", () => {
-        if (
-          this.shouldReacquire &&
-          this.supported &&
-          document.visibilityState === "visible"
-        ) {
-          this.request().catch(() => {});
-        }
-      });
+      document.addEventListener(
+        "visibilitychange",
+        this.handleVisibilityChange,
+      );
     }
+  }
+
+  /**
+   * Release any active lock and remove the visibilitychange listener.
+   * Call when the service is no longer needed (e.g. component teardown).
+   */
+  destroy() {
+    if (browser && this.handleVisibilityChange) {
+      document.removeEventListener(
+        "visibilitychange",
+        this.handleVisibilityChange,
+      );
+    }
+    this.release();
   }
 
   async request() {

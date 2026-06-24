@@ -100,6 +100,11 @@ configure_build_partykit_host
 
 npm run build
 
+# adapter-node hardcodes sourcemap:true for the server bundle, which would ship
+# full server source as .map files. Strip them so they never reach the Pi.
+# (Client build emits none.) Remove this once the adapter exposes a flag.
+find build/server -name '*.map' -type f -delete 2>/dev/null || true
+
 remote_bash "$STAGING_DIR" "$BACKUP_DIR" <<'REMOTE'
 set -euo pipefail
 

@@ -12,10 +12,12 @@ What looks solid:
 - Gemini route is server-side and guarded by rate/upload/origin controls.
 - Voice completion detection can mark existing unchecked items as done when
   Gemini has active-list context.
-- Whisper Tiny remains the local/offline path once it is ready.
-- PartyKit room creation now uses unique `/parties/main/:roomId` rooms and
+- Whisper Tiny is integrated as a local fallback with privacy mode support.
+- PartyKit room creation uses unique `/parties/main/:roomId` rooms and
   validated full-list snapshots.
-- Live Share now copies/shares the live room URL once a list is live.
+- Live Share copies/shares the live room URL once a list is live.
+- CSP headers, rate limiter eviction, HMAC-secured contributor tokens, and
+  password-hashed PartyKit rooms are in place (post-audit hardening).
 
 What still wants attention:
 
@@ -27,6 +29,8 @@ What still wants attention:
   metadata on app launch.
 - Dependency refresh pass for `partykit` and `partysocket` after live sharing is
   proven on devices.
+- Revisit `docs/LIVE_SHARING.md` pricing audit (last checked 2026-06-06) before
+  committing to public pricing or durability promises.
 
 Obvious next moves:
 

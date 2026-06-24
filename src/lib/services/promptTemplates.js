@@ -143,10 +143,13 @@ Critical requirements:
 export function applyTemplate(template, variables) {
   let result = template;
 
-  // Replace all variables in the template
+  // Replace all variables in the template.
+  // Use a replacer function (not a string) so `$`-sequences in user-derived
+  // values (e.g. "$5", "$&") are inserted literally instead of being treated
+  // as String.replace special replacement patterns.
   Object.entries(variables).forEach(([key, value]) => {
     const regex = new RegExp(`{{${key}}}`, "g");
-    result = result.replace(regex, value);
+    result = result.replace(regex, () => String(value));
   });
 
   return result;

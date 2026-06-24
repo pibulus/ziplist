@@ -4,6 +4,11 @@ import { json } from "@sveltejs/kit";
 const RATE_LIMIT_WINDOW_MS = Number(env.API_RATE_WINDOW_MS ?? "60000");
 const RATE_LIMIT_MAX = Number(env.API_RATE_LIMIT ?? "30");
 
+// Hard cap on tracked keys so a flood of unique IPs (e.g. spoofed
+// X-Forwarded-For values) can't grow the Map without bound. When exceeded we
+// evict the oldest entries (Map preserves insertion order).
+const MAX_BUCKETS = Number(env.API_RATE_MAX_BUCKETS ?? "10000");
+
 const buckets = new Map();
 
 function getClientKey(event) {
@@ -28,6 +33,29 @@ function clearExpired(now) {
   }
 }
 
+// Background sweep so stale entries are reclaimed even when the limited
+// endpoint goes quiet (clearExpired alone only runs on incoming requests).
+// `unref` keeps this timer from holding the process open. Guard for non-Node
+// runtimes (e.g. edge) where setInterval/unref may be absent.
+if (RATE_LIMIT_WINDOW_MS > 0 && typeof setInterval === "function") {
+  const sweep = setInterval(
+    () => clearExpired(Date.now()),
+    RATE_LIMIT_WINDOW_MS,
+  );
+  if (typeof sweep?.unref === "function") sweep.unref();
+}
+
+// Evict oldest entries once the Map exceeds the cap.
+function evictIfNeeded() {
+  if (buckets.size <= MAX_BUCKETS) return;
+  const overflow = buckets.size - MAX_BUCKETS;
+  let removed = 0;
+  for (const key of buckets.keys()) {
+    buckets.delete(key);
+    if (++removed >= overflow) break;
+  }
+}
+
 export function enforceRateLimit(event) {
   if (RATE_LIMIT_MAX <= 0 || RATE_LIMIT_WINDOW_MS <= 0) {
     return null;
@@ -41,6 +69,7 @@ export function enforceRateLimit(event) {
 
   if (!existing || now - existing.windowStart > RATE_LIMIT_WINDOW_MS) {
     buckets.set(key, { count: 1, windowStart: now });
+    evictIfNeeded();
     return null;
   }
 

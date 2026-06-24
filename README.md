@@ -45,7 +45,7 @@ Need Node.js 20.18.1+ and npm 10.8.0+.
 
 ```bash
 # Grab it
-git clone https://github.com/yourusername/ziplist.git
+git clone https://github.com/pibulus/ziplist.git
 cd ziplist
 
 # Install the goods
@@ -93,7 +93,7 @@ your LAN will use port `1999`.
 Contributor checkout and unlock codes use:
 
 ```bash
-CONTRIBUTOR_LICENSE_SECRET=long_random_secret_at_least_16_chars
+CONTRIBUTOR_LICENSE_SECRET=long_random_secret_at_least_32_chars
 CONTRIBUTOR_UNLOCK_CODES=ZL-DEMO-CODE
 PUBLIC_APP_URL=https://ziplist.app
 SQUARE_ACCESS_TOKEN=your_square_access_token
