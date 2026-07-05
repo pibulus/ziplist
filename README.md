@@ -111,7 +111,6 @@ SQUARE_WEBHOOK_NOTIFICATION_URL=https://ziplist.app/api/square/webhook
 ├── lib/services/lists/          # List state and item logic
 ├── lib/services/realtime/       # PartyKit live-list bridge
 ├── lib/services/transcription/  # Audio processing flow
-├── lib/services/theme/          # Color personality system
 ├── lib/services/pwa/            # PWA installation support
 ├── routes/                      # SvelteKit pages and server endpoints
 └── ../party/listRoom.ts         # PartyKit room server

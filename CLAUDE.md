@@ -27,8 +27,11 @@ ZipList is a minimal voice-to-list todo app. Core features:
 **Current State**: ~97% complete. Three rounds of security/correctness audits
 hardened CSP headers, rate limiter, PartyKit room auth (password hashing,
 VALIDATION PROTOCOL), Square webhook idempotency, import payload bounds, and
-response parser fail-closed behaviour. Remaining: real-device iPhone pass,
-PartyKit production deploy/env, production screenshots.
+response parser fail-closed behaviour. A fourth pass (2026-07-05, see
+docs/FABLE-AUDIT.md) added atomic/locked server stores, per-visitor rate
+buckets behind the tunnel, speech-bitrate recording, and dead-room live-share
+handling. Remaining: set BODY_SIZE_LIMIT=16M in prod env (see KEYS.md),
+real-device iPhone pass, sandbox-card checkout pass, production screenshots.
 
 ## Code Style Guidelines
 
@@ -61,7 +64,7 @@ PartyKit production deploy/env, production screenshots.
 - **listsService.js**: Processes transcription results, commands, and completion
   matches into list mutations
 - **listsStore.js**: Svelte store for list state and local storage (default lists + palette-safe list creation)
-- **themeService.js**: Theme switching and persistence
+- **index.js (`applyTheme()`)**: Theme switching and persistence (`src/lib/index.js`)
 - **pwa/pwaService.js**: Install prompt state, standalone/mobile detection,
   persistent storage requests, and installed-device setup completion
 - **pwa/wakeLockService.js**: Feature-detected Screen Wake Lock wrapper used
@@ -84,7 +87,6 @@ PartyKit production deploy/env, production screenshots.
 - **PwaDeviceSetup.svelte**: Installed mobile PWA setup pill for mic permission,
   persistent storage, and offline model preload
 - **SwipeableLists.svelte**: Horizontal list navigation with touch/swipe
-- **Ghost.svelte**: Lightweight themed SVG icon (used in copy button)
 - **PageLayout.svelte**: App shell with responsive layout and fixed footer
 
 ### Live Sharing
@@ -173,9 +175,13 @@ Five themes defined in `src/lib/styles/theme-variables.css` with 50+ CSS variabl
 - "Chunky Mode" (Neo-Brutalist) is an orthogonal style overlay
 - Theme constants in `src/lib/constants.js`, application in `src/lib/index.js:applyTheme()`
 
-## Ghost Component
+## Mascot Component
 
-Lightweight SVG icon (~50 lines) at `src/lib/components/ghost/Ghost.svelte`. Accepts `externalTheme` prop to tint fill color. Used as decorative copy-button icon in TranscriptDisplay. The original 20-file ghost animation system was removed in the cleanup arc.
+The app mascot renders through the portable SoftStack `Mascot.svelte`
+(`src/lib/components/ui/`) — float bob, blinking eyes, aura, and the cross-app
+sizing scale. ZipList passes its art inline via the default slot from
+`AnimatedTitle.svelte`. (The earlier Ghost icon system was removed in the
+cleanup arc.)
 
 ## Editor Configuration
 

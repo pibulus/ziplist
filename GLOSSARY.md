@@ -33,7 +33,7 @@
 - `AboutModal` - Product/about copy.
 - `ExtensionModal` - Extension information modal. The packaged extension itself
   is not part of the current repo.
-- `Ghost` - Lightweight themed SVG icon used as a decorative component.
+- `Mascot` - Portable SoftStack mascot/icon component (float, blink, aura).
 
 ## Services
 
@@ -54,7 +54,7 @@
   item operations.
 - `listsService` - Higher-level command/list API used by UI and transcription.
 - `shareService` - Static snapshot share/import URL generation.
-- `themeService` - Theme and Chunky Mode persistence/application.
+- `applyTheme` - Theme + Chunky Mode application/persistence (`src/lib/index.js`).
 - `modalService` - DaisyUI dialog open/close helpers.
 - `pwaService` - Install prompt state, standalone/mobile detection, persistent
   storage requests, and installed-device setup completion.

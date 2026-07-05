@@ -8,8 +8,8 @@ instead of reaching into those details directly.
 
 - `audio/` - Microphone recording lifecycle and audio states.
 - `first-visit/` - First-run/onboarding state.
-- `infrastructure/` - Event bus, shared Svelte stores, haptics, sound cues,
-  storage helpers.
+- `infrastructure/` - Shared Svelte stores, haptics, sound cues, storage
+  helpers.
 - `lists/` - List store, list mutations, command processing, local persistence.
 - `modals/` - Dialog open/close helpers.
 - `pwa/` - Install prompt, installed-device setup, persistent storage, and wake
@@ -17,10 +17,11 @@ instead of reaching into those details directly.
 - `realtime/` - PartyKit live-list client bridge, protocol, presence, typing,
   and anonymous avatar names.
 - `share/` - Static snapshot share/import URL generation.
-- `theme/` - Theme and Chunky Mode application/persistence.
 - `transcription/` - Recording-to-text orchestration plus local Whisper support.
-- Root files - Gemini wrappers, prompt templates, parser helpers, and public
-  service exports.
+- Root files - Gemini wrappers, prompt templates, and parser helpers.
+
+Theme application lives in `src/lib/index.js` (`applyTheme()`), not in a
+service directory.
 
 ## Main Flows
 
@@ -71,6 +72,7 @@ instead of reaching into those details directly.
 
 ## Public Entry
 
-`src/lib/services/index.js` re-exports the main services and provides
-`initializeServices()`. New services should be exported there only when multiple
-components need a stable public import path.
+Import services from their own modules (e.g.
+`$lib/services/lists/listsService`) or a subdirectory barrel like
+`$lib/services/infrastructure`. There is intentionally no top-level services
+barrel.
