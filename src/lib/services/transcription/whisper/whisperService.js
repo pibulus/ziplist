@@ -9,6 +9,14 @@ import { pipeline, env } from "@huggingface/transformers";
 const isBrowser =
   typeof window !== "undefined" && typeof navigator !== "undefined";
 
+// Model download/warmup progress chatter — dev-only so production consoles
+// stay quiet while the pipeline still narrates locally.
+function debugLog(...args) {
+  if (import.meta.env.DEV) {
+    console.log(...args);
+  }
+}
+
 // ============================================================================
 // STEP 1: Configure Transformers.js Environment
 // ============================================================================
@@ -170,7 +178,7 @@ class WhisperTranscriber {
     this.isLoading = true;
 
     try {
-      console.log(
+      debugLog(
         `🎯 Loading ${WHISPER_TINY_MODEL.name} (${Math.round(WHISPER_TINY_MODEL.size / 1024 / 1024)}MB)...`,
       );
 
@@ -186,7 +194,7 @@ class WhisperTranscriber {
               const percent = Math.round(
                 (progress.loaded / progress.total) * 100,
               );
-              console.log(`📥 Downloading: ${percent}%`);
+              debugLog(`📥 Downloading: ${percent}%`);
               onProgress?.(percent);
             }
           },
@@ -219,7 +227,7 @@ class WhisperTranscriber {
       this.isLoaded = true;
       this.isLoading = false;
 
-      console.log(`✅ ${WHISPER_TINY_MODEL.name} loaded and ready`);
+      debugLog(`✅ ${WHISPER_TINY_MODEL.name} loaded and ready`);
       return this.transcriber;
     } catch (error) {
       this.isLoading = false;
@@ -243,7 +251,7 @@ class WhisperTranscriber {
         temperature: 0,
         do_sample: false,
       });
-      console.log("🔥 Model warmed up");
+      debugLog("🔥 Model warmed up");
     } catch (error) {
       console.warn("Warmup failed (continuing):", error?.message);
     }
@@ -264,7 +272,7 @@ class WhisperTranscriber {
       throw new Error("No speech detected in audio");
     }
 
-    console.log(`🎤 Transcribing ${audioData.length} samples...`);
+    debugLog(`🎤 Transcribing ${audioData.length} samples...`);
 
     // Run inference
     const result = await this.transcriber(audioData, {
@@ -285,7 +293,7 @@ class WhisperTranscriber {
 
     // Clean repetitions (Whisper artifact)
     const cleaned = this.cleanRepetitions(text);
-    console.log(`✨ Transcribed: "${cleaned}"`);
+    debugLog(`✨ Transcribed: "${cleaned}"`);
 
     return cleaned;
   }
@@ -317,7 +325,7 @@ async function requestPersistentStorage() {
     const isPersisted = await navigator.storage.persisted();
     if (!isPersisted) {
       const granted = await navigator.storage.persist();
-      console.log("💾 Persistent storage:", granted ? "granted" : "denied");
+      debugLog("💾 Persistent storage:", granted ? "granted" : "denied");
       return granted;
     }
     return true;

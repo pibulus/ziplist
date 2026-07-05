@@ -173,13 +173,13 @@
     font-family: "Space Mono", monospace;
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
-    color: #333;
+    color: #111827;
   }
 
   .loading-state p,
   .error-state p {
     font-family: "Space Mono", monospace;
-    color: #666;
+    color: #4b5563;
     margin-bottom: 1rem;
   }
 

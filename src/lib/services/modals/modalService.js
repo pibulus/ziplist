@@ -69,8 +69,9 @@ export class ModalService {
     // #1 win — modals animate OUT instead of vanishing.
     openDialogs.forEach((dialog) => dialog.classList.add("zl-modal-closing"));
 
-    const reduceMotion =
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const closeDelay = reduceMotion ? 0 : MODAL_CLOSE_DURATION;
 
     this.closeTimer = window.setTimeout(() => {

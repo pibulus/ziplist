@@ -16,10 +16,7 @@ const createPromptStyleStore = () => {
     if (storedStyle && promptTemplates[storedStyle]) {
       store.set(storedStyle);
     } else if (storedStyle && !promptTemplates[storedStyle]) {
-      // Handle the case where a stored style is no longer available (like 'corporate')
-      console.log(
-        `Stored prompt style '${storedStyle}' is no longer available, using default`,
-      );
+      // A stored style that no longer exists (like 'corporate') resets quietly
       localStorage.setItem(STORAGE_KEY, DEFAULT_STYLE);
       store.set(DEFAULT_STYLE);
     }

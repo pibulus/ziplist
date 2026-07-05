@@ -166,7 +166,7 @@ export class AudioService {
           };
         }
       } catch (detailedConstraintError) {
-        console.log(
+        console.warn(
           "Detailed constraints failed, falling back to simple audio:",
           detailedConstraintError.message,
         );

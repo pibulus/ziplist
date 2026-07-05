@@ -131,7 +131,9 @@ class SimpleHybridService {
         .preloadModel()
         .then((result) => {
           if (result.success) {
-            console.log("Whisper model ready for offline use");
+            if (import.meta.env.DEV) {
+              console.log("Whisper model ready for offline use");
+            }
           } else if (this.whisperLoadPromise === loadPromise) {
             this.whisperLoadPromise = null;
           }

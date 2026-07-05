@@ -101,13 +101,10 @@
 				const choiceResult = await installPromptEvent.userChoice;
 				
 				if (choiceResult.outcome === 'accepted') {
-					console.log('📱 User accepted the PWA installation');
 					pwaService.markAsInstalled();
 					close();
-				} else {
-					console.log('📱 User dismissed the PWA installation');
 				}
-				
+
 				// Clear the saved prompt since it can only be used once
 				installPromptEvent = null;
 			} catch (error) {
@@ -117,7 +114,6 @@
 			}
 		} else {
 			// No install prompt available, show manual instructions
-			console.log('📱 No native install prompt available, showing manual instructions');
 			showPlatformInstructions = true;
 		}
 	}

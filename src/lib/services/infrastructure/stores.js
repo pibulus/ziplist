@@ -325,10 +325,6 @@ export const transcriptionCompletedEvent = (() => {
       currentState.text.trim() !== ""
     ) {
       // Condition: Was transcribing, now finished, and there's actual text.
-      console.log(
-        "[Store DEBUG] transcriptionCompletedEvent: Firing with text -",
-        currentState.text,
-      );
       set(currentState.text); // Emit the text value
       // Reset to null in a microtask to ensure current subscribers process the text value first
       // and to make it a true "event" store for the next completion.

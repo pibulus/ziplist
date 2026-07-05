@@ -51,12 +51,16 @@
   }
 </script>
 
+<svelte:window on:keydown={(e) => e.key === "Escape" && closeModal()} />
+
+<!-- click|self: only backdrop clicks dismiss — clicks inside the card while
+     reading the steps must not close it. Escape closes from anywhere. -->
 <div
   class="flex justify-center w-full permission-error-container"
-  on:click={closeModal}
-  on:keydown={(e) => (e.key === "Enter" || e.key === " ") && closeModal()}
+  on:click|self={closeModal}
+  on:keydown={(e) => e.key === "Escape" && closeModal()}
   role="alertdialog"
-  tabindex="0"
+  tabindex="-1"
   aria-labelledby="permission_error_title"
   aria-describedby="permission_error_description"
   aria-live="assertive"

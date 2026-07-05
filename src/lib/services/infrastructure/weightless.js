@@ -297,7 +297,9 @@ export class Weightless {
         // but in modern ones they do. Adding safety.
         try {
           lastNode.disconnect();
-        } catch (e) {}
+        } catch {
+          // older browsers lack disconnect on some nodes
+        }
       },
       (duration + 0.2) * 1000,
     );
