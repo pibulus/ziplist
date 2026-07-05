@@ -22,25 +22,26 @@ the same size side by side. Don't eyeball a percentage — match the ink.
 
 #### Usage
 
+ZipList renders its mascot art inline through the default slot (see
+`AnimatedTitle.svelte`); the `baseSrc`/`eyesSrc` file props exist for sister
+apps that ship their layers as standalone SVGs:
+
 ```svelte
 <script>
   import { Mascot } from "$lib/components/ui";
 </script>
 
+<Mascot ariaLabel="Start recording" on:click={handleClick}>
+  <MyMascotArt />
+</Mascot>
+
+<!-- or, with two-layer SVG files -->
 <Mascot
-  baseSrc="/assets/ziplist-icon-base.svg"
-  eyesSrc="/assets/ziplist-icon-eyes.svg"
+  baseSrc="/assets/my-icon-base.svg"
+  eyesSrc="/assets/my-icon-eyes.svg"
   ariaLabel="Start recording"
   on:click={handleClick}
 />
-```
-
-For fully custom art, use the default slot instead of `baseSrc`/`eyesSrc`:
-
-```svelte
-<Mascot ariaLabel="Open" on:click={...}>
-  <MyCustomGhost />
-</Mascot>
 ```
 
 #### Props

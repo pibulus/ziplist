@@ -6,7 +6,7 @@
     getRandomFromArray,
   } from "$lib/constants";
   import { activeListItems } from "$lib/services/lists/listsStore";
-  import { waveformData } from "$lib/services";
+  import { waveformData } from "$lib/services/infrastructure";
   import { onMount, onDestroy } from "svelte";
   import { createEventDispatcher } from "svelte";
 
