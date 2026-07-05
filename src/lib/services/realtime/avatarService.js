@@ -66,17 +66,22 @@ const AVATAR_COLORS = [
  * @returns {string} Avatar name like "Misty Fox"
  */
 export function getOrCreateAvatar() {
-  // Check if we already have an avatar
+  // localStorage can throw in privacy modes — never let that break a room
+  // join; a fresh unpersisted name is fine.
   if (typeof window !== "undefined") {
-    const existing = localStorage.getItem(STORAGE_KEY);
-    if (existing) {
-      return existing;
-    }
+    try {
+      const existing = localStorage.getItem(STORAGE_KEY);
+      if (existing) {
+        return existing;
+      }
 
-    // Generate new avatar
-    const avatar = generateAvatar();
-    localStorage.setItem(STORAGE_KEY, avatar);
-    return avatar;
+      // Generate new avatar
+      const avatar = generateAvatar();
+      localStorage.setItem(STORAGE_KEY, avatar);
+      return avatar;
+    } catch {
+      return generateAvatar();
+    }
   }
 
   // Fallback for SSR
@@ -100,7 +105,11 @@ function generateAvatar() {
 export function resetAvatar() {
   if (typeof window !== "undefined") {
     const newAvatar = generateAvatar();
-    localStorage.setItem(STORAGE_KEY, newAvatar);
+    try {
+      localStorage.setItem(STORAGE_KEY, newAvatar);
+    } catch {
+      // storage unavailable — still hand back a usable name
+    }
     return newAvatar;
   }
   return "Guest";
@@ -112,7 +121,11 @@ export function resetAvatar() {
  */
 export function getAvatar() {
   if (typeof window !== "undefined") {
-    return localStorage.getItem(STORAGE_KEY);
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch {
+      return null;
+    }
   }
   return null;
 }

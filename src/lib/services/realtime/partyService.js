@@ -158,12 +158,10 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
 
   // Handle connection events
   socket.addEventListener("open", () => {
-    console.log("[PartyService] Connected to room:", roomId);
     callbacks.onConnect?.();
   });
 
   socket.addEventListener("close", (event) => {
-    console.log("[PartyService] Disconnected from room:", roomId);
     callbacks.onDisconnect?.(event);
   });
 
