@@ -12,9 +12,23 @@ const MAX_BUCKETS = Number(env.API_RATE_MAX_BUCKETS ?? "10000");
 const buckets = new Map();
 
 function getClientKey(event) {
+  // Production sits behind a Cloudflare tunnel, so the socket peer that
+  // getClientAddress() reports is the tunnel itself — every visitor would
+  // collapse into ONE shared bucket and a single heavy user could 429 the
+  // whole site. Cloudflare stamps cf-connecting-ip on every proxied request
+  // (a client-sent value is overwritten at the edge), so prefer it. Direct
+  // origin hits could spoof it, but the tunnel is the only public path and
+  // MAX_BUCKETS bounds the damage of spoofed-key floods.
+  const cfIp = event.request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp;
+
   if (event.getClientAddress) {
-    const address = event.getClientAddress();
-    if (address) return address;
+    try {
+      const address = event.getClientAddress();
+      if (address) return address;
+    } catch {
+      // adapter can throw once the underlying socket is gone
+    }
   }
 
   const forwarded = event.request.headers.get("x-forwarded-for");
@@ -22,7 +36,7 @@ function getClientKey(event) {
     return forwarded.split(",")[0]?.trim() || "unknown";
   }
 
-  return event.request.headers.get("cf-connecting-ip") ?? "unknown";
+  return "unknown";
 }
 
 function clearExpired(now) {

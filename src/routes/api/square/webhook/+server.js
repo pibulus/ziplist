@@ -6,8 +6,9 @@ import {
   verifySquareWebhookSignature,
 } from "$lib/server/payments/squareProvider.js";
 import {
+  getCheckoutById,
   getCheckoutByProviderOrderId,
-  markCheckoutPaid,
+  markCheckoutPaidById,
 } from "$lib/server/payments/paymentStore.js";
 import { createLicenseForCheckout } from "$lib/server/contributor/licenseStore.js";
 
@@ -49,16 +50,32 @@ export async function POST(event) {
     return json({ received: true, ignored: true });
   }
 
-  const checkout = await getCheckoutByProviderOrderId(payment.order_id);
+  let checkout = await getCheckoutByProviderOrderId(payment.order_id);
+
   if (!checkout) {
-    console.warn(
-      "[SquareWebhook] Payment did not match a ZipList checkout:",
+    // Square doesn't always echo order_id when the payment link is created,
+    // so the stored checkout may have providerOrderId=null. Fall back to the
+    // checkoutId we embed in the payment note at link-creation time.
+    const noteMatch = /ZipList contributor checkout ([0-9a-f-]{36})/i.exec(
+      payment.note || "",
+    );
+    if (noteMatch) {
+      checkout = await getCheckoutById(noteMatch[1]);
+    }
+  }
+
+  if (!checkout) {
+    // A COMPLETED payment we can't match means someone paid and gets nothing.
+    // Log at error level so it's impossible to miss when scanning logs.
+    console.error(
+      "[SquareWebhook] COMPLETED payment did not match any ZipList checkout:",
+      payment.id,
       payment.order_id,
     );
     return json({ received: true, ignored: true });
   }
 
-  const paidCheckout = await markCheckoutPaid(payment.order_id, payment);
+  const paidCheckout = await markCheckoutPaidById(checkout.id, payment);
   if (paidCheckout) {
     // Never let a license-creation failure surface as a 500 to Square: the
     // payment is already recorded as paid, so a thrown error here just causes

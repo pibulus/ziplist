@@ -41,6 +41,12 @@ function estimateBase64Bytes(value) {
 function getGeminiClient() {
   const apiKey = env.GEMINI_API_KEY;
 
+  // The POST handler guards this today, but don't rely on every future
+  // caller remembering to — an undefined key throws deep inside the SDK.
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+
   if (!genAI || genAIKey !== apiKey) {
     if (typeof process !== "undefined") {
       process.env.GEMINI_API_KEY = apiKey;

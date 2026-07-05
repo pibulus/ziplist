@@ -36,13 +36,25 @@ export async function GET(event) {
     return json({ status: checkout.status || "pending" });
   }
 
-  const { license, code } = await createLicenseForCheckout(checkout);
-  const token = issueTokenForLicense(license);
+  try {
+    const { license, code } = await createLicenseForCheckout(checkout);
+    const token = issueTokenForLicense(license);
 
-  return json({
-    status: "paid",
-    code,
-    token,
-    license,
-  });
+    return json({
+      status: "paid",
+      code,
+      token,
+      license,
+    });
+  } catch (error) {
+    // The customer HAS paid at this point. Never surface a terminal error —
+    // the success page stops polling on non-OK responses. Report "processing"
+    // so it keeps polling and the next attempt (or webhook retry) can succeed.
+    console.error(
+      "[ContributorCheckout] Paid checkout but license issue failed:",
+      checkoutId,
+      error,
+    );
+    return json({ status: "processing" });
+  }
 }

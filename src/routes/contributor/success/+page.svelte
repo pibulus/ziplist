@@ -11,6 +11,12 @@
   let copyMessageTimer;
   let copyMessage = "";
 
+  // One flaky request right after paying must not kill the poll — only give
+  // up after several consecutive failures. 403/404 are definitive and stay
+  // immediate.
+  let failedPolls = 0;
+  const MAX_TRANSIENT_FAILURES = 4;
+
   function claimStorageKey(id) {
     return `ziplist_checkout_claim_${id}`;
   }
@@ -34,10 +40,22 @@
       const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        status = "error";
-        message = payload.error || "Checkout status needs one more try.";
+        if (response.status === 403 || response.status === 404) {
+          status = "error";
+          message = payload.error || "Checkout status needs one more try.";
+          return;
+        }
+
+        failedPolls += 1;
+        if (failedPolls >= MAX_TRANSIENT_FAILURES) {
+          status = "error";
+          message =
+            "Your payment is safe — the status check needs a break. Refresh this page in a moment.";
+        }
         return;
       }
+
+      failedPolls = 0;
 
       if (payload.status !== "paid") {
         status = "pending";
@@ -52,8 +70,11 @@
       setContributorStatus(true, payload.token || null);
       sessionStorage.removeItem(claimStorageKey(checkoutId));
     } catch {
-      status = "error";
-      message = "Check your connection, then refresh this page.";
+      failedPolls += 1;
+      if (failedPolls >= MAX_TRANSIENT_FAILURES) {
+        status = "error";
+        message = "Check your connection, then refresh this page.";
+      }
     }
   }
 

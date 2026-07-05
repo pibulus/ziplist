@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { storage } from "../storage/index.js";
+import { withStoreLock } from "../storage/storeLock.js";
 import {
   generateLicenseCode,
   hashContributorCode,
@@ -31,6 +32,10 @@ export async function createLicenseForCheckout(checkout) {
     throw new Error("Checkout is missing license data");
   }
 
+  return withStoreLock(STORE_KEY, () => createLicenseLocked(checkout));
+}
+
+async function createLicenseLocked(checkout) {
   const store = await readStore();
   const existing = store.licenses.find(
     (license) =>
@@ -74,22 +79,25 @@ export async function createLicenseForCheckout(checkout) {
 
 export async function redeemStoredLicense(code) {
   const codeHash = hashContributorCode(code);
-  const store = await readStore();
-  const license = store.licenses.find(
-    (candidate) =>
-      candidate.codeHash === codeHash && candidate.status === "active",
-  );
 
-  if (!license) {
-    return null;
-  }
+  return withStoreLock(STORE_KEY, async () => {
+    const store = await readStore();
+    const license = store.licenses.find(
+      (candidate) =>
+        candidate.codeHash === codeHash && candidate.status === "active",
+    );
 
-  const now = new Date().toISOString();
-  license.redeemedAt = license.redeemedAt || now;
-  license.lastSeenAt = now;
-  await writeStore(store);
+    if (!license) {
+      return null;
+    }
 
-  return publicLicense(license);
+    const now = new Date().toISOString();
+    license.redeemedAt = license.redeemedAt || now;
+    license.lastSeenAt = now;
+    await writeStore(store);
+
+    return publicLicense(license);
+  });
 }
 
 export function issueTokenForLicense(license) {
