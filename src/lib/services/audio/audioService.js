@@ -2,6 +2,13 @@ import { AudioStateManager, AudioStates } from "./audioStates";
 import { audioState, audioActions, uiActions } from "../infrastructure/stores";
 import { wakeLockService } from "../pwa/wakeLockService";
 
+// Speech doesn't need music bitrates. Browsers default MediaRecorder to
+// ~128kbps, which blows through the server's request-body limit in ~30s of
+// talking; 48kbps keeps transcription quality identical for voice while a
+// couple of minutes of rambling stays comfortably uploadable. (Same value as
+// the TalkType chassis.)
+const SPEECH_AUDIO_BITS_PER_SECOND = 48000;
+
 export const AudioEvents = {
   RECORDING_STARTED: "audio:recordingStarted",
   RECORDING_STOPPED: "audio:recordingStopped",
@@ -220,11 +227,15 @@ export class AudioService {
           ? ["audio/mp4", "audio/aac", "audio/webm", ""]
           : ["audio/webm", "audio/ogg", ""];
 
-        let mediaRecorderOptions = null;
+        let mediaRecorderOptions = {
+          audioBitsPerSecond: SPEECH_AUDIO_BITS_PER_SECOND,
+        };
 
         for (const mimeType of mimeTypes) {
           if (!mimeType || MediaRecorder.isTypeSupported(mimeType)) {
-            mediaRecorderOptions = mimeType ? { mimeType } : undefined;
+            mediaRecorderOptions = mimeType
+              ? { mimeType, audioBitsPerSecond: SPEECH_AUDIO_BITS_PER_SECOND }
+              : { audioBitsPerSecond: SPEECH_AUDIO_BITS_PER_SECOND };
             break;
           }
         }

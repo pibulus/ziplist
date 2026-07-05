@@ -23,6 +23,13 @@ $EDITOR ~/.config/fleet/keys.env
 - ❌ Don't set `GOOGLE_API_KEY` anywhere (shell or unit) — the `@google/genai` SDK prefers it
   and it silently shadows this app's real key, even one passed explicitly.
 
+## Production env beyond the key (declare in `ZIPLIST_EXTRA_ENV` in keys.env)
+- `BODY_SIZE_LIMIT=16M` — **required.** adapter-node rejects request bodies over
+  512KB by default, which 413s voice uploads after roughly a minute of talking
+  before the app's own `MAX_UPLOAD_BYTES` (15MB) check ever runs.
+- `ADDRESS_HEADER` is NOT needed — the rate limiter reads `cf-connecting-ip`
+  directly.
+
 ## Local dev
 `npm run dev` uses THIS repo's own `.env` `GEMINI_API_KEY` (== production). No shell shadow.
 

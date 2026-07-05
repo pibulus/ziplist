@@ -78,6 +78,15 @@ async function generateContent(promptData) {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
+
+      // A 413 can come from the proxy/adapter layer (plain-text body) before
+      // the route's own size check runs — still tell the user what happened.
+      if (response.status === 413) {
+        throw new Error(
+          err.error || "That recording is too long to send. Try a shorter one.",
+        );
+      }
+
       throw new Error(err.error || "Failed to fetch from API");
     }
 
