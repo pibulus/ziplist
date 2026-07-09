@@ -197,10 +197,7 @@ html[data-theme="focus"] {
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
-  --zl-delete-button-border: 1px solid rgba(255, 204, 51, 0.4);
   --zl-delete-button-hover-bg: rgba(255, 248, 230, 0.95);
-  --zl-delete-button-hover-border: rgba(255, 204, 51, 0.7);
   --zl-delete-button-text-color: rgba(255, 152, 0, 0.9);
 
   /* Drop indicator styling */
@@ -329,10 +326,7 @@ html[data-theme="chill"] {
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
-  --zl-delete-button-border: 1px solid rgba(77, 208, 225, 0.4);
   --zl-delete-button-hover-bg: rgba(240, 249, 255, 0.95);
-  --zl-delete-button-hover-border: rgba(77, 208, 225, 0.7);
   --zl-delete-button-text-color: rgba(38, 166, 192, 0.9);
 
   /* Drop indicator styling */
@@ -466,10 +460,7 @@ html[data-theme="zen"] {
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
-  --zl-delete-button-border: 1px solid rgba(151, 117, 250, 0.4);
   --zl-delete-button-hover-bg: rgba(244, 238, 255, 0.95);
-  --zl-delete-button-hover-border: rgba(151, 117, 250, 0.7);
   --zl-delete-button-text-color: rgba(132, 94, 247, 0.9);
 
   /* Drop indicator styling */
@@ -607,10 +598,7 @@ html[data-theme="nocturne"] {
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-bg: rgba(255, 255, 255, 0.8);
-  --zl-delete-button-border: 1px solid rgba(132, 198, 187, 0.4);
   --zl-delete-button-hover-bg: rgba(242, 240, 252, 0.95);
-  --zl-delete-button-hover-border: rgba(196, 135, 210, 0.6);
   --zl-delete-button-text-color: rgba(123, 148, 201, 0.9);
 
   /* Drop indicator styling */
@@ -721,7 +709,6 @@ html[data-theme="neo"] {
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-bg: rgba(255, 255, 255, 0.9);
   --zl-delete-button-hover-bg: #fff7d6;
   --zl-delete-button-text-color: #000000;
 
@@ -787,10 +774,6 @@ html.mode-neo-brutalist {
 
   /* Text Button */
   --zl-text-button-focus-shadow: 4px 4px 0px 0px #000000;
-
-  /* Delete Button */
-  --zl-delete-button-border: 2px solid #000000;
-  --zl-delete-button-hover-border: #000000;
 
   /* Inputs */
   --zl-edit-input-border: 3px solid #000000;

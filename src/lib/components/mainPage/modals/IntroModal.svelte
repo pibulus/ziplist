@@ -21,7 +21,7 @@
 
 <dialog
   id="intro_modal"
-  class="modal modal-bottom sm:modal-middle"
+  class="modal modal-middle"
   aria-labelledby="intro_modal_title"
   aria-modal="true"
 >

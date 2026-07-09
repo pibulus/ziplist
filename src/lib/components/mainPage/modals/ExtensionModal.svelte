@@ -5,7 +5,7 @@
 
 <dialog
   id="extension_modal"
-  class="modal modal-bottom sm:modal-middle overflow-hidden fixed z-50"
+  class="modal modal-middle overflow-hidden fixed z-50"
   style="overflow-y: hidden!important;"
   aria-labelledby="extension_modal_title"
   aria-modal="true"

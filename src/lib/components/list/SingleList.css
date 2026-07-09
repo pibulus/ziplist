@@ -1068,6 +1068,25 @@
   );
 }
 
+/* The tick itself — a drawn white check so "done" reads at a glance
+   instead of a bare filled square. Pops in with the checkbox's bounce. */
+.zl-checkbox:checked + .zl-checkbox-custom::before {
+  content: "";
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  width: 38%;
+  height: 20%;
+  border-left: 3px solid white;
+  border-bottom: 3px solid white;
+  border-radius: 1px;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  /* Soft shadow keeps the white tick legible on light theme fills
+     (focus yellow, nocturne sky) without needing per-theme tick colors. */
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+  z-index: 6;
+}
+
 .zl-checkbox:checked + .zl-checkbox-custom::after {
   content: "";
   position: absolute;
@@ -1551,21 +1570,28 @@
   }
 }
 
+/* ===================================================================
+   ITEM ROW ACTION TWINS — grab + delete share one visual language:
+   44px ghost squares, muted glyphs at rest, matching tint on wake.
+   The checkbox stays the only "drawn" control — it's the state, not
+   an action, so it gets the border and the fill.
+   =================================================================== */
 .grab-indicator {
   appearance: none;
   background: transparent;
   border: 0;
+  border-radius: 12px;
   color: inherit;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-right: 12px;
-  opacity: var(--zl-grab-handle-opacity, 0.6);
+  opacity: var(--zl-grab-handle-opacity, 0.55);
   transition: all 0.25s ease;
-  padding: 8px 8px;
-  min-width: 32px;
-  min-height: 32px;
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
   justify-content: center;
+  align-items: center;
   align-self: center;
   cursor: grab;
   position: relative;
@@ -1577,7 +1603,7 @@
 
 .grab-indicator span {
   width: 16px;
-  height: 2.5px;
+  height: 2px;
   background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 0.8));
   border-radius: 2px;
   transition:
@@ -1589,7 +1615,13 @@
 
 .zl-item:hover .grab-indicator {
   opacity: var(--zl-grab-handle-hover-opacity, 1);
-  transform: scale(1.1);
+}
+
+.grab-indicator:hover,
+.grab-indicator:focus-visible {
+  background-color: rgba(var(--zl-primary-color-rgb, 0, 188, 212), 0.1);
+  outline: none;
+  transform: scale(1.06);
 }
 
 .zl-item:hover .grab-indicator span {
@@ -1599,11 +1631,12 @@
 
 .grab-indicator.touch-active {
   opacity: 1;
-  transform: scale(1.08);
+  background-color: rgba(var(--zl-primary-color-rgb, 0, 188, 212), 0.12);
+  transform: scale(1.06);
 }
 
 .grab-indicator.touch-active span {
-  background-color: rgba(0, 188, 212, 1);
+  background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1));
   box-shadow: 0 2px 6px rgba(0, 151, 167, 0.35);
 }
 
@@ -1612,29 +1645,26 @@
   display: flex;
   flex-shrink: 0;
   justify-content: center;
-  margin-left: 0.5rem;
 }
 
 .zl-item-delete-button {
   align-items: center;
-  background: var(--zl-delete-button-bg, rgba(255, 255, 255, 0.8));
-  border: var(--zl-delete-button-border, 1px solid rgba(0, 188, 212, 0.4));
-  border-radius: 50%;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
   color: var(--zl-delete-button-text-color, rgba(0, 188, 212, 0.9));
   cursor: pointer;
   display: flex;
   font-family: "Space Mono", monospace;
-  font-size: 1.25rem;
-  font-weight: 900;
+  font-size: 1.15rem;
+  font-weight: 700;
   height: 44px;
   justify-content: center;
   line-height: 1;
-  opacity: 0.76;
+  opacity: 0.55;
   padding: 0;
   transition:
     background-color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
     color 0.18s ease,
     opacity 0.18s ease,
     transform 0.18s cubic-bezier(0.18, 0.89, 0.32, 1.28);
@@ -1648,15 +1678,16 @@
 
 .zl-item-delete-button:hover,
 .zl-item-delete-button:focus-visible {
-  background-color: rgba(255, 255, 255, 0.96);
-  border-color: rgba(0, 188, 212, 0.68);
-  box-shadow: 0 6px 14px rgba(0, 151, 167, 0.16);
+  background-color: var(
+    --zl-delete-button-hover-bg,
+    rgba(var(--zl-primary-color-rgb, 0, 188, 212), 0.1)
+  );
   outline: none;
-  transform: translateY(-1px) rotate(6deg) scale(1.04);
+  transform: rotate(6deg) scale(1.08);
 }
 
 .zl-item-delete-button:active {
-  transform: translateY(1px) scale(0.94);
+  transform: scale(0.92);
   transition-duration: 80ms;
 }
 
@@ -1822,14 +1853,11 @@
   .grab-indicator {
     grid-column: 3;
     grid-row: 1;
-    margin-right: 0;
-    min-height: 44px;
   }
 
   .zl-item-actions {
     grid-column: 3;
     grid-row: 1 / -1;
-    margin-left: 0;
   }
 
   .grab-indicator + .zl-item-actions {
@@ -1860,23 +1888,16 @@
   }
 }
 
+/* Touch devices: no hover to reveal the twins, so both rest awake —
+   still quiet, but clearly there. */
 @media (hover: none) {
-  .zl-item-delete-button {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(0, 188, 212, 0.24);
-    color: rgba(0, 151, 167, 0.86);
-    opacity: 1;
+  .zl-item-delete-button,
+  .grab-indicator {
+    opacity: 0.75;
   }
 
   .zl-item.checked .zl-item-delete-button {
-    opacity: 0.78;
-  }
-
-  .grab-indicator {
-    opacity: 0.85;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 10px;
+    opacity: 0.6;
   }
 }
 

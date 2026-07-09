@@ -67,6 +67,10 @@
     const dialog = document.getElementById("settings_modal");
     function onDialogClose() {
       closeModal();
+      // Reset scroll so the next open starts at the top, not wherever the
+      // last visit left off (the dialog stays mounted between opens).
+      const content = dialog?.querySelector(".zl-settings-content");
+      if (content) content.scrollTop = 0;
     }
     if (dialog) {
       dialog.addEventListener("close", onDialogClose);
@@ -193,12 +197,12 @@
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="3"
+              stroke-width="2.5"
               stroke-linecap="round"
               stroke-linejoin="round"
             >
@@ -211,9 +215,54 @@
 
       <section
         class="zl-settings-section"
-        aria-labelledby="settings_general_title"
+        aria-labelledby="settings_vibe_title"
       >
-        <h4 id="settings_general_title" class="zl-section-label">General</h4>
+        <h4 id="settings_vibe_title" class="zl-section-label">
+          Choose Your Vibe
+        </h4>
+        <div class="zl-vibe-grid">
+          {#each vibeOptions as vibe}
+            <button
+              type="button"
+              class="zl-vibe-option"
+              class:active={selectedVibe === vibe.id}
+              on:click={() => changeVibe(vibe.id)}
+              aria-label={`Use ${vibe.name} vibe`}
+              aria-pressed={selectedVibe === vibe.id}
+            >
+              <span class="zl-vibe-art" aria-hidden="true">
+                <ThemeMascot theme={vibe.id} size="38px" />
+              </span>
+              <span class="zl-vibe-name">{vibe.name}</span>
+              {#if selectedVibe === vibe.id}
+                <span class="zl-vibe-check" aria-hidden="true">✓</span>
+              {/if}
+            </button>
+          {/each}
+        </div>
+
+        <div class="zl-setting-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Chunky Mode</span>
+            <p class="zl-setting-desc">Thick borders & hard shadows</p>
+          </div>
+          <label class="zl-toggle">
+            <input
+              type="checkbox"
+              checked={chunkyModeValue}
+              on:change={toggleChunkyMode}
+              aria-label="Chunky Mode"
+            />
+            <span class="zl-toggle-slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <section
+        class="zl-settings-section"
+        aria-labelledby="settings_flow_title"
+      >
+        <h4 id="settings_flow_title" class="zl-section-label">Flow</h4>
 
         <div class="zl-setting-row">
           <div class="zl-setting-info">
@@ -228,22 +277,6 @@
               checked={autoRecordValue}
               on:change={toggleAutoRecord}
               aria-label="Ready microphone on start"
-            />
-            <span class="zl-toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Chunky Mode</span>
-            <p class="zl-setting-desc">Thick borders & hard shadows</p>
-          </div>
-          <label class="zl-toggle">
-            <input
-              type="checkbox"
-              checked={chunkyModeValue}
-              on:change={toggleChunkyMode}
-              aria-label="Chunky Mode"
             />
             <span class="zl-toggle-slider"></span>
           </label>
@@ -284,7 +317,12 @@
             <span class="zl-toggle-slider"></span>
           </label>
         </div>
+      </section>
 
+      <section
+        class="zl-settings-section zl-settings-footer"
+        aria-label="Contributor"
+      >
         <div class="zl-setting-row">
           <div class="zl-setting-info">
             <span class="zl-setting-name">Contributor</span>
@@ -299,35 +337,6 @@
           >
             {contributorUnlocked ? "Unlocked" : PRICING.displayPrice}
           </button>
-        </div>
-      </section>
-
-      <section
-        class="zl-settings-section"
-        aria-labelledby="settings_vibe_title"
-      >
-        <h4 id="settings_vibe_title" class="zl-section-label">
-          Choose Your Vibe
-        </h4>
-        <div class="zl-vibe-grid">
-          {#each vibeOptions as vibe}
-            <button
-              type="button"
-              class="zl-vibe-option"
-              class:active={selectedVibe === vibe.id}
-              on:click={() => changeVibe(vibe.id)}
-              aria-label={`Use ${vibe.name} vibe`}
-              aria-pressed={selectedVibe === vibe.id}
-            >
-              <span class="zl-vibe-art" aria-hidden="true">
-                <ThemeMascot theme={vibe.id} size="38px" />
-              </span>
-              <span class="zl-vibe-name">{vibe.name}</span>
-              {#if selectedVibe === vibe.id}
-                <span class="zl-vibe-check" aria-hidden="true">✓</span>
-              {/if}
-            </button>
-          {/each}
         </div>
       </section>
     </div>
@@ -378,7 +387,7 @@
     position: relative;
     z-index: 1001;
     width: min(92vw, 480px);
-    max-height: min(88dvh, 46rem);
+    max-height: min(88dvh, 58rem);
     background: var(--zl-card-bg-gradient-color-start, #fff);
     border: var(--zl-card-border-width, 4px) solid
       var(--zl-card-border-color, #000);
@@ -390,7 +399,7 @@
   }
 
   .zl-settings-content {
-    max-height: calc(min(88dvh, 46rem) - 4rem);
+    max-height: calc(min(88dvh, 58rem) - 4rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 0.125rem;
@@ -463,7 +472,27 @@
   }
 
   .zl-settings-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .zl-settings-section:last-child {
+    margin-bottom: 0.25rem;
+  }
+
+  /* Contributor sits apart from the everyday settings — a quiet divider
+     instead of another shouting section label. */
+  .zl-settings-footer {
+    border-top: 2px dashed var(--zl-item-border-color, rgba(0, 0, 0, 0.12));
+    padding-top: 1.25rem;
+  }
+
+  .zl-settings-footer .zl-setting-row {
+    margin-bottom: 0;
+  }
+
+  /* The vibe grid hands off to its sibling Chunky Mode row */
+  .zl-vibe-grid + .zl-setting-row {
+    margin-top: 0.75rem;
   }
 
   .zl-section-label {

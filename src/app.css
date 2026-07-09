@@ -157,6 +157,21 @@ body::-webkit-scrollbar-corner {
   background: transparent;
 }
 
+/* Inside modal cards the gradient thumb reads as a decorative bar — content
+   barely overflows, so the thumb runs nearly full height. Keep it neutral
+   and quiet there; the juicy gradient belongs to the page scroll. */
+:where(.modal-box, .zl-settings-content) {
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+
+:where(.modal-box, .zl-settings-content)::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+:where(.modal-box, .zl-settings-content)::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.26);
+}
+
 @media (hover: none) and (pointer: coarse) {
   :where(
     .modal-box,
@@ -225,8 +240,8 @@ dialog.modal::backdrop {
 }
 
 /* Custom modal styling — skeleton frame: 28rem max-width, 1.5rem radius,
-   fluid padding. modal-bottom (mobile bottom-sheet) -> sm:modal-middle is set
-   per-modal via DaisyUI classes; the box rules below apply to both. */
+   fluid padding. All DaisyUI modals are modal-middle (centered card on every
+   form factor). */
 .modal-box {
   max-height: 85vh !important;
   overflow-y: auto !important;
@@ -236,6 +251,11 @@ dialog.modal::backdrop {
   padding: clamp(1.25rem, 4vw, 2rem) !important;
   border-radius: 1.5rem !important;
   transform-origin: center;
+  /* Must stack above the fixed .modal-backdrop (z-index: 0) below — with
+     z-index auto the later-DOM backdrop paints on top and eats every click
+     inside the box. */
+  position: relative;
+  z-index: 1;
 }
 
 /* OPEN animation — playful pop-in (skeleton). Scoped to open, NON-closing
@@ -257,30 +277,6 @@ dialog.modal.zl-modal-closing > .modal-box {
 dialog.modal.zl-modal-closing > .modal-backdrop,
 dialog.modal.zl-modal-closing .modal-backdrop {
   animation: zl-modal-backdrop-out 210ms ease-out both;
-}
-
-/* Mobile bottom-sheet polish — full-width docked sheet with safe-area inset
-   below 640px; centered card above (DaisyUI modal-bottom sm:modal-middle). */
-@media (max-width: 639px) {
-  .modal-bottom .modal-box {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-    padding-bottom: calc(
-      clamp(1.25rem, 4vw, 2rem) + env(safe-area-inset-bottom, 0px)
-    ) !important;
-  }
-
-  /* Bottom-sheet slides up from the dock; pop-out slides back down. */
-  .modal-bottom[open]:not(.zl-modal-closing) > .modal-box {
-    animation: zl-modal-sheet-in 360ms cubic-bezier(0.18, 0.92, 0.2, 1.04) both;
-  }
-
-  .modal-bottom.zl-modal-closing > .modal-box {
-    animation: zl-modal-sheet-out 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
-  }
 }
 
 /* Ensure scrollbars don't cause layout shifts */
@@ -367,28 +363,6 @@ dialog.modal.zl-modal-closing .modal-backdrop {
   }
 }
 
-@keyframes zl-modal-sheet-in {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes zl-modal-sheet-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-}
-
 @keyframes zl-modal-backdrop-in {
   from {
     opacity: 0;
@@ -411,8 +385,6 @@ dialog.modal.zl-modal-closing .modal-backdrop {
 @media (prefers-reduced-motion: reduce) {
   dialog.modal[open]:not(.zl-modal-closing) > .modal-box,
   dialog.modal.zl-modal-closing > .modal-box,
-  .modal-bottom[open]:not(.zl-modal-closing) > .modal-box,
-  .modal-bottom.zl-modal-closing > .modal-box,
   .modal > .modal-backdrop,
   .modal .modal-backdrop,
   dialog.modal.zl-modal-closing > .modal-backdrop,
