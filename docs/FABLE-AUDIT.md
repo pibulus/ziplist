@@ -207,3 +207,14 @@ Live-audited at 390×844, 820×1180, 1440×900 with Playwright against dev.
 - Neo soft-mode token gaps filled (9 vars were falling back to purple).
 - Modal frames unified (30rem, card-radius token); settings modal on the
   fluid type scale; stray radii snapped.
+
+## Share/PWA coherence — 2026-07-09 late (same evening)
+
+- Header ratios: title 1.02rem full-strength, trio clustered (40px ghost
+  boxes, 0.1rem gap).
+- /import rewritten in product voice: list name is the title, "Add to my
+  lists" / "Not now" actions (flat primary, ink text — was unreadable
+  white-on-yellow), theme-token checkboxes + tick, ghost X.
+- /live/[roomId] btn-primary flat (was amber→teal + red hover shadow).
+- PwaDeviceSetup: flat primary button + progress (was gradient + white
+  text). manifest.json already cream.
