@@ -12,6 +12,11 @@
   import { PRICING } from "$lib/config/pricing.js";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import {
+    getOrCreateAvatar,
+    setAvatarName,
+    getAvatarImage,
+  } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
 
   // Props for the modal
@@ -19,6 +24,7 @@
 
   // Theme/vibe selection
   let selectedVibe;
+  let avatarName = "";
   let autoRecordValue = false;
   let listFirstModeValue = false;
   let soundCuesValue = true;
@@ -57,6 +63,8 @@
   ];
 
   onMount(() => {
+    avatarName = getOrCreateAvatar();
+
     // Check for chunky mode
     if (typeof document !== "undefined") {
       chunkyModeValue =
@@ -171,6 +179,12 @@
 
   function openContributorModal() {
     window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
+  }
+
+  function saveAvatarName(event) {
+    avatarName = setAvatarName(event.currentTarget.value);
+    event.currentTarget.value = avatarName;
+    soundService.select();
   }
 </script>
 
@@ -316,6 +330,33 @@
             />
             <span class="zl-toggle-slider"></span>
           </label>
+        </div>
+
+        <div class="zl-setting-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Name in shared rooms</span>
+            <p class="zl-setting-desc">
+              Your face and name when a list goes live
+            </p>
+          </div>
+          <div class="zl-avatar-field">
+            {#if avatarName}
+              <img
+                class="zl-avatar-face"
+                src={getAvatarImage(avatarName)}
+                alt=""
+                aria-hidden="true"
+              />
+            {/if}
+            <input
+              type="text"
+              class="zl-avatar-input"
+              value={avatarName}
+              maxlength="48"
+              on:change={saveAvatarName}
+              aria-label="Name in shared rooms"
+            />
+          </div>
         </div>
       </section>
 
@@ -533,6 +574,44 @@
     font-size: var(--font-size-xs, 0.75rem);
     color: var(--zl-text-color-secondary, #666);
     margin: 0.25rem 0 0 0;
+  }
+
+  .zl-avatar-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .zl-avatar-face {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25);
+    flex-shrink: 0;
+  }
+
+  .zl-avatar-input {
+    width: 9.5rem;
+    min-height: 44px;
+    padding: 0.3rem 0.6rem;
+    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    font-family: "Space Mono", monospace;
+    font-size: var(--font-size-xs, 0.8rem);
+    font-weight: 700;
+    color: var(--zl-text-color-primary, #444);
+    outline: none;
+    transition: var(--zl-transition-fast, all 0.2s ease);
+  }
+
+  .zl-avatar-input:focus-visible {
+    border-color: var(--zl-primary-color, #ffb000);
+    outline: none;
   }
 
   /* Toggle Switch */

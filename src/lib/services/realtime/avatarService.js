@@ -2,8 +2,13 @@
  * Avatar Service
  *
  * Generates and persists random avatar names like "Misty Fox" or "Happy Frog"
- * for anonymous user identification in live collaboration.
+ * for anonymous user identification in live collaboration. Names are editable
+ * (Options → your room name); faces come from DiceBear's thumbs collection,
+ * generated offline as SVG data-URIs (no network, no CSP concerns) and seeded
+ * by the name so the same name always wears the same face.
  */
+import { createAvatar } from "@dicebear/core";
+import { thumbs } from "@dicebear/collection";
 
 const ADJECTIVES = [
   "Misty",
@@ -96,6 +101,53 @@ function generateAvatar() {
   const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
   const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
   return `${adjective} ${animal}`;
+}
+
+/**
+ * Set a custom avatar name (the "call me Mum" move). Empty input falls
+ * back to a fresh generated name.
+ * @param {string} name
+ * @returns {string} the stored name
+ */
+export function setAvatarName(name) {
+  const trimmed = (name || "").trim().slice(0, 48);
+  const finalName = trimmed || generateAvatar();
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEY, finalName);
+    } catch {
+      // privacy mode — the name just won't persist
+    }
+  }
+  return finalName;
+}
+
+const avatarImageCache = new Map();
+
+/**
+ * DiceBear thumbs face for an avatar name — offline SVG data-URI, cached.
+ * @param {string} name - avatar name used as the deterministic seed
+ * @returns {string} data:image/svg+xml URI ('' if generation fails)
+ */
+export function getAvatarImage(name) {
+  const seed = name || "Guest";
+  if (avatarImageCache.has(seed)) {
+    return avatarImageCache.get(seed);
+  }
+  let uri = "";
+  try {
+    uri = createAvatar(thumbs, {
+      seed,
+      radius: 50,
+      scale: 92,
+      backgroundType: ["solid"],
+      backgroundColor: ["transparent"],
+    }).toDataUri();
+  } catch (error) {
+    console.warn("Avatar image generation failed:", error);
+  }
+  avatarImageCache.set(seed, uri);
+  return uri;
 }
 
 /**

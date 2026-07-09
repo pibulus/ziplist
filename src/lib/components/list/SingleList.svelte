@@ -15,7 +15,10 @@
   import { hapticService } from "$lib/services/infrastructure/hapticService";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
-  import { getAvatarColor } from "$lib/services/realtime/avatarService";
+  import {
+    getAvatarColor,
+    getAvatarImage,
+  } from "$lib/services/realtime/avatarService";
   import { getLiveActivityStore } from "$lib/services/realtime/liveActivityStore";
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
   import { getTypingStore } from "$lib/services/realtime/typingStore";
@@ -1453,11 +1456,13 @@
                 {#if presence.length > 0}
                   <div class="zl-presence-dots" aria-hidden="true">
                     {#each presence.slice(0, 4) as user (user.id)}
-                      <span
+                      <img
                         class="zl-presence-dot"
                         title={user.avatar}
+                        alt=""
+                        src={getAvatarImage(user.avatar)}
                         style="background-color: {getAvatarColor(user.avatar)}"
-                      ></span>
+                      />
                     {/each}
                   </div>
                 {/if}

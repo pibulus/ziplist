@@ -1,4 +1,6 @@
 <script>
+  import BrandMark from "$lib/components/ui/BrandMark.svelte";
+
   export let title = "ZipList | Talk a List. Tick It Off.";
   export let description =
     "Make a checklist by talking. ZipList is a warm little web app for groceries, errands, packing, gear, chores, and quick shared lists.";
@@ -61,6 +63,14 @@
   class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10"
   class:list-first-shell={listFirst}
 >
+  {#if listFirst}
+    <!-- The hero is hidden in list-first mode; the letterhead keeps the
+         page named without bringing the whole title back -->
+    <div class="listfirst-brand">
+      <BrandMark />
+    </div>
+  {/if}
+
   <main
     id="main-content"
     class="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg md:max-w-2xl lg:max-w-3xl"
@@ -143,6 +153,14 @@
   .page-shell.list-first-shell {
     gap: 1.25rem;
     padding-top: max(env(safe-area-inset-top), clamp(2rem, 6svh, 4rem));
+  }
+
+  /* Letterhead as page chrome — fixed top-left, above the grid flow */
+  .listfirst-brand {
+    position: fixed;
+    top: max(env(safe-area-inset-top), 0.6rem);
+    left: max(env(safe-area-inset-left), 0.9rem);
+    z-index: 30;
   }
 
   footer {
