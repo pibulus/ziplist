@@ -100,6 +100,9 @@
       <p>Connected as <strong>{avatar}</strong></p>
     </div>
   {:else if error}
+    <div class="live-brand-row">
+      <BrandMark />
+    </div>
     <div
       class="error-state"
       class:popped-state={errorCode === "room_expired"}

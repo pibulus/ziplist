@@ -594,14 +594,10 @@
   }
 
   .zl-setting-action {
-    background: linear-gradient(
-      135deg,
-      var(--zl-primary-color, #ffcc33),
-      #f2a93b
-    );
-    border: 2px solid var(--zl-card-border-color, #000000);
+    background: var(--zl-cta-color, #ffb000);
+    border: 0;
     border-radius: 999px;
-    box-shadow: 3px 3px 0 #000000;
+    box-shadow: 0 3px 8px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.25);
     color: #111111;
     cursor: pointer;
     flex-shrink: 0;
@@ -610,14 +606,26 @@
     font-weight: 900;
     min-height: 44px;
     padding: 0.35rem 0.85rem;
-    transition:
-      transform 0.16s ease,
-      box-shadow 0.16s ease;
+    transition: var(--zl-transition-fast, all 0.2s ease);
   }
 
   .zl-setting-action:hover,
   .zl-setting-action:focus-visible {
+    box-shadow: 0 5px 14px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.32);
+    filter: saturate(1.08) brightness(1.04);
+    transform: translateY(-1px);
+  }
+
+  /* Chunky mode gets its hard-shadow identity back — gated, not leaked */
+  :global(html.mode-neo-brutalist) .zl-setting-action {
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0 #000000;
+  }
+
+  :global(html.mode-neo-brutalist) .zl-setting-action:hover,
+  :global(html.mode-neo-brutalist) .zl-setting-action:focus-visible {
     box-shadow: 4px 4px 0 #000000;
+    filter: none;
     transform: translate(-1px, -1px);
   }
 

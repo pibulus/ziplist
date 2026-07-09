@@ -983,7 +983,7 @@
   border: var(--zl-checkbox-border, 2px solid rgba(201, 120, 255, 0.5));
   border-radius: var(--zl-checkbox-border-radius, 12px);
   background-color: var(--zl-checkbox-bg, rgba(255, 255, 255, 0.8));
-  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: var(--zl-transition-fast, all 0.2s ease);
   box-shadow: var(--zl-checkbox-shadow, 0 3px 7px rgba(0, 151, 167, 0.15));
 }
 

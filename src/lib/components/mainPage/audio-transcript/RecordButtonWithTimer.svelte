@@ -179,7 +179,7 @@
     ? `--progress: ${Math.min((recordingDuration / ANIMATION.RECORDING.LIMIT) * 100, 100)}%`
     : "";
 
-  $: baseStyle = `min-width: 260px; min-height: 62px; transform-origin: center center; position: relative; ${progressStyle}`;
+  $: baseStyle = `min-width: min(260px, 88vw); min-height: 62px; transform-origin: center center; position: relative; ${progressStyle}`;
   const dispatch = createEventDispatcher();
 </script>
 

@@ -191,6 +191,15 @@
     }
   }
 
+  /* Short viewports (SE-class phones, landscape): compress the hero
+     stack so the record button never needs a scroll to reach. */
+  @media (max-height: 700px) {
+    .page-shell {
+      gap: 1.25rem;
+      padding-top: max(env(safe-area-inset-top), 1.5rem) !important;
+    }
+  }
+
   /* Media queries for mobile optimization */
   @media (max-width: 640px) {
     .page-shell {

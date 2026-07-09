@@ -44,7 +44,7 @@
 
   <button
     type="button"
-    class="zl-delete-button zl-draft-cancel"
+    class="zl-item-delete-button zl-draft-cancel"
     data-swipe-ignore="true"
     on:pointerdown|preventDefault
     on:click|stopPropagation={onCancelDraft}
