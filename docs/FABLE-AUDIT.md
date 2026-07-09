@@ -232,4 +232,4 @@ grid.
 Deferred (real debt, not first-impression): shadow system consolidation
 to ~4 elevation tokens (currently ~9 bespoke treatments; two hardcoded
 black/teal outliers in SingleList.css ~589/639); typography.css token
-migration for hero/CTA (hand-rolled clamps compete with --font-size-*).
+migration for hero/CTA (hand-rolled clamps compete with --font-size-\*).

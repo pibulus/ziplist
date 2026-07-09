@@ -217,15 +217,6 @@ html[data-theme="focus"] {
   --zl-edit-input-focus-border: rgba(255, 171, 119, 0.6);
   --zl-edit-input-focus-shadow: 0 0 0 3px rgba(255, 171, 119, 0.1);
 
-  /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(255, 248, 230, 0.4),
-    rgba(255, 243, 215, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(255, 171, 119, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #ffcc33);
-
   /* New item input styling */
   --zl-new-item-input-border: 2px solid rgba(255, 171, 119, 0.4);
   --zl-new-item-input-focus-border: rgba(255, 171, 119, 0.7);

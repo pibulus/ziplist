@@ -368,23 +368,42 @@
     font-weight: 900;
     letter-spacing: 0;
     min-height: 52px;
-    transition:
-      transform 0.16s ease,
-      box-shadow 0.16s ease;
+    transition: var(--zl-transition-fast, all 0.2s ease);
     width: 100%;
   }
 
+  /* Programmatic focus target for a11y — no UA ring on a container */
+  .zl-contributor-card:focus,
+  .zl-contributor-card:focus-visible {
+    outline: none;
+  }
+
   .zl-contributor-primary {
-    background: linear-gradient(135deg, var(--zl-primary-color, #ffcc4d), var(--zl-accent-color, #f3a72f));
-    border: 3px solid var(--zl-card-border-color, #000000);
-    box-shadow: 5px 5px 0 var(--zl-card-border-color, #000000);
+    background: var(--zl-cta-color, #ffb000);
+    border: 0;
+    box-shadow: 0 3px 8px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.25);
     color: #111111;
   }
 
   .zl-contributor-primary:hover:not(:disabled),
   .zl-contributor-primary:focus-visible:not(:disabled) {
-    box-shadow: 7px 7px 0 var(--zl-card-border-color, #000000);
+    box-shadow: 0 5px 14px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.32);
+    filter: saturate(1.08) brightness(1.04);
     outline: none;
+    transform: translateY(-1px);
+  }
+
+  /* Chunky mode keeps its hard-edge identity — gated, not leaked */
+  :global(html.mode-neo-brutalist) .zl-contributor-primary {
+    border: 3px solid var(--zl-card-border-color, #000000);
+    box-shadow: 5px 5px 0 var(--zl-card-border-color, #000000);
+  }
+
+  :global(html.mode-neo-brutalist) .zl-contributor-primary:hover:not(:disabled),
+  :global(html.mode-neo-brutalist)
+    .zl-contributor-primary:focus-visible:not(:disabled) {
+    box-shadow: 7px 7px 0 var(--zl-card-border-color, #000000);
+    filter: none;
     transform: translate(-1px, -1px);
   }
 
