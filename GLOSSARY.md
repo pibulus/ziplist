@@ -24,16 +24,22 @@
 - `SwipeableLists` - Mobile-first horizontal list navigation.
 - `SingleList` - Main checklist surface: items, add/edit/delete/toggle, reorder,
   move actions, static share, and live share controls.
-- `ListItem` / `ListItemBody` - Reusable row rendering and row actions.
+- `ListItemBody` - Reusable row rendering and row actions (checkbox, text,
+  reorder/delete ghost twins).
 - `DraftItemRow` - Inline typed-item entry row.
-- `ImportConfirmationDialog` - Confirms snapshot imports from static share links.
-- `SettingsModal` - Theme, prompt style, Chunky Mode, and contributor controls.
+- `ImportConfirmationDialog` - The share landing card: branded page a static
+  share link opens, with the list preview and Save to ZipList.
+- `SettingsModal` - Vibe picker, Chunky Mode, flow toggles, room name, and
+  contributor entry.
 - `ContributorModal` - Contributor code/redeem/checkout entry.
 - `IntroModal` - First-run onboarding.
 - `AboutModal` - Product/about copy.
 - `ExtensionModal` - Extension information modal. The packaged extension itself
   is not part of the current repo.
 - `Mascot` - Portable SoftStack mascot/icon component (float, blink, aura).
+- `BrandMark` - Mini mascot + ZipList.app wordmark letterhead used on
+  standalone pages (share landing, live rooms, list-first mode).
+- `ThemeMascot` - Tiny per-theme mascot swatch used by the vibe picker.
 
 ## Services
 
@@ -65,6 +71,8 @@
 - `partyService` - Low-level PartySocket client and room creation proxy calls.
 - `liveListsService` - Bridges PartyKit room state into `listsStore`.
 - `presenceStore` / `typingStore` - Per-live-list ephemeral collaborator state.
+- `avatarService` - Editable room names ("Zesty Bear" by default) plus
+  DiceBear thumbs faces, generated offline as SVG data-URIs.
 
 ## Core Flows
 
@@ -83,5 +91,9 @@
 - **Themes** - `focus`, `chill`, `zen`, `nocturne`, and `neo`, defined through
   CSS variables in `src/lib/styles/theme-variables.css`.
 - **Chunky Mode** - Orthogonal visual style overlay; it should respect the active
-  theme variables.
+  theme variables. Hard black shadows belong ONLY behind this mode's gate.
 - **Dude** - The tappable title-area character/record affordance.
+- **Design laws** (settled 2026-07-09) - The cream page ground is constant across
+  themes; the CTA is one flat brand yellow (`--zl-cta-color`); gradients are
+  within-family shade offsets only; quiet actions share one ghost stroke-icon
+  language; copy never shouts, commands, or speaks as the user.

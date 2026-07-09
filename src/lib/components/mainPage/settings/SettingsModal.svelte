@@ -247,7 +247,7 @@
               <span class="zl-vibe-art" aria-hidden="true">
                 <ThemeMascot theme={vibe.id} size="38px" />
               </span>
-              <span class="zl-vibe-name">{vibe.name}</span>
+              <span>{vibe.name}</span>
               {#if selectedVibe === vibe.id}
                 <span class="zl-vibe-check" aria-hidden="true">✓</span>
               {/if}

@@ -11,7 +11,7 @@
   <span class="zl-brandmark-icon" aria-hidden="true">
     <ThemeMascot theme="neo" size="22px" />
   </span>
-  <span class="zl-brandmark-word">
+  <span>
     ZipList<span class="zl-brandmark-suffix" aria-hidden="true">.app</span>
   </span>
 </a>

@@ -151,23 +151,6 @@ export function getAvatarImage(name) {
 }
 
 /**
- * Reset the user's avatar (generate a new one)
- * @returns {string} New avatar name
- */
-export function resetAvatar() {
-  if (typeof window !== "undefined") {
-    const newAvatar = generateAvatar();
-    try {
-      localStorage.setItem(STORAGE_KEY, newAvatar);
-    } catch {
-      // storage unavailable — still hand back a usable name
-    }
-    return newAvatar;
-  }
-  return "Guest";
-}
-
-/**
  * Get the current avatar without creating one
  * @returns {string | null} Current avatar or null
  */

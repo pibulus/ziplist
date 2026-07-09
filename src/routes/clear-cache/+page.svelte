@@ -147,7 +147,7 @@
 
   .zl-cache-mark {
     align-items: center;
-    background: linear-gradient(135deg, #ffd56a, #79e7d3);
+    background: var(--zl-cta-color, #ffb000);
     border: 3px solid #000000;
     border-radius: 18px;
     box-shadow: 4px 4px 0 #000000;
@@ -193,14 +193,12 @@
     min-height: 44px;
     padding: 0.75rem 1rem;
     text-decoration: none;
-    transition:
-      box-shadow 0.16s ease,
-      transform 0.16s ease;
+    transition: var(--zl-transition-fast, all 0.2s ease);
     width: 100%;
   }
 
   .zl-cache-button {
-    background: linear-gradient(135deg, #ffcc33, #ff6ac2);
+    background: var(--zl-cta-color, #ffb000);
   }
 
   .zl-cache-return {

@@ -24,14 +24,19 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - PartyKit real-time collaboration (optional — works without server)
 - Canvas confetti celebrations, particle effects
 
-**Current State**: ~97% complete. Three rounds of security/correctness audits
-hardened CSP headers, rate limiter, PartyKit room auth (password hashing,
-VALIDATION PROTOCOL), Square webhook idempotency, import payload bounds, and
-response parser fail-closed behaviour. A fourth pass (2026-07-05, see
-docs/FABLE-AUDIT.md) added atomic/locked server stores, per-visitor rate
-buckets behind the tunnel, speech-bitrate recording, and dead-room live-share
-handling. Remaining: set BODY_SIZE_LIMIT=16M in prod env (see KEYS.md),
-real-device iPhone pass, sandbox-card checkout pass, production screenshots.
+**Current State**: ~99% complete, v1.0 runway. Security/correctness audits
+(through 2026-07-05) hardened CSP, rate limiting, PartyKit room auth, Square
+webhook idempotency, and server stores. The 2026-07-09→10 design-coherence
+arc (merged to main, see docs/FABLE-AUDIT.md) settled the design laws:
+constant cream page ground, one flat brand-yellow CTA (`--zl-cta-color`),
+within-family gradients only, one ghost stroke-icon language, branded
+share/live landing pages (BrandMark letterhead), DiceBear room avatars with
+editable names, and the copy voice rules (no all-caps, no imperatives at
+users, never speak as the user). Remaining is hands-on only: deploy main to
+the Pi, BODY_SIZE_LIMIT=16M (see KEYS.md), real-device iPhone + two-phone
+live pass, sandbox-card checkout, screenshots → tag v1.0.0. Post-launch
+charter lives in docs/V1.1.md (including the hard cutoffs: no dates, no
+nested items, no multi-list rooms, no accounts).
 
 ## Code Style Guidelines
 
