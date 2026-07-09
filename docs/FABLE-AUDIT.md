@@ -191,3 +191,19 @@ Live-audited at 390×844, 820×1180, 1440×900 with Playwright against dev.
   outweighs the checkbox.
 - **All DaisyUI modals `modal-middle`** — intro was bottom-docked on phones.
   Dead bottom-sheet CSS + dead delete-button theme vars pruned.
+
+## Coherence pass — 2026-07-09 evening (color / type / frames)
+
+- Cream page ground made constant across themes (was repainted mint/
+  lavender/slate per theme); footer follows.
+- CTA gradient retired → flat theme primary. Record button fully
+  de-hardcoded (was amber→pink everywhere, amber→cyan transcribing).
+- Nocturne's animated rainbow .app suffix and focus's pink stray → each
+  theme's own gradient pair (--zl-cta-grad-start/end tokens).
+- Item rows near-solid white vs tinted card; card wash softened by a
+  --zl-card-veil layer (nocturne opts down).
+- List header: name always visible, gap ratios fixed, [+ live share] as
+  ghost stroke-icon buttons with tooltips (no more emoji pills).
+- Neo soft-mode token gaps filled (9 vars were falling back to purple).
+- Modal frames unified (30rem, card-radius token); settings modal on the
+  fluid type scale; stray radii snapped.
