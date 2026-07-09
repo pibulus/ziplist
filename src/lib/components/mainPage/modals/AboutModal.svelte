@@ -73,7 +73,8 @@
 
       <!-- Privacy / local-first one-liner (skeleton link set) -->
       <p class="text-xs text-gray-500 leading-relaxed">
-        Your lists live on your device, not our servers.
+        Your lists live on your device, not our servers. Voice input makes one
+        quick trip to the transcriber to become items, then it's gone.
       </p>
 
       <div class="flex items-center gap-3 pt-2">

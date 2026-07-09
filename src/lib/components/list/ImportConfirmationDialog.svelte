@@ -115,7 +115,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--zl-primary-color, #ffb000);
+    background: var(--zl-cta-color, #ffb000);
     box-shadow:
       0 0 0 2px rgba(255, 255, 255, 0.68),
       0 2px 6px rgba(0, 0, 0, 0.12);
@@ -225,7 +225,7 @@
     min-height: 52px;
     border: none;
     border-radius: 999px;
-    background: var(--zl-primary-color, #ffb000);
+    background: var(--zl-cta-color, #ffb000);
     color: #111111;
     font-family: "Space Mono", monospace;
     font-size: 1rem;

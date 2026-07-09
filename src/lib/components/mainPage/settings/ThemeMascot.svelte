@@ -12,9 +12,9 @@
   // so each swatch matches the app's existing theme colors exactly.
   const mascotThemes = {
     neo: { start: "#ffe86b", mid: "#ff9a8c", end: "#76ead7" },
-    focus: { start: "#fff9f5", mid: "#ffdbc5", end: "#ffab77" },
-    chill: { start: "#e5f9f6", mid: "#94d7dd", end: "#4da1a9" },
-    nocturne: { start: "#8db0c8", mid: "#7da9ad", end: "#c487d2" },
+    focus: { start: "#ffcf9c", mid: "#ffab77", end: "#ff8a5b" },
+    chill: { start: "#a5e3e0", mid: "#71c9ce", end: "#4da1a9" },
+    nocturne: { start: "#d8a9e3", mid: "#c487d2", end: "#6ca4c2" },
   };
 
   const uid = Math.random().toString(36).slice(2, 8);

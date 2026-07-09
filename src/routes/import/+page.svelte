@@ -141,7 +141,7 @@
   }
 
   .back-button {
-    background: var(--zl-primary-color, #ffb000);
+    background: var(--zl-cta-color, #ffb000);
     border: none;
     color: #111111;
     font-family: "Space Mono", monospace;

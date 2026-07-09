@@ -169,7 +169,7 @@
       : `${buttonLabel}. Create a new list`;
 
   $: baseButtonClasses =
-    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
+    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[380px] px-6 py-4 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
 
   $: clipboardSuccessClasses = clipboardSuccess
     ? "notification-pulse border border-purple-200 bg-purple-50"
@@ -179,7 +179,7 @@
     ? `--progress: ${Math.min((recordingDuration / ANIMATION.RECORDING.LIMIT) * 100, 100)}%`
     : "";
 
-  $: baseStyle = `min-width: 280px; min-height: 64px; transform-origin: center center; position: relative; ${progressStyle}`;
+  $: baseStyle = `min-width: 260px; min-height: 62px; transform-origin: center center; position: relative; ${progressStyle}`;
   const dispatch = createEventDispatcher();
 </script>
 
@@ -252,7 +252,7 @@
               <span
                 class="cta__label relative z-10 px-1 py-0.5 rounded-lg"
                 class:text-shadow-recording={recording}
-                style="font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem); letter-spacing: .02em; text-align: center; width: 100%;"
+                style="font-size: clamp(1.05rem, 0.4vw + 1rem, 1.2rem); letter-spacing: .02em; text-align: center; width: 100%;"
               >
                 {buttonLabel}
               </span>
@@ -287,13 +287,13 @@
     transition-property:
       transform, box-shadow, background-image, background-position;
 
-    /* Flat theme primary — the CTA is a color, not a gradient. Juice
-       comes from motion, glow, and the mascot; the button stays solid. */
-    background-color: var(--zl-primary-color, #ffb000);
+    /* Flat brand yellow — the voice button is the same in every theme,
+       like the cream ground. Juice comes from motion and glow. */
+    background-color: var(--zl-cta-color, #ffb000);
 
     /* Better default shadow */
     box-shadow:
-      0 4px 6px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2),
+      0 4px 6px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2),
       0 2px 4px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
@@ -320,7 +320,7 @@
   /* Neo-brutalist button override */
   :global(html.mode-neo-brutalist) .record-button {
     background-image: none;
-    background-color: var(--zl-primary-color);
+    background-color: var(--zl-cta-color, #ffb000);
     border: 3px solid #000000;
     box-shadow: 6px 6px 0px 0px #000000;
     border-radius: 16px; /* Less rounded */
@@ -346,13 +346,13 @@
   .record-button:focus {
     outline: none;
     box-shadow:
-      0 0 0 3px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.4),
+      0 0 0 3px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.4),
       0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   /* Enhanced focus ring for keyboard navigation */
   .record-button:focus-visible {
-    outline: 3px solid var(--zl-primary-color, #ffb000);
+    outline: 3px solid var(--zl-cta-color, #ffb000);
     outline-offset: 2px;
   }
 
@@ -361,7 +361,7 @@
   .record-button:hover:not(:disabled) {
     transform: translateY(-1px) scale(1.02);
     box-shadow:
-      0 6px 10px -2px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25),
+      0 6px 10px -2px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.25),
       0 4px 6px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
@@ -369,7 +369,7 @@
   .record-button:not(.recording-active):hover:not(:disabled) {
     filter: saturate(1.08) brightness(1.04);
     transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
+    box-shadow: 0 8px 15px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.3);
   }
 
   /* Audio visualization pulse effect - Enhanced */
@@ -389,14 +389,14 @@
     background: radial-gradient(
       circle at center,
       rgba(
-        var(--zl-primary-color-rgb, 255, 176, 0),
+        var(--zl-cta-color-rgb, 255, 176, 0),
         calc(0.5 * var(--pulse-intensity))
       ),
       rgba(
-        var(--zl-accent-color-rgb, 255, 176, 0),
+        var(--zl-cta-color-rgb, 255, 176, 0),
         calc(0.55 * var(--pulse-intensity))
       ),
-      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0)
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0)
     );
     opacity: calc(0.9 * var(--pulse-intensity));
     z-index: 1; /* Increased z-index to make it more visible */
@@ -409,12 +409,12 @@
     box-shadow:
       0 0 calc(20px * var(--pulse-intensity)) calc(8px * var(--pulse-intensity))
         rgba(
-          var(--zl-accent-color-rgb, 255, 176, 0),
+          var(--zl-cta-color-rgb, 255, 176, 0),
           calc(0.4 * var(--pulse-intensity))
         ),
       0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity))
         rgba(
-          var(--zl-primary-color-rgb, 255, 176, 0),
+          var(--zl-cta-color-rgb, 255, 176, 0),
           calc(0.6 * var(--pulse-intensity))
         );
   }
@@ -423,7 +423,7 @@
   .record-button:active:not(:disabled) {
     transform: translateY(1px) scale(0.98);
     box-shadow:
-      0 2px 4px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.15),
+      0 2px 4px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.15),
       0 1px 2px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 3px rgba(0, 0, 0, 0.1);
   }
@@ -464,12 +464,12 @@
     0%,
     100% {
       box-shadow: 0 0 12px 2px
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.35);
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.35);
       transform: scale(1);
     }
     50% {
       box-shadow: 0 0 20px 6px
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.5);
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
       transform: scale(1.02);
     }
   }
@@ -510,7 +510,7 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    background-color: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.18);
+    background-color: rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.18);
   }
 
   .progress-bar {
@@ -520,21 +520,21 @@
     height: 100%;
     transition: width 0.3s ease;
     animation: pulse-glow 1.5s infinite ease-in-out;
-    background-color: var(--zl-primary-color, #ffb000);
+    background-color: var(--zl-cta-color, #ffb000);
   }
 
   @keyframes pulse-glow {
     0% {
       box-shadow: inset 0 0 5px
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.5);
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     }
     50% {
       box-shadow: inset 0 0 15px
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.8);
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.8);
     }
     100% {
       box-shadow: inset 0 0 5px
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.5);
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     }
   }
 
@@ -548,22 +548,22 @@
     background-image:
       linear-gradient(
         to right,
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.9),
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.9)
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9),
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9)
           var(--progress, 0%),
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.38)
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.38)
           calc(var(--progress, 0%) + 0.5%),
-        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.24) 100%
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.24) 100%
       ),
       /* Subtle noise texture overlay */
       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
 
     background-size: 100% 100%;
     box-shadow:
-      0 4px 15px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.35),
-      inset 0 0 10px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2),
-      0 0 20px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2);
-    border: 1px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
+      0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.35),
+      inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2),
+      0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
+    border: 1px solid rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.3);
     /* Smoother & faster transitions for clearer state changes */
     transition:
       background-image 0.3s ease-out,
@@ -588,44 +588,44 @@
   .recording-warning {
     background-image: linear-gradient(
       to right,
-      rgb(var(--zl-primary-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.7)
+      rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7)
         var(--progress, 0%),
-      rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.45) 100%
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.45) 100%
     );
     box-shadow:
-      0 4px 15px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3),
-      inset 0 0 10px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2),
-      0 0 20px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2);
+      0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.3),
+      inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2),
+      0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
   }
 
   .recording-danger {
     background-image: linear-gradient(
       to right,
-      rgb(var(--zl-primary-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.7)
+      rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7)
         var(--progress, 0%),
-      rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.62) 100%
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.62) 100%
     );
     box-shadow:
-      0 4px 15px -1px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.28),
-      inset 0 0 10px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.22),
-      0 0 20px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.2);
+      0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.28),
+      inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22),
+      0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
     animation: danger-pulse 1s infinite alternate ease-in-out;
   }
 
   @keyframes danger-pulse {
     0% {
       box-shadow:
-        0 4px 15px -1px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.28),
-        inset 0 0 10px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.22),
-        0 0 20px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.2);
+        0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.28),
+        inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22),
+        0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
     }
     100% {
       box-shadow:
-        0 4px 15px -1px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.38),
-        inset 0 0 15px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.26),
-        0 0 25px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.24);
+        0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.38),
+        inset 0 0 15px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.26),
+        0 0 25px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.24);
     }
   }
 

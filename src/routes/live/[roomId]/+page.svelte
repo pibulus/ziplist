@@ -141,6 +141,19 @@
     flex-direction: column;
   }
 
+  /* The cream ground is the brand's constant — live rooms are no
+     exception (without this the page fell through to the dark html bg). */
+  :global(body:has(.live-join-container)) {
+    background-color: #fff6e6;
+    background-image: radial-gradient(
+      circle at center,
+      #fff6e6 0%,
+      #fff6e6 40%,
+      #fff0d4 70%,
+      #ffe8c8 100%
+    );
+  }
+
   .loading-state,
   .error-state {
     display: flex;
@@ -221,7 +234,7 @@
   }
 
   .btn-primary {
-    background: var(--zl-primary-color, #ffb000);
+    background: var(--zl-cta-color, #ffb000);
     color: #111111;
     border: none;
     border-radius: 16px;

@@ -12,6 +12,8 @@
   --zl-primary-color: #ffcc33;
   --zl-secondary-color: #ffd4da;
   --zl-accent-color: #ff6ac2;
+  --zl-cta-color: #ffb000; /* Brand voice-button yellow — constant across themes */
+  --zl-cta-color-rgb: 255, 176, 0;
   --zl-cta-grad-start: #ffd54f;
   --zl-cta-grad-end: #ffb000;
   --zl-highlight-color: #ffecf0;
@@ -109,9 +111,9 @@
  */
 html[data-theme="focus"] {
   /* Mascot gradient — tangerine sunrise (matches ThemeMascot focus swatch) */
-  --zl-mascot-gradient-start: #fff9f5;
-  --zl-mascot-gradient-mid: #ffdbc5;
-  --zl-mascot-gradient-end: #ffab77;
+  --zl-mascot-gradient-start: #ffcf9c;
+  --zl-mascot-gradient-mid: #ffab77;
+  --zl-mascot-gradient-end: #ff8a5b;
 
   /* Card gradient - soft pastel tangerine sunrise with pink-yellow glow */
   --zl-card-bg-gradient-angle: 135deg;
@@ -249,8 +251,8 @@ html[data-theme="focus"] {
  */
 html[data-theme="chill"] {
   /* Mascot gradient — cool teal (matches ThemeMascot chill swatch) */
-  --zl-mascot-gradient-start: #e5f9f6;
-  --zl-mascot-gradient-mid: #94d7dd;
+  --zl-mascot-gradient-start: #a5e3e0;
+  --zl-mascot-gradient-mid: #71c9ce;
   --zl-mascot-gradient-end: #4da1a9;
 
   /* Card gradient */
@@ -380,9 +382,9 @@ html[data-theme="chill"] {
  */
 html[data-theme="zen"] {
   /* Mascot gradient — soft violet (derived from zen's card gradient stops) */
-  --zl-mascot-gradient-start: #f4eeff;
-  --zl-mascot-gradient-mid: #b197fc;
-  --zl-mascot-gradient-end: #9775fa;
+  --zl-mascot-gradient-start: #cdb5ff;
+  --zl-mascot-gradient-mid: #9775fa;
+  --zl-mascot-gradient-end: #845ef7;
 
   /* Card gradient */
   --zl-card-bg-gradient-angle: 145deg;
@@ -516,9 +518,9 @@ html[data-theme="zen"] {
  */
 html[data-theme="nocturne"] {
   /* Mascot gradient — moonlit blue→orchid (matches ThemeMascot nocturne swatch) */
-  --zl-mascot-gradient-start: #8db0c8;
-  --zl-mascot-gradient-mid: #7da9ad;
-  --zl-mascot-gradient-end: #c487d2;
+  --zl-mascot-gradient-start: #d8a9e3;
+  --zl-mascot-gradient-mid: #c487d2;
+  --zl-mascot-gradient-end: #6ca4c2;
 
   /* Card gradient - soft pastel moonlight with blue-green tones */
   --zl-card-bg-gradient-angle: 135deg;
