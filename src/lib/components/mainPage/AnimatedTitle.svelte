@@ -3,6 +3,7 @@
   import { createEventDispatcher } from "svelte";
   import { AppSuffix, Mascot } from "$lib/components/ui";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
+  import { isRecording } from "$lib/services/infrastructure/stores.js";
 
   const dispatch = createEventDispatcher();
 
@@ -44,8 +45,15 @@
 
 <!-- Typography with improved kerning and weight using font-variation-settings -->
 <div class="relative title-container">
-  <!-- The Floating Dude — shared Mascot component (SoftStack standard) -->
-  <Mascot ariaLabel="Start recording" on:click={handleDudeClick} />
+  <!-- The Floating Dude — shared Mascot component (SoftStack standard).
+       Named label + live state so screen readers can tell it apart from the
+       record button (the old static "Start recording" never flipped). -->
+  <Mascot
+    ariaLabel={$isRecording
+      ? "ZipList mascot — stop recording"
+      : "ZipList mascot — start recording"}
+    on:click={handleDudeClick}
+  />
 
   <h1
     class="mb-1 text-5xl font-black tracking-normal text-center cursor-default select-none staggered-text sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
