@@ -126,11 +126,11 @@
   :global(.bg-gradient-mesh) {
     background-color: #fff6e6;
     background-image: radial-gradient(
-      circle at center,
-      #fff6e6 0%,
-      #fff6e6 40%,
-      #fff0d4 70%,
-      #ffe8c8 100%
+      circle at 50% 35%,
+      #fff8ed 0%,
+      #fff6e6 52%,
+      #fff3df 82%,
+      #ffefda 100%
     );
     /* background-attachment: fixed is intentionally omitted —
        iOS Safari renders it as a flat color on non-viewport elements. */

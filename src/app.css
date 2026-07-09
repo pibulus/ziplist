@@ -50,6 +50,14 @@ html {
   scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
 }
 
+/* The brand cream, at the root — otherwise DaisyUI's dark theme base bleeds
+   around the page edges and in overscroll on every route. Must outrank
+   DaisyUI's html[data-theme] background. */
+html,
+html[data-theme] {
+  background-color: #fff6e6;
+}
+
 /* Prevent horizontal overflow */
 body {
   overflow-x: hidden;

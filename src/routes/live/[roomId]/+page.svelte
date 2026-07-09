@@ -9,6 +9,7 @@
   } from "$lib/services/realtime/liveListsService";
   import { getOrCreateAvatar } from "$lib/services/realtime/avatarService";
   import SingleList from "$lib/components/list/SingleList.svelte";
+  import BrandMark from "$lib/components/ui/BrandMark.svelte";
   import { fade, fly } from "svelte/transition";
 
   // Get room ID from URL
@@ -126,7 +127,14 @@
     <span class="live-status-sr" role="status" aria-live="polite">
       Live collaboration is active.
     </span>
+    <div class="live-brand-row">
+      <BrandMark />
+    </div>
     <SingleList {listId} showListManagement={false} />
+    <a class="live-hook" href="/">
+      or start a list of your own
+      <span aria-hidden="true">→</span>
+    </a>
   {/if}
 </div>
 
@@ -146,11 +154,11 @@
   :global(body:has(.live-join-container)) {
     background-color: #fff6e6;
     background-image: radial-gradient(
-      circle at center,
-      #fff6e6 0%,
-      #fff6e6 40%,
-      #fff0d4 70%,
-      #ffe8c8 100%
+      circle at 50% 35%,
+      #fff8ed 0%,
+      #fff6e6 52%,
+      #fff3df 82%,
+      #ffefda 100%
     );
   }
 
@@ -250,6 +258,33 @@
     transform: translateY(-2px);
     filter: saturate(1.08) brightness(1.04);
     box-shadow: 0 4px 12px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.35);
+  }
+
+  .live-brand-row {
+    width: 100%;
+    max-width: min(540px, calc(100vw - 2rem));
+    margin: 0.5rem auto 0.35rem;
+    padding-inline: 0.35rem;
+  }
+
+  .live-hook {
+    align-self: center;
+    margin-top: 0.35rem;
+    font-family: "Space Mono", monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--zl-text-color-secondary, #666);
+    text-decoration: none;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+  }
+
+  .live-hook:hover,
+  .live-hook:focus-visible {
+    color: var(--zl-text-color-primary, #444);
+    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+    outline: none;
   }
 
   .live-status-sr {

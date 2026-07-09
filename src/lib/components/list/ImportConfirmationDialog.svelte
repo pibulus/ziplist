@@ -1,5 +1,6 @@
 <script>
   import { fly } from "svelte/transition";
+  import BrandMark from "$lib/components/ui/BrandMark.svelte";
   import { listsService } from "$lib/services/lists/listsService";
 
   import { goto } from "$app/navigation";
@@ -18,9 +19,9 @@
 
 <div class="share-landing" in:fly={{ y: 16, duration: 250 }}>
   <!-- Letterhead: the brand lives on the page, not inside the list -->
-  <a class="share-brand" href="/" aria-label="Open ZipList">
-    ZipList<span class="share-brand-suffix" aria-hidden="true">.app</span>
-  </a>
+  <div class="share-brand-row">
+    <BrandMark />
+  </div>
 
   <div class="share-card">
     <header class="share-card-header">
@@ -61,26 +62,9 @@
   }
 
   /* Brand letterhead above the card */
-  .share-brand {
+  .share-brand-row {
     align-self: flex-start;
     margin: 0 0.35rem 0.6rem;
-    font-family: "Space Mono", monospace;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--zl-text-color-primary, #444);
-    text-decoration: none;
-    opacity: 0.85;
-    transition: opacity 0.2s ease;
-  }
-
-  .share-brand:hover,
-  .share-brand:focus-visible {
-    opacity: 1;
-    outline: none;
-  }
-
-  .share-brand-suffix {
-    color: var(--zl-primary-color, #ffb000);
   }
 
   /* The card wears the app's card frame */

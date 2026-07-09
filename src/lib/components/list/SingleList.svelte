@@ -1437,26 +1437,22 @@
                 </button>
               </h2>
             {:else}
+              <!-- Guest view: no color dot — list color-coding is the
+                   owner's filing system, meaningless in a shared room -->
               <h2 class="zl-list-title-inner">
-                <span
-                  class="zl-list-color-dot"
-                  style="background: {list.primaryColor};"
-                  aria-hidden="true"
-                ></span>
                 <span class="zl-list-title">{list.name}</span>
               </h2>
             {/if}
             {#if isLive}
               <div
                 class="zl-live-presence"
-                aria-label="{presence.length} collaborators online"
+                title="Live — {presence.length} here"
+                aria-label="Live list. {presence.length} collaborators online"
               >
                 <span class="zl-live-presence-pulse" aria-hidden="true"></span>
-                <span class="zl-live-presence-label">Live</span>
-                <span class="zl-live-presence-count">{presence.length}</span>
                 {#if presence.length > 0}
                   <div class="zl-presence-dots" aria-hidden="true">
-                    {#each presence.slice(0, 3) as user (user.id)}
+                    {#each presence.slice(0, 4) as user (user.id)}
                       <span
                         class="zl-presence-dot"
                         title={user.avatar}
@@ -1464,6 +1460,11 @@
                       ></span>
                     {/each}
                   </div>
+                {/if}
+                {#if presence.length > 4}
+                  <span class="zl-live-presence-count" aria-hidden="true"
+                    >+{presence.length - 4}</span
+                  >
                 {/if}
               </div>
             {/if}
