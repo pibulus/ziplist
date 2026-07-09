@@ -13,7 +13,6 @@
   let sharedList = null;
   let isLoading = true;
   let error = null;
-  let showDialog = false;
 
   onMount(() => {
     if (browser) {
@@ -36,9 +35,7 @@
           return;
         }
 
-        // Show the import confirmation dialog
         isLoading = false;
-        showDialog = true;
       } catch (err) {
         console.error("Error processing shared list:", err);
         error = "That shared list needs one more try.";
@@ -46,12 +43,6 @@
       }
     }
   });
-
-  // Close dialog and go back to home
-  function handleClose() {
-    showDialog = false;
-    goto("/");
-  }
 </script>
 
 <PageLayout
@@ -61,26 +52,24 @@
   robots="noindex, nofollow, noarchive"
   ogTitle="Someone zipped you a list"
   ogDescription="Open a shared ZipList and add it to your own list stack."
-  ogImageAlt="ZipList shared list import screen"
+  ogImageAlt="ZipList shared list"
 >
   <div class="import-container">
     {#if isLoading}
       <div class="loading-container" role="status" aria-live="polite">
         <div class="loading-spinner" aria-hidden="true"></div>
-        <p class="loading-text">Processing shared list...</p>
+        <p class="loading-text">Opening shared list...</p>
       </div>
     {:else if error}
       <div class="error-container" role="alert">
         <h2>That link needs another try</h2>
         <p class="error-message">{error}</p>
         <button type="button" class="back-button" on:click={() => goto("/")}>
-          Go back home
+          Open ZipList
         </button>
       </div>
-    {/if}
-
-    {#if showDialog && sharedList}
-      <ImportConfirmationDialog {sharedList} onClose={handleClose} />
+    {:else if sharedList}
+      <ImportConfirmationDialog {sharedList} />
     {/if}
   </div>
 </PageLayout>
@@ -93,7 +82,7 @@
     align-items: center;
     justify-content: center;
     min-height: 60vh;
-    padding: 2rem;
+    padding: 1rem 0 2rem;
   }
 
   .loading-container {
@@ -107,8 +96,8 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    border: 4px solid rgba(201, 120, 255, 0.2);
-    border-top-color: rgba(201, 120, 255, 0.8);
+    border: 4px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2);
+    border-top-color: var(--zl-primary-color, #ffb000);
     animation: spin 1s infinite ease;
   }
 
@@ -136,7 +125,7 @@
     padding: 2rem;
     background: rgba(255, 251, 235, 0.86);
     border-radius: 24px;
-    border: 2px solid rgba(255, 176, 0, 0.32);
+    border: 2px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.32);
   }
 
   .error-container h2 {
@@ -152,20 +141,21 @@
   }
 
   .back-button {
-    background: white;
-    border: 2px solid rgba(201, 120, 255, 0.4);
-    color: var(--zl-primary-color, #c978ff);
+    background: var(--zl-primary-color, #ffb000);
+    border: none;
+    color: #111111;
     font-family: "Space Mono", monospace;
-    font-weight: 600;
+    font-weight: 700;
     padding: 0.75rem 1.5rem;
-    border-radius: 12px;
+    border-radius: 999px;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25);
   }
 
   .back-button:hover {
-    background: rgba(255, 245, 250, 0.9);
     transform: translateY(-2px);
-    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
+    filter: saturate(1.08) brightness(1.04);
+    box-shadow: 0 5px 15px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
   }
 </style>

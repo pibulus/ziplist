@@ -1,201 +1,147 @@
 <script>
-  import { fade, fly } from "svelte/transition";
+  import { fly } from "svelte/transition";
   import { listsService } from "$lib/services/lists/listsService";
 
   import { goto } from "$app/navigation";
 
   // Props
   export let sharedList;
-  export let onClose = () => {};
 
-  // Save the list and navigate to home
+  // Save the list and open it at home
   async function saveList() {
     if (sharedList) {
-      // Add the list using the listsService
       await listsService.addList(sharedList);
-
-      // Close dialog and navigate home
-      onClose();
       goto("/");
     }
   }
 </script>
 
-<div class="import-dialog-backdrop" transition:fade={{ duration: 200 }}>
-  <div
-    class="import-dialog"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="import-dialog-title"
-    aria-describedby={sharedList
-      ? "import-dialog-description"
-      : "import-dialog-error"}
-    in:fly={{ y: 20, duration: 250 }}
-  >
-    <div class="import-dialog-header">
-      <div class="import-dialog-heading">
-        <h2 id="import-dialog-title">
-          {sharedList ? sharedList.name : "This link needs a refresh"}
-        </h2>
-        <p class="import-subtitle">shared with you</p>
-      </div>
-      <a class="import-brand" href="/" aria-label="Open ZipList">
-        ZipList<span class="import-brand-dot" aria-hidden="true">.app</span>
-      </a>
-    </div>
+<div class="share-landing" in:fly={{ y: 16, duration: 250 }}>
+  <!-- Letterhead: the brand lives on the page, not inside the list -->
+  <a class="share-brand" href="/" aria-label="Open ZipList">
+    ZipList<span class="share-brand-suffix" aria-hidden="true">.app</span>
+  </a>
 
-    <div class="import-dialog-content">
-      {#if sharedList}
-        <ul class="preview-items">
-          {#each sharedList.items as item, i (i)}
-            <li class="preview-item {item.checked ? 'checked' : ''}">
-              <span class="preview-checkbox {item.checked ? 'checked' : ''}"
-              ></span>
-              <span class="preview-text">{item.text}</span>
-            </li>
-          {/each}
-        </ul>
-      {:else}
-        <div class="error-message">
-          <p id="import-dialog-error">That shared list needs a fresh link.</p>
-        </div>
-      {/if}
-    </div>
+  <div class="share-card">
+    <header class="share-card-header">
+      <span class="share-dot" aria-hidden="true"></span>
+      <h1 class="share-card-title">{sharedList.name}</h1>
+    </header>
 
-    <div class="import-dialog-actions">
-      {#if sharedList}
-        <p id="import-dialog-description" class="import-count">
-          {sharedList.items.length}
-          {sharedList.items.length === 1 ? "thing" : "things"}
-        </p>
-      {:else}
-        <span></span>
-      {/if}
-      <div class="import-buttons">
-        <button type="button" class="cancel-button" on:click={onClose}
-          >Not now</button
-        >
-        <button
-          type="button"
-          class="import-button"
-          on:click={saveList}
-          disabled={!sharedList}
-        >
-          Save to ZipList
-        </button>
-      </div>
-    </div>
+    <ul class="preview-items">
+      {#each sharedList.items as item, i (i)}
+        <li class="preview-item {item.checked ? 'checked' : ''}">
+          <span class="preview-checkbox {item.checked ? 'checked' : ''}"
+          ></span>
+          <span class="preview-text">{item.text}</span>
+        </li>
+      {/each}
+    </ul>
+
+    <footer class="share-card-footer">
+      <button type="button" class="save-button" on:click={saveList}>
+        Save to ZipList
+      </button>
+    </footer>
   </div>
+
+  <!-- The hook: a way onward for people who landed here from a friend -->
+  <a class="share-hook" href="/">
+    or start a list of your own
+    <span aria-hidden="true">→</span>
+  </a>
 </div>
 
 <style>
-  /* Dialog backdrop */
-  .import-dialog-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(43, 38, 32, 0.46);
+  .share-landing {
+    width: min(92vw, 30rem);
+    margin: 0 auto;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(3px);
-    padding: max(16px, env(safe-area-inset-top)) 16px
-      max(16px, env(safe-area-inset-bottom));
+    flex-direction: column;
   }
 
-  /* Dialog container — same frame family as every ZipList modal */
-  .import-dialog {
-    width: min(92vw, 30rem);
-    max-height: 88dvh;
-    overflow: hidden;
+  /* Brand letterhead above the card */
+  .share-brand {
+    align-self: flex-start;
+    margin: 0 0.35rem 0.6rem;
+    font-family: "Space Mono", monospace;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--zl-text-color-primary, #444);
+    text-decoration: none;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+  }
+
+  .share-brand:hover,
+  .share-brand:focus-visible {
+    opacity: 1;
+    outline: none;
+  }
+
+  .share-brand-suffix {
+    color: var(--zl-primary-color, #ffb000);
+  }
+
+  /* The card wears the app's card frame */
+  .share-card {
     display: flex;
     flex-direction: column;
     border-radius: var(--zl-card-border-radius, 28px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     border: var(--zl-card-border-width, 3px) solid
       var(--zl-card-border-color, rgba(255, 212, 218, 0.8));
+    box-shadow: var(--zl-card-box-shadow, 0 10px 30px rgba(0, 0, 0, 0.12));
     background: linear-gradient(
       135deg,
       var(--zl-card-bg-gradient-color-start, #fff6e5),
       var(--zl-card-bg-gradient-color-second, #ffecf0)
     );
+    overflow: hidden;
   }
 
-  /* Header: the list's name is the hero; the brand sits quietly top-right */
-  .import-dialog-header {
-    padding: 1.35rem 1.5rem 1rem;
+  /* Header band: a primary-tinted strip so the anatomy reads at a glance */
+  .share-card-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.95rem 1.35rem;
+    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
     border-bottom: 2px dashed
       var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
   }
 
-  .import-dialog-heading {
-    min-width: 0;
+  .share-dot {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--zl-primary-color, #ffb000);
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.68),
+      0 2px 6px rgba(0, 0, 0, 0.12);
   }
 
-  .import-dialog-header h2 {
+  .share-card-title {
     margin: 0;
     font-family: "Space Mono", monospace;
-    font-size: var(--font-size-lg, 1.2rem);
+    font-size: 1.15rem;
     font-weight: 800;
     line-height: 1.25;
     color: var(--zl-text-color-primary, #444444);
     overflow-wrap: break-word;
-  }
-
-  .import-subtitle {
-    margin: 0.2rem 0 0;
-    font-family: "Space Mono", monospace;
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--zl-text-color-secondary, #888);
-  }
-
-  .import-brand {
-    flex-shrink: 0;
-    font-family: "Space Mono", monospace;
-    font-size: 0.85rem;
-    font-weight: 800;
-    line-height: 1.6;
-    color: var(--zl-text-color-primary, #444);
-    text-decoration: none;
-    opacity: 0.82;
-    transition: opacity 0.2s ease;
-  }
-
-  .import-brand:hover,
-  .import-brand:focus-visible {
-    opacity: 1;
-    outline: none;
-  }
-
-  .import-brand-dot {
-    color: var(--zl-primary-color, #ffb000);
-  }
-
-  /* Dialog content */
-  .import-dialog-content {
-    padding: 1.25rem 1.5rem;
-    overflow-y: auto;
-    flex: 1;
+    min-width: 0;
   }
 
   .preview-items {
     list-style: none;
-    padding: 0;
+    padding: 1.1rem 1.35rem;
     margin: 0;
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
   }
 
-  /* Preview rows wear the real ZipList item look: white surface, accent
-     spine on the left, the family checkbox. Same clothes, smaller closet. */
+  /* Rows wear the real ZipList item look */
   .preview-item {
     display: flex;
     align-items: center;
@@ -266,100 +212,70 @@
     font-weight: 700;
   }
 
-  .error-message {
-    background: rgba(255, 251, 235, 0.78);
-    border: 1px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.32);
-    padding: 1rem;
-    border-radius: 16px;
-    color: #4b5563;
-    font-family: "Space Mono", monospace;
-    text-align: center;
+  /* Footer band mirrors the header — one clear action, full width */
+  .share-card-footer {
+    padding: 0.95rem 1.35rem;
+    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+    border-top: 2px dashed
+      var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
   }
 
-  /* Footer: a quiet fact on the left, the choices on the right */
-  .import-dialog-actions {
-    padding: 1rem 1.5rem 1.25rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    border-top: 2px dashed var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
-  }
-
-  .import-count {
-    margin: 0;
-    font-family: "Space Mono", monospace;
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--zl-text-color-secondary, #888);
-    white-space: nowrap;
-  }
-
-  .import-buttons {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
-  .cancel-button,
-  .import-button {
-    min-height: 44px;
-    padding: 0.6rem 1.15rem;
+  .save-button {
+    width: 100%;
+    min-height: 52px;
+    border: none;
     border-radius: 999px;
+    background: var(--zl-primary-color, #ffb000);
+    color: #111111;
     font-family: "Space Mono", monospace;
-    font-weight: 700;
-    font-size: 0.88rem;
+    font-size: 1rem;
+    font-weight: 800;
     cursor: pointer;
     transition: all 0.2s ease;
-    white-space: nowrap;
-  }
-
-  .cancel-button {
-    background: transparent;
-    border: 0;
-    color: var(--zl-text-color-secondary, #666666);
-    opacity: 0.8;
-  }
-
-  .cancel-button:hover,
-  .cancel-button:focus-visible {
-    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
-    color: var(--zl-text-color-primary, #444);
-    opacity: 1;
-    outline: none;
-  }
-
-  .import-button {
-    background: var(--zl-primary-color, #ffb000);
-    border: none;
-    color: #111111;
     box-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25);
   }
 
-  .import-button:hover:not(:disabled),
-  .import-button:focus-visible:not(:disabled) {
+  .save-button:hover,
+  .save-button:focus-visible {
     transform: translateY(-2px);
     filter: saturate(1.08) brightness(1.04);
     box-shadow: 0 5px 15px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
     outline: none;
   }
 
-  .import-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .save-button:active {
+    transform: translateY(0) scale(0.99);
   }
 
-  /* Responsive styles */
+  /* The onward path, quiet under the card */
+  .share-hook {
+    align-self: center;
+    margin-top: 1rem;
+    font-family: "Space Mono", monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--zl-text-color-secondary, #666);
+    text-decoration: none;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+  }
+
+  .share-hook:hover,
+  .share-hook:focus-visible {
+    color: var(--zl-text-color-primary, #444);
+    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+    outline: none;
+  }
+
   @media (max-width: 480px) {
-    .import-dialog-header {
-      padding: 1.1rem 1.15rem 0.85rem;
+    .share-card-header,
+    .share-card-footer {
+      padding: 0.8rem 1rem;
     }
 
-    .import-dialog-content {
-      padding: 1rem 1.15rem;
-    }
-
-    .import-dialog-actions {
-      padding: 0.85rem 1.15rem 1rem;
+    .preview-items {
+      padding: 0.9rem 1rem;
     }
 
     .preview-item {
@@ -368,12 +284,6 @@
 
     .preview-text {
       font-size: 0.98rem;
-    }
-
-    .cancel-button,
-    .import-button {
-      padding: 0.55rem 0.95rem;
-      font-size: 0.84rem;
     }
   }
 </style>
