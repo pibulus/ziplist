@@ -218,3 +218,18 @@ Live-audited at 390×844, 820×1180, 1440×900 with Playwright against dev.
 - /live/[roomId] btn-primary flat (was amber→teal + red hover shadow).
 - PwaDeviceSetup: flat primary button + progress (was gradient + white
   text). manifest.json already cream.
+
+## Stacey + Vince agent pass — 2026-07-09 late
+
+Applied: draft cancel X was an unstyled orphan (class referenced
+nonexistent zl-delete-button) → ghost twin; BrandMark on live error
+state; CTA min-width clamped for 320px phones; max-height:700px hero
+compression; Contributor button de-gradiented + hard shadow gated to
+chunky; focus theme egg-yolk leftovers → peach family; transition
+stragglers (0.25s/0.16s) → --zl-transition-fast; hero margins to 8/16
+grid.
+
+Deferred (real debt, not first-impression): shadow system consolidation
+to ~4 elevation tokens (currently ~9 bespoke treatments; two hardcoded
+black/teal outliers in SingleList.css ~589/639); typography.css token
+migration for hero/CTA (hand-rolled clamps compete with --font-size-*).
