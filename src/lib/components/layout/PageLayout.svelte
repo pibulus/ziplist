@@ -209,6 +209,12 @@
     }
   }
 
+  /* List-first docks the record button above the footer — reserve the
+     extra lane so the list's tail never hides beneath it. */
+  .page-shell.list-first-shell {
+    padding-bottom: calc(11rem + env(safe-area-inset-bottom)) !important;
+  }
+
   /* Short viewports (SE-class phones, landscape): compress the hero
      stack so the record button never needs a scroll to reach. */
   @media (max-height: 700px) {

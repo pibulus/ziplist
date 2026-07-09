@@ -872,9 +872,29 @@
 {/if}
 
 <style>
+  /* List-first: the voice button docks above the footer like a compose
+     bar — thumb zone on phones, grounded instead of orphaned top-middle
+     on desktop. Normal mode keeps it in the hero flow. */
   .list-first-record-button {
-    margin-bottom: 1.25rem;
-    margin-top: 0;
+    position: fixed;
+    bottom: calc(4rem + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    margin: 0;
+    width: min(92vw, 380px);
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.14));
+  }
+
+  /* The picker dots dock too, just above the pill — both are chrome in
+     list-first, so neither fights the layout for its spot */
+  :global(.list-first-shell .pagination-dots) {
+    position: fixed;
+    bottom: calc(9.9rem + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 39;
+    margin: 0;
   }
 </style>
 
