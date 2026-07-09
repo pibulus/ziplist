@@ -56,7 +56,7 @@
   />
 
   <h1
-    class="mb-1 text-5xl font-black tracking-normal text-center cursor-default select-none staggered-text sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
+    class="mb-1 text-[clamp(3rem,9vmin_+_1.1rem,8rem)] font-black tracking-normal text-center cursor-default select-none staggered-text"
     style="font-weight: 900; letter-spacing: 0; font-feature-settings: 'kern' 1; font-kerning: normal; font-variation-settings: 'wght' 900, 'opsz' 32;"
     aria-label={title}
   >
