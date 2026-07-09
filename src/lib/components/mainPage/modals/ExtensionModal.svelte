@@ -22,7 +22,8 @@
     </form>
 
     <div class="animate-fadeUp space-y-4">
-      <div class="flex items-center gap-3 mb-1">
+      <!-- pr-10 keeps the title clear of the absolute close X -->
+      <div class="flex items-center gap-3 mb-1 pr-10">
         <div
           class="w-9 h-9 rounded-full flex items-center justify-center shadow-sm border border-purple-200/60 overflow-hidden"
         >

@@ -48,7 +48,7 @@
 
       <h1
         id="intro_modal_title"
-        class="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-gray-900"
+        class="text-center text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-gray-900"
       >
         Speak up a list, <br /> lickety split.
       </h1>

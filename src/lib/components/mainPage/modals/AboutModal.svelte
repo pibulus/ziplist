@@ -23,7 +23,8 @@
     </form>
 
     <div class="animate-fadeUp space-y-4">
-      <div class="flex items-center gap-3 mb-1">
+      <!-- pr-10 keeps the title clear of the absolute close X -->
+      <div class="flex items-center gap-3 mb-1 pr-10">
         <!-- Mascot slot (skeleton) — the real ZipList dude, not an emoji. -->
         <div class="about-mascot-slot shrink-0">
           <Mascot interactive={false} aura={false} />
