@@ -210,10 +210,14 @@ export class Weightless {
 
   scheduleTone(context, cue, note, masterNode) {
     const voice = this.voices[note.voice] || this.voices.tap;
-    const startAt =
+    // Clamp: on a fresh AudioContext currentTime is 0 and negative jitter
+    // would make the time invalid (RangeError) and silence the cue.
+    const startAt = Math.max(
+      context.currentTime,
       context.currentTime +
-      (note.offset || 0) +
-      this.randomBetween(-0.005, 0.005);
+        (note.offset || 0) +
+        this.randomBetween(-0.005, 0.005),
+    );
     const duration = note.duration || 0.05;
 
     // Add detune jitter based on cue settings
