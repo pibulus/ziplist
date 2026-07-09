@@ -55,11 +55,11 @@
 </script>
 
 <PageLayout
-  title="Import Shared List | ZipList"
+  title="A list for you | ZipList"
   description="Open a ZipList share link and add the shared list to your own lists."
   canonical="https://ziplist.app/import"
   robots="noindex, nofollow, noarchive"
-  ogTitle="Import a Shared ZipList"
+  ogTitle="Someone zipped you a list"
   ogDescription="Open a shared ZipList and add it to your own list stack."
   ogImageAlt="ZipList shared list import screen"
 >

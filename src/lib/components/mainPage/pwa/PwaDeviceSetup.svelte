@@ -285,11 +285,7 @@
   .progress-fill {
     display: block;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      var(--zl-primary-color, #ffcc33),
-      var(--zl-accent-color, #ff6ac2)
-    );
+    background: var(--zl-primary-color, #ffb000);
     transition: width 0.2s ease;
   }
 
@@ -313,12 +309,8 @@
 
   .setup-button {
     padding: 0 1rem;
-    color: #fff;
-    background: linear-gradient(
-      135deg,
-      var(--zl-accent-color, #ff6ac2),
-      var(--zl-primary-color, #ffcc33)
-    );
+    color: #111111;
+    background: var(--zl-primary-color, #ffb000);
     box-shadow: 0 6px 14px rgba(var(--zl-primary-color-rgb, 255, 204, 51), 0.2);
   }
 

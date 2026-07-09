@@ -36,22 +36,45 @@
     in:fly={{ y: 20, duration: 250 }}
   >
     <div class="import-dialog-header">
-      <h2 id="import-dialog-title">Import Shared List</h2>
+      <div class="import-dialog-heading">
+        <p class="import-eyebrow" aria-hidden="true">
+          Someone zipped you a list
+        </p>
+        <h2 id="import-dialog-title">
+          {sharedList ? sharedList.name : "This link needs a refresh"}
+        </h2>
+      </div>
       <button
         type="button"
         class="close-button"
         on:click={onClose}
-        aria-label="Close dialog">×</button
+        aria-label="Close dialog"
       >
+        <svg
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <div class="import-dialog-content">
       {#if sharedList}
         <div class="import-preview">
-          <h3 id="import-dialog-description">
-            "{sharedList.name}" ({sharedList.items.length}
-            {sharedList.items.length === 1 ? "item" : "items"})
-          </h3>
+          <p id="import-dialog-description" class="import-count">
+            {sharedList.items.length}
+            {sharedList.items.length === 1 ? "thing" : "things"} to tick off
+          </p>
 
           <ul class="preview-items">
             {#each sharedList.items as item, i (i)}
@@ -74,7 +97,7 @@
 
     <div class="import-dialog-actions">
       <button type="button" class="cancel-button" on:click={onClose}
-        >Cancel</button
+        >Not now</button
       >
       <button
         type="button"
@@ -82,7 +105,7 @@
         on:click={importList}
         disabled={!sharedList}
       >
-        Import List
+        Add to my lists
       </button>
     </div>
   </div>
@@ -107,7 +130,7 @@
   /* Dialog container */
   .import-dialog {
     background: white;
-    border-radius: 24px;
+    border-radius: var(--zl-card-border-radius, 28px);
     width: 90%;
     max-width: 480px;
     max-height: 90vh;
@@ -115,7 +138,8 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    border: 3px solid var(--zl-card-border-color, rgba(255, 212, 218, 0.8));
+    border: var(--zl-card-border-width, 3px) solid
+      var(--zl-card-border-color, rgba(255, 212, 218, 0.8));
     background: linear-gradient(
       135deg,
       var(--zl-card-bg-gradient-color-start, #fff6e5),
@@ -133,22 +157,36 @@
       var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
   }
 
+  .import-dialog-heading {
+    min-width: 0;
+  }
+
+  .import-eyebrow {
+    margin: 0 0 0.3rem;
+    font-family: "Space Mono", monospace;
+    font-size: var(--font-size-xs, 0.75rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--zl-text-color-secondary, #888);
+  }
+
   .import-dialog-header h2 {
     margin: 0;
     font-family: "Space Mono", monospace;
-    font-size: 1.5rem;
+    font-size: var(--font-size-xl, 1.4rem);
     color: var(--zl-text-color-primary, #444444);
+    overflow-wrap: break-word;
   }
 
   .close-button {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(201, 120, 255, 0.4);
-    color: var(--zl-primary-color, #c978ff);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    line-height: 1;
+    background: transparent;
+    border: 0;
+    color: var(--zl-text-color-secondary, #666);
+    opacity: 0.72;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -156,9 +194,12 @@
     transition: all 0.2s ease;
   }
 
-  .close-button:hover {
-    background: rgba(255, 235, 245, 0.9);
-    transform: scale(1.1);
+  .close-button:hover,
+  .close-button:focus-visible {
+    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+    color: var(--zl-text-color-primary, #444);
+    opacity: 1;
+    outline: none;
   }
 
   /* Dialog content */
@@ -168,12 +209,12 @@
     flex: 1;
   }
 
-  .import-preview h3 {
+  .import-count {
     font-family: "Space Mono", monospace;
-    font-size: 1.2rem;
-    color: var(--zl-text-color-primary, #444444);
-    margin-top: 0;
-    margin-bottom: 1rem;
+    font-size: var(--font-size-xs, 0.8rem);
+    font-weight: 700;
+    color: var(--zl-text-color-secondary, #888);
+    margin: 0 0 0.85rem;
   }
 
   .preview-items {
@@ -190,7 +231,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.85);
     border-radius: 12px;
     border: 1px solid var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
   }
@@ -200,21 +241,36 @@
   }
 
   .preview-checkbox {
+    position: relative;
     width: 24px;
     height: 24px;
     border-radius: 8px;
-    border: 2px solid rgba(201, 120, 255, 0.5);
-    background: rgba(255, 255, 255, 0.8);
+    border: var(--zl-checkbox-border, 2px solid rgba(255, 176, 0, 0.5));
+    background: var(--zl-checkbox-bg, rgba(255, 255, 255, 0.8));
     flex-shrink: 0;
   }
 
   .preview-checkbox.checked {
     background: linear-gradient(
       145deg,
-      var(--zl-checkbox-checked-gradient-start, #e9a8ff) 0%,
-      var(--zl-checkbox-checked-gradient-end, #c978ff) 100%
+      var(--zl-checkbox-checked-gradient-start, #ffd680) 0%,
+      var(--zl-checkbox-checked-gradient-end, #ffb000) 100%
     );
     border-color: transparent;
+  }
+
+  .preview-checkbox.checked::before {
+    content: "";
+    position: absolute;
+    top: 44%;
+    left: 50%;
+    width: 38%;
+    height: 20%;
+    border-left: 2.5px solid white;
+    border-bottom: 2.5px solid white;
+    border-radius: 1px;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
   }
 
   .preview-text {
@@ -245,7 +301,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    border-top: 1px solid rgba(201, 120, 255, 0.1);
+    border-top: 1px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
     background: rgba(255, 255, 255, 0.5);
   }
 
@@ -261,7 +317,7 @@
 
   .cancel-button {
     background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(201, 120, 255, 0.3);
+    border: 1px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
     color: var(--zl-text-color-secondary, #666666);
   }
 
@@ -271,19 +327,17 @@
   }
 
   .import-button {
-    background: linear-gradient(
-      135deg,
-      var(--zl-checkbox-checked-gradient-start, #e9a8ff) 0%,
-      var(--zl-checkbox-checked-gradient-end, #c978ff) 100%
-    );
+    background: var(--zl-primary-color, #ffb000);
     border: none;
-    color: white;
-    box-shadow: 0 3px 8px rgba(201, 120, 255, 0.2);
+    color: #111111;
+    font-weight: 700;
+    box-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25);
   }
 
   .import-button:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(201, 120, 255, 0.3);
+    filter: saturate(1.08) brightness(1.04);
+    box-shadow: 0 5px 15px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
   }
 
   .import-button:disabled {
@@ -303,7 +357,7 @@
     }
 
     .import-dialog-header h2 {
-      font-size: 1.3rem;
+      font-size: var(--font-size-lg, 1.2rem);
     }
 
     .import-dialog-content,

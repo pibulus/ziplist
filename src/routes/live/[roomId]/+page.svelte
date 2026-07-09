@@ -221,7 +221,7 @@
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #ffb000 0%, #2dd4bf 100%);
+    background: var(--zl-primary-color, #ffb000);
     color: #111111;
     border: none;
     border-radius: 16px;
@@ -230,12 +230,13 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 3px 8px rgba(255, 176, 0, 0.24);
+    box-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.24);
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+    filter: saturate(1.08) brightness(1.04);
+    box-shadow: 0 4px 12px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.35);
   }
 
   .live-status-sr {
