@@ -164,3 +164,30 @@ documented plural form.
 - `npm run lint` — passes (prettier + eslint; was failing on main).
 - Not run: real-device pass, live two-device sync, sandbox checkout — these
   need hardware/browser/Square-sandbox and are the top of NEXT.md.
+
+## Follow-up pass — 2026-07-09 (UX/ergonomics + two latent bugs)
+
+Live-audited at 390×844, 820×1180, 1440×900 with Playwright against dev.
+
+- **Backdrop ate every tap inside Intro/About/Extension modals.** The custom
+  `.modal-backdrop` (fixed, z:0, full viewport) painted above the z:auto
+  `.modal-box`, so "Zip it up" never ran its handler — the modal only closed
+  because the backdrop itself is a close button (intro therefore never marked
+  seen). `.modal-box` now stacks at z:1. Settings modal was unaffected (own
+  layering).
+- **Page could freeze forever after closing a modal.** modalService's unlock
+  hung off one fragile `once` close-listener; orphan it (node replacement,
+  modal→modal switch racing the 220ms close timer) and the body stayed
+  `position:fixed`. Replaced with a document-level capture listener that
+  force-unlocks when the last dialog closes; switches no longer clobber the
+  scroll snapshot.
+- **Sound cues could throw on a fresh AudioContext** (negative humanize
+  jitter at currentTime 0 → `setValueAtTime` RangeError). Clamped.
+- **Options modal reorganized**: Vibe first (Chunky Mode as its sibling),
+  FLOW for behavior toggles, Contributor behind a dashed divider; 58rem cap
+  (iPad shows it whole), scroll resets between opens, slimmer close X.
+- **Item-row family DNA**: reorder ≡ and delete × are twin 44px ghost
+  buttons; checked boxes draw a real white tick. Delete circle no longer
+  outweighs the checkbox.
+- **All DaisyUI modals `modal-middle`** — intro was bottom-docked on phones.
+  Dead bottom-sheet CSS + dead delete-button theme vars pruned.
