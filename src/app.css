@@ -239,17 +239,17 @@ dialog.modal::backdrop {
   animation: zl-modal-backdrop-in 180ms ease-out both;
 }
 
-/* Custom modal styling — skeleton frame: 28rem max-width, 1.5rem radius,
-   fluid padding. All DaisyUI modals are modal-middle (centered card on every
-   form factor). */
+/* Custom modal styling — ONE modal frame family-wide: 30rem max-width,
+   card-radius token (follows chunky mode), fluid padding. All DaisyUI
+   modals are modal-middle (centered card on every form factor). */
 .modal-box {
   max-height: 85vh !important;
   overflow-y: auto !important;
   margin: 1rem auto !important;
-  width: min(95%, 28rem) !important;
-  max-width: 28rem !important;
+  width: min(92vw, 30rem) !important;
+  max-width: 30rem !important;
   padding: clamp(1.25rem, 4vw, 2rem) !important;
-  border-radius: 1.5rem !important;
+  border-radius: var(--zl-card-border-radius, 28px) !important;
   transform-origin: center;
   /* Must stack above the fixed .modal-backdrop (z-index: 0) below — with
      z-index auto the later-DOM backdrop paints on top and eats every click

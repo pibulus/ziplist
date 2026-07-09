@@ -310,7 +310,7 @@
   .zl-code-copy-button {
     background: rgba(255, 255, 255, 0.86);
     border: 2px solid #000000;
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: 3px 3px 0 #000000;
     color: #111827;
     cursor: pointer;

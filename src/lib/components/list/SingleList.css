@@ -190,15 +190,22 @@
   /* Shadow for depth */
   box-shadow: var(--zl-card-box-shadow);
 
-  background: linear-gradient(
-    var(--zl-card-bg-gradient-angle),
-    var(--zl-card-bg-gradient-color-start),
-    var(--zl-card-bg-gradient-color-second),
-    var(--zl-card-bg-gradient-color-mid),
-    var(--zl-card-bg-gradient-color-fourth),
-    var(--zl-card-bg-gradient-color-end)
-  );
-  background-size: var(--zl-card-bg-gradient-size);
+  background:
+    linear-gradient(
+      var(--zl-card-veil, rgba(255, 255, 255, 0.3)),
+      var(--zl-card-veil, rgba(255, 255, 255, 0.3))
+    ),
+    linear-gradient(
+      var(--zl-card-bg-gradient-angle),
+      var(--zl-card-bg-gradient-color-start),
+      var(--zl-card-bg-gradient-color-second),
+      var(--zl-card-bg-gradient-color-mid),
+      var(--zl-card-bg-gradient-color-fourth),
+      var(--zl-card-bg-gradient-color-end)
+    );
+  background-size:
+    100% 100%,
+    var(--zl-card-bg-gradient-size);
   animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease
     infinite;
 }
@@ -279,7 +286,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.55rem;
-  margin-bottom: 0.7rem;
+  padding-inline: 0.15rem;
+  margin-bottom: 0.85rem;
   min-height: 44px;
 }
 
@@ -303,7 +311,7 @@
 .zl-list-title-inner {
   display: flex;
   align-items: center;
-  gap: 0.42rem;
+  gap: 0.55rem;
   min-width: 0;
   max-width: 100%;
 }
@@ -348,8 +356,8 @@
   color: inherit;
   display: inline-flex;
   align-items: center;
-  padding: 0.16rem 0.45rem;
-  margin: -0.16rem -0.45rem;
+  padding: 0.16rem 0.55rem 0.16rem 0.3rem;
+  margin: -0.16rem 0;
   transition: var(--zl-transition-fast);
 }
 
@@ -374,13 +382,10 @@
   text-overflow: ellipsis;
 }
 
-.zl-list-title-hint {
+/* Default names are placeholders — present but quiet, inviting a rename */
+.zl-list-title.is-default {
   color: var(--zl-text-color-secondary);
-  font-family: "Space Mono", monospace;
-  font-size: 0.68rem;
-  font-weight: 800;
-  opacity: 0.72;
-  text-transform: uppercase;
+  opacity: 0.85;
 }
 
 .zl-list-actions {
@@ -449,12 +454,8 @@
   min-width: 44px;
   height: 44px;
   min-height: 44px;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 0;
-  font-family: "Space Mono", monospace;
-  font-size: 0.92rem;
-  font-weight: 900;
-  letter-spacing: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -462,46 +463,32 @@
   white-space: nowrap;
 }
 
+/* Ghost icon buttons — one quiet action language for the whole card:
+   header trio up top, ≡/× twins in the rows. Icons carry the meaning,
+   tooltips carry the words. */
 .zl-add-list-button,
 .zl-live-button,
 .zl-share-button {
-  border: 1px solid rgba(0, 188, 212, 0.2);
-  background: rgba(255, 255, 255, 0.78);
-  color: var(--zl-text-color-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 0;
+  background: transparent;
+  color: var(--zl-text-color-secondary);
+  opacity: 0.72;
+  box-shadow: none;
   transition: var(--zl-transition-fast);
 }
 
-.zl-add-list-button {
-  border-color: rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0.24);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.92),
-    rgba(var(--zl-primary-color-rgb, 255, 171, 119), 0.18)
-  );
+.zl-header-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .zl-live-button.locked {
-  border-color: rgba(0, 0, 0, 0.16);
-  background: rgba(255, 255, 255, 0.58);
-  color: var(--zl-text-color-secondary);
+  opacity: 0.45;
 }
 
 .zl-live-button:disabled {
   cursor: progress;
-  opacity: 0.72;
-}
-
-.zl-add-list-button .add-icon {
-  font-size: 1.18rem;
-  line-height: 1;
-}
-
-.zl-share-button .share-icon,
-.zl-live-button .live-icon {
-  display: inline-flex;
-  line-height: 1;
-  transform: translateY(-1px);
+  opacity: 0.5;
 }
 
 .zl-add-list-button:hover:not(:disabled),
@@ -510,9 +497,9 @@
 .zl-share-button:hover:not(:disabled),
 .zl-live-button:focus-visible:not(:disabled),
 .zl-share-button:focus-visible:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 188, 212, 0.35);
+  background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+  color: var(--zl-text-color-primary);
+  opacity: 1;
   outline: none;
 }
 
@@ -583,7 +570,7 @@
   .zl-live-button,
   .zl-add-list-button,
   .zl-share-button {
-    border-radius: 14px;
+    border-radius: 16px;
   }
 
   .zl-list-title {
@@ -877,28 +864,6 @@
       rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.7)
     );
   border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
-}
-
-.zl-item::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 235, 246, 0.3) 100%
-  );
-  border-radius: 0 18px 18px 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.zl-item:hover::after {
-  opacity: 1;
 }
 
 .zl-item.checked {

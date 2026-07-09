@@ -187,7 +187,7 @@
     align-items: center;
     background: rgba(255, 255, 255, 0.82);
     border: 2px solid rgba(255, 176, 0, 0.42);
-    border-radius: 22px;
+    border-radius: 24px;
     box-shadow:
       0 10px 24px rgba(255, 176, 0, 0.16),
       inset 0 0 0 2px rgba(255, 255, 255, 0.72);

@@ -386,12 +386,12 @@
   .zl-settings-card {
     position: relative;
     z-index: 1001;
-    width: min(92vw, 480px);
+    width: min(92vw, 30rem);
     max-height: min(88dvh, 58rem);
     background: var(--zl-card-bg-gradient-color-start, #fff);
     border: var(--zl-card-border-width, 4px) solid
       var(--zl-card-border-color, #000);
-    border-radius: var(--zl-card-border-radius, 32px);
+    border-radius: var(--zl-card-border-radius, 28px);
     box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(0, 0, 0, 0.1));
     padding: 2rem;
     overflow: hidden;
@@ -438,7 +438,7 @@
 
   .zl-settings-title {
     font-family: "Space Mono", monospace;
-    font-size: 1.5rem;
+    font-size: var(--font-size-xl, 1.5rem);
     font-weight: 900;
     color: var(--zl-text-color-primary, #000);
     margin: 0;
@@ -497,7 +497,7 @@
 
   .zl-section-label {
     font-family: "Space Mono", monospace;
-    font-size: 0.85rem;
+    font-size: var(--font-size-xs, 0.8rem);
     font-weight: 800;
     text-transform: uppercase;
     color: var(--zl-text-color-disabled, #999);
@@ -530,7 +530,7 @@
   }
 
   .zl-setting-desc {
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs, 0.75rem);
     color: var(--zl-text-color-secondary, #666);
     margin: 0.25rem 0 0 0;
   }
@@ -606,7 +606,7 @@
     cursor: pointer;
     flex-shrink: 0;
     font-family: "Space Mono", monospace;
-    font-size: 0.78rem;
+    font-size: var(--font-size-xs, 0.78rem);
     font-weight: 900;
     min-height: 44px;
     padding: 0.35rem 0.85rem;
@@ -639,7 +639,7 @@
     transition: all 0.2s;
     font-family: "Space Mono", monospace;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: var(--font-size-xs, 0.8rem);
     display: flex;
     flex-direction: column;
     gap: 0.45rem;

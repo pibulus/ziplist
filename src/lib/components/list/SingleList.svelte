@@ -1430,26 +1430,12 @@
                       style="background: {list.primaryColor};"
                       aria-hidden="true"
                     ></span>
-                    {#if isDefaultName}
-                      <span class="zl-list-title-hint" aria-hidden="true"
-                        >Edit</span
-                      >
-                    {:else}
-                      <span class="zl-list-title">
-                        {list.name}
-                      </span>
-                    {/if}
+                    <span class="zl-list-title" class:is-default={isDefaultName}>
+                      {list.name}
+                    </span>
                   </span>
                 </button>
               </h2>
-            {:else if isDefaultName}
-              <div class="zl-list-title-inner" aria-hidden="true">
-                <span
-                  class="zl-list-color-dot"
-                  style="background: {list.primaryColor};"
-                  aria-hidden="true"
-                ></span>
-              </div>
             {:else}
               <h2 class="zl-list-title-inner">
                 <span
@@ -1494,7 +1480,20 @@
             title="Create a new list"
             aria-label="Create a new list"
           >
-            <span class="add-icon" aria-hidden="true">+</span>
+            <svg
+              class="zl-header-icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
           </button>
         {/if}
         {#if liveFeatureAvailable}
@@ -1517,9 +1516,23 @@
                     list.name || "this list"
                   }`}
             >
-              <span class="live-icon" aria-hidden="true"
-                >{$isContributor ? (isMakingLive ? "..." : "🔴") : "↗"}</span
+              <svg
+                class="zl-header-icon"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               >
+                <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+                <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
+                <circle cx="12" cy="12" r="2"></circle>
+                <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+                <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path>
+              </svg>
             </button>
           {/if}
         {/if}
@@ -1533,7 +1546,24 @@
             ? `Share live link for ${list.name || "this list"}`
             : `Share ${list.name || "this list"}`}
         >
-          <span class="share-icon" aria-hidden="true">🔗</span>
+          <svg
+            class="zl-header-icon"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            ></path>
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            ></path>
+          </svg>
         </button>
       </div>
     </div>

@@ -253,7 +253,7 @@
   .zl-contributor-card {
     position: relative;
     z-index: 1001;
-    width: min(92vw, 28rem);
+    width: min(92vw, 30rem);
     max-height: min(88dvh, 42rem);
     overflow-y: auto;
     border: var(--zl-card-border-width, 4px) solid var(--zl-card-border-color, #000000);
@@ -515,7 +515,7 @@
 
   @media (max-width: 420px) {
     .zl-contributor-card {
-      border-radius: 22px;
+      border-radius: 24px;
       padding: 1rem;
       width: min(94vw, 28rem);
     }

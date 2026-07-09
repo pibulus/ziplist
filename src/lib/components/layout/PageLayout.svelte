@@ -120,6 +120,9 @@
     outline: none;
   }
 
+  /* The cream ground is the brand's constant — themes express through the
+     card, mascot, and accents, never by repainting the page. One stable
+     ground keeps theme-switching calm instead of a full costume change. */
   :global(.bg-gradient-mesh) {
     background-color: #fff6e6;
     background-image: radial-gradient(
@@ -131,40 +134,6 @@
     );
     /* background-attachment: fixed is intentionally omitted —
        iOS Safari renders it as a flat color on non-viewport elements. */
-  }
-
-  /* Page background adapts to cool/dark themes */
-  :global(html[data-theme="chill"] .bg-gradient-mesh) {
-    background-color: #e5f9f6;
-    background-image: radial-gradient(
-      circle at center,
-      #e5f9f6 0%,
-      #e5f9f6 40%,
-      #d0f0f0 70%,
-      #b7e5e5 100%
-    );
-  }
-
-  :global(html[data-theme="zen"] .bg-gradient-mesh) {
-    background-color: #f4eeff;
-    background-image: radial-gradient(
-      circle at center,
-      #f4eeff 0%,
-      #f4eeff 40%,
-      #ebe0ff 70%,
-      #d0bfff 100%
-    );
-  }
-
-  :global(html[data-theme="nocturne"] .bg-gradient-mesh) {
-    background-color: #dbeaf3;
-    background-image: radial-gradient(
-      circle at center,
-      #dbeaf3 0%,
-      #dbeaf3 40%,
-      #c8dde9 70%,
-      #b5cfe0 100%
-    );
   }
 
   .page-shell {
@@ -265,18 +234,6 @@
     footer .container > div:last-child {
       margin-right: 1rem;
     }
-  }
-
-  :global(html[data-theme="chill"]) footer {
-    --footer-surface-rgb: 229, 249, 246;
-  }
-
-  :global(html[data-theme="zen"]) footer {
-    --footer-surface-rgb: 244, 238, 255;
-  }
-
-  :global(html[data-theme="nocturne"]) footer {
-    --footer-surface-rgb: 219, 234, 243;
   }
 
   /* Desktop layout - start from top */

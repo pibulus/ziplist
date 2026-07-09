@@ -169,7 +169,7 @@
       : `${buttonLabel}. Create a new list`;
 
   $: baseButtonClasses =
-    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md focus:outline focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
+    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[420px] px-6 py-5 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
 
   $: clipboardSuccessClasses = clipboardSuccess
     ? "notification-pulse border border-purple-200 bg-purple-50"
@@ -186,7 +186,7 @@
 <div class="fixed-button-container">
   {#if transcribing}
     <div
-      class="progress-container h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full bg-amber-200 shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
+      class="progress-container h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
       role="progressbar"
       aria-label="List-making progress"
       aria-valuenow={progress}
@@ -195,7 +195,7 @@
       aria-valuetext={`Making list ${Math.round(progress)} percent complete`}
       >
         <div
-        class="flex items-center justify-center h-full transition-all duration-300 progress-bar bg-gradient-to-r from-amber-400 to-cyan-300"
+        class="flex items-center justify-center h-full transition-all duration-300 progress-bar"
         style="width: {progress}%;"
       >
         <span class="text-white font-bold z-10 relative">Ziplisting...</span>
@@ -205,7 +205,6 @@
     <button
       bind:this={recordButtonElement}
       class="{baseButtonClasses} {clipboardSuccessClasses}"
-      class:has-list-button={hasActiveList && !recording}
       class:pulse-subtle={!recording && !hasActiveList && !clipboardSuccess}
       class:recording-active={recording}
       class:audio-reactive={recording}
@@ -288,16 +287,13 @@
     transition-property:
       transform, box-shadow, background-image, background-position;
 
-    /* Soft tangerine to pink gradient */
-    background-image: linear-gradient(
-      to right,
-      rgba(251, 191, 36, 0.95),
-      rgba(249, 168, 212, 0.8)
-    );
+    /* Flat theme primary — the CTA is a color, not a gradient. Juice
+       comes from motion, glow, and the mascot; the button stays solid. */
+    background-color: var(--zl-primary-color, #ffb000);
 
     /* Better default shadow */
     box-shadow:
-      0 4px 6px -1px rgba(251, 191, 36, 0.2),
+      0 4px 6px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2),
       0 2px 4px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
@@ -350,51 +346,30 @@
   .record-button:focus {
     outline: none;
     box-shadow:
-      0 0 0 3px rgba(251, 191, 36, 0.4),
+      0 0 0 3px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.4),
       0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   /* Enhanced focus ring for keyboard navigation */
   .record-button:focus-visible {
-    outline: 3px solid #ffd65c;
+    outline: 3px solid var(--zl-primary-color, #ffb000);
     outline-offset: 2px;
   }
 
-  /* Hover state */
+  /* Hover state — same gradient, just brighter and lifted. One color
+     story per theme; juice comes from motion and light, not a new hue. */
   .record-button:hover:not(:disabled) {
     transform: translateY(-1px) scale(1.02);
     box-shadow:
-      0 6px 10px -2px rgba(251, 191, 36, 0.25),
+      0 6px 10px -2px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25),
       0 4px 6px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
-  /* Non-recording hover effect - softer gradient with subtle pink */
   .record-button:not(.recording-active):hover:not(:disabled) {
-    background-image: linear-gradient(
-      to right,
-      rgba(252, 211, 77, 0.9),
-      rgba(244, 114, 182, 0.8)
-    );
+    filter: saturate(1.08) brightness(1.04);
     transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(251, 191, 36, 0.3);
-  }
-
-  /* Styles for when we have an active list - tangerine to pink gradient */
-  .has-list-button {
-    background-image: linear-gradient(
-      to right,
-      rgba(251, 191, 36, 0.95),
-      rgba(244, 114, 182, 0.7)
-    );
-  }
-
-  .has-list-button:hover:not(:disabled) {
-    background-image: linear-gradient(
-      to right,
-      rgba(251, 191, 36, 1),
-      rgba(236, 72, 153, 0.8)
-    );
+    box-shadow: 0 8px 15px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
   }
 
   /* Audio visualization pulse effect - Enhanced */
@@ -413,9 +388,15 @@
     border-radius: inherit;
     background: radial-gradient(
       circle at center,
-      rgba(251, 146, 60, calc(0.5 * var(--pulse-intensity))),
-      rgba(249, 168, 212, calc(0.7 * var(--pulse-intensity))),
-      rgba(251, 191, 36, 0)
+      rgba(
+        var(--zl-primary-color-rgb, 255, 176, 0),
+        calc(0.5 * var(--pulse-intensity))
+      ),
+      rgba(
+        var(--zl-accent-color-rgb, 255, 176, 0),
+        calc(0.55 * var(--pulse-intensity))
+      ),
+      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0)
     );
     opacity: calc(0.9 * var(--pulse-intensity));
     z-index: 1; /* Increased z-index to make it more visible */
@@ -427,27 +408,29 @@
   .recording-active::before {
     box-shadow:
       0 0 calc(20px * var(--pulse-intensity)) calc(8px * var(--pulse-intensity))
-        rgba(249, 168, 212, calc(0.5 * var(--pulse-intensity))),
+        rgba(
+          var(--zl-accent-color-rgb, 255, 176, 0),
+          calc(0.4 * var(--pulse-intensity))
+        ),
       0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity))
-        rgba(251, 191, 36, calc(0.6 * var(--pulse-intensity)));
+        rgba(
+          var(--zl-primary-color-rgb, 255, 176, 0),
+          calc(0.6 * var(--pulse-intensity))
+        );
   }
 
   /* Active/pressed state */
   .record-button:active:not(:disabled) {
     transform: translateY(1px) scale(0.98);
     box-shadow:
-      0 2px 4px -1px rgba(251, 191, 36, 0.15),
+      0 2px 4px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.15),
       0 1px 2px -1px rgba(0, 0, 0, 0.1),
       inset 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
-  /* Non-recording active effect */
+  /* Non-recording active effect — press darkens, no palette swap */
   .record-button:not(.recording-active):active:not(:disabled) {
-    background-image: linear-gradient(
-      to right,
-      rgba(245, 158, 11, 1),
-      rgba(234, 88, 12, 0.95)
-    );
+    filter: saturate(1.1) brightness(0.94);
   }
 
   /* Button press animation */
@@ -461,16 +444,13 @@
     }
     35% {
       transform: scale(0.98);
-      background-color: #f59e0b;
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     75% {
       transform: scale(1.01);
-      background-color: #fbbf24;
     }
     100% {
       transform: scale(1);
-      background-color: #fbbf24;
     }
   }
 
@@ -483,11 +463,13 @@
   @keyframes button-breathe {
     0%,
     100% {
-      box-shadow: 0 0 12px 2px rgba(251, 191, 36, 0.35);
+      box-shadow: 0 0 12px 2px
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.35);
       transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 20px 6px rgba(251, 191, 36, 0.5);
+      box-shadow: 0 0 20px 6px
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.5);
       transform: scale(1.02);
     }
   }
@@ -528,6 +510,7 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    background-color: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.18);
   }
 
   .progress-bar {
@@ -537,17 +520,21 @@
     height: 100%;
     transition: width 0.3s ease;
     animation: pulse-glow 1.5s infinite ease-in-out;
+    background-color: var(--zl-primary-color, #ffb000);
   }
 
   @keyframes pulse-glow {
     0% {
-      box-shadow: inset 0 0 5px rgba(255, 190, 60, 0.5);
+      box-shadow: inset 0 0 5px
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.5);
     }
     50% {
-      box-shadow: inset 0 0 15px rgba(255, 190, 60, 0.8);
+      box-shadow: inset 0 0 15px
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.8);
     }
     100% {
-      box-shadow: inset 0 0 5px rgba(255, 190, 60, 0.5);
+      box-shadow: inset 0 0 5px
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.5);
     }
   }
 
@@ -556,24 +543,27 @@
     position: relative;
     overflow: hidden;
 
-    /* Soft tangerine to pink gradient for recording state */
+    /* Filled portion is the theme primary; the tail is the same shade
+       faded — progress reads as depth, not a second color story. */
     background-image:
       linear-gradient(
         to right,
-        rgba(251, 191, 36, 0.9),
-        rgba(251, 191, 36, 0.9) var(--progress, 0%),
-        rgba(249, 168, 212, 0.7) calc(var(--progress, 0%) + 0.5%),
-        rgba(244, 114, 182, 0.5) 100%
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.9),
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.9)
+          var(--progress, 0%),
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.38)
+          calc(var(--progress, 0%) + 0.5%),
+        rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.24) 100%
       ),
       /* Subtle noise texture overlay */
       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
 
     background-size: 100% 100%;
     box-shadow:
-      0 4px 15px -1px rgba(251, 191, 36, 0.35),
-      inset 0 0 10px rgba(251, 191, 36, 0.2),
-      0 0 20px rgba(251, 191, 36, 0.2);
-    border: 1px solid rgba(251, 191, 36, 0.3);
+      0 4px 15px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.35),
+      inset 0 0 10px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2),
+      0 0 20px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2);
+    border: 1px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
     /* Smoother & faster transitions for clearer state changes */
     transition:
       background-image 0.3s ease-out,
@@ -593,46 +583,49 @@
     z-index: 5; /* Increased z-index for text to appear above effects */
   }
 
-  /* Time-limit gradients stay bright without stressful red states. */
+  /* Time-limit states signal through the theme's own accent + pulse
+     intensity — no stressful red, no off-palette hues. */
   .recording-warning {
     background-image: linear-gradient(
       to right,
-      rgb(251, 191, 36) var(--progress, 0%),
-      rgba(251, 191, 36, 0.7) var(--progress, 0%),
-      rgba(34, 211, 238, 0.58) 100%
+      rgb(var(--zl-primary-color-rgb, 255, 176, 0)) var(--progress, 0%),
+      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.7)
+        var(--progress, 0%),
+      rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.45) 100%
     );
     box-shadow:
-      0 4px 15px -1px rgba(251, 191, 36, 0.3),
-      inset 0 0 10px rgba(251, 191, 36, 0.2),
-      0 0 20px rgba(251, 191, 36, 0.2);
+      0 4px 15px -1px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3),
+      inset 0 0 10px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2),
+      0 0 20px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.2);
   }
 
   .recording-danger {
     background-image: linear-gradient(
       to right,
-      rgb(251, 191, 36) var(--progress, 0%),
-      rgba(251, 191, 36, 0.7) var(--progress, 0%),
-      rgba(45, 212, 191, 0.72) 100%
+      rgb(var(--zl-primary-color-rgb, 255, 176, 0)) var(--progress, 0%),
+      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.7)
+        var(--progress, 0%),
+      rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.62) 100%
     );
     box-shadow:
-      0 4px 15px -1px rgba(45, 212, 191, 0.28),
-      inset 0 0 10px rgba(45, 212, 191, 0.22),
-      0 0 20px rgba(45, 212, 191, 0.2);
+      0 4px 15px -1px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.28),
+      inset 0 0 10px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.22),
+      0 0 20px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.2);
     animation: danger-pulse 1s infinite alternate ease-in-out;
   }
 
   @keyframes danger-pulse {
     0% {
       box-shadow:
-        0 4px 15px -1px rgba(45, 212, 191, 0.28),
-        inset 0 0 10px rgba(45, 212, 191, 0.22),
-        0 0 20px rgba(45, 212, 191, 0.2);
+        0 4px 15px -1px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.28),
+        inset 0 0 10px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.22),
+        0 0 20px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.2);
     }
     100% {
       box-shadow:
-        0 4px 15px -1px rgba(45, 212, 191, 0.38),
-        inset 0 0 15px rgba(45, 212, 191, 0.26),
-        0 0 25px rgba(45, 212, 191, 0.24);
+        0 4px 15px -1px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.38),
+        inset 0 0 15px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.26),
+        0 0 25px rgba(var(--zl-accent-color-rgb, 255, 176, 0), 0.24);
     }
   }
 
