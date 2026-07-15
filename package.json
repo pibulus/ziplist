@@ -15,6 +15,7 @@
     "deploy:pi": "bash scripts/deploy-pi.sh",
     "smoke:live": "node scripts/smoke-live-sharing.mjs",
     "prepare": "svelte-kit sync || echo ''",
+    "postinstall": "node scripts/stub-sharp.js",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
     "lighthouse": "npm run build && lhci autorun"
@@ -23,6 +24,7 @@
     "@eslint/compat": "^1.2.5",
     "@eslint/js": "^9.18.0",
     "@lhci/cli": "^0.14.0",
+    "@sveltejs/adapter-netlify": "6.0.4",
     "@sveltejs/adapter-node": "5.5.4",
     "@sveltejs/kit": "^2.16.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",

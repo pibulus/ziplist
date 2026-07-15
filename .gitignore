@@ -58,3 +58,4 @@ tasks/
 
 # Playwright MCP screenshot/snapshot artifacts
 .playwright-mcp/
+stubs/
