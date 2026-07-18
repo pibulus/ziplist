@@ -288,7 +288,7 @@
       const copied = await copyText(liveUrl);
       showListStatus(
         copied
-          ? "Live link copied!"
+          ? "Live link copied — send it to someone lovely!"
           : "Live link ready. Copying needs browser permission.",
         copied,
       );
@@ -322,8 +322,8 @@
       if (result.success) {
         showListStatus(
           result.urlTooLong
-            ? "Share link copied! Note: Very long URL."
-            : "Share link copied!",
+            ? "Link copied — it's a long one, but it'll work!"
+            : "Link copied — send it to someone lovely!",
           true,
           result.urlTooLong ? 5000 : 3000,
         );

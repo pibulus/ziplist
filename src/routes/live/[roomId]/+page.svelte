@@ -57,20 +57,20 @@
 </script>
 
 <svelte:head>
-  <title>Join Live List | ZipList</title>
+  <title>Someone saved you a spot | ZipList</title>
   <meta
     name="description"
-    content="Join a shared live ZipList room and collaborate on a list in real time."
+    content="Hop into a shared list and tick things off together, live."
   />
   <meta name="robots" content="noindex, nofollow, noarchive" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ZipList" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:url" content={`https://ziplist.app/live/${roomId}`} />
-  <meta property="og:title" content="Join a Live ZipList" />
+  <meta property="og:title" content="Someone saved you a spot on their list" />
   <meta
     property="og:description"
-    content="Open a shared ZipList room and collaborate on a list in real time."
+    content="Hop in — you'll tick things off together, live."
   />
   <meta property="og:image" content="https://ziplist.app/og-image.png" />
   <meta
@@ -83,10 +83,10 @@
   <meta property="og:image:alt" content="ZipList live shared list room" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content={`https://ziplist.app/live/${roomId}`} />
-  <meta name="twitter:title" content="Join a Live ZipList" />
+  <meta name="twitter:title" content="Someone saved you a spot on their list" />
   <meta
     name="twitter:description"
-    content="Open a shared ZipList room and collaborate on a list in real time."
+    content="Hop in — you'll tick things off together, live."
   />
   <meta name="twitter:image" content="https://ziplist.app/og-image.png" />
   <meta name="twitter:image:alt" content="ZipList live shared list room" />
