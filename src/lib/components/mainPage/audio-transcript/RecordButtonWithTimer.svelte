@@ -29,6 +29,7 @@
 
   let audioLevel = 0;
   let animationFrameId;
+  let pressAnimationTimeout = null;
   let pulseIntensity = 0;
   let waveformLevels = Array(WAVE_BAR_COUNT).fill(0);
   const unsubscribeWaveform = waveformData.subscribe((data) => {
@@ -94,7 +95,17 @@
     if (unsubscribeWaveform) unsubscribeWaveform();
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     if (unsubscribe) unsubscribe();
+    clearPressAnimationTimeout();
   });
+
+  // talktype's pattern: one tracked press timeout, cleared on re-press and
+  // on destroy — never a raw setTimeout that can outlive the component.
+  function clearPressAnimationTimeout() {
+    if (pressAnimationTimeout) {
+      clearTimeout(pressAnimationTimeout);
+      pressAnimationTimeout = null;
+    }
+  }
 
   function updateRandomPhrases() {
     if (ZIPLIST_START_PHRASES.length > 1) {
@@ -115,13 +126,15 @@
   }
   export function animateButtonPress() {
     if (recordButtonElement) {
+      clearPressAnimationTimeout();
       recordButtonElement.classList.remove("button-press");
       void recordButtonElement.offsetWidth;
       recordButtonElement.classList.add("button-press");
-      setTimeout(() => {
+      pressAnimationTimeout = setTimeout(() => {
         if (recordButtonElement) {
           recordButtonElement.classList.remove("button-press");
         }
+        pressAnimationTimeout = null;
       }, ANIMATION.BUTTON.PRESS_DURATION);
     }
   }
@@ -454,9 +467,10 @@
     }
   }
 
-  /* Subtle breathing glow for button */
+  /* Subtle breathing glow for button — 4.8s matches the fleet's idle
+     breathe (talktype/daysay) so every app inhales at the same pace. */
   .pulse-subtle {
-    animation: button-breathe 3.5s ease-in-out infinite;
+    animation: button-breathe 4.8s ease-in-out infinite;
     transform-origin: center;
   }
 
@@ -769,6 +783,20 @@
       opacity: 1;
       transform: translateY(-50%) scale(1.4);
       box-shadow: 0 0 15px rgba(236, 72, 153, 1);
+    }
+  }
+
+  /* Fleet standard (talktype/daysay honor this — so do we): motion is
+     decoration, never information. Kill every animation on request. */
+  @media (prefers-reduced-motion: reduce) {
+    .pulse-subtle,
+    .button-press,
+    .notification-pulse,
+    .recording-danger,
+    .progress-bar,
+    .wave-bar,
+    .recording-indicator {
+      animation: none !important;
     }
   }
 </style>
