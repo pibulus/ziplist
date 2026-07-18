@@ -252,8 +252,9 @@ export class AudioService {
         // analyser pure silence — flat bars while the recording works fine.
         // Recreate the context at the mic's real rate. (Safe after the
         // grant: WebKit lets contexts run while capture is active.)
-        const micRate =
-          this.stream.getAudioTracks()[0]?.getSettings?.()?.sampleRate;
+        const micRate = this.stream
+          .getAudioTracks()[0]
+          ?.getSettings?.()?.sampleRate;
         if (
           this.audioContext &&
           micRate &&
