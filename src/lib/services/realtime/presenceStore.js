@@ -18,9 +18,7 @@ import { writable } from "svelte/store";
  * @returns {Object} Presence store with subscribe method and update functions
  */
 export function createPresenceStore() {
-  const { subscribe, set, update } = writable(
-    /** @type {PresenceUser[]} */ ([]),
-  );
+  const { subscribe, set } = writable(/** @type {PresenceUser[]} */ ([]));
 
   return {
     subscribe,
@@ -31,28 +29,6 @@ export function createPresenceStore() {
      */
     setUsers(users) {
       set(users);
-    },
-
-    /**
-     * Add a user to presence
-     * @param {PresenceUser} user
-     */
-    addUser(user) {
-      update((users) => {
-        // Don't add duplicates
-        if (users.some((u) => u.id === user.id)) {
-          return users;
-        }
-        return [...users, user];
-      });
-    },
-
-    /**
-     * Remove a user from presence
-     * @param {string} userId
-     */
-    removeUser(userId) {
-      update((users) => users.filter((u) => u.id !== userId));
     },
 
     /**

@@ -315,7 +315,25 @@ export async function connectToLive(listId, roomId, password = null) {
         },
 
         onPresence: (users) => {
-          presenceStore.setUsers(Array.isArray(users) ? users : []);
+          const roster = Array.isArray(users) ? users : [];
+          presenceStore.setUsers(roster);
+
+          // Presence is authoritative for who's here. Sweep activity
+          // indicators from anyone who left so a dropped connection can't
+          // leave a ghost "still typing/recording" badge hanging around
+          // until its TTL expires (voice badges live up to 45s).
+          const presentIds = new Set(roster.map((user) => user.id));
+          for (const user of get(typingStore)) {
+            if (!presentIds.has(user.id)) typingStore.stopTyping(user.id);
+          }
+          const activity = get(activityStore);
+          for (const entry of [
+            ...activity.drafts,
+            ...activity.focuses,
+            ...activity.voices,
+          ]) {
+            if (!presentIds.has(entry.id)) activityStore.clearUser(entry.id);
+          }
         },
 
         onDisconnect: (event) => {

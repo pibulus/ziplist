@@ -267,7 +267,12 @@ export default class ListRoom implements Party.Server {
       );
     }
 
-    if (createSecret && authHeader !== `Bearer ${createSecret}`) {
+    // Timing-safe compare so the shared create secret can't be probed
+    // byte-by-byte via response timing.
+    if (
+      createSecret &&
+      !timingSafeStringEqual(authHeader, `Bearer ${createSecret}`)
+    ) {
       return this.json({ error: "Forbidden" }, 403);
     }
 
