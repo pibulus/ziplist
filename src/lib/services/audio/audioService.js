@@ -357,11 +357,21 @@ export class AudioService {
       // The mimeType should be determined before onstop is set up.
       const mimeType = this.mediaRecorder.mimeType || "audio/webm";
 
-      this.mediaRecorder.onstop = () => {
+      // MediaRecorder.stop() can wedge and never fire onstop (family-wide
+      // lesson) — onstop and a 5s watchdog both funnel through this guarded
+      // finalizer; whoever arrives first wins, the other no-ops.
+      let settled = false;
+      let wedgeTimeout = null;
+
+      const finalize = () => {
+        if (settled) return;
+        settled = true;
+        if (wedgeTimeout) clearTimeout(wedgeTimeout);
         wakeLockService.release();
 
-        // Create the Blob from this.audioChunks, which now contains all chunks
-        // including the final one from the last dataavailable event.
+        // Create the Blob from this.audioChunks — on the normal path this
+        // includes the final chunk from the last dataavailable event; on the
+        // wedge path it's whatever made it in (better than hanging forever).
         const audioBlob = new Blob(this.audioChunks, { type: mimeType });
 
         // Update store with audio blob
@@ -385,10 +395,22 @@ export class AudioService {
         resolve(audioBlob);
       };
 
+      this.mediaRecorder.onstop = finalize;
+
       try {
         this.mediaRecorder.stop();
+        wedgeTimeout = setTimeout(() => {
+          if (!settled) {
+            console.warn(
+              "MediaRecorder onstop never fired — salvaging recorded chunks",
+            );
+            finalize();
+          }
+        }, 5000);
       } catch (error) {
         console.warn("Error stopping MediaRecorder:", error.message);
+        if (settled) return;
+        settled = true;
 
         // Ensure tracks are stopped even if MediaRecorder stop fails
         if (this.stream) {

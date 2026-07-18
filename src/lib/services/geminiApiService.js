@@ -32,6 +32,14 @@ function blobToGenerativePart(blob) {
     return Promise.reject(new Error("Invalid audio data"));
   }
 
+  // Blink-tap floor (family pattern): a sub-1KB blob is a container header
+  // with no real speech — bail kindly before burning the Gemini round-trip.
+  if (blob.size < 1000) {
+    return Promise.reject(
+      new Error("That tap was a blink — speak a touch longer."),
+    );
+  }
+
   const mimeType = getSafeMimeType(blob);
 
   return Promise.resolve({
