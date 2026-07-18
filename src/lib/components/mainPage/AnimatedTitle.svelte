@@ -56,7 +56,7 @@
   />
 
   <h1
-    class="mb-1 text-[clamp(3rem,9vmin_+_1.1rem,8rem)] font-black tracking-normal text-center cursor-default select-none staggered-text"
+    class="mb-1 text-[clamp(3rem,7.5vmin_+_1rem,5.5rem)] font-black tracking-normal text-center cursor-default select-none staggered-text"
     style="font-weight: 900; letter-spacing: 0; font-feature-settings: 'kern' 1; font-kerning: normal; font-variation-settings: 'wght' 900, 'opsz' 32;"
     aria-label={title}
   >
@@ -93,7 +93,7 @@
 
 <!-- Updated subheadline with improved typography and reduced bottom margin -->
 <p
-  class="mx-auto mt-4 mb-4 text-base text-center cursor-default select-none slide-in-subtitle max-w-prose text-gray-700/85 sm:mt-4 sm:mb-3 sm:text-lg md:text-xl lg:text-2xl"
+  class="mx-auto mt-3 mb-3 text-base text-center cursor-default select-none slide-in-subtitle max-w-prose text-gray-700/85 sm:mt-3 sm:mb-3 sm:text-lg md:text-xl"
   style="font-weight: 400; letter-spacing: 0; line-height: 1.4; max-inline-size: 40ch; text-wrap: balance; font-variation-settings: 'wght' 400, 'opsz' 16;"
 >
   {#each subtitle.split("\n") as line, i}
@@ -200,6 +200,29 @@
   }
 
   /* Media queries for mobile optimization */
+  /* Compact desktop viewports (≤820px tall): smaller wordmark so the list
+     card surfaces above the fold. */
+  @media (min-width: 768px) and (max-height: 820px) {
+    h1.staggered-text {
+      font-size: 4rem;
+      line-height: 1.05;
+    }
+    .slide-in-subtitle {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  /* Squat laptops: smaller still. */
+  @media (min-width: 768px) and (max-height: 740px) {
+    h1.staggered-text {
+      font-size: 3.25rem;
+    }
+    .slide-in-subtitle {
+      margin-top: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+  }
+
   @media (max-width: 640px) {
     h1.staggered-text {
       font-size: 3rem;

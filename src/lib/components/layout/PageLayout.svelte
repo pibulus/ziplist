@@ -60,7 +60,7 @@
 <a class="skip-link" href="#main-content">Skip to lists</a>
 
 <div
-  class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10"
+  class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(2.75rem,8vh,5.5rem)] font-sans text-gray-800 antialiased sm:px-6 md:px-10"
   class:list-first-shell={listFirst}
 >
   {#if listFirst}
