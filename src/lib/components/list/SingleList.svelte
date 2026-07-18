@@ -10,8 +10,47 @@
   );
   import { listsService } from "$lib/services/lists/listsService";
   import { shareList } from "$lib/services/share";
-  import { fade, fly } from "svelte/transition";
+  import { fade } from "svelte/transition";
+  import { cubicOut, backOut } from "svelte/easing";
   import { flip } from "svelte/animate";
+
+  // Respect the user's motion preference for the juicy item transitions.
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  // Gentle pop/scale-in for freshly added rows — a little overshoot via backOut
+  // makes an add feel like it *lands*. Reduced-motion folks get a plain fade.
+  function itemIn(node, { delay = 0 } = {}) {
+    if (prefersReducedMotion) {
+      return { delay, duration: 160, css: (t) => `opacity: ${t}` };
+    }
+    return {
+      delay,
+      duration: 320,
+      easing: backOut,
+      css: (t) => {
+        const eased = Math.min(1, t);
+        return `opacity: ${Math.min(1, t * 1.4)}; transform: translateY(${(1 - eased) * 14}px) scale(${0.9 + eased * 0.1});`;
+      },
+    };
+  }
+
+  // Quick, satisfying exit for deletes — collapse + fade in sub-200ms so the
+  // list closes the gap cleanly. Reduced-motion gets a bare fast fade.
+  function itemOut(node) {
+    if (prefersReducedMotion) {
+      return { duration: 120, css: (t) => `opacity: ${t}` };
+    }
+    return {
+      duration: 190,
+      easing: cubicOut,
+      css: (t) => {
+        const eased = cubicOut(t);
+        return `opacity: ${t}; transform: translateY(${(1 - eased) * -8}px) scale(${0.94 + eased * 0.06});`;
+      },
+    };
+  }
   import { hapticService } from "$lib/services/infrastructure/hapticService";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
@@ -1345,8 +1384,11 @@
     draftInputNode?.focus();
   }
 
-  function saveDraftItem() {
+  // Returns true when an item was actually committed, so callers (e.g. Enter
+  // for rapid-fire adds) know whether to keep the draft open for the next one.
+  function saveDraftItem({ keepAdding = false } = {}) {
     const newText = draftItemText.trim();
+    let didAdd = false;
 
     if (newText) {
       const result = listsService.addItem(newText, list.id);
@@ -1354,19 +1396,32 @@
         showListStatus(result.message || "That item needs one more try.");
         hapticService.notification("warning");
         soundService.locked();
-        return;
+        return false;
       }
 
       if (result.message) {
         showListStatus(result.message, true);
       }
       soundService.add({ force: true });
+      didAdd = true;
     }
 
     hapticService.selection();
+
+    // Rapid-fire: a committed Enter clears the field but keeps the draft row
+    // open and focused so you can keep piling items in without re-reaching for
+    // the button. An empty Enter (nothing to add) closes out like before.
+    if (keepAdding && didAdd) {
+      draftItemText = "";
+      broadcastDraftActivity({ text: "", mode: "typing" });
+      draftInputNode?.focus();
+      return true;
+    }
+
     draftItemActive = false;
     draftItemText = "";
     clearDraftActivity();
+    return didAdd;
   }
 
   function cancelDraftItem() {
@@ -1379,7 +1434,8 @@
 
   function handleDraftItemKeyDown(event) {
     if (event.key === "Enter") {
-      saveDraftItem();
+      // Keep the draft open on Enter for rapid-fire adds; blur/Escape close it.
+      saveDraftItem({ keepAdding: true });
     } else if (event.key === "Escape") {
       cancelDraftItem();
     }
@@ -1644,7 +1700,8 @@
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: touchDragItemId ? 180 : 300 }}
-              in:fly={{ y: 20, duration: 300, delay: getStaggerDelay(index) }}
+              in:itemIn={{ delay: getStaggerDelay(index) }}
+              out:itemOut
               aria-grabbed={getItemGrabbedState(item.id)}
               aria-dropeffect="move"
               role="listitem"
@@ -1741,11 +1798,10 @@
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{ duration: touchDragItemId ? 180 : 300 }}
-              in:fly={{
-                y: 20,
-                duration: 300,
+              in:itemIn={{
                 delay: getStaggerDelay(renderedActiveItems.length + index + 1),
               }}
+              out:itemOut
               aria-grabbed={getItemGrabbedState(item.id)}
               aria-dropeffect="move"
               role="listitem"
