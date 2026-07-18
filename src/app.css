@@ -219,12 +219,29 @@ body.modal-active {
   position: relative !important;
 }
 
-/* Modal fixes to prevent scrollbar issues */
+/* Modal fixes to prevent scrollbar issues. The explicit width/height/margin
+   override the UA's default dialog sizing — without them the dialog is inset
+   from the viewport and the "centered" box sits visibly off-centre. */
 .modal {
   padding: 0 !important;
   overflow: hidden !important;
   position: fixed !important;
   inset: 0 !important;
+  /* 100% (not 100vw/100dvh): with a classic scrollbar reserved, 100vw
+     includes the scrollbar and the "centered" card sits ~7px off-centre.
+     Percentages resolve against the viewport minus scrollbar. */
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+/* Gutter so the card never touches the viewport edge on small screens. */
+dialog.modal[open] {
+  padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
 }
 
 dialog.modal::backdrop {
@@ -253,7 +270,9 @@ dialog.modal::backdrop {
 .modal-box {
   max-height: 85vh !important;
   overflow-y: auto !important;
-  margin: 1rem auto !important;
+  /* The dialog is a centering grid; a vertical margin here would offset the
+     box from true centre. Padding on the dialog provides the viewport gutter. */
+  margin: 0 !important;
   width: min(92vw, 30rem) !important;
   max-width: 30rem !important;
   padding: clamp(1.25rem, 4vw, 2rem) !important;
@@ -266,10 +285,44 @@ dialog.modal::backdrop {
   z-index: 1;
 }
 
+/* Every modal wraps its close button in a bare `<form method="dialog">`. Make
+   that wrapper sticky so the button rides along at the top of the panel
+   instead of scrolling out of reach. Zero-height so it never displaces the
+   content beneath it. (Family DNA — matches talktype/riffrap/daysay.) */
+.modal-box > form:has(> .modal-close-btn) {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: 0;
+  overflow: visible;
+}
+
+/* Fade the top edge of the panel to its own background so scrolling content
+   dissolves out instead of sliding behind the pinned close button mid-glyph.
+   Sits under the button and above the content; never eats pointer events. */
+.modal-box > form:has(> .modal-close-btn)::before {
+  content: "";
+  position: absolute;
+  top: calc(-1 * clamp(1.25rem, 4vw, 2rem));
+  left: calc(-1 * clamp(1.25rem, 4vw, 2rem));
+  right: calc(-1 * clamp(1.25rem, 4vw, 2rem));
+  height: 4rem;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 250, 239, 0.97) 0%,
+    rgba(255, 250, 239, 0.9) 55%,
+    rgba(255, 250, 239, 0) 100%
+  );
+  border-radius: var(--zl-card-border-radius, 28px)
+    var(--zl-card-border-radius, 28px) 0 0;
+}
+
 /* OPEN animation — playful pop-in (skeleton). Scoped to open, NON-closing
    dialogs so the entrance can't restart for a frame during teardown. */
 dialog.modal[open]:not(.zl-modal-closing) > .modal-box {
-  animation: zl-modal-pop-in 420ms cubic-bezier(0.18, 0.92, 0.2, 1.18) both;
+  animation: zl-modal-pop-in 280ms cubic-bezier(0.16, 0.84, 0.24, 1.06) both;
 }
 
 /* CLOSE animation (skeleton's #1 win) — driven by modalService adding
@@ -279,12 +332,12 @@ dialog.modal.zl-modal-closing {
 }
 
 dialog.modal.zl-modal-closing > .modal-box {
-  animation: zl-modal-pop-out 210ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: zl-modal-pop-out 180ms cubic-bezier(0.4, 0, 0.24, 1) both;
 }
 
 dialog.modal.zl-modal-closing > .modal-backdrop,
 dialog.modal.zl-modal-closing .modal-backdrop {
-  animation: zl-modal-backdrop-out 210ms ease-out both;
+  animation: zl-modal-backdrop-out 180ms ease-out both;
 }
 
 /* Ensure scrollbars don't cause layout shifts */
@@ -341,18 +394,17 @@ dialog.modal.zl-modal-closing .modal-backdrop {
 /* ===================================================================
    MODAL OPEN / CLOSE — skeleton pop-in + pop-out + backdrop fade
    =================================================================== */
+/* Rises and settles with one small overshoot. No rotation — a wobble is
+   charming once, but these fire several times a session from the footer nav,
+   and the tilt reads as noise at that frequency. Matches talktype. */
 @keyframes zl-modal-pop-in {
   0% {
     opacity: 0;
-    transform: translateY(18px) scale(0.92) rotate(-1.2deg);
+    transform: translateY(12px) scale(0.96);
   }
-  58% {
+  60% {
     opacity: 1;
-    transform: translateY(-4px) scale(1.025) rotate(0.35deg);
-  }
-  78% {
-    opacity: 1;
-    transform: translateY(1px) scale(0.992) rotate(-0.12deg);
+    transform: translateY(-2px) scale(1.015);
   }
   100% {
     opacity: 1;
@@ -367,7 +419,7 @@ dialog.modal.zl-modal-closing .modal-backdrop {
   }
   to {
     opacity: 0;
-    transform: translateY(10px) scale(0.96) rotate(0.35deg);
+    transform: translateY(8px) scale(0.97);
   }
 }
 

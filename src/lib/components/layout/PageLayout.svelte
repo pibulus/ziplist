@@ -80,27 +80,28 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs backdrop-blur-[3px] sm:pb-4 sm:pt-6"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs backdrop-blur-[3px] sm:pb-4 sm:pt-6 px-4 sm:px-6 md:px-8"
   >
     <div
-      class="container mx-auto flex flex-row items-center justify-center gap-1 sm:justify-between sm:gap-3"
+      class="footer-row mx-auto flex w-full flex-row items-center justify-center gap-3 sm:justify-between"
     >
       <div
-        class="copyright ml-4 hidden flex-wrap items-center justify-center sm:ml-6 sm:flex md:ml-8"
+        class="copyright hidden items-center justify-center sm:flex min-w-0 shrink whitespace-nowrap"
       >
         <span class="mr-1 text-sm font-medium tracking-normal">
-          © {footerYear} {appName}
+          © {footerYear}
+          {appName}
         </span>
         <span class="footer-dot mx-2">•</span>
         <span class="footer-meta text-sm font-light">
           <span
             class="footer-heart animate-pulse hover:scale-110"
-            aria-label="love"
-          >❤️</span>
+            aria-label="love">❤️</span
+          >
           in Melbourne
         </span>
       </div>
-      <div class="flex items-center sm:mr-6 md:mr-8">
+      <div class="flex shrink-0 items-center">
         <slot name="footer-buttons" />
       </div>
     </div>
@@ -256,16 +257,8 @@
       padding-bottom: 0.5rem;
     }
 
-    footer .container {
+    footer .footer-row {
       gap: 0.5rem;
-    }
-
-    footer .container > div.copyright {
-      margin-left: 1rem;
-    }
-
-    footer .container > div:last-child {
-      margin-right: 1rem;
     }
   }
 
