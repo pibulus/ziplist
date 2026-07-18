@@ -246,9 +246,36 @@ export class AudioService {
           mediaRecorderOptions,
         );
 
+        // iOS reroutes the mic hardware (usually to 48kHz) once capture
+        // starts. A context created before getUserMedia keeps its old rate
+        // and stays 'running', but createMediaStreamSource then feeds the
+        // analyser pure silence — flat bars while the recording works fine.
+        // Recreate the context at the mic's real rate. (Safe after the
+        // grant: WebKit lets contexts run while capture is active.)
+        const micRate =
+          this.stream.getAudioTracks()[0]?.getSettings?.()?.sampleRate;
+        if (
+          this.audioContext &&
+          micRate &&
+          this.audioContext.sampleRate !== micRate
+        ) {
+          console.warn(
+            `AudioContext rate ${this.audioContext.sampleRate} != mic rate ${micRate} — recreating context`,
+          );
+          try {
+            await this.audioContext.close();
+          } catch {
+            // A dying context that refuses to close still gets replaced below.
+          }
+          this.audioContext = null;
+        }
+
         if (!this.audioContext) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           this.audioContext = new AudioContext();
+        }
+        if (this.audioContext.state === "suspended") {
+          await this.audioContext.resume().catch(() => {});
         }
 
         const source = this.audioContext.createMediaStreamSource(this.stream);
