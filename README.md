@@ -20,12 +20,12 @@ more whenever. Drag things around. Tick them off. That is the whole point.
 - **Fast local storage** - your everyday lists stay on your device
 - **Drag, drop, check off** - desktop drag plus touch-native reorder on mobile
 - **Say what is done** - phrases like "I bought the milk" can tick matching
-  unchecked items when Gemini has list context
+  unchecked items when there is list context to work from
 - **Optional live lists** - PartyKit rooms let a couple, band, family, or
   housemate group share one changing list
 - **Installable web app** - save it to your home screen, no app store needed
 - **Installed-device setup** - the mobile PWA can ready mic permission, storage,
-  and the offline model in one guided step
+  and offline voice in one guided step
 - **No task-manager pressure** - no dates, priorities, streaks, or dashboard
 
 ## Use It Anywhere
@@ -144,8 +144,8 @@ Choose once, it remembers. Because good tools should feel like they know you.
 
 - **Install to home screen** - Works like a native app
 - **Offline support** - No internet required after first load
-- **Offline model setup** - Installed mobile users can preload Whisper with
-  progress feedback
+- **Offline voice setup** - Installed mobile users can preload offline voice
+  with progress feedback
 - **Recording wake lock** - Supported browsers keep the screen awake while
   recording
 - **Fast startup** - Cached and optimized for speed

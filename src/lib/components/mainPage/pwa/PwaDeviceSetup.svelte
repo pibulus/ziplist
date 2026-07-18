@@ -7,7 +7,7 @@
   const dispatch = createEventDispatcher();
   const OFFLINE_MODEL_TIMEOUT_MS = 90000;
   const OFFLINE_MODEL_TIMEOUT_MESSAGE =
-    "Offline model is still downloading. ZipList works online; try setup again later.";
+    "Offline voice is still downloading. ZipList works online; try setup again later.";
 
   let isRunning = false;
   let isComplete = false;
@@ -62,7 +62,7 @@
 
       if (status.isLoading || status.progress > 0) {
         progress = Math.max(10, clampProgress(status.progress));
-        statusText = `Loading offline model ${progress}%`;
+        statusText = `Loading offline voice ${progress}%`;
       }
 
       if (status.error) {
@@ -109,7 +109,7 @@
       await pwaService.requestPersistentStorage();
       if (isDismissed || runId !== setupRunId) return;
 
-      statusText = "Loading offline model...";
+      statusText = "Loading offline voice...";
       const modelResult = await withTimeout(
         preloadOfflineModel(),
         OFFLINE_MODEL_TIMEOUT_MS,
@@ -118,7 +118,7 @@
       if (isDismissed || runId !== setupRunId) return;
 
       if (!modelResult?.success) {
-        throw modelResult?.error || new Error("Offline model needs one more try");
+        throw modelResult?.error || new Error("Offline voice needs one more try");
       }
 
       progress = 100;

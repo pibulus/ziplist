@@ -11,7 +11,7 @@ plans live under `docs/archive/`.
 - `ARCHITECTURE.md` - Current codebase map and ownership boundaries.
 - `PWA.md` - Installable app, offline shell, wake lock, and installed-device
   setup notes.
-- `TRANSCRIPTION.md` - Gemini, Whisper, parser, and AI completion flow.
+- `TRANSCRIPTION.md` - Gemini, Whisper, parser, and item-completion flow.
 - `LIVE_SHARING.md` - PartyKit live-list architecture and deploy notes.
 
 ## Archive

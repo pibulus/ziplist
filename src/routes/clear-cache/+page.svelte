@@ -92,8 +92,8 @@
       <p>Device Cache</p>
       <h1>Refresh Local Cache</h1>
       <span>
-        Clears cached offline models, service worker caches, and browser storage
-        on this device.
+        Clears cached offline voice data, service worker caches, and browser
+        storage on this device.
       </span>
     </div>
 
