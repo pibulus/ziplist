@@ -513,8 +513,8 @@
   text-align: center;
 }
 
-/* Live presence: no pill, no shouting — a soft pulse says "live", the
-   avatar dots say who. A count only appears when dots overflow. */
+/* Live presence: a soft pill that says "live" warmly (never alarming red),
+   the avatar dots say who's here. A count only appears when dots overflow. */
 .zl-live-presence {
   align-items: center;
   display: inline-flex;
@@ -522,19 +522,29 @@
   font-family: "Space Mono", monospace;
   font-size: 0.72rem;
   font-weight: 800;
-  gap: 0.34rem;
-  height: 28px;
+  gap: 0.4rem;
+  height: 30px;
   line-height: 1;
   color: var(--zl-text-color-secondary, #888);
+  padding: 0 0.5rem 0 0.5rem;
+  border-radius: 999px;
+  background: rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.1);
+  border: 1px solid rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22);
 }
 
 .zl-live-presence-pulse {
-  animation: soft-pulse 1.4s ease-in-out infinite;
-  background: #ff3b54;
+  animation: soft-pulse 1.6s ease-in-out infinite;
+  background: var(--zl-cta-color, #ffb000);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(255, 59, 84, 0.14);
+  box-shadow: 0 0 0 3px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
   height: 8px;
   width: 8px;
+}
+
+.zl-live-presence-label {
+  color: var(--zl-text-color-secondary, #888);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .zl-live-presence-count {
@@ -560,6 +570,17 @@
 
   .zl-list-title {
     font-size: 0.88rem;
+  }
+
+  /* Tight phones: the pulse + avatar dots carry "live"; drop the word so
+     the header row stays uncramped alongside the title and actions. */
+  .zl-live-presence {
+    padding: 0 0.3rem;
+    gap: 0.28rem;
+  }
+
+  .zl-live-presence-label {
+    display: none;
   }
 }
 
@@ -1850,6 +1871,7 @@
   .zl-live-caret,
   .zl-live-draft-empty > span,
   .zl-live-voice-wave > span,
+  .zl-live-presence-pulse,
   .zl-live-voice-row .zl-live-activity-orb > span {
     animation: none;
   }
@@ -1867,18 +1889,4 @@
 body.zl-touch-dragging {
   user-select: none;
   -webkit-user-select: none;
-}
-
-/* Presence Dots */
-.zl-presence-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.zl-presence-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

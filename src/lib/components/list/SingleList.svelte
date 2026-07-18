@@ -1509,6 +1509,9 @@
                 aria-label="Live list. {presence.length} collaborators online"
               >
                 <span class="zl-live-presence-pulse" aria-hidden="true"></span>
+                <span class="zl-live-presence-label" aria-hidden="true"
+                  >Live</span
+                >
                 {#if presence.length > 0}
                   <div class="zl-presence-dots" aria-hidden="true">
                     {#each presence.slice(0, 4) as user (user.id)}

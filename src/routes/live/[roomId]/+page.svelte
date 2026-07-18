@@ -133,6 +133,12 @@
     <div class="live-brand-row">
       <BrandMark />
     </div>
+    <div class="live-welcome" in:fade={{ duration: 260 }}>
+      <span class="live-welcome-badge" aria-hidden="true">You're in</span>
+      <p class="live-welcome-line">
+        Tick things off together — changes show up for everyone, live.
+      </p>
+    </div>
     <SingleList {listId} showListManagement={false} />
     <a class="live-hook" href="/">
       or start a list of your own
@@ -266,13 +272,68 @@
   .live-brand-row {
     width: 100%;
     max-width: min(540px, calc(100vw - 2rem));
-    margin: 0.5rem auto 0.35rem;
+    margin: 0.5rem auto 1rem;
     padding-inline: 0.35rem;
+  }
+
+  /* Desktop: not a stretched phone — give the centered column real top
+     breathing room and a calmer rhythm between letterhead, welcome, card. */
+  @media (min-width: 720px) {
+    .live-join-container {
+      padding-top: 3rem;
+      max-width: 640px;
+    }
+
+    .live-brand-row {
+      margin-bottom: 1.5rem;
+    }
+
+    .live-welcome-line {
+      font-size: 1rem;
+    }
+  }
+
+  /* Guest welcome — gives the room a sense of place instead of a bare
+     card. Warm badge + one plain line about what "live" means here. */
+  .live-welcome {
+    width: 100%;
+    max-width: min(540px, calc(100vw - 2rem));
+    margin: 0 auto;
+    padding-inline: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  .live-welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8a5a00;
+    background: rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.16);
+    border: 1px solid rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.28);
+    border-radius: 999px;
+    padding: 0.28rem 0.7rem;
+  }
+
+  .live-welcome-line {
+    margin: 0;
+    font-family: "Space Mono", monospace;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    font-weight: 600;
+    color: var(--zl-text-color-secondary, #5e5140);
   }
 
   .live-hook {
     align-self: center;
-    margin-top: 0.35rem;
+    margin-top: 0.5rem;
     font-family: "Space Mono", monospace;
     font-size: 0.85rem;
     font-weight: 700;
