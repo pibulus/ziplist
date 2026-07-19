@@ -1,5 +1,6 @@
 <script>
   import BrandMark from "$lib/components/ui/BrandMark.svelte";
+  import FooterCharm from "$lib/components/FooterCharm.svelte";
 
   export let title = "ZipList | Talk a List. Tick It Off.";
   export let description =
@@ -94,10 +95,7 @@
         </span>
         <span class="footer-dot mx-2">•</span>
         <span class="footer-meta text-sm font-light">
-          <span
-            class="footer-heart animate-pulse hover:scale-110"
-            aria-label="love">❤️</span
-          >
+          <FooterCharm charms={['❤️', '🍒', '⚡']} />
           in Melbourne
         </span>
       </div>
