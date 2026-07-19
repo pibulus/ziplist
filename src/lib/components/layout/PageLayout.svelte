@@ -94,10 +94,8 @@
         </span>
         <span class="footer-dot mx-2">•</span>
         <span class="footer-meta text-sm font-light">
-          <span
-            class="footer-heart animate-pulse hover:scale-110"
-            aria-label="love">❤️</span
-          >
+          Made with
+          <span class="footer-heart animate-pulse hover:scale-110">love</span>
           in Melbourne
         </span>
       </div>

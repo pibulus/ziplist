@@ -153,8 +153,8 @@ export const COPY_MESSAGES = [
 
 // Attribution Tags
 export const ATTRIBUTION = {
-  SIMPLE_TAG: "𝘊𝘳𝘦𝘢𝘵𝘦𝘥 𝘸𝘪𝘵𝘩 𝘡𝘪𝘱𝘭𝘪𝘴𝘵 👻",
-  SHARE_POSTFIX: "\n\n𝘊𝘳𝘦𝘢𝘵𝘦𝘥 𝘸𝘪𝘵𝘩 𝘡𝘪𝘱𝘭𝘪𝘴𝘵 👻",
+  SIMPLE_TAG: "𝘊𝘳𝘦𝘢𝘵𝘦𝘥 𝘸𝘪𝘵𝘩 𝘡𝘪𝘱𝘭𝘪𝘴𝘵",
+  SHARE_POSTFIX: "\n\n𝘊𝘳𝘦𝘢𝘵𝘦𝘥 𝘸𝘪𝘵𝘩 𝘡𝘪𝘱𝘭𝘪𝘴𝘵",
   FOCUS_RECOVERY_MESSAGE: "Click in the window first, then copy again.",
 };
 

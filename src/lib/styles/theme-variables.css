@@ -8,6 +8,15 @@
 
 /* Base variables used across all themes */
 :root {
+  /* Family design-system aliases (chassis components like PwaInstallCard
+     read --ds-*; map them to ZipList's brand duo so shared surfaces stay
+     on-palette instead of falling back to kernel defaults). */
+  --ds-primary-color: #ffcc33;
+  --ds-primary-color-rgb: 255, 204, 51;
+  --ds-accent-color: #ff6ac2;
+  --ds-bg: #fffaef;
+  --ds-ink: #2a2233;
+
   /* Default fallback colors */
   --zl-primary-color: #ffcc33;
   --zl-secondary-color: #ffd4da;

@@ -159,11 +159,11 @@
 					{#if isIOS && isSafari}
 						<div class="ios-instructions">
 							<div class="ios-step">
-								<div class="ios-icon">1️⃣</div>
+								<div class="ios-icon">1.</div>
 								<span>Tap <span class="ios-share-icon">⬆️</span> below</span>
 							</div>
 							<div class="ios-step">
-								<div class="ios-icon">2️⃣</div>
+								<div class="ios-icon">2.</div>
 								<span>Scroll and tap <b>Add to Home Screen</b></span>
 							</div>
 						</div>

@@ -3,17 +3,17 @@
    * A reusable modal close button component that provides consistent styling and behavior
    * across all modals in the application.
    */
-  export let position = 'right-4 top-4';
+  export let position = 'right-2.5 top-2.5';
   export let size = 'md';
   export let label = 'Close';
   export let closeModal;
   export let modalId = null;
-  
+
   // Size classes mapping
   const sizeClasses = {
-    sm: 'h-8 w-8 text-sm',
-    md: 'h-10 w-10 text-base',
-    lg: 'h-11 w-11 text-lg'
+    sm: 'h-7 w-7 text-xs',
+    md: 'h-8 w-8 text-sm',
+    lg: 'h-10 w-10 text-base'
   };
   
   // Get size classes based on the size prop
@@ -40,7 +40,7 @@
 
 <button
   type="button"
-  class="modal-close-btn absolute {position} z-50 flex {sizeClass} items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-slate-600 shadow-sm transition-all duration-200 ease-in-out hover:bg-amber-100 hover:text-slate-900"
+  class="modal-close-btn absolute {position} z-50 flex {sizeClass} items-center justify-center rounded-full bg-black/5 text-slate-600 hover:bg-black/10 hover:text-slate-900"
   aria-label={label}
   on:click|preventDefault={handleClick}
 >
@@ -48,27 +48,38 @@
 </button>
 
 <style>
-  /* Skeleton X button: 44px circular tap target, top-right 1rem inset
-     (set via the `position` prop, default right-4 top-4), scale-hover,
-     visible focus ring for keyboard users. */
+  /* Family X: small, tucked into the corner, squishy on press.
+     Fingers get a bigger target via the coarse-pointer bump below. */
   .modal-close-btn {
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     user-select: none;
-    min-width: 44px;
-    min-height: 44px;
+    opacity: 0.6;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      opacity 0.15s ease,
+      transform 0.22s linear(0, 0.5 15%, 1.15 40%, 0.97 65%, 1);
   }
 
   .modal-close-btn:hover {
-    transform: scale(1.05);
+    opacity: 1;
+    transform: scale(1.1);
   }
 
   .modal-close-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.86);
   }
 
   .modal-close-btn:focus-visible {
-    outline: 3px solid var(--zl-accent-color, #ff6ac2);
+    outline: 2px solid var(--zl-accent-color, #ff6ac2);
     outline-offset: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .modal-close-btn {
+      min-width: 40px;
+      min-height: 40px;
+    }
   }
 </style>

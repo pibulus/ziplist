@@ -297,26 +297,25 @@ dialog.modal::backdrop {
   overflow: visible;
 }
 
-/* Fade the top edge of the panel to its own background so scrolling content
-   dissolves out instead of sliding behind the pinned close button mid-glyph.
-   Sits under the button and above the content; never eats pointer events. */
+/* Keep the pinned close button legible when content scrolls beneath it —
+   a soft corner radial ONLY behind the button, never a full-width wash
+   (the old full-width strip bleached icons/mascots at the modal top). */
 .modal-box > form:has(> .modal-close-btn)::before {
   content: "";
   position: absolute;
   top: calc(-1 * clamp(1.25rem, 4vw, 2rem));
-  left: calc(-1 * clamp(1.25rem, 4vw, 2rem));
   right: calc(-1 * clamp(1.25rem, 4vw, 2rem));
+  width: 6.5rem;
   height: 4rem;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 250, 239, 0.97) 0%,
-    rgba(255, 250, 239, 0.9) 55%,
-    rgba(255, 250, 239, 0) 100%
+  background: radial-gradient(
+    ellipse at top right,
+    rgba(255, 250, 239, 0.88) 0%,
+    rgba(255, 250, 239, 0.55) 50%,
+    rgba(255, 250, 239, 0) 78%
   );
-  border-radius: var(--zl-card-border-radius, 28px)
-    var(--zl-card-border-radius, 28px) 0 0;
+  border-radius: 0 var(--zl-card-border-radius, 28px) 0 0;
 }
 
 /* OPEN animation — playful pop-in (skeleton). Scoped to open, NON-closing

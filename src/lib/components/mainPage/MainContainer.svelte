@@ -906,8 +906,10 @@
   />
 {/if}
 
-<!-- PWA Install Prompt -->
-{#if $showPwaInstallPrompt && PwaInstallPrompt && !loadingPwaPrompt}
+<!-- PWA Install Prompt — retired in favor of the family PwaInstallCard
+     (chassis kernel, rendered in +layout.svelte). The old pwa service stays
+     intact; re-enable by restoring this block. -->
+{#if false && $showPwaInstallPrompt && PwaInstallPrompt && !loadingPwaPrompt}
   <div transition:fade={{ duration: 300 }}>
     <svelte:component
       this={PwaInstallPrompt}

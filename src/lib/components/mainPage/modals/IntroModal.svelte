@@ -32,7 +32,7 @@
     <form method="dialog">
       <ModalCloseButton
         {closeModal}
-        position="right-4 top-4"
+        position="right-2.5 top-2.5"
         size="sm"
         label="Close Intro"
         modalId="intro_modal"
@@ -84,7 +84,7 @@
 
       <button
         type="button"
-        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-yellow-400 to-cyan-300 text-slate-950 shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
+        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-[#ffcc33] to-[#ff6ac2] text-slate-950 shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
         on:click={handleActionButton}
       >
         Zip it up

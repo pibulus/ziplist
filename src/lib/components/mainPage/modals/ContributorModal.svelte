@@ -123,7 +123,7 @@
       <ModalCloseButton
         closeModal={handleClose}
         label="Close contributor modal"
-        position="right-4 top-4"
+        position="right-2.5 top-2.5"
         modalId="contributor_modal"
       />
     </form>
