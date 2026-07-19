@@ -83,7 +83,7 @@
           rel="noopener noreferrer"
           class="about-link text-xs text-teal-700 hover:text-teal-900 font-medium transition-colors"
         >
-          Coffee jar
+          ☕ Coffee jar
         </a>
         <a
           href="https://github.com/pibulus"
