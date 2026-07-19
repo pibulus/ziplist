@@ -10,6 +10,7 @@
   );
   import { listsService } from "$lib/services/lists/listsService";
   import { shareList } from "$lib/services/share";
+  import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
   import { fade } from "svelte/transition";
   import { cubicOut, backOut } from "svelte/easing";
   import { flip } from "svelte/animate";
@@ -367,6 +368,7 @@
           result.urlTooLong ? 5000 : 3000,
         );
         soundService.copySuccess({ force: true });
+        notePwaMoment(); // a shared list earns the install suggestion
       } else {
         showListStatus("Share needs one more try.");
         soundService.error({ force: true });
