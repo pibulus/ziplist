@@ -39,7 +39,7 @@
       />
     </form>
 
-    <div class="space-y-5 sm:space-y-6 md:space-y-7 animate-fadeIn">
+    <div class="space-y-5 sm:space-y-6 md:space-y-7">
       <!-- Mascot slot (skeleton) — the ZipList dude, decorative, smaller in
            the modal so it reads alongside the title without crowding it. -->
       <div class="flex justify-center intro-mascot-slot">
@@ -97,21 +97,6 @@
 </dialog>
 
 <style>
-  .animate-fadeIn {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
-
-  @keyframes fadeIn {
-    0% {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   /* Mascot slot — shrink the shared Mascot to a modal-friendly size so it sits
      above the title without crowding it. Overrides the SoftStack breakpoint
      tokens locally; the character art itself is untouched. */

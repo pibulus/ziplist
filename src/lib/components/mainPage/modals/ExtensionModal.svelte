@@ -21,7 +21,7 @@
       />
     </form>
 
-    <div class="animate-fadeUp space-y-4">
+    <div class="space-y-4">
       <!-- pr-10 keeps the title clear of the absolute close X -->
       <div class="flex items-center gap-3 mb-1 pr-10">
         <div
@@ -94,19 +94,3 @@
   ></button>
 </dialog>
 
-<style>
-  .animate-fadeUp {
-    animation: fadeUp 0.5s ease-out forwards;
-  }
-
-  @keyframes fadeUp {
-    0% {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-</style>

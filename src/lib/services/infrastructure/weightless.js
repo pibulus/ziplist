@@ -5,6 +5,11 @@
  *
  * Modular, independent, and organic.
  * Combines Ziplist's "Lush" synth engine with Stargram's "Sparkle" harmony.
+ *
+ * NOTE: this file is the standalone, portable Weightless lib — keep it
+ * app-agnostic. ZipList intentionally overrides EVERY voice/cue preset below
+ * via ZIPLIST_VOICES/ZIPLIST_CUES in soundService.js, so the defaults here are
+ * unused by ZipList itself. That's by design: they ship with the lib.
  */
 
 const MASTER_LEVEL = 0.65;

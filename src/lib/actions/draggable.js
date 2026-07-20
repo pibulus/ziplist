@@ -3,7 +3,7 @@
  * Svelte action for drag and drop functionality
  */
 
-import { vibrate, HAPTIC_PATTERNS } from "../utils/haptics";
+import { hapticService } from "$lib/services/infrastructure/hapticService";
 
 /**
  * Makes an element draggable with callbacks
@@ -31,7 +31,7 @@ export function draggable(node, options = {}) {
     }
 
     event.dataTransfer.effectAllowed = "move";
-    vibrate(HAPTIC_PATTERNS.DRAG_START);
+    hapticService.dragStart();
 
     if (onDragStart) {
       onDragStart(event);
@@ -39,7 +39,7 @@ export function draggable(node, options = {}) {
   }
 
   function handleDragEnd(event) {
-    vibrate(HAPTIC_PATTERNS.DRAG_END);
+    hapticService.dragEnd();
 
     if (onDragEnd) {
       onDragEnd(event);
@@ -59,7 +59,7 @@ export function draggable(node, options = {}) {
 
   function handleDrop(event) {
     event.preventDefault();
-    vibrate(HAPTIC_PATTERNS.HEAVY);
+    hapticService.impact("heavy");
 
     if (onDrop) {
       onDrop(event);

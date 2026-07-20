@@ -22,7 +22,7 @@
       />
     </form>
 
-    <div class="animate-fadeUp space-y-4">
+    <div class="space-y-4">
       <!-- pr-10 keeps the title clear of the absolute close X -->
       <div class="flex items-center gap-3 mb-1 pr-10">
         <!-- Mascot slot (skeleton) — the real ZipList dude, not an emoji. -->
@@ -115,21 +115,6 @@
 </dialog>
 
 <style>
-  .animate-fadeUp {
-    animation: fadeUp 0.5s ease-out forwards;
-  }
-
-  @keyframes fadeUp {
-    0% {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   /* Mascot slot — shrink the shared Mascot to sit inline beside the title
      without crowding it. The character art itself is untouched. */
   .about-mascot-slot :global(.mascot) {

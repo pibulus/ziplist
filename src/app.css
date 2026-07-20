@@ -356,28 +356,6 @@ dialog.modal.zl-modal-closing .modal-backdrop {
   fill: url(#gradient-fill);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes pulse-glow {
   0% {
     box-shadow: 0 0 5px rgba(255, 190, 60, 0.5);
@@ -453,10 +431,3 @@ dialog.modal.zl-modal-closing .modal-backdrop {
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-.animate-fadeUp {
-  animation: fadeUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-}

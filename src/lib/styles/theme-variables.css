@@ -401,15 +401,6 @@ html[data-theme="zen"] {
     rgba(151, 117, 250, 0.2)
   );
 
-  /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(245, 245, 240, 0.4),
-    rgba(232, 230, 223, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(151, 117, 250, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #9775fa);
-
   /* Base theme colors derived from gradient */
   --zl-primary-color: #9775fa;
   --zl-primary-color-rgb: 151, 117, 250;

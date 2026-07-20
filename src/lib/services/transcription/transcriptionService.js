@@ -1,4 +1,3 @@
-import { geminiService as defaultGeminiService } from "$lib/services/geminiService";
 import { simpleHybridService } from "./simpleHybridService";
 import { listParser } from "../listParser.js"; // Import the listParser
 import { listsService } from "../lists/listsService"; // Import the listsService
@@ -22,8 +21,7 @@ export const TranscriptionEvents = {
 };
 
 export class TranscriptionService {
-  constructor(dependencies = {}) {
-    this.geminiService = dependencies.geminiService || defaultGeminiService;
+  constructor() {
     this.browser = typeof window !== "undefined";
     this.lastTranscriptionTimestamp = null;
   }
