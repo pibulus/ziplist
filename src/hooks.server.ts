@@ -4,8 +4,12 @@ import { dev } from "$app/environment";
 // - script-src allows 'unsafe-inline' because SvelteKit injects an inline
 //   hydration bootstrap; tighten to nonces only if we move to kit.csp.
 // - connect-src covers same-origin APIs plus PartyKit (wss/https) for live
-//   lists. Dev additionally allows ws://localhost:* so `npm run dev:party`
-//   (local PartyKit on :1999) and Vite HMR aren't blocked.
+//   lists. BOTH partykit.io and partykit.dev are listed: deployed workers live
+//   on *.partykit.dev (ours is ziplist.pibulus.partykit.dev), so a .io-only
+//   allowlist silently blocks every live-share WebSocket in the browser while
+//   the server-side API still looks healthy. Dev additionally allows
+//   ws://localhost:* so `npm run dev:party` (local PartyKit on :1999) and
+//   Vite HMR aren't blocked.
 // - img-src allows data:/blob: for canvas confetti + generated avatars.
 const CSP = [
   "default-src 'self'",
@@ -14,7 +18,7 @@ const CSP = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self' blob:",
-  `connect-src 'self' https://*.partykit.io wss://*.partykit.io${dev ? " ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*" : ""}`,
+  `connect-src 'self' https://*.partykit.io wss://*.partykit.io https://*.partykit.dev wss://*.partykit.dev${dev ? " ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*" : ""}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "base-uri 'self'",
