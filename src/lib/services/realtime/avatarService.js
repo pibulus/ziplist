@@ -104,6 +104,31 @@ function generateAvatar() {
 }
 
 /**
+ * Re-roll to a brand-new random avatar (the "click your face for a new
+ * one" move). Faces are seeded by name, so a fresh generated name is a
+ * fresh face — regenerates until it actually differs from the current one
+ * so a click always visibly does something.
+ * @param {string} [currentName]
+ * @returns {string} the stored name
+ */
+export function rerollAvatar(currentName) {
+  let next = generateAvatar();
+  let guard = 0;
+  while (next === currentName && guard < 5) {
+    next = generateAvatar();
+    guard += 1;
+  }
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // privacy mode — the name just won't persist
+    }
+  }
+  return next;
+}
+
+/**
  * Set a custom avatar name (the "call me Mum" move). Empty input falls
  * back to a fresh generated name.
  * @param {string} name

@@ -16,6 +16,7 @@
     getOrCreateAvatar,
     setAvatarName,
     getAvatarImage,
+    rerollAvatar,
   } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
 
@@ -30,6 +31,7 @@
   let soundCuesValue = true;
   let chunkyModeValue = false;
   let contributorUnlocked = false;
+  let avatarRerolling = false;
 
   // Subscribe to theme store
   const unsubscribeTheme = theme.subscribe((value) => {
@@ -186,6 +188,17 @@
     event.currentTarget.value = avatarName;
     soundService.select();
   }
+
+  // Click your face, get a new one — the "call me Mum" input above still
+  // lets you type your own, this is just the quick shuffle.
+  function rerollAvatarFace() {
+    avatarName = rerollAvatar(avatarName);
+    soundService.select();
+    avatarRerolling = true;
+    setTimeout(() => {
+      avatarRerolling = false;
+    }, 420);
+  }
 </script>
 
 <dialog
@@ -337,12 +350,21 @@
           </div>
           <div class="zl-avatar-field">
             {#if avatarName}
-              <img
-                class="zl-avatar-face"
-                src={getAvatarImage(avatarName)}
-                alt=""
-                aria-hidden="true"
-              />
+              <button
+                type="button"
+                class="zl-avatar-face-btn"
+                class:rerolling={avatarRerolling}
+                on:click={rerollAvatarFace}
+                title="Tap for a new face"
+                aria-label="Re-roll avatar face"
+              >
+                <img
+                  class="zl-avatar-face"
+                  src={getAvatarImage(avatarName)}
+                  alt=""
+                  aria-hidden="true"
+                />
+              </button>
             {/if}
             <input
               type="text"
@@ -621,6 +643,67 @@
     gap: 0.5rem;
     flex-shrink: 0;
     min-width: 0;
+  }
+
+  /* 44px tap target wraps the 30px face — bestie, no acrylic-defeating
+     targets in this house. Squish-then-spin on click/tap, satisfying
+     without being disruptive. */
+  .zl-avatar-face-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease;
+  }
+
+  .zl-avatar-face-btn:hover {
+    transform: scale(1.08);
+  }
+
+  .zl-avatar-face-btn:active {
+    transform: scale(0.9);
+  }
+
+  .zl-avatar-face-btn:focus-visible {
+    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
+    outline-offset: 2px;
+  }
+
+  .zl-avatar-face-btn.rerolling .zl-avatar-face {
+    animation: avatar-reroll-spin 0.42s
+      var(--zl-transition-easing-bounce, cubic-bezier(0.34, 1.56, 0.64, 1));
+  }
+
+  @keyframes avatar-reroll-spin {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    40% {
+      transform: scale(0.72) rotate(160deg);
+    }
+    100% {
+      transform: scale(1) rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zl-avatar-face-btn,
+    .zl-avatar-face-btn:hover,
+    .zl-avatar-face-btn:active {
+      transition: none;
+      transform: none;
+    }
+    .zl-avatar-face-btn.rerolling .zl-avatar-face {
+      animation: none;
+    }
   }
 
   .zl-avatar-face {
