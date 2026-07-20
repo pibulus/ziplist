@@ -846,7 +846,6 @@
   <svelte:fragment slot="footer-buttons">
     <FooterComponent
       on:showAbout={showAboutModal}
-      on:showContributor={openContributorModal}
       on:showSettings={openSettingsModal}
       on:showExtension={showExtensionModal}
     />

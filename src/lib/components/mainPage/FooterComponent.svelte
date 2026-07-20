@@ -29,10 +29,6 @@
     dispatch("showSettings");
   }
 
-  function showContributor() {
-    dispatch("showContributor");
-  }
-
   function showExtension() {
     dispatch("showExtension");
   }
@@ -83,15 +79,6 @@
     aria-label="About Ziplist"
   >
     About
-  </button>
-  <button
-    type="button"
-    class={footerButtonClass}
-    on:click={showContributor}
-    aria-label="Open Contributor unlock"
-  >
-    <span class="hidden sm:inline">Contributor</span>
-    <span class="sm:hidden">Unlock</span>
   </button>
   <button
     type="button"

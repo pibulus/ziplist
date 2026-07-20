@@ -1,7 +1,16 @@
 <script>
   import { ModalCloseButton } from "./index.js";
   import { Mascot } from "$lib/components/ui";
+  import { isContributor } from "$lib";
   export let closeModal;
+
+  // Contributor lives here (and in Options) instead of a permanent footer
+  // spot — same "ziplist-open-contributor" hook SettingsModal and the
+  // max-lists/live-share gates already use, no new tracking added.
+  function openContributor() {
+    closeModal();
+    window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
+  }
 </script>
 
 <dialog
@@ -76,7 +85,7 @@
         Your lists live on your device, not our servers.
       </p>
 
-      <div class="flex items-center gap-3 pt-2">
+      <div class="flex flex-wrap items-center gap-3 pt-2">
         <a
           href="https://ko-fi.com/madebypablo"
           target="_blank"
@@ -93,6 +102,15 @@
         >
           GitHub
         </a>
+        {#if !$isContributor}
+          <button
+            type="button"
+            class="about-link about-contributor-link text-xs font-medium transition-colors"
+            on:click={openContributor}
+          >
+            Become a contributor
+          </button>
+        {/if}
       </div>
 
       <div class="flex justify-between items-end pt-2">
@@ -130,5 +148,17 @@
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+  }
+
+  .about-contributor-link {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--zl-accent-color, #ff6ac2);
+  }
+
+  .about-contributor-link:hover {
+    color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
   }
 </style>
