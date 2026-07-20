@@ -12,6 +12,9 @@ export const THEMES = {
   ZEN: "zen",
   NOCTURNE: "nocturne",
   NEO: "neo",
+  HIGHLIGHTER: "highlighter",
+  DAYGLO: "dayglo",
+  MANILA: "manila",
 };
 
 export const DEFAULT_THEME = THEMES.NEO;

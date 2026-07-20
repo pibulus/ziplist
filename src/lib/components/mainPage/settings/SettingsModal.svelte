@@ -63,6 +63,9 @@
     { id: THEMES.CHILL, name: "Chill" },
     { id: THEMES.ZEN, name: "Zen" },
     { id: THEMES.NOCTURNE, name: "Nocturne" },
+    { id: THEMES.HIGHLIGHTER, name: "Highlighter" },
+    { id: THEMES.DAYGLO, name: "Dayglo" },
+    { id: THEMES.MANILA, name: "Manila" },
   ];
 
   onMount(() => {

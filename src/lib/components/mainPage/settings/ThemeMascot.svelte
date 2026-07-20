@@ -16,6 +16,9 @@
     chill: { start: "#a5e3e0", mid: "#71c9ce", end: "#4da1a9" },
     zen: { start: "#cdb5ff", mid: "#9775fa", end: "#845ef7" },
     nocturne: { start: "#d8a9e3", mid: "#c487d2", end: "#6ca4c2" },
+    highlighter: { start: "#ff2e93", mid: "#ff7a1a", end: "#f9f002" },
+    dayglo: { start: "#c8ff33", mid: "#7dfad0", end: "#17e0e0" },
+    manila: { start: "#ffb200", mid: "#ff7a3d", end: "#ff4d6a" },
   };
 
   const uid = Math.random().toString(36).slice(2, 8);
