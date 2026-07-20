@@ -116,928 +116,31 @@
 }
 
 /**
- * Theme: Focus (Default)
+ * ============================================================
+ * THE DESK DRAWER — four office-supply fluro themes, one concept
+ * ============================================================
+ * Highlighter · Sticky Note · Carbon Copy · Wite-Out
  *
- * A tangerine sunrise theme — sharpened from its original washed-out
- * pastel toward genuine amber-coral punch, while keeping the warm
- * sunrise identity (not converted to fluro; this is Focus, not
- * Highlighter).
+ * Every theme is a warm cream "paper" ground (the desk) with ONE
+ * fluro office-tool accent duo popping off it. Not seasons, not
+ * moods — actual desk-drawer objects, so the set reads as siblings
+ * at a glance and the concept is nameable in a word: office supplies.
+ * Toybrut/neobrut kawaii — chunky borders, punchy but polished.
+ * ============================================================
  */
-html[data-theme="focus"] {
-  /* Mascot gradient — tangerine sunrise, deepened (matches ThemeMascot focus swatch) */
-  --zl-mascot-gradient-start: #ffb87a;
-  --zl-mascot-gradient-mid: #ff8c4d;
-  --zl-mascot-gradient-end: #ff6a3d;
-
-  /* Card gradient - tangerine sunrise, more saturated top-to-bottom */
-  --zl-card-bg-gradient-angle: 135deg;
-  --zl-card-bg-gradient-color-start: #fff7ef;
-  --zl-card-bg-gradient-color-second: #ffdec7;
-  --zl-card-bg-gradient-color-mid: #ffc79e;
-  --zl-card-bg-gradient-color-fourth: #ffa876;
-  --zl-card-bg-gradient-color-end: #ff8552;
-  --zl-card-border-color: rgba(255, 138, 77, 0.65);
-  --zl-card-box-shadow: 0 12px 30px rgba(255, 122, 61, 0.26);
-  --zl-card-inner-border-gradient: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 122, 61, 0.24)
-  );
-
-  /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(255, 240, 220, 0.5),
-    rgba(255, 224, 195, 0.5)
-  );
-  --zl-empty-state-border: 3px dashed rgba(255, 138, 77, 0.4);
-  --zl-empty-title-color: var(--zl-primary-color, #ff8c4d);
-
-  /* Base theme colors derived from gradient */
-  --zl-primary-color: #ff8c4d;
-  --zl-primary-color-rgb: 255, 140, 77;
-  --zl-secondary-color: #ffa876;
-  --zl-accent-color: #ff6a3d;
-  --zl-cta-grad-start: #ffa25f;
-  --zl-cta-grad-end: #ff6a3d;
-  --zl-accent-color-rgb: 255, 106, 61;
-  --zl-highlight-color: #fff2e6;
-  --zl-text-hover-color: #ff6a3d;
-
-  /* Text colors - warm dark text for light background */
-  --zl-text-color-primary: #5b4b41;
-  --zl-text-color-secondary: #7d6b62;
-  --zl-text-color-disabled: #a89a94;
-
-  /* Footer resting color — focus is LIGHT, use its muted warm ink */
-  --footer-text-color: #7d6b62;
-
-  /* List item styling */
-  --zl-item-bg: rgba(255, 255, 255, 0.85);
-  --zl-item-hover-bg: rgba(255, 255, 255, 0.97);
-  --zl-item-border-color: rgba(255, 171, 119, 0.4);
-  --zl-item-border-hover-color: rgba(255, 171, 119, 0.7);
-  --zl-item-box-shadow: 0 4px 10px rgba(255, 138, 91, 0.1);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(255, 138, 91, 0.15);
-
-  /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(255, 248, 230, 0.4);
-  --zl-item-checked-border-color: rgba(255, 171, 119, 0.25);
-
-  /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(255, 171, 119, 0.7);
-  --zl-item-dragging-bg: rgba(255, 255, 255, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(255, 138, 91, 0.25);
-  --zl-item-dragover-bg: rgba(255, 248, 230, 0.8);
-  --zl-item-dragover-border: 2px solid rgba(255, 171, 119, 0.6);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(255, 138, 91, 0.2);
-
-  /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(255, 171, 119, 0.5);
-  --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
-  --zl-checkbox-hover-border: 2px solid rgba(255, 171, 119, 0.7);
-  --zl-checkbox-hover-bg: rgba(255, 248, 230, 0.8);
-  --zl-checkbox-checked-gradient-start: #ffc9a3;
-  --zl-checkbox-checked-gradient-end: #ff8a5b;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(255, 138, 91, 0.2);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
-
-  /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(255, 248, 230, 0.7),
-    rgba(255, 248, 230, 0.9)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(255, 138, 91, 0.2);
-
-  /* Grab handle styling */
-  --zl-grab-handle-color: rgba(255, 171, 119, 0.7);
-  --zl-grab-handle-opacity: 0.6;
-  --zl-grab-handle-hover-opacity: 1;
-
-  /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(255, 248, 230, 0.95);
-  --zl-delete-button-text-color: rgba(255, 152, 0, 0.9);
-
-  /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(255, 171, 119, 0.7);
-  --zl-drop-arrow-bg: rgba(255, 171, 119, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(255, 138, 91, 0.3);
-
-  /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(255, 171, 119, 0.3);
-  --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
-  --zl-edit-input-focus-border: rgba(255, 171, 119, 0.6);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(255, 171, 119, 0.1);
-
-  /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(255, 171, 119, 0.4);
-  --zl-new-item-input-focus-border: rgba(255, 171, 119, 0.7);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(255, 171, 119, 0.1);
-
-  /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(
-    to bottom right,
-    var(--zl-cta-grad-start),
-    var(--zl-cta-grad-end)
-  );
-  --app-suffix-bg-size: auto;
-  --app-suffix-anim: none;
-  --app-suffix-stroke: none;
-  --app-suffix-filter: none;
-}
 
 /**
- * Theme: Chill
+ * Theme: Highlighter (Default)
  *
- * A cool, icy theme with mint, slate, and sky blue colors
- * creating a calm, refreshing feel
- */
-html[data-theme="chill"] {
-  /* Mascot gradient — cool teal (matches ThemeMascot chill swatch) */
-  --zl-mascot-gradient-start: #a5e3e0;
-  --zl-mascot-gradient-mid: #71c9ce;
-  --zl-mascot-gradient-end: #4da1a9;
-
-  /* Card gradient */
-  --zl-card-bg-gradient-angle: 120deg;
-  --zl-card-bg-gradient-color-start: #e5f9f6;
-  --zl-card-bg-gradient-color-second: #d5f3f1;
-  --zl-card-bg-gradient-color-mid: #b7e5e5;
-  --zl-card-bg-gradient-color-fourth: #94d7dd;
-  --zl-card-bg-gradient-color-end: #71c9ce;
-  --zl-card-border-color: rgba(113, 201, 206, 0.6);
-  --zl-card-box-shadow: 0 12px 30px rgba(38, 166, 192, 0.2);
-  --zl-card-inner-border-gradient: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.6),
-    rgba(113, 201, 206, 0.2)
-  );
-
-  /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(240, 249, 255, 0.4),
-    rgba(224, 247, 250, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(77, 208, 225, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #71c9ce);
-
-  /* Base theme colors derived from gradient */
-  --zl-primary-color: #71c9ce;
-  --zl-primary-color-rgb: 113, 201, 206;
-  --zl-secondary-color: #94d7dd;
-  --zl-accent-color: #4da1a9;
-  --zl-cta-grad-start: #8fd8db;
-  --zl-cta-grad-end: #4da1a9;
-  --zl-accent-color-rgb: 77, 161, 169;
-  --zl-highlight-color: #e5f9f6;
-  --zl-text-hover-color: #4da1a9;
-
-  /* Footer resting color — chill is LIGHT, use a muted teal/slate ink */
-  --footer-text-color: #4a6e72;
-
-  /* List item styling */
-  --zl-item-bg: rgba(255, 255, 255, 0.85);
-  --zl-item-hover-bg: rgba(255, 255, 255, 0.97);
-  --zl-item-border-color: rgba(77, 208, 225, 0.4);
-  --zl-item-border-hover-color: rgba(77, 208, 225, 0.7);
-  --zl-item-box-shadow: 0 4px 10px rgba(38, 166, 192, 0.1);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(38, 166, 192, 0.15);
-
-  /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(240, 249, 255, 0.4);
-  --zl-item-checked-border-color: rgba(77, 208, 225, 0.25);
-
-  /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(77, 208, 225, 0.7);
-  --zl-item-dragging-bg: rgba(255, 255, 255, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(38, 166, 192, 0.25);
-  --zl-item-dragover-bg: rgba(240, 249, 255, 0.8);
-  --zl-item-dragover-border: 2px solid rgba(77, 208, 225, 0.6);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(38, 166, 192, 0.2);
-
-  /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(77, 208, 225, 0.5);
-  --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
-  --zl-checkbox-hover-border: 2px solid rgba(77, 208, 225, 0.7);
-  --zl-checkbox-hover-bg: rgba(240, 249, 255, 0.8);
-  --zl-checkbox-checked-gradient-start: #80deea;
-  --zl-checkbox-checked-gradient-end: #4dd0e1;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(38, 166, 192, 0.2);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
-
-  /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(240, 249, 255, 0.7),
-    rgba(240, 249, 255, 0.9)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(38, 166, 192, 0.2);
-
-  /* Grab handle styling */
-  --zl-grab-handle-color: rgba(77, 208, 225, 0.7);
-  --zl-grab-handle-opacity: 0.6;
-  --zl-grab-handle-hover-opacity: 1;
-
-  /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(240, 249, 255, 0.95);
-  --zl-delete-button-text-color: rgba(38, 166, 192, 0.9);
-
-  /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(77, 208, 225, 0.7);
-  --zl-drop-arrow-bg: rgba(77, 208, 225, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(38, 166, 192, 0.3);
-
-  /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(77, 208, 225, 0.3);
-  --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
-  --zl-edit-input-focus-border: rgba(77, 208, 225, 0.6);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
-
-  /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(240, 249, 255, 0.4),
-    rgba(224, 247, 250, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(77, 208, 225, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #4dd0e1);
-
-  /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(77, 208, 225, 0.4);
-  --zl-new-item-input-focus-border: rgba(77, 208, 225, 0.7);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
-
-  /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to bottom right, #4ad8cb, #67e799);
-  --app-suffix-bg-size: auto;
-  --app-suffix-anim: none;
-  --app-suffix-stroke: none;
-  --app-suffix-filter: none;
-}
-
-/**
- * Theme: Zen
- *
- * A regal violet lo-fi theme with soothing lavender and deep purple tones
- * creating a centered, calming atmosphere with sophisticated elegance
- */
-html[data-theme="zen"] {
-  /* Mascot gradient — soft violet (derived from zen's card gradient stops) */
-  --zl-mascot-gradient-start: #cdb5ff;
-  --zl-mascot-gradient-mid: #9775fa;
-  --zl-mascot-gradient-end: #845ef7;
-
-  /* Card gradient */
-  --zl-card-bg-gradient-angle: 145deg;
-  --zl-card-bg-gradient-color-start: #f4eeff;
-  --zl-card-bg-gradient-color-second: #e6dbff;
-  --zl-card-bg-gradient-color-mid: #d0bfff;
-  --zl-card-bg-gradient-color-fourth: #b197fc;
-  --zl-card-bg-gradient-color-end: #9775fa;
-  --zl-card-border-color: rgba(151, 117, 250, 0.5);
-  --zl-card-box-shadow: 0 12px 30px rgba(151, 117, 250, 0.2);
-  --zl-card-inner-border-gradient: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.6),
-    rgba(151, 117, 250, 0.2)
-  );
-
-  /* Base theme colors derived from gradient */
-  --zl-primary-color: #9775fa;
-  --zl-primary-color-rgb: 151, 117, 250;
-  --zl-secondary-color: #b197fc;
-  --zl-accent-color: #845ef7;
-  --zl-cta-grad-start: #b39ffc;
-  --zl-cta-grad-end: #845ef7;
-  --zl-accent-color-rgb: 132, 94, 247;
-  --zl-highlight-color: #f4eeff;
-  --zl-text-hover-color: #845ef7;
-
-  /* Text colors */
-  --zl-text-color-primary: #382f66;
-  --zl-text-color-secondary: #5d5393;
-  --zl-text-color-disabled: #9a93c2;
-
-  /* Footer resting color — zen is LIGHT, use its muted violet ink */
-  --footer-text-color: #5d5393;
-
-  /* List item styling */
-  --zl-item-bg: rgba(255, 255, 255, 0.85);
-  --zl-item-hover-bg: rgba(255, 255, 255, 0.97);
-  --zl-item-border-color: rgba(151, 117, 250, 0.3);
-  --zl-item-border-hover-color: rgba(151, 117, 250, 0.6);
-  --zl-item-box-shadow: 0 4px 10px rgba(151, 117, 250, 0.1);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(151, 117, 250, 0.15);
-
-  /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(244, 238, 255, 0.4);
-  --zl-item-checked-border-color: rgba(151, 117, 250, 0.2);
-
-  /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(151, 117, 250, 0.6);
-  --zl-item-dragging-bg: rgba(255, 255, 255, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(151, 117, 250, 0.25);
-  --zl-item-dragover-bg: rgba(244, 238, 255, 0.8);
-  --zl-item-dragover-border: 2px solid rgba(151, 117, 250, 0.5);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(151, 117, 250, 0.2);
-
-  /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(151, 117, 250, 0.5);
-  --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
-  --zl-checkbox-hover-border: 2px solid rgba(151, 117, 250, 0.7);
-  --zl-checkbox-hover-bg: rgba(244, 238, 255, 0.8);
-  --zl-checkbox-checked-gradient-start: #c4b5fd;
-  --zl-checkbox-checked-gradient-end: #9775fa;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(151, 117, 250, 0.2);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.8);
-
-  /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(244, 238, 255, 0.7),
-    rgba(244, 238, 255, 0.9)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(151, 117, 250, 0.2);
-
-  /* Grab handle styling */
-  --zl-grab-handle-color: rgba(151, 117, 250, 0.7);
-  --zl-grab-handle-opacity: 0.6;
-  --zl-grab-handle-hover-opacity: 1;
-
-  /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(244, 238, 255, 0.95);
-  --zl-delete-button-text-color: rgba(132, 94, 247, 0.9);
-
-  /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(151, 117, 250, 0.7);
-  --zl-drop-arrow-bg: rgba(151, 117, 250, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(151, 117, 250, 0.3);
-
-  /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(151, 117, 250, 0.3);
-  --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
-  --zl-edit-input-focus-border: rgba(151, 117, 250, 0.6);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(151, 117, 250, 0.1);
-
-  /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(244, 238, 255, 0.4),
-    rgba(230, 219, 255, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(151, 117, 250, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #9775fa);
-
-  /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(151, 117, 250, 0.4);
-  --zl-new-item-input-focus-border: rgba(151, 117, 250, 0.7);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(151, 117, 250, 0.1);
-
-  /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to bottom right, #9f8fff, #8183f4);
-  --app-suffix-bg-size: auto;
-  --app-suffix-anim: none;
-  --app-suffix-stroke: none;
-  --app-suffix-filter: none;
-}
-
-/**
- * Theme: Nocturne
- *
- * A dreamy moonlight theme with soft pastel neon accents
- * creating a peaceful night-time lo-fi vibe
- */
-html[data-theme="nocturne"] {
-  /* Mascot gradient — moonlit blue→orchid (matches ThemeMascot nocturne swatch) */
-  --zl-mascot-gradient-start: #d8a9e3;
-  --zl-mascot-gradient-mid: #c487d2;
-  --zl-mascot-gradient-end: #6ca4c2;
-
-  /* Card gradient - soft pastel moonlight with blue-green tones */
-  --zl-card-bg-gradient-angle: 135deg;
-  --zl-card-bg-gradient-color-start: #8db0c8;
-  --zl-card-bg-gradient-color-second: #98bdcf;
-  --zl-card-bg-gradient-color-mid: #7da9ad;
-  --zl-card-bg-gradient-color-fourth: #68a3b3;
-  --zl-card-bg-gradient-color-end: #7b94c9;
-  --zl-card-border-color: rgba(108, 164, 194, 0.5);
-  --zl-card-box-shadow: 0 12px 30px rgba(132, 198, 187, 0.3);
-  --zl-card-inner-border-gradient: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.6),
-    rgba(132, 198, 187, 0.2)
-  );
-
-  /* Base theme colors derived from gradient */
-  --zl-primary-color: #c487d2;
-  --zl-primary-color-rgb: 196, 135, 210;
-  --zl-secondary-color: #84c6bb;
-  --zl-accent-color: #6ca4c2;
-  --zl-card-veil: rgba(255, 255, 255, 0.08);
-  --zl-cta-grad-start: #cfa3da;
-  --zl-cta-grad-end: #6ca4c2;
-  --zl-accent-color-rgb: 108, 164, 194;
-  --zl-highlight-color: #f8f8f2;
-  --zl-text-hover-color: #c487d2;
-
-  /* List item styling - soothing muted colors */
-  --zl-item-bg: rgba(255, 255, 255, 0.85);
-  --zl-item-hover-bg: rgba(240, 246, 255, 0.7);
-  --zl-item-border-color: rgba(132, 198, 187, 0.4);
-  --zl-item-border-hover-color: rgba(132, 198, 187, 0.7);
-  --zl-item-box-shadow: 0 4px 10px rgba(123, 148, 201, 0.2);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(123, 148, 201, 0.25);
-
-  /* Text colors - soft dark text on lighter background */
-  --zl-text-color-primary: #405b73;
-  --zl-text-color-secondary: #5a7a91;
-  --zl-text-color-disabled: #a1b5c5;
-
-  /* Footer resting color — nocturne in THIS app renders on a LIGHT blue
-     background (#dbeaf3, see PageLayout .bg-gradient-mesh) with dark primary
-     text, so use its own dark muted ink, NOT a light value (a light footer
-     text would be unreadable here). Brief's "nocturne is DARK" does not match
-     ziplist's actual light-bg nocturne. */
-  --footer-text-color: #5a7a91;
-
-  /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(235, 244, 250, 0.4);
-  --zl-item-checked-border-color: rgba(132, 198, 187, 0.25);
-
-  /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(196, 135, 210, 0.6);
-  --zl-item-dragging-bg: rgba(255, 255, 255, 0.9);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(123, 148, 201, 0.3);
-  --zl-item-dragover-bg: rgba(240, 246, 255, 0.8);
-  --zl-item-dragover-border: 2px solid rgba(196, 135, 210, 0.5);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(196, 135, 210, 0.25);
-
-  /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(132, 198, 187, 0.5);
-  --zl-checkbox-bg: rgba(255, 255, 255, 0.8);
-  --zl-checkbox-hover-border: 2px solid rgba(196, 135, 210, 0.7);
-  --zl-checkbox-hover-bg: rgba(242, 240, 252, 0.8);
-  --zl-checkbox-checked-gradient-start: #a6d0f8;
-  --zl-checkbox-checked-gradient-end: #84c6bb;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(123, 148, 201, 0.3);
-  --zl-checkbox-sparkle-color: rgba(196, 135, 210, 0.8);
-
-  /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(240, 246, 255, 0.7),
-    rgba(235, 244, 250, 0.9)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(196, 135, 210, 0.25);
-
-  /* Grab handle styling */
-  --zl-grab-handle-color: rgba(123, 148, 201, 0.7);
-  --zl-grab-handle-opacity: 0.6;
-  --zl-grab-handle-hover-opacity: 1;
-
-  /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(242, 240, 252, 0.95);
-  --zl-delete-button-text-color: rgba(123, 148, 201, 0.9);
-
-  /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(196, 135, 210, 0.7);
-  --zl-drop-arrow-bg: rgba(132, 198, 187, 0.8);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(123, 148, 201, 0.4);
-
-  /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(132, 198, 187, 0.4);
-  --zl-edit-input-bg: rgba(255, 255, 255, 0.8);
-  --zl-edit-input-focus-border: rgba(196, 135, 210, 0.6);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(196, 135, 210, 0.2);
-
-  /* Empty state styling */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(235, 244, 250, 0.4),
-    rgba(242, 240, 252, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(132, 198, 187, 0.3);
-  --zl-empty-title-color: var(--zl-primary-color, #c487d2);
-
-  /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(196, 135, 210, 0.4);
-  --zl-new-item-input-focus-border: rgba(196, 135, 210, 0.6);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(196, 135, 210, 0.2);
-
-  /* AppSuffix (.app) token — moonlight duotone, no neon after dark */
-  --app-suffix-gradient: linear-gradient(
-    to bottom right,
-    var(--zl-cta-grad-start),
-    var(--zl-cta-grad-end)
-  );
-  --app-suffix-bg-size: auto;
-  --app-suffix-anim: none;
-  --app-suffix-stroke: none;
-  --app-suffix-filter: none;
-}
-
-/**
- * Theme: Highlighter
- *
- * Office fluro. Stabilo Boss pink meets manila-yellow, popping hard
- * against a warm cream desk-paper ground. The loudest theme in the
- * roster — chunky borders read like a highlighter dragged across a
- * memo.
+ * The anchor. Pablo-approved pink→yellow duo, unchanged identity,
+ * formerly "Neo" — renamed to belong to the desk-drawer set. Stabilo
+ * Boss pink dragged across warm cream memo paper.
  */
 html[data-theme="highlighter"] {
-  /* Mascot gradient — fluro pink → fluro yellow, dead-on highlighter pair */
-  --zl-mascot-gradient-start: #ff2e93;
-  --zl-mascot-gradient-mid: #ff7a1a;
-  --zl-mascot-gradient-end: #f9f002;
-
-  /* Card gradient — warm manila cream, the "desk paper" ground the fluro pops off */
-  --zl-card-bg-gradient-angle: 135deg;
-  --zl-card-bg-gradient-color-start: #fffdf2;
-  --zl-card-bg-gradient-color-second: #fff9dc;
-  --zl-card-bg-gradient-color-mid: #fff2b8;
-  --zl-card-bg-gradient-color-fourth: #ffe98f;
-  --zl-card-bg-gradient-color-end: #ffe066;
-  --zl-card-border-color: #ff2e93;
-  --zl-card-box-shadow: 0 12px 30px rgba(255, 46, 147, 0.22);
-  --zl-card-inner-border-gradient: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.7),
-    rgba(255, 46, 147, 0.18)
-  );
-
-  /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(255, 249, 220, 0.5),
-    rgba(255, 224, 102, 0.35)
-  );
-  --zl-empty-state-border: 3px dashed rgba(255, 46, 147, 0.4);
-  --zl-empty-title-color: var(--zl-primary-color, #ff2e93);
-
-  /* Base theme colors */
-  --zl-primary-color: #ff2e93;
-  --zl-primary-color-rgb: 255, 46, 147;
-  --zl-secondary-color: #ffe066;
-  --zl-accent-color: #f9f002;
-  --zl-cta-grad-start: #ffe066;
-  --zl-cta-grad-end: #ff2e93;
-  --zl-accent-color-rgb: 249, 240, 2;
-  --zl-highlight-color: #fff9dc;
-  --zl-text-hover-color: #ff2e93;
-
-  /* Text colors — warm near-black ink, never full black */
-  --zl-text-color-primary: #241a1f;
-  --zl-text-color-secondary: #5c4750;
-  --zl-text-color-disabled: #a8969e;
-
-  /* Footer resting color — light theme, muted warm ink */
-  --footer-text-color: #8a3a63;
-
-  /* List item styling */
-  --zl-item-bg: rgba(255, 253, 242, 0.92);
-  --zl-item-hover-bg: rgba(255, 253, 242, 1);
-  --zl-item-border-color: rgba(255, 46, 147, 0.45);
-  --zl-item-border-hover-color: rgba(255, 46, 147, 0.8);
-  --zl-item-box-shadow: 0 4px 10px rgba(255, 46, 147, 0.14);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(255, 46, 147, 0.2);
-
-  /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(255, 249, 220, 0.5);
-  --zl-item-checked-border-color: rgba(255, 46, 147, 0.25);
-
-  /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(255, 46, 147, 0.8);
-  --zl-item-dragging-bg: rgba(255, 253, 242, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(255, 46, 147, 0.3);
-  --zl-item-dragover-bg: rgba(255, 249, 220, 0.9);
-  --zl-item-dragover-border: 2px solid rgba(255, 46, 147, 0.65);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(255, 46, 147, 0.22);
-
-  /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(255, 46, 147, 0.55);
-  --zl-checkbox-bg: rgba(255, 253, 242, 0.9);
-  --zl-checkbox-hover-border: 2px solid rgba(255, 46, 147, 0.8);
-  --zl-checkbox-hover-bg: rgba(255, 249, 220, 0.9);
-  --zl-checkbox-checked-gradient-start: #ffe066;
-  --zl-checkbox-checked-gradient-end: #ff2e93;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(255, 46, 147, 0.25);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
-
-  /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(255, 249, 220, 0.8),
-    rgba(255, 224, 102, 0.6)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(255, 46, 147, 0.25);
-
-  /* Grab handle styling */
-  --zl-grab-handle-color: rgba(255, 46, 147, 0.75);
-  --zl-grab-handle-opacity: 0.6;
-  --zl-grab-handle-hover-opacity: 1;
-
-  /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(255, 249, 220, 0.95);
-  --zl-delete-button-text-color: rgba(255, 122, 26, 0.95);
-
-  /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(255, 46, 147, 0.75);
-  --zl-drop-arrow-bg: rgba(255, 46, 147, 0.95);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(255, 46, 147, 0.35);
-
-  /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(255, 46, 147, 0.35);
-  --zl-edit-input-bg: rgba(255, 253, 242, 0.9);
-  --zl-edit-input-focus-border: rgba(255, 46, 147, 0.7);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(255, 46, 147, 0.15);
-
-  /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(255, 46, 147, 0.45);
-  --zl-new-item-input-focus-border: rgba(255, 46, 147, 0.8);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(255, 46, 147, 0.15);
-
-  /* AppSuffix (.app) token — pink-to-yellow highlighter streak */
-  --app-suffix-gradient: linear-gradient(to right, #ff2e93, #f9f002);
-  --app-suffix-bg-size: auto;
-  --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(36, 26, 31, 0.15);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 46, 147, 0.28));
-}
-
-/**
- * Theme: Dayglo
- *
- * Office fluro, cooler half. Sticky-note lime and highlighter cyan on
- * warm cream — the "corkboard covered in Post-its" energy, not a
- * screen-glow neon.
- */
-html[data-theme="dayglo"] {
-  /* Mascot gradient — fluro lime → fluro cyan */
-  --zl-mascot-gradient-start: #c8ff33;
-  --zl-mascot-gradient-mid: #7dfad0;
-  --zl-mascot-gradient-end: #17e0e0;
-
-  /* Card gradient — warm cream ground, cool fluro only at the edge */
-  --zl-card-bg-gradient-angle: 130deg;
-  --zl-card-bg-gradient-color-start: #fdfef0;
-  --zl-card-bg-gradient-color-second: #f4fdd8;
-  --zl-card-bg-gradient-color-mid: #e3fbc9;
-  --zl-card-bg-gradient-color-fourth: #cdf7d9;
-  --zl-card-bg-gradient-color-end: #a9f0e6;
-  --zl-card-border-color: #17c9c9;
-  --zl-card-box-shadow: 0 12px 30px rgba(23, 224, 224, 0.22);
-  --zl-card-inner-border-gradient: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.7),
-    rgba(23, 224, 224, 0.2)
-  );
-
-  /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(244, 253, 216, 0.5),
-    rgba(169, 240, 230, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(23, 224, 224, 0.4);
-  --zl-empty-title-color: var(--zl-primary-color, #12b8b8);
-
-  /* Base theme colors */
-  --zl-primary-color: #12b8b8;
-  --zl-primary-color-rgb: 18, 184, 184;
-  --zl-secondary-color: #c8ff33;
-  --zl-accent-color: #17e0e0;
-  --zl-cta-grad-start: #c8ff33;
-  --zl-cta-grad-end: #17c9c9;
-  --zl-accent-color-rgb: 23, 224, 224;
-  --zl-highlight-color: #f4fdd8;
-  --zl-text-hover-color: #0f9d9d;
-
-  /* Text colors — warm near-black ink */
-  --zl-text-color-primary: #1c2620;
-  --zl-text-color-secondary: #47594f;
-  --zl-text-color-disabled: #93a49c;
-
-  /* Footer resting color — light theme, muted teal ink */
-  --footer-text-color: #0f7a7a;
-
-  /* List item styling */
-  --zl-item-bg: rgba(253, 254, 240, 0.92);
-  --zl-item-hover-bg: rgba(253, 254, 240, 1);
-  --zl-item-border-color: rgba(23, 224, 224, 0.4);
-  --zl-item-border-hover-color: rgba(23, 224, 224, 0.75);
-  --zl-item-box-shadow: 0 4px 10px rgba(23, 184, 184, 0.14);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(23, 184, 184, 0.2);
-
-  /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(244, 253, 216, 0.5);
-  --zl-item-checked-border-color: rgba(23, 224, 224, 0.25);
-
-  /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(23, 224, 224, 0.75);
-  --zl-item-dragging-bg: rgba(253, 254, 240, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(23, 184, 184, 0.28);
-  --zl-item-dragover-bg: rgba(244, 253, 216, 0.9);
-  --zl-item-dragover-border: 2px solid rgba(23, 224, 224, 0.6);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(23, 184, 184, 0.22);
-
-  /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(23, 224, 224, 0.5);
-  --zl-checkbox-bg: rgba(253, 254, 240, 0.9);
-  --zl-checkbox-hover-border: 2px solid rgba(23, 224, 224, 0.75);
-  --zl-checkbox-hover-bg: rgba(244, 253, 216, 0.9);
-  --zl-checkbox-checked-gradient-start: #c8ff33;
-  --zl-checkbox-checked-gradient-end: #17c9c9;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(23, 184, 184, 0.22);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
-
-  /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(244, 253, 216, 0.8),
-    rgba(205, 247, 217, 0.7)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(23, 184, 184, 0.22);
-
-  /* Grab handle styling */
-  --zl-grab-handle-color: rgba(23, 184, 184, 0.75);
-  --zl-grab-handle-opacity: 0.6;
-  --zl-grab-handle-hover-opacity: 1;
-
-  /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(244, 253, 216, 0.95);
-  --zl-delete-button-text-color: rgba(15, 122, 122, 0.9);
-
-  /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(23, 224, 224, 0.75);
-  --zl-drop-arrow-bg: rgba(23, 184, 184, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(23, 184, 184, 0.32);
-
-  /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(23, 224, 224, 0.3);
-  --zl-edit-input-bg: rgba(253, 254, 240, 0.9);
-  --zl-edit-input-focus-border: rgba(23, 224, 224, 0.65);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(23, 224, 224, 0.15);
-
-  /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(23, 224, 224, 0.4);
-  --zl-new-item-input-focus-border: rgba(23, 224, 224, 0.7);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(23, 224, 224, 0.15);
-
-  /* AppSuffix (.app) token — lime-to-cyan sticky streak */
-  --app-suffix-gradient: linear-gradient(to right, #c8ff33, #17e0e0);
-  --app-suffix-bg-size: auto;
-  --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(28, 38, 32, 0.15);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(23, 184, 184, 0.26));
-}
-
-/**
- * Theme: Manila
- *
- * Office fluro, warm half. Carbon-copy orange and index-tab coral on a
- * true manila-folder ground — the desk drawer full of file tabs, not
- * the highlighter drawer. Punchier than Focus, but earthier than
- * Highlighter/Dayglo.
- */
-html[data-theme="manila"] {
-  /* Mascot gradient — fluro orange → carbon-copy coral */
-  --zl-mascot-gradient-start: #ffb200;
-  --zl-mascot-gradient-mid: #ff7a3d;
-  --zl-mascot-gradient-end: #ff4d6a;
-
-  /* Card gradient — manila folder cream through to coral edge */
-  --zl-card-bg-gradient-angle: 140deg;
-  --zl-card-bg-gradient-color-start: #fffaf0;
-  --zl-card-bg-gradient-color-second: #ffefd2;
-  --zl-card-bg-gradient-color-mid: #ffdca3;
-  --zl-card-bg-gradient-color-fourth: #ffc17a;
-  --zl-card-bg-gradient-color-end: #ff9d6e;
-  --zl-card-border-color: #ff4d6a;
-  --zl-card-box-shadow: 0 12px 30px rgba(255, 122, 61, 0.22);
-  --zl-card-inner-border-gradient: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.65),
-    rgba(255, 77, 106, 0.18)
-  );
-
-  /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(255, 239, 210, 0.5),
-    rgba(255, 157, 110, 0.3)
-  );
-  --zl-empty-state-border: 3px dashed rgba(255, 77, 106, 0.4);
-  --zl-empty-title-color: var(--zl-primary-color, #ff7a3d);
-
-  /* Base theme colors */
-  --zl-primary-color: #ff7a3d;
-  --zl-primary-color-rgb: 255, 122, 61;
-  --zl-secondary-color: #ffdca3;
-  --zl-accent-color: #ff4d6a;
-  --zl-cta-grad-start: #ffb200;
-  --zl-cta-grad-end: #ff4d6a;
-  --zl-accent-color-rgb: 255, 77, 106;
-  --zl-highlight-color: #ffefd2;
-  --zl-text-hover-color: #ff4d6a;
-
-  /* Text colors — warm near-black ink */
-  --zl-text-color-primary: #2b1c14;
-  --zl-text-color-secondary: #6b4c3c;
-  --zl-text-color-disabled: #b09384;
-
-  /* Footer resting color — light theme, muted rust ink */
-  --footer-text-color: #9a4a2f;
-
-  /* List item styling */
-  --zl-item-bg: rgba(255, 250, 240, 0.92);
-  --zl-item-hover-bg: rgba(255, 250, 240, 1);
-  --zl-item-border-color: rgba(255, 77, 106, 0.35);
-  --zl-item-border-hover-color: rgba(255, 77, 106, 0.7);
-  --zl-item-box-shadow: 0 4px 10px rgba(255, 122, 61, 0.14);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(255, 122, 61, 0.2);
-
-  /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(255, 239, 210, 0.5);
-  --zl-item-checked-border-color: rgba(255, 77, 106, 0.25);
-
-  /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(255, 77, 106, 0.7);
-  --zl-item-dragging-bg: rgba(255, 250, 240, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(255, 122, 61, 0.28);
-  --zl-item-dragover-bg: rgba(255, 239, 210, 0.9);
-  --zl-item-dragover-border: 2px solid rgba(255, 77, 106, 0.55);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(255, 122, 61, 0.22);
-
-  /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(255, 77, 106, 0.5);
-  --zl-checkbox-bg: rgba(255, 250, 240, 0.9);
-  --zl-checkbox-hover-border: 2px solid rgba(255, 77, 106, 0.75);
-  --zl-checkbox-hover-bg: rgba(255, 239, 210, 0.9);
-  --zl-checkbox-checked-gradient-start: #ffb200;
-  --zl-checkbox-checked-gradient-end: #ff4d6a;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(255, 122, 61, 0.22);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
-
-  /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(255, 239, 210, 0.8),
-    rgba(255, 220, 163, 0.65)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(255, 77, 106, 0.22);
-
-  /* Grab handle styling */
-  --zl-grab-handle-color: rgba(255, 122, 61, 0.75);
-  --zl-grab-handle-opacity: 0.6;
-  --zl-grab-handle-hover-opacity: 1;
-
-  /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(255, 239, 210, 0.95);
-  --zl-delete-button-text-color: rgba(255, 77, 106, 0.9);
-
-  /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(255, 77, 106, 0.75);
-  --zl-drop-arrow-bg: rgba(255, 122, 61, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(255, 122, 61, 0.32);
-
-  /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(255, 77, 106, 0.3);
-  --zl-edit-input-bg: rgba(255, 250, 240, 0.9);
-  --zl-edit-input-focus-border: rgba(255, 77, 106, 0.65);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(255, 77, 106, 0.15);
-
-  /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(255, 77, 106, 0.4);
-  --zl-new-item-input-focus-border: rgba(255, 77, 106, 0.7);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(255, 77, 106, 0.15);
-
-  /* AppSuffix (.app) token — amber-to-coral folder-tab streak */
-  --app-suffix-gradient: linear-gradient(to right, #ffb200, #ff4d6a);
-  --app-suffix-bg-size: auto;
-  --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(43, 28, 20, 0.15);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 122, 61, 0.28));
-}
-
-/**
- * Theme: Neo
- *
- * A high-contrast, bold aesthetic with pastel colors.
- * Best used with "Chunky Mode" enabled.
- */
-html[data-theme="neo"] {
   /* Mascot gradient — the intro modal's "Zip it up" button gradient
      (from-[#ffcc33] to-[#ff6ac2]), lifted stop-for-stop as the app's default
-     signature look (matches ThemeMascot neo swatch). */
+     signature look (matches ThemeMascot highlighter swatch). Unchanged from
+     the original "neo" theme — Pablo explicitly approved this gradient. */
   --zl-mascot-gradient-start: #ffcc33;
   --zl-mascot-gradient-mid: #ffa36f;
   --zl-mascot-gradient-end: #ff6ac2;
@@ -1054,71 +157,71 @@ html[data-theme="neo"] {
   --zl-primary-color: #ffb000; /* Amber/Egg Yolk */
   --zl-primary-color-rgb: 255, 176, 0;
   --zl-secondary-color: #ffd1dc; /* Pastel Pink */
-  --zl-accent-color: #000000; /* Black */
+  --zl-accent-color: #1e1714; /* warm near-black, not pure black */
   --zl-cta-grad-start: #ffd54f;
   --zl-cta-grad-end: #ffb000;
-  --zl-accent-color-rgb: 0, 0, 0;
+  --zl-accent-color-rgb: 30, 23, 20;
   --zl-highlight-color: #a0e7e5; /* Tiffany Blue / Mint */
-  --zl-text-hover-color: #000000;
+  --zl-text-hover-color: #1e1714;
 
-  /* Text colors */
-  --zl-text-color-primary: #000000;
-  --zl-text-color-secondary: #333333;
-  --zl-text-color-disabled: #777777;
+  /* Text colors — warm near-black, never pure black */
+  --zl-text-color-primary: #1e1714;
+  --zl-text-color-secondary: #3a2f2a;
+  --zl-text-color-disabled: #7d7269;
 
-  /* Footer resting color — neo is LIGHT/high-contrast, use its dark ink */
-  --footer-text-color: #333333;
+  /* Footer resting color — light/high-contrast, use its dark ink */
+  --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: #ffffff;
+  --zl-item-bg: #fffef7;
   --zl-item-hover-bg: #fff8e1;
-  --zl-item-border-color: #000000;
-  --zl-item-border-hover-color: #000000;
+  --zl-item-border-color: #1e1714;
+  --zl-item-border-hover-color: #1e1714;
 
   /* Checked item styling */
   --zl-item-checked-opacity: 1;
-  --zl-item-checked-bg: #e0e0e0;
-  --zl-item-checked-border-color: #555555;
+  --zl-item-checked-bg: #e8e2d8;
+  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
   --zl-item-dragging-bg: #ffd1dc;
   --zl-item-dragover-bg: #e6f7ff;
 
   /* Checkbox styling */
-  --zl-checkbox-bg: #ffffff;
-  --zl-checkbox-border: 2px solid rgba(0, 0, 0, 0.68);
-  --zl-checkbox-hover-border: 2px solid #000000;
-  --zl-card-border-color: #000000;
-  --zl-card-box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-  --zl-edit-input-border: 2px solid rgba(0, 0, 0, 0.35);
-  --zl-edit-input-focus-border: rgba(0, 0, 0, 0.7);
-  --zl-item-dragging-border: 3px solid rgba(0, 0, 0, 0.8);
-  --zl-item-dragover-border: 2px dashed rgba(0, 0, 0, 0.55);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  --zl-checkbox-bg: #fffef7;
+  --zl-checkbox-border: 2px solid rgba(30, 23, 20, 0.68);
+  --zl-checkbox-hover-border: 2px solid #1e1714;
+  --zl-card-border-color: #1e1714;
+  --zl-card-box-shadow: 0 12px 30px rgba(30, 23, 20, 0.12);
+  --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
+  --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
+  --zl-item-dragging-border: 3px solid rgba(30, 23, 20, 0.8);
+  --zl-item-dragover-border: 2px dashed rgba(30, 23, 20, 0.55);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(30, 23, 20, 0.15);
   --zl-checkbox-hover-bg: #a0e7e5;
-  --zl-checkbox-checked-gradient-start: #000000;
-  --zl-checkbox-checked-gradient-end: #000000;
+  --zl-checkbox-checked-gradient-start: #1e1714;
+  --zl-checkbox-checked-gradient-end: #1e1714;
   --zl-checkbox-sparkle-color: #ffb000;
 
   /* Text button styling */
   --zl-text-button-hover-bg: #ffd1dc;
 
   /* Grab handle styling */
-  --zl-grab-handle-color: #000000;
+  --zl-grab-handle-color: #1e1714;
   --zl-grab-handle-opacity: 0.3;
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
   --zl-delete-button-hover-bg: #fff7d6;
-  --zl-delete-button-text-color: #000000;
+  --zl-delete-button-text-color: #1e1714;
 
   /* Drop indicator styling */
-  --zl-drop-indicator-color: #000000;
-  --zl-drop-arrow-bg: #000000;
+  --zl-drop-indicator-color: #1e1714;
+  --zl-drop-arrow-bg: #1e1714;
   --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-bg: #ffffff;
+  --zl-edit-input-bg: #fffef7;
   --zl-edit-input-focus-shadow: 4px 4px 0px 0px #a0e7e5;
 
   /* New item input styling */
@@ -1126,15 +229,408 @@ html[data-theme="neo"] {
 
   /* Empty state styling */
   --zl-empty-state-bg: #fff0f5;
-  --zl-empty-title-color: #000000;
+  --zl-empty-title-color: #1e1714;
 
-  /* AppSuffix (.app) token — pink-yellow gradient + neo flourishes (text-stroke +
-     amber drop-shadow). Mirrors :root since neo is the DEFAULT_THEME. */
+  /* AppSuffix (.app) token — pink-yellow gradient + toybrut flourishes
+     (text-stroke + amber drop-shadow). Mirrors :root since highlighter is
+     the DEFAULT_THEME. */
   --app-suffix-gradient: linear-gradient(to right, #ffcc33, #ff6ac2);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(0, 0, 0, 0.1);
+  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
   --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 176, 0, 0.24));
+}
+
+/**
+ * Theme: Sticky Note
+ *
+ * Office fluro, cooler half. Folded in from the "Dayglo" experiment —
+ * lime and cyan sticky-note colors on warm cream, the corkboard-covered-
+ * in-Post-its energy. Same silhouette family as Highlighter, different
+ * hue duo, so the pair reads as drawer-mates.
+ */
+html[data-theme="sticky-note"] {
+  /* Mascot gradient — fluro lime → fluro cyan */
+  --zl-mascot-gradient-start: #c8ff33;
+  --zl-mascot-gradient-mid: #7dfad0;
+  --zl-mascot-gradient-end: #17e0e0;
+
+  /* Card gradient — warm cream ground, cool fluro only at the edge */
+  --zl-card-bg-gradient-angle: 130deg;
+  --zl-card-bg-gradient-color-start: #fdfef0;
+  --zl-card-bg-gradient-color-second: #f4fdd8;
+  --zl-card-bg-gradient-color-mid: #e3fbc9;
+  --zl-card-bg-gradient-color-fourth: #cdf7d9;
+  --zl-card-bg-gradient-color-end: #a9f0e6;
+  --zl-card-border-color: #0f9d9d;
+  --zl-card-box-shadow: 0 12px 30px rgba(23, 224, 224, 0.22);
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(23, 224, 224, 0.2)
+  );
+
+  /* Empty state styling overrides — deepened primary so the title never
+     washes out against the pale mint/lime card (the "chill" lesson). */
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(244, 253, 216, 0.5),
+    rgba(169, 240, 230, 0.4)
+  );
+  --zl-empty-state-border: 3px dashed rgba(15, 157, 157, 0.45);
+  --zl-empty-title-color: var(--zl-primary-color, #0f7a7a);
+
+  /* Base theme colors — darkened from the original dayglo pass for
+     guaranteed contrast against the card's palest stops */
+  --zl-primary-color: #0f7a7a;
+  --zl-primary-color-rgb: 15, 122, 122;
+  --zl-secondary-color: #7a9c1f;
+  --zl-accent-color: #0f9d9d;
+  --zl-cta-grad-start: #c8ff33;
+  --zl-cta-grad-end: #0f9d9d;
+  --zl-accent-color-rgb: 15, 157, 157;
+  --zl-highlight-color: #f4fdd8;
+  --zl-text-hover-color: #0b6363;
+
+  /* Text colors — warm near-black ink */
+  --zl-text-color-primary: #1c2620;
+  --zl-text-color-secondary: #3a4d43;
+  --zl-text-color-disabled: #7d8f86;
+
+  /* Footer resting color — light theme, muted teal ink */
+  --footer-text-color: #0b6363;
+
+  /* List item styling */
+  --zl-item-bg: rgba(253, 254, 240, 0.92);
+  --zl-item-hover-bg: rgba(253, 254, 240, 1);
+  --zl-item-border-color: rgba(15, 157, 157, 0.45);
+  --zl-item-border-hover-color: rgba(15, 157, 157, 0.8);
+  --zl-item-box-shadow: 0 4px 10px rgba(15, 122, 122, 0.14);
+  --zl-item-hover-box-shadow: 0 8px 20px rgba(15, 122, 122, 0.2);
+
+  /* Checked item styling */
+  --zl-item-checked-opacity: 0.75;
+  --zl-item-checked-bg: rgba(244, 253, 216, 0.5);
+  --zl-item-checked-border-color: rgba(15, 157, 157, 0.3);
+
+  /* Drag and drop styling */
+  --zl-item-dragging-border: 3px solid rgba(15, 157, 157, 0.8);
+  --zl-item-dragging-bg: rgba(253, 254, 240, 1);
+  --zl-item-dragging-shadow: 0 15px 30px rgba(15, 122, 122, 0.28);
+  --zl-item-dragover-bg: rgba(244, 253, 216, 0.9);
+  --zl-item-dragover-border: 2px solid rgba(15, 157, 157, 0.65);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(15, 122, 122, 0.22);
+
+  /* Checkbox styling */
+  --zl-checkbox-border: 2px solid rgba(15, 157, 157, 0.55);
+  --zl-checkbox-bg: rgba(253, 254, 240, 0.9);
+  --zl-checkbox-hover-border: 2px solid rgba(15, 157, 157, 0.8);
+  --zl-checkbox-hover-bg: rgba(244, 253, 216, 0.9);
+  --zl-checkbox-checked-gradient-start: #c8ff33;
+  --zl-checkbox-checked-gradient-end: #0f9d9d;
+  --zl-checkbox-checked-shadow: 0 3px 8px rgba(15, 122, 122, 0.25);
+  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
+
+  /* Text button styling */
+  --zl-text-button-hover-bg: linear-gradient(
+    135deg,
+    rgba(244, 253, 216, 0.8),
+    rgba(205, 247, 217, 0.7)
+  );
+  --zl-text-button-focus-shadow: 0 3px 8px rgba(15, 122, 122, 0.25);
+
+  /* Grab handle styling */
+  --zl-grab-handle-color: rgba(15, 122, 122, 0.8);
+  --zl-grab-handle-opacity: 0.6;
+  --zl-grab-handle-hover-opacity: 1;
+
+  /* Delete button styling */
+  --zl-delete-button-hover-bg: rgba(244, 253, 216, 0.95);
+  --zl-delete-button-text-color: rgba(11, 99, 99, 0.9);
+
+  /* Drop indicator styling */
+  --zl-drop-indicator-color: rgba(15, 157, 157, 0.8);
+  --zl-drop-arrow-bg: rgba(15, 122, 122, 0.9);
+  --zl-drop-arrow-shadow: 0 0 8px rgba(15, 122, 122, 0.32);
+
+  /* Edit input styling */
+  --zl-edit-input-border: 2px solid rgba(15, 157, 157, 0.35);
+  --zl-edit-input-bg: rgba(253, 254, 240, 0.9);
+  --zl-edit-input-focus-border: rgba(15, 157, 157, 0.7);
+  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(15, 157, 157, 0.15);
+
+  /* New item input styling */
+  --zl-new-item-input-border: 2px solid rgba(15, 157, 157, 0.45);
+  --zl-new-item-input-focus-border: rgba(15, 157, 157, 0.75);
+  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(15, 157, 157, 0.15);
+
+  /* AppSuffix (.app) token — lime-to-cyan sticky streak */
+  --app-suffix-gradient: linear-gradient(to right, #7a9c1f, #0f9d9d);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: 0.5px rgba(28, 38, 32, 0.15);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(15, 122, 122, 0.28));
+}
+
+/**
+ * Theme: Carbon Copy
+ *
+ * Office fluro, warm half. Folded in from the "Manila" experiment —
+ * carbon-copy orange and index-tab coral on a true manila-folder ground.
+ * The desk drawer full of file tabs, not the highlighter drawer.
+ */
+html[data-theme="carbon-copy"] {
+  /* Mascot gradient — fluro orange → carbon-copy coral */
+  --zl-mascot-gradient-start: #ffb200;
+  --zl-mascot-gradient-mid: #ff7a3d;
+  --zl-mascot-gradient-end: #ff4d6a;
+
+  /* Card gradient — manila folder cream through to coral edge */
+  --zl-card-bg-gradient-angle: 140deg;
+  --zl-card-bg-gradient-color-start: #fffaf0;
+  --zl-card-bg-gradient-color-second: #ffefd2;
+  --zl-card-bg-gradient-color-mid: #ffdca3;
+  --zl-card-bg-gradient-color-fourth: #ffc17a;
+  --zl-card-bg-gradient-color-end: #ff9d6e;
+  --zl-card-border-color: #d9264a;
+  --zl-card-box-shadow: 0 12px 30px rgba(255, 122, 61, 0.22);
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.65),
+    rgba(255, 77, 106, 0.18)
+  );
+
+  /* Empty state styling overrides */
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(255, 239, 210, 0.5),
+    rgba(255, 157, 110, 0.3)
+  );
+  --zl-empty-state-border: 3px dashed rgba(217, 38, 74, 0.45);
+  --zl-empty-title-color: var(--zl-primary-color, #b8501f);
+
+  /* Base theme colors — darkened primary from the original manila pass
+     for guaranteed contrast against the palest cream card stop */
+  --zl-primary-color: #b8501f;
+  --zl-primary-color-rgb: 184, 80, 31;
+  --zl-secondary-color: #ffdca3;
+  --zl-accent-color: #d9264a;
+  --zl-cta-grad-start: #ffb200;
+  --zl-cta-grad-end: #d9264a;
+  --zl-accent-color-rgb: 217, 38, 74;
+  --zl-highlight-color: #ffefd2;
+  --zl-text-hover-color: #d9264a;
+
+  /* Text colors — warm near-black ink */
+  --zl-text-color-primary: #2b1c14;
+  --zl-text-color-secondary: #5c3d2e;
+  --zl-text-color-disabled: #a3897a;
+
+  /* Footer resting color — light theme, muted rust ink */
+  --footer-text-color: #8a3a20;
+
+  /* List item styling */
+  --zl-item-bg: rgba(255, 250, 240, 0.92);
+  --zl-item-hover-bg: rgba(255, 250, 240, 1);
+  --zl-item-border-color: rgba(217, 38, 74, 0.4);
+  --zl-item-border-hover-color: rgba(217, 38, 74, 0.75);
+  --zl-item-box-shadow: 0 4px 10px rgba(184, 80, 31, 0.14);
+  --zl-item-hover-box-shadow: 0 8px 20px rgba(184, 80, 31, 0.2);
+
+  /* Checked item styling */
+  --zl-item-checked-opacity: 0.75;
+  --zl-item-checked-bg: rgba(255, 239, 210, 0.5);
+  --zl-item-checked-border-color: rgba(217, 38, 74, 0.3);
+
+  /* Drag and drop styling */
+  --zl-item-dragging-border: 3px solid rgba(217, 38, 74, 0.75);
+  --zl-item-dragging-bg: rgba(255, 250, 240, 1);
+  --zl-item-dragging-shadow: 0 15px 30px rgba(184, 80, 31, 0.28);
+  --zl-item-dragover-bg: rgba(255, 239, 210, 0.9);
+  --zl-item-dragover-border: 2px solid rgba(217, 38, 74, 0.6);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(184, 80, 31, 0.22);
+
+  /* Checkbox styling */
+  --zl-checkbox-border: 2px solid rgba(217, 38, 74, 0.55);
+  --zl-checkbox-bg: rgba(255, 250, 240, 0.9);
+  --zl-checkbox-hover-border: 2px solid rgba(217, 38, 74, 0.8);
+  --zl-checkbox-hover-bg: rgba(255, 239, 210, 0.9);
+  --zl-checkbox-checked-gradient-start: #ffb200;
+  --zl-checkbox-checked-gradient-end: #d9264a;
+  --zl-checkbox-checked-shadow: 0 3px 8px rgba(184, 80, 31, 0.22);
+  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
+
+  /* Text button styling */
+  --zl-text-button-hover-bg: linear-gradient(
+    135deg,
+    rgba(255, 239, 210, 0.8),
+    rgba(255, 220, 163, 0.65)
+  );
+  --zl-text-button-focus-shadow: 0 3px 8px rgba(184, 80, 31, 0.22);
+
+  /* Grab handle styling */
+  --zl-grab-handle-color: rgba(184, 80, 31, 0.8);
+  --zl-grab-handle-opacity: 0.6;
+  --zl-grab-handle-hover-opacity: 1;
+
+  /* Delete button styling */
+  --zl-delete-button-hover-bg: rgba(255, 239, 210, 0.95);
+  --zl-delete-button-text-color: rgba(217, 38, 74, 0.9);
+
+  /* Drop indicator styling */
+  --zl-drop-indicator-color: rgba(217, 38, 74, 0.8);
+  --zl-drop-arrow-bg: rgba(184, 80, 31, 0.9);
+  --zl-drop-arrow-shadow: 0 0 8px rgba(184, 80, 31, 0.32);
+
+  /* Edit input styling */
+  --zl-edit-input-border: 2px solid rgba(217, 38, 74, 0.35);
+  --zl-edit-input-bg: rgba(255, 250, 240, 0.9);
+  --zl-edit-input-focus-border: rgba(217, 38, 74, 0.7);
+  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(217, 38, 74, 0.15);
+
+  /* New item input styling */
+  --zl-new-item-input-border: 2px solid rgba(217, 38, 74, 0.45);
+  --zl-new-item-input-focus-border: rgba(217, 38, 74, 0.75);
+  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(217, 38, 74, 0.15);
+
+  /* AppSuffix (.app) token — amber-to-coral folder-tab streak */
+  --app-suffix-gradient: linear-gradient(to right, #b8501f, #d9264a);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: 0.5px rgba(43, 28, 20, 0.15);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(184, 80, 31, 0.28));
+}
+
+/**
+ * Theme: Wite-Out
+ *
+ * Office fluro, correction-fluid half. Replaces the too-pale "Chill" —
+ * same cool mint/blue family Pablo liked, but built from scratch with
+ * a genuinely legible primary/accent duo instead of near-white-on-
+ * near-white. Correction tape blue-white streak against warm cream.
+ */
+html[data-theme="wite-out"] {
+  /* Mascot gradient — chalky mint → correction-fluid blue */
+  --zl-mascot-gradient-start: #b8f2e6;
+  --zl-mascot-gradient-mid: #6fd8d1;
+  --zl-mascot-gradient-end: #2f8fdb;
+
+  /* Card gradient — warm cream ground, cool pop at the edge only */
+  --zl-card-bg-gradient-angle: 125deg;
+  --zl-card-bg-gradient-color-start: #fdfefc;
+  --zl-card-bg-gradient-color-second: #eafaf5;
+  --zl-card-bg-gradient-color-mid: #d4f3ec;
+  --zl-card-bg-gradient-color-fourth: #b9e8f2;
+  --zl-card-bg-gradient-color-end: #9adcf0;
+  --zl-card-border-color: #1f6fa8;
+  --zl-card-box-shadow: 0 12px 30px rgba(47, 143, 219, 0.22);
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(47, 143, 219, 0.2)
+  );
+
+  /* Empty state styling overrides — this is the direct fix for the old
+     "chill" bug: title color is a real dark teal-blue, not a pale tint,
+     so "Your list awaits" stays legible against the mint/blue card. */
+  --zl-empty-state-bg: linear-gradient(
+    135deg,
+    rgba(234, 250, 245, 0.5),
+    rgba(185, 232, 242, 0.4)
+  );
+  --zl-empty-state-border: 3px dashed rgba(31, 111, 168, 0.45);
+  --zl-empty-title-color: var(--zl-primary-color, #1f6fa8);
+
+  /* Base theme colors — deep enough to hold contrast against the
+     lightest card stop (#fdfefc); this is the fix for the chill bug */
+  --zl-primary-color: #1f6fa8;
+  --zl-primary-color-rgb: 31, 111, 168;
+  --zl-secondary-color: #6fd8d1;
+  --zl-accent-color: #146099;
+  --zl-cta-grad-start: #6fd8d1;
+  --zl-cta-grad-end: #1f6fa8;
+  --zl-accent-color-rgb: 20, 96, 153;
+  --zl-highlight-color: #eafaf5;
+  --zl-text-hover-color: #146099;
+
+  /* Text colors — deepened from the old chill pass, warm near-black base */
+  --zl-text-color-primary: #1a2e33;
+  --zl-text-color-secondary: #33555e;
+  --zl-text-color-disabled: #7f9aa1;
+
+  /* Footer resting color — light theme, muted deep-teal ink */
+  --footer-text-color: #1f6fa8;
+
+  /* List item styling */
+  --zl-item-bg: rgba(255, 255, 255, 0.9);
+  --zl-item-hover-bg: rgba(255, 255, 255, 1);
+  --zl-item-border-color: rgba(31, 111, 168, 0.4);
+  --zl-item-border-hover-color: rgba(31, 111, 168, 0.75);
+  --zl-item-box-shadow: 0 4px 10px rgba(31, 111, 168, 0.12);
+  --zl-item-hover-box-shadow: 0 8px 20px rgba(31, 111, 168, 0.18);
+
+  /* Checked item styling */
+  --zl-item-checked-opacity: 0.75;
+  --zl-item-checked-bg: rgba(234, 250, 245, 0.5);
+  --zl-item-checked-border-color: rgba(31, 111, 168, 0.28);
+
+  /* Drag and drop styling */
+  --zl-item-dragging-border: 3px solid rgba(31, 111, 168, 0.75);
+  --zl-item-dragging-bg: rgba(255, 255, 255, 1);
+  --zl-item-dragging-shadow: 0 15px 30px rgba(31, 111, 168, 0.28);
+  --zl-item-dragover-bg: rgba(234, 250, 245, 0.9);
+  --zl-item-dragover-border: 2px solid rgba(31, 111, 168, 0.6);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(31, 111, 168, 0.22);
+
+  /* Checkbox styling */
+  --zl-checkbox-border: 2px solid rgba(31, 111, 168, 0.55);
+  --zl-checkbox-bg: rgba(255, 255, 255, 0.9);
+  --zl-checkbox-hover-border: 2px solid rgba(31, 111, 168, 0.8);
+  --zl-checkbox-hover-bg: rgba(234, 250, 245, 0.9);
+  --zl-checkbox-checked-gradient-start: #6fd8d1;
+  --zl-checkbox-checked-gradient-end: #1f6fa8;
+  --zl-checkbox-checked-shadow: 0 3px 8px rgba(31, 111, 168, 0.25);
+  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
+
+  /* Text button styling */
+  --zl-text-button-hover-bg: linear-gradient(
+    135deg,
+    rgba(234, 250, 245, 0.8),
+    rgba(185, 232, 242, 0.65)
+  );
+  --zl-text-button-focus-shadow: 0 3px 8px rgba(31, 111, 168, 0.25);
+
+  /* Grab handle styling */
+  --zl-grab-handle-color: rgba(31, 111, 168, 0.8);
+  --zl-grab-handle-opacity: 0.6;
+  --zl-grab-handle-hover-opacity: 1;
+
+  /* Delete button styling */
+  --zl-delete-button-hover-bg: rgba(234, 250, 245, 0.95);
+  --zl-delete-button-text-color: rgba(20, 96, 153, 0.9);
+
+  /* Drop indicator styling */
+  --zl-drop-indicator-color: rgba(31, 111, 168, 0.8);
+  --zl-drop-arrow-bg: rgba(31, 111, 168, 0.9);
+  --zl-drop-arrow-shadow: 0 0 8px rgba(31, 111, 168, 0.32);
+
+  /* Edit input styling */
+  --zl-edit-input-border: 2px solid rgba(31, 111, 168, 0.35);
+  --zl-edit-input-bg: rgba(255, 255, 255, 0.9);
+  --zl-edit-input-focus-border: rgba(31, 111, 168, 0.7);
+  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(31, 111, 168, 0.15);
+
+  /* New item input styling */
+  --zl-new-item-input-border: 2px solid rgba(31, 111, 168, 0.45);
+  --zl-new-item-input-focus-border: rgba(31, 111, 168, 0.75);
+  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(31, 111, 168, 0.15);
+
+  /* AppSuffix (.app) token — mint-to-blue correction streak */
+  --app-suffix-gradient: linear-gradient(to right, #2f8fdb, #146099);
+  --app-suffix-bg-size: auto;
+  --app-suffix-anim: none;
+  --app-suffix-stroke: 0.5px rgba(26, 46, 51, 0.15);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(31, 111, 168, 0.26));
 }
 
 /**

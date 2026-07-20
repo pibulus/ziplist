@@ -6,18 +6,17 @@
  */
 
 // Theme Configuration — matches CSS in src/lib/styles/theme-variables.css
+// "The Desk Drawer": four office-supply fluro themes, one collective
+// concept — Highlighter / Sticky Note / Carbon Copy / Wite-Out. Curated
+// down from 8 (2026-07-20) per Pablo: fewer themes, one nameable idea.
 export const THEMES = {
-  FOCUS: "focus",
-  CHILL: "chill",
-  ZEN: "zen",
-  NOCTURNE: "nocturne",
-  NEO: "neo",
   HIGHLIGHTER: "highlighter",
-  DAYGLO: "dayglo",
-  MANILA: "manila",
+  STICKY_NOTE: "sticky-note",
+  CARBON_COPY: "carbon-copy",
+  WITE_OUT: "wite-out",
 };
 
-export const DEFAULT_THEME = THEMES.NEO;
+export const DEFAULT_THEME = THEMES.HIGHLIGHTER;
 
 // Local Storage Keys
 export const STORAGE_KEYS = {

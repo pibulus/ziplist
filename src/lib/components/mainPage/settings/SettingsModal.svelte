@@ -56,16 +56,13 @@
     contributorUnlocked = value;
   });
 
-  // Theme options
+  // Theme options — "The Desk Drawer": four office-supply fluro themes,
+  // one collective concept. Curated down from 8 (2026-07-20).
   const vibeOptions = [
-    { id: THEMES.NEO, name: "Neo" },
-    { id: THEMES.FOCUS, name: "Focus" },
-    { id: THEMES.CHILL, name: "Chill" },
-    { id: THEMES.ZEN, name: "Zen" },
-    { id: THEMES.NOCTURNE, name: "Nocturne" },
     { id: THEMES.HIGHLIGHTER, name: "Highlighter" },
-    { id: THEMES.DAYGLO, name: "Dayglo" },
-    { id: THEMES.MANILA, name: "Manila" },
+    { id: THEMES.STICKY_NOTE, name: "Sticky Note" },
+    { id: THEMES.CARBON_COPY, name: "Carbon Copy" },
+    { id: THEMES.WITE_OUT, name: "Wite-Out" },
   ];
 
   onMount(() => {
@@ -834,11 +831,12 @@
     transform: translate(-1px, -1px);
   }
 
-  /* Vibe Grid — 4 columns holds for up to 8 themes (2 tidy rows); auto-fit
-     keeps it balanced if the roster changes instead of a hardcoded count. */
+  /* Vibe Grid — 2×2 for the curated 4-theme roster (The Desk Drawer).
+     Keeps tiles at a comfortable size on mobile; a single row of 4 reads
+     cramped at 390px. */
   .zl-vibe-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.6rem;
   }
 

@@ -9,7 +9,7 @@
 
 <a class="zl-brandmark" href="/" aria-label="Open ZipList">
   <span class="zl-brandmark-icon" aria-hidden="true">
-    <ThemeMascot theme="neo" size="22px" />
+    <ThemeMascot theme="highlighter" size="22px" />
   </span>
   <span>
     ZipList<span class="zl-brandmark-suffix" aria-hidden="true">.app</span>

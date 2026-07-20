@@ -5,24 +5,20 @@
   Each instance gets a unique gradient id so tiles don't share a fill.
 -->
 <script>
-  export let theme = "neo";
+  export let theme = "highlighter";
   export let size = "38px";
 
-  // Per-theme 3-stop palettes — sourced from the original vibe pill gradients
-  // so each swatch matches the app's existing theme colors exactly.
+  // Per-theme 3-stop palettes — "The Desk Drawer" roster (curated 2026-07-20),
+  // matching the --zl-mascot-gradient-* stops in theme-variables.css exactly.
   const mascotThemes = {
-    neo: { start: "#ffcc33", mid: "#ffa36f", end: "#ff6ac2" },
-    focus: { start: "#ffcf9c", mid: "#ffab77", end: "#ff8a5b" },
-    chill: { start: "#a5e3e0", mid: "#71c9ce", end: "#4da1a9" },
-    zen: { start: "#cdb5ff", mid: "#9775fa", end: "#845ef7" },
-    nocturne: { start: "#d8a9e3", mid: "#c487d2", end: "#6ca4c2" },
-    highlighter: { start: "#ff2e93", mid: "#ff7a1a", end: "#f9f002" },
-    dayglo: { start: "#c8ff33", mid: "#7dfad0", end: "#17e0e0" },
-    manila: { start: "#ffb200", mid: "#ff7a3d", end: "#ff4d6a" },
+    highlighter: { start: "#ffcc33", mid: "#ffa36f", end: "#ff6ac2" },
+    "sticky-note": { start: "#c8ff33", mid: "#7dfad0", end: "#17e0e0" },
+    "carbon-copy": { start: "#ffb200", mid: "#ff7a3d", end: "#ff4d6a" },
+    "wite-out": { start: "#b8f2e6", mid: "#6fd8d1", end: "#2f8fdb" },
   };
 
   const uid = Math.random().toString(36).slice(2, 8);
-  $: pal = mascotThemes[theme] || mascotThemes.neo;
+  $: pal = mascotThemes[theme] || mascotThemes.highlighter;
   $: gid = `tm-${theme}-${uid}`;
 </script>
 

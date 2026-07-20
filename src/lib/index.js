@@ -44,6 +44,21 @@ export const theme = createLocalStorageStore(
   CONSTANTS.DEFAULT_THEME,
 );
 
+// Migration safety: a user may have a theme saved from a retired roster
+// (e.g. "chill", "zen", "nocturne", "neo", "dayglo", "manila" from before
+// the 2026-07-20 curation down to The Desk Drawer's four). If the stored
+// value isn't one of the current THEMES, fall back to DEFAULT_THEME and
+// re-persist it so the store, localStorage, and the picker's active-tile
+// state all agree. app.html's inline pre-hydration script does the same
+// check for the bare data-theme attribute; this covers the Svelte store.
+if (browser) {
+  const validThemeIds = Object.values(CONSTANTS.THEMES);
+  const storedTheme = localStorage.getItem(CONSTANTS.STORAGE_KEYS.THEME);
+  if (storedTheme && !validThemeIds.includes(storedTheme)) {
+    theme.set(CONSTANTS.DEFAULT_THEME);
+  }
+}
+
 // Create centralized store for modal visibility
 export const showSettingsModal = writable(false);
 
