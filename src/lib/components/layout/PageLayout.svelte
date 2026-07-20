@@ -198,6 +198,15 @@
     color: var(--zl-footer-dot-color);
   }
 
+  /* "Made with [charm] in Melbourne" was reading as a near-invisible whisper
+     at font-light + text-sm on the blurred footer. Same warm token as the
+     rest of the footer (never black), just weighted so it's genuinely
+     legible instead of merely present. */
+  .footer-meta {
+    color: var(--footer-text-color, #4b5563);
+    opacity: 0.92;
+  }
+
   .footer-heart {
     color: var(--footer-heart-color, var(--zl-accent-color, #ff6ac2));
     display: inline-block;
