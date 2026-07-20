@@ -82,6 +82,18 @@ nested items, no multi-list rooms, no accounts).
 - **party/listRoom.ts**: PartyKit room server for validated live-list snapshots
   and ephemeral presence
 
+### Modal System
+
+All five modals (Intro, About, Extension, Settings, Contributor) run on ONE
+global system: `services/modals/modalService.js` (imperative open/close by
+dialog id, scroll-lock, exit-animation orchestration, one-modal-at-a-time)
+over native `<dialog>`/`showModal()` top-layer semantics, with the shared
+`dialog.modal` skeleton + `zl-modal-*` keyframes in `app.css`. This is
+ZipList's equivalent of the softstack-charms chassis ModalShell — evaluated
+2026-07-20 and deliberately NOT migrated (the shell would add a second,
+weaker, div-based modal system). Never hand-roll per-modal Escape/backdrop/
+scroll-lock/keyframe machinery; route new modals through `modalService`.
+
 ### Component Structure
 
 - **MainContainer.svelte**: Top-level orchestrator, handles recording state and lifecycle

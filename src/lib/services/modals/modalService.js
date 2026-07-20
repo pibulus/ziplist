@@ -1,5 +1,19 @@
 import { browser } from "$app/environment";
 
+// ── Chassis note (2026-07-20 ModalShell rollout) ─────────────────────────
+// This service + the app.css `dialog.modal` system IS ZipList's equivalent
+// of the softstack-charms ModalShell: one central place already owns the
+// scroll-lock (position:fixed, scroll-restoring — stronger than an overflow
+// lock), the exit animation orchestration (zl-modal-closing), one-modal-at-
+// a-time switching, and a force-unlock safety net; Escape + focus containment
+// come free from native <dialog>/showModal() top-layer semantics, which the
+// div-based shell cannot provide. All five modals ride this one system with
+// zero per-modal machinery, so vendoring the shell here would ADD a second
+// parallel modal system — the exact drift disease the shell exists to kill.
+// Deliberately not migrated. If this system ever grows per-modal copies,
+// revisit softstack-charms/src/modal/ before hand-rolling anything.
+// ─────────────────────────────────────────────────────────────────────────
+
 // Keep in sync with the zl-modal-pop-out duration in app.css.
 // Must match the zl-modal-pop-out duration in app.css (180ms). This is how
 // long we wait before dialog.close() removes the element from the top layer.
