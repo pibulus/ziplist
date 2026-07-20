@@ -11,7 +11,7 @@
   // Per-theme 3-stop palettes — sourced from the original vibe pill gradients
   // so each swatch matches the app's existing theme colors exactly.
   const mascotThemes = {
-    neo: { start: "#ffe86b", mid: "#ff9a8c", end: "#76ead7" },
+    neo: { start: "#ffcc33", mid: "#ffa36f", end: "#ff6ac2" },
     focus: { start: "#ffcf9c", mid: "#ffab77", end: "#ff8a5b" },
     chill: { start: "#a5e3e0", mid: "#71c9ce", end: "#4da1a9" },
     nocturne: { start: "#d8a9e3", mid: "#c487d2", end: "#6ca4c2" },

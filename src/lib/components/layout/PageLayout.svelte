@@ -94,7 +94,8 @@
           {appName}
         </span>
         <span class="footer-dot mx-2">•</span>
-        <span class="footer-meta text-sm font-light">
+        <span class="footer-meta text-sm font-medium">
+          Made with
           <FooterCharm charms={['❤️', '🍒', '⚡']} />
           in Melbourne
         </span>

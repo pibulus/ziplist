@@ -96,16 +96,19 @@
 
   /* Mascot (the floating ZipList dude) gradient — 3 stops the hero silhouette
      reads via fill="url(#themeGradient)". Defaults mirror DEFAULT_THEME (neo)
-     so the bare/pre-JS state renders the same Miami gradient as the old baked
-     icon. Overridden per-theme below so the hero RECOLORS with the vibe (was a
-     baked-in <img> that never themed). Matches the ThemeMascot swatch palettes. */
-  --zl-mascot-gradient-start: #ffe86b;
-  --zl-mascot-gradient-mid: #ff9a8c;
-  --zl-mascot-gradient-end: #76ead7;
+     so the bare/pre-JS state renders the SAME gradient as the intro modal's
+     "Zip it up" button (from-[#ffcc33] to-[#ff6ac2]) — the app's real signature
+     pink-to-yellow duo, not an invented third hue. Mid stop is the true 42%
+     blend of the two end colors, so it still reads as ONE gradient, not three.
+     Overridden per-theme below so the hero RECOLORS with the vibe. Matches the
+     ThemeMascot swatch palettes. */
+  --zl-mascot-gradient-start: #ffcc33;
+  --zl-mascot-gradient-mid: #ffa36f;
+  --zl-mascot-gradient-end: #ff6ac2;
 
   /* AppSuffix (.app) token — defaults mirror DEFAULT_THEME (neo) so the
-     bare/pre-JS state renders the neo Miami gradient + flourishes. */
-  --app-suffix-gradient: linear-gradient(to right, #ffd700, #ffb000, #4ecdc4);
+     bare/pre-JS state renders the neo pink-yellow gradient + flourishes. */
+  --app-suffix-gradient: linear-gradient(to right, #ffcc33, #ff6ac2);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
   --app-suffix-stroke: 0.5px rgba(0, 0, 0, 0.1);
@@ -644,10 +647,12 @@ html[data-theme="nocturne"] {
  * Best used with "Chunky Mode" enabled.
  */
 html[data-theme="neo"] {
-  /* Mascot gradient — Miami neo (matches ThemeMascot neo swatch + old baked icon) */
-  --zl-mascot-gradient-start: #ffe86b;
-  --zl-mascot-gradient-mid: #ff9a8c;
-  --zl-mascot-gradient-end: #76ead7;
+  /* Mascot gradient — the intro modal's "Zip it up" button gradient
+     (from-[#ffcc33] to-[#ff6ac2]), lifted stop-for-stop as the app's default
+     signature look (matches ThemeMascot neo swatch). */
+  --zl-mascot-gradient-start: #ffcc33;
+  --zl-mascot-gradient-mid: #ffa36f;
+  --zl-mascot-gradient-end: #ff6ac2;
 
   /* Card gradient */
   --zl-card-bg-gradient-angle: 180deg;
@@ -735,9 +740,9 @@ html[data-theme="neo"] {
   --zl-empty-state-bg: #fff0f5;
   --zl-empty-title-color: #000000;
 
-  /* AppSuffix (.app) token — Miami gradient + neo flourishes (text-stroke +
+  /* AppSuffix (.app) token — pink-yellow gradient + neo flourishes (text-stroke +
      amber drop-shadow). Mirrors :root since neo is the DEFAULT_THEME. */
-  --app-suffix-gradient: linear-gradient(to right, #ffd700, #ffb000, #4ecdc4);
+  --app-suffix-gradient: linear-gradient(to right, #ffcc33, #ff6ac2);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
   --app-suffix-stroke: 0.5px rgba(0, 0, 0, 0.1);
