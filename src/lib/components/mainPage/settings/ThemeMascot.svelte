@@ -14,6 +14,7 @@
     neo: { start: "#ffcc33", mid: "#ffa36f", end: "#ff6ac2" },
     focus: { start: "#ffcf9c", mid: "#ffab77", end: "#ff8a5b" },
     chill: { start: "#a5e3e0", mid: "#71c9ce", end: "#4da1a9" },
+    zen: { start: "#cdb5ff", mid: "#9775fa", end: "#845ef7" },
     nocturne: { start: "#d8a9e3", mid: "#c487d2", end: "#6ca4c2" },
   };
 

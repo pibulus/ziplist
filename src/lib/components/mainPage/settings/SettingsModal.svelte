@@ -61,6 +61,7 @@
     { id: THEMES.NEO, name: "Neo" },
     { id: THEMES.FOCUS, name: "Focus" },
     { id: THEMES.CHILL, name: "Chill" },
+    { id: THEMES.ZEN, name: "Zen" },
     { id: THEMES.NOCTURNE, name: "Nocturne" },
   ];
 
