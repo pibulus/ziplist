@@ -278,58 +278,54 @@
       >
         <h4 id="settings_flow_title" class="zl-section-label">Flow</h4>
 
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Ready Mic on Start</span>
-            <p class="zl-setting-desc">
-              Prep the recorder when ZipList opens; tap once before mic access
-            </p>
+        <div class="zl-toggle-grid">
+          <div class="zl-toggle-tile">
+            <div class="zl-setting-info">
+              <span class="zl-setting-name">Ready Mic</span>
+              <p class="zl-setting-desc">Prep the recorder on open</p>
+            </div>
+            <label class="zl-toggle">
+              <input
+                type="checkbox"
+                checked={autoRecordValue}
+                on:change={toggleAutoRecord}
+                aria-label="Ready microphone on start"
+              />
+              <span class="zl-toggle-slider"></span>
+            </label>
           </div>
-          <label class="zl-toggle">
-            <input
-              type="checkbox"
-              checked={autoRecordValue}
-              on:change={toggleAutoRecord}
-              aria-label="Ready microphone on start"
-            />
-            <span class="zl-toggle-slider"></span>
-          </label>
-        </div>
 
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">List First</span>
-            <p class="zl-setting-desc">
-              Hide the mascot and title when you want the working view
-            </p>
+          <div class="zl-toggle-tile">
+            <div class="zl-setting-info">
+              <span class="zl-setting-name">List First</span>
+              <p class="zl-setting-desc">Hide mascot &amp; title</p>
+            </div>
+            <label class="zl-toggle">
+              <input
+                type="checkbox"
+                checked={listFirstModeValue}
+                on:change={toggleListFirstMode}
+                aria-label="List First mode"
+              />
+              <span class="zl-toggle-slider"></span>
+            </label>
           </div>
-          <label class="zl-toggle">
-            <input
-              type="checkbox"
-              checked={listFirstModeValue}
-              on:change={toggleListFirstMode}
-              aria-label="List First mode"
-            />
-            <span class="zl-toggle-slider"></span>
-          </label>
-        </div>
 
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Sound Cues</span>
-            <p class="zl-setting-desc">
-              Soft taps, checklist pops, and finishes
-            </p>
+          <div class="zl-toggle-tile">
+            <div class="zl-setting-info">
+              <span class="zl-setting-name">Sound Cues</span>
+              <p class="zl-setting-desc">Taps, pops, finishes</p>
+            </div>
+            <label class="zl-toggle">
+              <input
+                type="checkbox"
+                checked={soundCuesValue}
+                on:change={toggleSoundCues}
+                aria-label="Sound Cues"
+              />
+              <span class="zl-toggle-slider"></span>
+            </label>
           </div>
-          <label class="zl-toggle">
-            <input
-              type="checkbox"
-              checked={soundCuesValue}
-              on:change={toggleSoundCues}
-              aria-label="Sound Cues"
-            />
-            <span class="zl-toggle-slider"></span>
-          </label>
         </div>
 
         <div class="zl-setting-row">
@@ -428,19 +424,19 @@
     position: relative;
     z-index: 1001;
     width: min(92vw, 30rem);
-    max-height: min(88dvh, 58rem);
+    max-height: min(92dvh, 58rem);
     background: var(--zl-card-bg-gradient-color-start, #fff);
     border: var(--zl-card-border-width, 4px) solid
       var(--zl-card-border-color, #000);
     border-radius: var(--zl-card-border-radius, 28px);
     box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(0, 0, 0, 0.1));
-    padding: 2rem;
+    padding: 1.5rem;
     overflow: hidden;
     animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
   .zl-settings-content {
-    max-height: calc(min(88dvh, 58rem) - 4rem);
+    max-height: calc(min(92dvh, 58rem) - 3rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 0.125rem;
@@ -472,8 +468,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: -0.25rem 0 1.5rem;
-    padding: 0.25rem 0 0.75rem;
+    margin: -0.25rem 0 0.85rem;
+    padding: 0.25rem 0 0.5rem;
     background: var(--zl-card-bg-gradient-color-start, #fff);
   }
 
@@ -513,7 +509,7 @@
   }
 
   .zl-settings-section {
-    margin-bottom: 1.75rem;
+    margin-bottom: 1.1rem;
   }
 
   .zl-settings-section:last-child {
@@ -524,7 +520,7 @@
      instead of another shouting section label. */
   .zl-settings-footer {
     border-top: 2px dashed var(--zl-item-border-color, rgba(0, 0, 0, 0.12));
-    padding-top: 1.25rem;
+    padding-top: 0.85rem;
   }
 
   .zl-settings-footer .zl-setting-row {
@@ -533,7 +529,7 @@
 
   /* The vibe grid hands off to its sibling Chunky Mode row */
   .zl-vibe-grid + .zl-setting-row {
-    margin-top: 0.75rem;
+    margin-top: 0.6rem;
   }
 
   .zl-section-label {
@@ -542,7 +538,7 @@
     font-weight: 800;
     text-transform: uppercase;
     color: var(--zl-text-color-disabled, #999);
-    margin-bottom: 1rem;
+    margin-bottom: 0.6rem;
     letter-spacing: 0;
   }
 
@@ -551,12 +547,55 @@
     justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem;
+    padding: 0.75rem 0.85rem;
     background: rgba(255, 255, 255, 0.5);
     border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
     border-radius: 16px;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.6rem;
     transition: all 0.2s;
+  }
+
+  /* Flow's three boolean toggles — was three full-width rows (biggest
+     scroll-height offender), now a balanced 2-up grid. Ready Mic + List
+     First pair up top; Sound Cues spans full width since three won't
+     split evenly and a half-width orphan reads unbalanced. */
+  .zl-toggle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .zl-toggle-tile {
+    grid-column: span 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 16px;
+    transition: all 0.2s;
+  }
+
+  .zl-toggle-tile:hover {
+    border-color: var(--zl-primary-color);
+    background: white;
+  }
+
+  .zl-toggle-tile:last-child {
+    grid-column: span 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .zl-toggle-tile .zl-setting-name {
+    font-size: var(--font-size-xs, 0.8rem);
+  }
+
+  .zl-toggle-tile .zl-setting-desc {
+    font-size: 0.68rem;
   }
 
   .zl-setting-row:hover {
@@ -708,16 +747,17 @@
     transform: translate(-1px, -1px);
   }
 
-  /* Vibe Grid */
+  /* Vibe Grid — 4 columns holds for up to 8 themes (2 tidy rows); auto-fit
+     keeps it balanced if the roster changes instead of a hardcoded count. */
   .zl-vibe-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   .zl-vibe-option {
     position: relative;
-    padding: 1rem 0.5rem;
+    padding: 0.65rem 0.4rem;
     min-height: 44px;
     background: white;
     border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
@@ -729,7 +769,7 @@
     font-size: var(--font-size-xs, 0.8rem);
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 0.35rem;
     align-items: center;
     justify-content: center;
   }
