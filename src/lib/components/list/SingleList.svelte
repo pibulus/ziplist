@@ -12,7 +12,7 @@
   import { shareList } from "$lib/services/share";
   import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
   import { fade } from "svelte/transition";
-  import { cubicOut, backOut } from "svelte/easing";
+  import { cubicOut, backOut, quintOut } from "svelte/easing";
   import { flip } from "svelte/animate";
 
   // Respect the user's motion preference for the juicy item transitions.
@@ -110,6 +110,7 @@
   let touchDragStartX = 0;
   let touchDragStartY = 0;
   let touchDragCurrentY = 0;
+  let touchDragTilt = 0; // deg — smoothed vertical-velocity lean on the ghost
   let touchDragGhostRect = null;
   let touchDragPointerOffsetY = 0;
   let touchDragTargetIndex = -1;
@@ -538,9 +539,16 @@
   $: touchDraggedItem = touchDragItemId
     ? list.items.find((item) => item.id === touchDragItemId) || null
     : null;
+  // Ghost transport is TRANSFORM-only: top/left/width are laid out once at
+  // grab, then every finger move is a translate3d — compositor work, no
+  // layout thrash (the old `top:` updates re-laid-out every frame).
+  // --drag-tilt carries the finger's vertical velocity so the card leans
+  // into fast moves and rights itself when you slow down.
   $: touchGhostStyle =
     touchDraggedItem && touchDragGhostRect
-      ? `top: ${touchDragCurrentY - touchDragPointerOffsetY}px; left: ${touchDragGhostRect.left}px; width: ${touchDragGhostRect.width}px;`
+      ? `top: ${touchDragGhostRect.top}px; left: ${touchDragGhostRect.left}px; width: ${touchDragGhostRect.width}px; transform: translate3d(0, ${
+          touchDragCurrentY - touchDragPointerOffsetY - touchDragGhostRect.top
+        }px, 0); --drag-tilt: ${touchDragTilt}deg;`
       : "";
 
   // Track previous item IDs to detect new items (from remote users)
@@ -762,6 +770,7 @@
     stopTouchDragAutoScroll();
     removeTouchDragListeners();
 
+    touchDragTilt = 0;
     touchDragPreviewItems = null;
     touchDragItemId = null;
     touchDragPendingItemId = null;
@@ -901,6 +910,7 @@
     touchDragItemId = touchDragPendingItemId;
     touchDragPointerOffsetY = touchDragStartY - rect.top;
     touchDragGhostRect = {
+      top: rect.top,
       left: rect.left,
       width: rect.width,
       height: rect.height,
@@ -959,6 +969,13 @@
     }
 
     event.preventDefault();
+    // Lean into the move: raw per-event delta, low-passed so it reads as
+    // carry rather than jitter. Clamped to a whisper (±3°).
+    const rawTilt = Math.max(
+      -3,
+      Math.min(3, (touch.clientY - touchDragCurrentY) * 0.35),
+    );
+    touchDragTilt = touchDragTilt * 0.65 + rawTilt * 0.35;
     touchDragCurrentY = touch.clientY;
     updateTouchDragPreview(touch.clientY);
     updateTouchDragAutoScroll(touch.clientY);
@@ -1717,7 +1734,7 @@
               on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
-              animate:flip={{ duration: touchDragItemId ? 180 : 300 }}
+              animate:flip={{ duration: touchDragItemId ? 220 : 260, easing: quintOut }}
               in:itemIn={{ delay: getStaggerDelay(index) }}
               out:itemOut
               aria-grabbed={getItemGrabbedState(item.id)}
@@ -1815,7 +1832,7 @@
               on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
-              animate:flip={{ duration: touchDragItemId ? 180 : 300 }}
+              animate:flip={{ duration: touchDragItemId ? 220 : 260, easing: quintOut }}
               in:itemIn={{
                 delay: getStaggerDelay(renderedActiveItems.length + index + 1),
               }}

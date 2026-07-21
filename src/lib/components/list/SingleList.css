@@ -1463,6 +1463,10 @@
   box-shadow: none;
   transform: none;
   background: rgba(255, 255, 255, 0.28);
+  /* Fades down as the ghost lifts off it, instead of snapping hollow. */
+  transition:
+    opacity 160ms ease-out,
+    background-color 160ms ease-out;
 }
 
 .zl-item.touch-placeholder::after {
@@ -1628,11 +1632,13 @@
   line-height: 1;
   opacity: 0.55;
   padding: 0;
+  /* Family squish (same curve as the modal X): springy grow on hover,
+     satisfying press-down on tap. */
   transition:
     background-color 0.18s ease,
     color 0.18s ease,
     opacity 0.18s ease,
-    transform 0.18s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    transform 0.22s linear(0, 0.5 15%, 1.15 40%, 0.97 65%, 1);
   width: 44px;
 }
 
@@ -1652,7 +1658,7 @@
 }
 
 .zl-item-delete-button:active {
-  transform: scale(0.92);
+  transform: scale(0.86);
   transition-duration: 80ms;
 }
 
@@ -1660,17 +1666,40 @@
   position: fixed;
   z-index: 999;
   pointer-events: none;
-  transform: translateZ(0);
+  /* transform (translate3d) comes from the inline style — compositor-only
+     transport, laid out once at grab. */
+  will-change: transform;
 }
 
+/* Pick-up: the row visibly LIFTS off the list — grows into its shadow over
+   ~180ms instead of appearing pre-lifted. The rotate rides --drag-tilt so
+   the card leans with fast finger moves (inline var, smoothed in JS); its
+   own 90ms transition keeps the lean fluid without lagging the translate
+   (tilt lives on the inner element, transport on the outer). */
 .zl-touch-ghost-item {
   margin: 0;
   opacity: 0.98;
-  transform: rotate(1.1deg) scale(1.02);
+  transform: rotate(calc(1.1deg + var(--drag-tilt, 0deg))) scale(1.02);
   box-shadow: 0 16px 34px rgba(0, 151, 167, 0.24);
   border-color: rgba(0, 188, 212, 0.7);
   background: rgba(255, 255, 255, 0.96);
-  animation: none;
+  animation: zl-ghost-lift 180ms cubic-bezier(0.16, 0.84, 0.24, 1.06) backwards;
+  transition: transform 90ms ease-out;
+}
+
+@keyframes zl-ghost-lift {
+  from {
+    transform: rotate(0deg) scale(1);
+    box-shadow: 0 2px 6px rgba(0, 151, 167, 0.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-touch-ghost-item {
+    animation: none;
+    transition: none;
+    transform: scale(1.02);
+  }
 }
 
 .ghost-checkbox {
