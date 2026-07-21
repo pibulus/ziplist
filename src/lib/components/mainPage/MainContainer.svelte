@@ -30,6 +30,7 @@
   import { listFirstMode, soundCues } from "$lib";
   import { listsStore } from "$lib/services/lists/listsStore";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import { hapticService } from "$lib/services/infrastructure/hapticService";
   import SwipeableLists from "../list/SwipeableLists.svelte";
   import PermissionError from "./audio-transcript/PermissionError.svelte";
   import RecordButtonWithTimer from "./audio-transcript/RecordButtonWithTimer.svelte";
@@ -461,6 +462,41 @@
   });
 
   // Handle toggle recording
+  // ── Push-to-talk (hybrid) ─────────────────────────────────────────────
+  // Hold past 250ms = walkie-talkie: start on hold, stop on release. The
+  // permission trap: on a first-ever hold, getUserMedia's dialog appears
+  // mid-press and the user releases to tap "Allow" — so a release while
+  // the start is still pending only auto-stops if the recording goes live
+  // within a beat (a fast-start race); a long pend (permission flow)
+  // gracefully degrades to toggle semantics and the user taps to stop.
+  let holdReleasedWhilePending = false;
+  let holdPendingExpiry = null;
+
+  function handleHoldStart() {
+    hapticService.impact("medium");
+    if (!$isRecording) handleToggleRecording();
+  }
+
+  function handleHoldEnd() {
+    if ($isRecording) {
+      stopActiveRecording();
+      return;
+    }
+    if (isStartingRecording) {
+      holdReleasedWhilePending = true;
+      if (holdPendingExpiry) clearTimeout(holdPendingExpiry);
+      holdPendingExpiry = setTimeout(() => {
+        holdReleasedWhilePending = false;
+      }, 1200);
+    }
+  }
+
+  $: if (holdReleasedWhilePending && $isRecording) {
+    holdReleasedWhilePending = false;
+    if (holdPendingExpiry) clearTimeout(holdPendingExpiry);
+    stopActiveRecording();
+  }
+
   async function handleToggleRecording() {
     if ($isRecording) {
       stopActiveRecording();
@@ -817,6 +853,8 @@
       recordingDuration={$recordingDuration}
       progress={$transcriptionProgress}
       on:click={handleToggleRecording}
+      on:holdstart={handleHoldStart}
+      on:holdend={handleHoldEnd}
       on:preload={preloadSpeechModel}
     />
   </div>

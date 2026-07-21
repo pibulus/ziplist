@@ -182,7 +182,52 @@
       : `${buttonLabel}. Create a new list`;
 
   $: baseButtonClasses =
-    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[380px] px-6 py-4 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black";
+    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[380px] px-6 py-4 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black select-none touch-manipulation";
+
+  // ── Push-to-talk (hybrid) ─────────────────────────────────────────────
+  // Quick tap keeps the classic toggle. Press-and-hold past HOLD_MS turns
+  // the button into a walkie-talkie: holdstart begins recording, release
+  // fires holdend (parent stops). Pointer capture keeps the release on the
+  // button even when the thumb drifts; the click that browsers fire after
+  // a completed hold is swallowed so it can't re-toggle.
+  const HOLD_MS = 250;
+  let holdTimer = null;
+  let holdActive = false;
+  let swallowNextClick = false;
+
+  function clearHoldTimer() {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+  }
+
+  function handlePointerDown(event) {
+    dispatch("preload");
+    if (disabled || transcribing) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    try {
+      recordButtonElement?.setPointerCapture?.(event.pointerId);
+    } catch {
+      /* capture is best-effort */
+    }
+    clearHoldTimer();
+    if (recording) return; // already live: release resolves as a normal tap-stop
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      holdActive = true;
+      swallowNextClick = true;
+      dispatch("holdstart");
+    }, HOLD_MS);
+  }
+
+  function handlePointerRelease() {
+    clearHoldTimer();
+    if (holdActive) {
+      holdActive = false;
+      dispatch("holdend");
+    }
+  }
 
   $: clipboardSuccessClasses = clipboardSuccess
     ? "notification-pulse border border-purple-200 bg-purple-50"
@@ -227,13 +272,20 @@
       style={baseStyle}
       data-record-button
       on:click={() => {
+        if (swallowNextClick) {
+          // This click is the tail of a completed hold — already handled.
+          swallowNextClick = false;
+          return;
+        }
         dispatch("click");
         // Only update phrases for next time after a click
         if (!recording) {
           updateRandomPhrases();
         }
       }}
-      on:pointerdown={() => dispatch("preload")}
+      on:pointerdown={handlePointerDown}
+      on:pointerup={handlePointerRelease}
+      on:pointercancel={handlePointerRelease}
       on:mouseenter={() => {
         dispatch("preload");
         // Don't update phrases on hover to prevent flicker
