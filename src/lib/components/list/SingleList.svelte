@@ -392,11 +392,27 @@
       return;
     }
 
-    if (!$isContributor) {
-      showListStatus("Contributor opens live shared lists.", false, 4200);
+    // Volume gate, not a feature gate: anyone can make a list live. Free
+    // runs one live list at a time; contributor runs several. Only fires
+    // when a DIFFERENT list is already live — re-tapping the live list
+    // itself falls through to the isLive branch below.
+    const maxLiveLists = $isContributor
+      ? PRODUCT_LIMITS.CONTRIBUTOR_MAX_LIVE_LISTS
+      : PRODUCT_LIMITS.FREE_MAX_LIVE_LISTS;
+    if (
+      !liveListsService.isLive(list?.id) &&
+      liveListsService.getLiveListCount() >= maxLiveLists
+    ) {
+      showListStatus(
+        $isContributor
+          ? `ZipList runs ${maxLiveLists} live lists at once. End one to start another.`
+          : `Free ZipList runs one live list at a time. End that one, or run more at once with Contributor.`,
+        false,
+        4200,
+      );
       hapticService.notification("warning");
       soundService.locked({ force: true });
-      requestContributorUnlock();
+      if (!$isContributor) requestContributorUnlock();
       return;
     }
 
@@ -1568,14 +1584,11 @@
             <button
               type="button"
               class="zl-live-button"
-              class:locked={!$isContributor}
               disabled={isMakingLive}
               on:click={handleMakeLive}
-              title={$isContributor
-                ? isMakingLive
-                  ? "Starting live list"
-                  : "Enable real-time collaboration"
-                : "Contributor opens live shared lists"}
+              title={isMakingLive
+                ? "Starting live list"
+                : "Enable real-time collaboration"}
               aria-busy={isMakingLive}
               aria-label={isMakingLive
                 ? "Starting live list"

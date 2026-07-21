@@ -14,16 +14,20 @@ export const PRICING = {
   },
 };
 
+// Contributor buys ROOM, not features (2026-07-21). Every feature works
+// free — "Live shared lists" and "Longer lists" used to sit here but
+// neither was ever actually gated (list length is a soft nudge for
+// everyone), and live sharing is now free too. Claiming a benefit the
+// free tier already has reads as a bait once someone notices.
 export const CONTRIBUTOR_BENEFITS = [
-  "More lists",
-  "Longer lists",
-  "Live shared lists",
+  "12 lists instead of 3",
+  "Several lists live at once",
   "Unlock on your devices",
 ];
 
 export const CONTRIBUTOR_COPY = {
   summary:
-    "$9 a year, no subscription — get more room and help keep the simple list bit free for everyone.",
+    "$9 a year, no subscription — every feature is free, this just buys more room and keeps ZipList going.",
   checkoutError:
     "Checkout needs server setup first. Contributor codes still work.",
 };

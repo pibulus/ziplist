@@ -1,6 +1,5 @@
 import { dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
-import { env as publicEnv } from "$env/dynamic/public";
 import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter.js";
 import { verifyContributorToken } from "$lib/server/contributor/licenseCrypto.js";
@@ -52,10 +51,6 @@ function getPartyKitProtocol(host) {
   return isLocalPartyKitHost(host) ? "http" : "https";
 }
 
-function isDevContributorBypassEnabled() {
-  return dev && publicEnv.PUBLIC_FORCE_CONTRIBUTOR_MODE === "true";
-}
-
 function getPartyKitCreateSecret() {
   return env.PARTYKIT_CREATE_SECRET?.trim() || "";
 }
@@ -64,6 +59,13 @@ export async function POST(event) {
   const rateResponse = enforceRateLimit(event);
   if (rateResponse) return rateResponse;
 
+  // Live sharing is free for everyone (2026-07-21). Contributor gates
+  // VOLUME (how many lists, how many live at once), never the feature
+  // itself — the client enforces the concurrent-live cap. Rate limiting
+  // above is what protects room creation from abuse, not payment status.
+  // The token is still read: it sets the room TIER (supporter rooms get
+  // the longer retention the PartyKit room server applies), it just no
+  // longer decides whether a room may be created at all.
   const token = getBearerToken(event.request);
   let tokenPayload = null;
 
@@ -76,15 +78,6 @@ export async function POST(event) {
         error,
       );
     }
-  }
-
-  if (!tokenPayload && !isDevContributorBypassEnabled()) {
-    return json(
-      {
-        error: "Contributor unlock is needed to make a live shared list.",
-      },
-      { status: 402 },
-    );
   }
 
   const host = getPartyKitHost(event);

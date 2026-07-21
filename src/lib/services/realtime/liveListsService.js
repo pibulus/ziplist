@@ -466,6 +466,10 @@ export function isLive(listId) {
   return activeConnections.has(listId);
 }
 
+export function getLiveListCount() {
+  return activeConnections.size;
+}
+
 export function isLiveCollaborationAvailable() {
   return isPartyKitAvailable();
 }

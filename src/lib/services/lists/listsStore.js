@@ -194,7 +194,7 @@ function getMaxListsMessage(maxLists) {
     return `ZipList keeps ${maxLists} lists max. Rename one or clear space first.`;
   }
 
-  return `Free ZipList keeps ${maxLists} lists. Contributor opens more room and live sharing.`;
+  return `Free ZipList keeps ${maxLists} lists. Contributor opens more room.`;
 }
 
 // Initialize the lists store
