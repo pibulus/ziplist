@@ -115,7 +115,11 @@ export class ModalService {
         if (dialog && typeof dialog.close === "function" && dialog.open) {
           dialog.close();
         }
-        dialog.classList.remove("zl-modal-closing");
+        // Deliberately KEEP .zl-modal-closing here. DaisyUI's .modal fades
+        // out via a ~200ms opacity transition after close(); stripping the
+        // class now snaps .modal-box back to full opacity mid-fade — a
+        // visible "ghost flash" of the modal. openModal() (and cleanup())
+        // already clear the class before the next showModal().
       });
 
       // A modal→modal switch may have opened a new dialog while this close
