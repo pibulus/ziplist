@@ -218,7 +218,8 @@
     <button
       bind:this={recordButtonElement}
       class="{baseButtonClasses} {clipboardSuccessClasses}"
-      class:pulse-subtle={!recording && !hasActiveList && !clipboardSuccess}
+      class:pulse-subtle={!recording && !clipboardSuccess}
+      class:pulse-calm={hasActiveList}
       class:recording-active={recording}
       class:audio-reactive={recording}
       class:recording-warning={isWarning && recording}
@@ -468,23 +469,66 @@
   }
 
   /* Subtle breathing glow for button — 4.8s matches the fleet's idle
-     breathe (talktype/daysay) so every app inhales at the same pace. */
+     breathe (talktype/daysay) so every app inhales at the same pace.
+
+     Swiping between lists flips hasActiveList, which used to add/remove
+     this class outright: the animation restarted from frame 0 AND the
+     glow box-shadow hard-cut to the base shadow's totally different
+     shape. That snap is what read as "the button resets" on every list
+     change. Now the animation runs continuously in both states and only
+     its AMPLITUDE changes (--breathe-glow / --breathe-lift), so an empty
+     list breathes big to invite a first recording and a populated list
+     settles to a calm idle — and the change between them eases instead
+     of snapping. */
   .pulse-subtle {
+    --breathe-glow: 1;
+    --breathe-lift: 1;
     animation: button-breathe 4.8s ease-in-out infinite;
     transform-origin: center;
+    transition:
+      --breathe-glow 0.45s ease-out,
+      --breathe-lift 0.45s ease-out;
+  }
+
+  /* Already has items: same breath, dialled down — no restart, no snap. */
+  .pulse-subtle.pulse-calm {
+    --breathe-glow: 0.42;
+    --breathe-lift: 0.3;
+  }
+
+  @property --breathe-glow {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
+  }
+
+  @property --breathe-lift {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
   }
 
   @keyframes button-breathe {
     0%,
     100% {
-      box-shadow: 0 0 12px 2px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.35);
+      box-shadow: 0 0 calc(12px * var(--breathe-glow)) calc(
+            2px * var(--breathe-glow)
+          )
+        rgba(
+          var(--zl-cta-color-rgb, 255, 176, 0),
+          calc(0.35 * var(--breathe-glow))
+        );
       transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 20px 6px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
-      transform: scale(1.02);
+      box-shadow: 0 0 calc(20px * var(--breathe-glow)) calc(
+            6px * var(--breathe-glow)
+          )
+        rgba(
+          var(--zl-cta-color-rgb, 255, 176, 0),
+          calc(0.5 * var(--breathe-glow))
+        );
+      transform: scale(calc(1 + 0.02 * var(--breathe-lift)));
     }
   }
 
@@ -797,6 +841,11 @@
     .wave-bar,
     .recording-indicator {
       animation: none !important;
+    }
+
+    /* No breath, so no amplitude to ease between either. */
+    .pulse-subtle {
+      transition: none !important;
     }
   }
 </style>
