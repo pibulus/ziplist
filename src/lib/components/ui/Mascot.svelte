@@ -148,11 +148,16 @@
    *   :global(.my-app) { --mascot-size-mobile: 96px; }
    */
   .mascot {
-    --mascot-size-mobile: 110px; /* ~105px visible ink — matches TalkType */
-    --mascot-size-sm: 120px; /* >= 640px */
-    --mascot-size-md: 140px; /* >= 768px */
-    --mascot-size-lg: 160px; /* >= 1024px — matches TalkType ~174 ink */
-    --mascot-gap: 0.625rem; /* bottom spacing under the mascot */
+    /* HERO-SPEC.md slot — the family mascot SLOT is fixed at 176/192/224/256
+       (= talktype's ghost wrapper) so titles land at identical y across apps.
+       Ink parity is tuned separately: the dude's svg is near-full-bleed (~90%
+       ink) vs the ghost's ~68%, so .mascot-art pads 12% to read ghost-sized.
+       Measured live 2026-07-21: ghost ink 174px @lg, dude ink 174px with this. */
+    --mascot-size-mobile: 176px;
+    --mascot-size-sm: 192px; /* >= 640px */
+    --mascot-size-md: 224px; /* >= 768px */
+    --mascot-size-lg: 256px; /* >= 1024px */
+    --mascot-gap: 1rem; /* bottom spacing under the mascot (0 at md+) */
     --mascot-aura-color-1: rgba(255, 204, 51, 0.18);
     --mascot-aura-color-2: rgba(255, 106, 194, 0.12);
     --mascot-aura-color-3: rgba(113, 201, 206, 0.08);
@@ -222,6 +227,10 @@
     width: 100%;
     height: 100%;
     transition: filter 0.3s ease;
+    /* Ink-parity padding — see slot comment above. Modal-sized instances
+       (Intro/About) zero this out; they were tuned full-bleed. */
+    padding: var(--mascot-ink-pad, 12%);
+    box-sizing: border-box;
   }
 
   .mascot-art.is-floating {

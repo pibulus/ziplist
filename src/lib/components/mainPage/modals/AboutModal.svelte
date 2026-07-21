@@ -140,6 +140,7 @@
     --mascot-size-sm: 48px;
     --mascot-size-md: 48px;
     --mascot-size-lg: 48px;
+    --mascot-ink-pad: 0%;
     margin-bottom: 0;
   }
 

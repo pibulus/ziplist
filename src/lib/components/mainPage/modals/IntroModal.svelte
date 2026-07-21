@@ -105,6 +105,7 @@
     --mascot-size-sm: 72px;
     --mascot-size-md: 80px;
     --mascot-size-lg: 80px;
+    --mascot-ink-pad: 0%;
     margin-bottom: 0;
   }
 </style>
