@@ -26,9 +26,13 @@
    * @example
    *   <Mascot ariaLabel="Start recording" on:click={handleClick} />
    */
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onDestroy } from "svelte";
 
   const dispatch = createEventDispatcher();
+
+  onDestroy(() => {
+    if (tapTimer) clearTimeout(tapTimer);
+  });
 
   /** Legacy body / base SVG layer. Optional — does NOT theme-recolor. */
   export let baseSrc = "";
@@ -42,6 +46,13 @@
   export let float = true;
   /** Idle "tappable" aura ring (only meaningful when interactive). */
   export let aura = true;
+  /** Listening/recording look — stronger, faster aura + a warm glow. */
+  export let active = false;
+
+  // Tap squish — the dude acknowledges every poke with a squash-and-stretch
+  // before whatever the click actually does (usually: start recording).
+  let tapped = false;
+  let tapTimer = null;
 
   // Unique gradient id per instance so hero + modal mascots don't share a fill.
   const gid = `zlMascotGradient-${Math.random().toString(36).slice(2, 8)}`;
@@ -51,6 +62,16 @@
 
   function handleClick(event) {
     if (!interactive) return;
+    // Restartable squish: drop the class for a frame so rapid taps re-fire.
+    tapped = false;
+    requestAnimationFrame(() => {
+      tapped = true;
+    });
+    if (tapTimer) clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => {
+      tapped = false;
+      tapTimer = null;
+    }, 420);
     dispatch("click", event);
   }
 </script>
@@ -61,11 +82,12 @@
   class="mascot"
   class:is-interactive={interactive}
   class:has-aura={aura && interactive}
+  class:is-active={active}
   aria-label={interactive ? ariaLabel : undefined}
   aria-hidden={interactive ? undefined : "true"}
   on:click={handleClick}
 >
-  <div class="mascot-art" class:is-floating={float}>
+  <div class="mascot-art" class:is-floating={float} class:tapped>
     {#if $$slots.default}
       <slot />
     {:else if useLegacyImg}
@@ -237,6 +259,40 @@
     animation: mascot-float 6s ease-in-out infinite;
   }
 
+  /* Tap acknowledgment — squash, overshoot, settle. Rides ON TOP of the
+     float via a wrapper-level scale so the two don't fight. */
+  .mascot-art.tapped {
+    animation:
+      mascot-tap-squish 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+      mascot-float 6s ease-in-out infinite;
+  }
+
+  @keyframes mascot-tap-squish {
+    0% {
+      scale: 1 1;
+    }
+    30% {
+      scale: 1.08 0.86;
+    }
+    62% {
+      scale: 0.94 1.08;
+    }
+    100% {
+      scale: 1 1;
+    }
+  }
+
+  /* Listening look — the aura stops teasing and commits: continuous,
+     quicker, brighter, plus a warm glow on the art itself. */
+  .mascot.is-active .mascot-art {
+    filter: drop-shadow(0 0 16px var(--mascot-hover-glow));
+  }
+
+  .mascot.is-active.has-aura::after {
+    animation: mascot-aura 1.5s ease-in-out infinite;
+    animation-delay: 0s;
+  }
+
   .mascot.is-interactive:hover .mascot-art {
     filter: drop-shadow(0 0 15px var(--mascot-hover-glow));
   }
@@ -323,9 +379,10 @@
     }
   }
 
-  /* Respect reduced-motion: kill float / blink / aura. */
+  /* Respect reduced-motion: kill float / blink / aura / squish. */
   @media (prefers-reduced-motion: reduce) {
     .mascot-art.is-floating,
+    .mascot-art.tapped,
     .mascot-eyes,
     .mascot-eyes-group,
     .mascot.has-aura::after {

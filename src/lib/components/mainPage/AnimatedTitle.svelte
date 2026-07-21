@@ -52,6 +52,7 @@
     ariaLabel={$isRecording
       ? "ZipList mascot — stop recording"
       : "ZipList mascot — start recording"}
+    active={$isRecording}
     on:click={handleDudeClick}
   />
 
