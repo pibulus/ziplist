@@ -119,13 +119,20 @@
  * ============================================================
  * THE DESK DRAWER — four office-supply fluro themes, one concept
  * ============================================================
- * Highlighter · Sticky Note · Carbon Copy · Wite-Out
+ * Highlighter · Sticky Note · Gel Pen · Legal Pad
  *
  * Every theme is a warm cream "paper" ground (the desk) with ONE
  * fluro office-tool accent duo popping off it. Not seasons, not
  * moods — actual desk-drawer objects, so the set reads as siblings
  * at a glance and the concept is nameable in a word: office supplies.
  * Toybrut/neobrut kawaii — chunky borders, punchy but polished.
+ *
+ * ALL FOUR share Highlighter's FLAT cream card (one colour, no
+ * gradient stops) and warm near-black ink + borders. The theme is
+ * carried by the fluro accent duo alone — mascot gradient, checkbox
+ * fill, focus shadows. Gradient-washed cards were cut 2026-07-21:
+ * they muddied the neon and made the set read as four different
+ * apps instead of four pens in one drawer.
  * ============================================================
  */
 
@@ -244,393 +251,337 @@ html[data-theme="highlighter"] {
 /**
  * Theme: Sticky Note
  *
- * Office fluro, cooler half. Folded in from the "Dayglo" experiment —
- * lime and cyan sticky-note colors on warm cream, the corkboard-covered-
- * in-Post-its energy. Same silhouette family as Highlighter, different
- * hue duo, so the pair reads as drawer-mates.
+ * Fluro-yellow Post-it. The 3M canary-on-acid yellow with the amber
+ * gum-strip edge, flat on cream. The block of stickies by the monitor.
  */
 html[data-theme="sticky-note"] {
-  /* Mascot gradient — fluro lime → fluro cyan */
-  --zl-mascot-gradient-start: #c8ff33;
-  --zl-mascot-gradient-mid: #7dfad0;
-  --zl-mascot-gradient-end: #17e0e0;
+  /* Mascot gradient — the fluro duo, the ONE place a gradient lives */
+  --zl-mascot-gradient-start: #fff95c;
+  --zl-mascot-gradient-mid: #ffe14d;
+  --zl-mascot-gradient-end: #ffb300;
 
-  /* Card gradient — warm cream ground, cool fluro only at the edge */
-  --zl-card-bg-gradient-angle: 130deg;
-  --zl-card-bg-gradient-color-start: #fdfef0;
-  --zl-card-bg-gradient-color-second: #f4fdd8;
-  --zl-card-bg-gradient-color-mid: #e3fbc9;
-  --zl-card-bg-gradient-color-fourth: #cdf7d9;
-  --zl-card-bg-gradient-color-end: #a9f0e6;
-  --zl-card-border-color: #0f9d9d;
-  --zl-card-box-shadow: 0 12px 30px rgba(23, 224, 224, 0.22);
+  /* Card — flat warm cream, same ground as Highlighter (no gradient) */
+  --zl-card-bg-gradient-angle: 180deg;
+  --zl-card-bg-gradient-color-start: #fff9f0;
+  --zl-card-bg-gradient-color-second: #fff9f0;
+  --zl-card-bg-gradient-color-mid: #fff9f0;
+  --zl-card-bg-gradient-color-fourth: #fff9f0;
+  --zl-card-bg-gradient-color-end: #fff9f0;
+  --zl-card-border-color: #1e1714;
+  --zl-card-box-shadow: 0 12px 30px rgba(30, 23, 20, 0.12);
   --zl-card-inner-border-gradient: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.7),
-    rgba(23, 224, 224, 0.2)
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 179, 0, 0.2)
   );
 
-  /* Empty state styling overrides — deepened primary so the title never
-     washes out against the pale mint/lime card (the "chill" lesson). */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(244, 253, 216, 0.5),
-    rgba(169, 240, 230, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(15, 157, 157, 0.45);
-  --zl-empty-title-color: var(--zl-primary-color, #0f7a7a);
+  /* Base theme colors */
+  --zl-primary-color: #c98a00;
+  --zl-primary-color-rgb: 201, 138, 0;
+  --zl-secondary-color: #fffbcc;
+  --zl-accent-color: #1e1714;
+  --zl-accent-color-rgb: 30, 23, 20;
+  --zl-cta-grad-start: #fff95c;
+  --zl-cta-grad-end: #ffc400;
+  --zl-highlight-color: #fffbcc;
+  --zl-text-hover-color: #1e1714;
 
-  /* Base theme colors — darkened from the original dayglo pass for
-     guaranteed contrast against the card's palest stops */
-  --zl-primary-color: #0f7a7a;
-  --zl-primary-color-rgb: 15, 122, 122;
-  --zl-secondary-color: #7a9c1f;
-  --zl-accent-color: #0f9d9d;
-  --zl-cta-grad-start: #c8ff33;
-  --zl-cta-grad-end: #0f9d9d;
-  --zl-accent-color-rgb: 15, 157, 157;
-  --zl-highlight-color: #f4fdd8;
-  --zl-text-hover-color: #0b6363;
+  /* Text colors — warm near-black, never pure black */
+  --zl-text-color-primary: #1e1714;
+  --zl-text-color-secondary: #3a2f2a;
+  --zl-text-color-disabled: #7d7269;
 
-  /* Text colors — warm near-black ink */
-  --zl-text-color-primary: #1c2620;
-  --zl-text-color-secondary: #3a4d43;
-  --zl-text-color-disabled: #7d8f86;
-
-  /* Footer resting color — light theme, muted teal ink */
-  --footer-text-color: #0b6363;
+  /* Footer resting color */
+  --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: rgba(253, 254, 240, 0.92);
-  --zl-item-hover-bg: rgba(253, 254, 240, 1);
-  --zl-item-border-color: rgba(15, 157, 157, 0.45);
-  --zl-item-border-hover-color: rgba(15, 157, 157, 0.8);
-  --zl-item-box-shadow: 0 4px 10px rgba(15, 122, 122, 0.14);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(15, 122, 122, 0.2);
+  --zl-item-bg: #fffef7;
+  --zl-item-hover-bg: #fffbcc;
+  --zl-item-border-color: #1e1714;
+  --zl-item-border-hover-color: #1e1714;
 
   /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(244, 253, 216, 0.5);
-  --zl-item-checked-border-color: rgba(15, 157, 157, 0.3);
+  --zl-item-checked-opacity: 1;
+  --zl-item-checked-bg: #e8e2d8;
+  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(15, 157, 157, 0.8);
-  --zl-item-dragging-bg: rgba(253, 254, 240, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(15, 122, 122, 0.28);
-  --zl-item-dragover-bg: rgba(244, 253, 216, 0.9);
-  --zl-item-dragover-border: 2px solid rgba(15, 157, 157, 0.65);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(15, 122, 122, 0.22);
+  --zl-item-dragging-bg: #fffbcc;
+  --zl-item-dragover-bg: #fffbcc;
+  --zl-item-dragging-border: 3px solid rgba(30, 23, 20, 0.8);
+  --zl-item-dragover-border: 2px dashed rgba(30, 23, 20, 0.55);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(30, 23, 20, 0.15);
 
   /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(15, 157, 157, 0.55);
-  --zl-checkbox-bg: rgba(253, 254, 240, 0.9);
-  --zl-checkbox-hover-border: 2px solid rgba(15, 157, 157, 0.8);
-  --zl-checkbox-hover-bg: rgba(244, 253, 216, 0.9);
-  --zl-checkbox-checked-gradient-start: #c8ff33;
-  --zl-checkbox-checked-gradient-end: #0f9d9d;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(15, 122, 122, 0.25);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
+  --zl-checkbox-bg: #fffef7;
+  --zl-checkbox-border: 2px solid rgba(30, 23, 20, 0.68);
+  --zl-checkbox-hover-border: 2px solid #1e1714;
+  --zl-checkbox-hover-bg: #fffbcc;
+  --zl-checkbox-checked-gradient-start: #1e1714;
+  --zl-checkbox-checked-gradient-end: #1e1714;
+  --zl-checkbox-sparkle-color: #ffe14d;
 
   /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(244, 253, 216, 0.8),
-    rgba(205, 247, 217, 0.7)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(15, 122, 122, 0.25);
+  --zl-text-button-hover-bg: #fffbcc;
 
   /* Grab handle styling */
-  --zl-grab-handle-color: rgba(15, 122, 122, 0.8);
-  --zl-grab-handle-opacity: 0.6;
+  --zl-grab-handle-color: #1e1714;
+  --zl-grab-handle-opacity: 0.3;
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(244, 253, 216, 0.95);
-  --zl-delete-button-text-color: rgba(11, 99, 99, 0.9);
+  --zl-delete-button-hover-bg: #fffbcc;
+  --zl-delete-button-text-color: #1e1714;
 
   /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(15, 157, 157, 0.8);
-  --zl-drop-arrow-bg: rgba(15, 122, 122, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(15, 122, 122, 0.32);
+  --zl-drop-indicator-color: #1e1714;
+  --zl-drop-arrow-bg: #1e1714;
+  --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(15, 157, 157, 0.35);
-  --zl-edit-input-bg: rgba(253, 254, 240, 0.9);
-  --zl-edit-input-focus-border: rgba(15, 157, 157, 0.7);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(15, 157, 157, 0.15);
+  --zl-edit-input-bg: #fffef7;
+  --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
+  --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #c98a00;
 
   /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(15, 157, 157, 0.45);
-  --zl-new-item-input-focus-border: rgba(15, 157, 157, 0.75);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(15, 157, 157, 0.15);
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #c98a00;
 
-  /* AppSuffix (.app) token — lime-to-cyan sticky streak */
-  --app-suffix-gradient: linear-gradient(to right, #7a9c1f, #0f9d9d);
+  /* Empty state styling */
+  --zl-empty-state-bg: #fffbcc;
+  --zl-empty-state-border: 3px dashed rgba(30, 23, 20, 0.3);
+  --zl-empty-title-color: #1e1714;
+
+  /* AppSuffix (.app) token */
+  --app-suffix-gradient: linear-gradient(to right, #c98a00, #8a5f00);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(28, 38, 32, 0.15);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(15, 122, 122, 0.28));
+  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 179, 0, 0.28));
 }
 
 /**
- * Theme: Carbon Copy
+ * Theme: Gel Pen
  *
- * Office fluro, warm half. Folded in from the "Manila" experiment —
- * carbon-copy orange and index-tab coral on a true manila-folder ground.
- * The desk drawer full of file tabs, not the highlighter drawer.
+ * Fluro-pink gel rollerball. That screaming magenta ink that bleeds
+ * through the page, flat on cream. Loudest pen in the cup.
  */
-html[data-theme="carbon-copy"] {
-  /* Mascot gradient — fluro orange → carbon-copy coral */
-  --zl-mascot-gradient-start: #ffb200;
-  --zl-mascot-gradient-mid: #ff7a3d;
-  --zl-mascot-gradient-end: #ff4d6a;
+html[data-theme="gel-pen"] {
+  /* Mascot gradient — the fluro duo, the ONE place a gradient lives */
+  --zl-mascot-gradient-start: #ff4fa3;
+  --zl-mascot-gradient-mid: #ff2d87;
+  --zl-mascot-gradient-end: #e0006b;
 
-  /* Card gradient — manila folder cream through to coral edge */
-  --zl-card-bg-gradient-angle: 140deg;
-  --zl-card-bg-gradient-color-start: #fffaf0;
-  --zl-card-bg-gradient-color-second: #ffefd2;
-  --zl-card-bg-gradient-color-mid: #ffdca3;
-  --zl-card-bg-gradient-color-fourth: #ffc17a;
-  --zl-card-bg-gradient-color-end: #ff9d6e;
-  --zl-card-border-color: #d9264a;
-  --zl-card-box-shadow: 0 12px 30px rgba(255, 122, 61, 0.22);
+  /* Card — flat warm cream, same ground as Highlighter (no gradient) */
+  --zl-card-bg-gradient-angle: 180deg;
+  --zl-card-bg-gradient-color-start: #fff9f0;
+  --zl-card-bg-gradient-color-second: #fff9f0;
+  --zl-card-bg-gradient-color-mid: #fff9f0;
+  --zl-card-bg-gradient-color-fourth: #fff9f0;
+  --zl-card-bg-gradient-color-end: #fff9f0;
+  --zl-card-border-color: #1e1714;
+  --zl-card-box-shadow: 0 12px 30px rgba(30, 23, 20, 0.12);
   --zl-card-inner-border-gradient: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.65),
-    rgba(255, 77, 106, 0.18)
+    rgba(255, 255, 255, 0.6),
+    rgba(224, 0, 107, 0.2)
   );
 
-  /* Empty state styling overrides */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(255, 239, 210, 0.5),
-    rgba(255, 157, 110, 0.3)
-  );
-  --zl-empty-state-border: 3px dashed rgba(217, 38, 74, 0.45);
-  --zl-empty-title-color: var(--zl-primary-color, #b8501f);
+  /* Base theme colors */
+  --zl-primary-color: #d1005f;
+  --zl-primary-color-rgb: 209, 0, 95;
+  --zl-secondary-color: #ffe0ef;
+  --zl-accent-color: #1e1714;
+  --zl-accent-color-rgb: 30, 23, 20;
+  --zl-cta-grad-start: #ff4fa3;
+  --zl-cta-grad-end: #e0006b;
+  --zl-highlight-color: #ffe0ef;
+  --zl-text-hover-color: #1e1714;
 
-  /* Base theme colors — darkened primary from the original manila pass
-     for guaranteed contrast against the palest cream card stop */
-  --zl-primary-color: #b8501f;
-  --zl-primary-color-rgb: 184, 80, 31;
-  --zl-secondary-color: #ffdca3;
-  --zl-accent-color: #d9264a;
-  --zl-cta-grad-start: #ffb200;
-  --zl-cta-grad-end: #d9264a;
-  --zl-accent-color-rgb: 217, 38, 74;
-  --zl-highlight-color: #ffefd2;
-  --zl-text-hover-color: #d9264a;
+  /* Text colors — warm near-black, never pure black */
+  --zl-text-color-primary: #1e1714;
+  --zl-text-color-secondary: #3a2f2a;
+  --zl-text-color-disabled: #7d7269;
 
-  /* Text colors — warm near-black ink */
-  --zl-text-color-primary: #2b1c14;
-  --zl-text-color-secondary: #5c3d2e;
-  --zl-text-color-disabled: #a3897a;
-
-  /* Footer resting color — light theme, muted rust ink */
-  --footer-text-color: #8a3a20;
+  /* Footer resting color */
+  --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: rgba(255, 250, 240, 0.92);
-  --zl-item-hover-bg: rgba(255, 250, 240, 1);
-  --zl-item-border-color: rgba(217, 38, 74, 0.4);
-  --zl-item-border-hover-color: rgba(217, 38, 74, 0.75);
-  --zl-item-box-shadow: 0 4px 10px rgba(184, 80, 31, 0.14);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(184, 80, 31, 0.2);
+  --zl-item-bg: #fffef7;
+  --zl-item-hover-bg: #ffe0ef;
+  --zl-item-border-color: #1e1714;
+  --zl-item-border-hover-color: #1e1714;
 
   /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(255, 239, 210, 0.5);
-  --zl-item-checked-border-color: rgba(217, 38, 74, 0.3);
+  --zl-item-checked-opacity: 1;
+  --zl-item-checked-bg: #e8e2d8;
+  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(217, 38, 74, 0.75);
-  --zl-item-dragging-bg: rgba(255, 250, 240, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(184, 80, 31, 0.28);
-  --zl-item-dragover-bg: rgba(255, 239, 210, 0.9);
-  --zl-item-dragover-border: 2px solid rgba(217, 38, 74, 0.6);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(184, 80, 31, 0.22);
+  --zl-item-dragging-bg: #ffe0ef;
+  --zl-item-dragover-bg: #ffe0ef;
+  --zl-item-dragging-border: 3px solid rgba(30, 23, 20, 0.8);
+  --zl-item-dragover-border: 2px dashed rgba(30, 23, 20, 0.55);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(30, 23, 20, 0.15);
 
   /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(217, 38, 74, 0.55);
-  --zl-checkbox-bg: rgba(255, 250, 240, 0.9);
-  --zl-checkbox-hover-border: 2px solid rgba(217, 38, 74, 0.8);
-  --zl-checkbox-hover-bg: rgba(255, 239, 210, 0.9);
-  --zl-checkbox-checked-gradient-start: #ffb200;
-  --zl-checkbox-checked-gradient-end: #d9264a;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(184, 80, 31, 0.22);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
+  --zl-checkbox-bg: #fffef7;
+  --zl-checkbox-border: 2px solid rgba(30, 23, 20, 0.68);
+  --zl-checkbox-hover-border: 2px solid #1e1714;
+  --zl-checkbox-hover-bg: #ffe0ef;
+  --zl-checkbox-checked-gradient-start: #1e1714;
+  --zl-checkbox-checked-gradient-end: #1e1714;
+  --zl-checkbox-sparkle-color: #ff8cc4;
 
   /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(255, 239, 210, 0.8),
-    rgba(255, 220, 163, 0.65)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(184, 80, 31, 0.22);
+  --zl-text-button-hover-bg: #ffe0ef;
 
   /* Grab handle styling */
-  --zl-grab-handle-color: rgba(184, 80, 31, 0.8);
-  --zl-grab-handle-opacity: 0.6;
+  --zl-grab-handle-color: #1e1714;
+  --zl-grab-handle-opacity: 0.3;
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(255, 239, 210, 0.95);
-  --zl-delete-button-text-color: rgba(217, 38, 74, 0.9);
+  --zl-delete-button-hover-bg: #ffe0ef;
+  --zl-delete-button-text-color: #1e1714;
 
   /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(217, 38, 74, 0.8);
-  --zl-drop-arrow-bg: rgba(184, 80, 31, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(184, 80, 31, 0.32);
+  --zl-drop-indicator-color: #1e1714;
+  --zl-drop-arrow-bg: #1e1714;
+  --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(217, 38, 74, 0.35);
-  --zl-edit-input-bg: rgba(255, 250, 240, 0.9);
-  --zl-edit-input-focus-border: rgba(217, 38, 74, 0.7);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(217, 38, 74, 0.15);
+  --zl-edit-input-bg: #fffef7;
+  --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
+  --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #d1005f;
 
   /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(217, 38, 74, 0.45);
-  --zl-new-item-input-focus-border: rgba(217, 38, 74, 0.75);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(217, 38, 74, 0.15);
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #d1005f;
 
-  /* AppSuffix (.app) token — amber-to-coral folder-tab streak */
-  --app-suffix-gradient: linear-gradient(to right, #b8501f, #d9264a);
+  /* Empty state styling */
+  --zl-empty-state-bg: #ffe0ef;
+  --zl-empty-state-border: 3px dashed rgba(30, 23, 20, 0.3);
+  --zl-empty-title-color: #1e1714;
+
+  /* AppSuffix (.app) token */
+  --app-suffix-gradient: linear-gradient(to right, #d1005f, #8f0041);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(43, 28, 20, 0.15);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(184, 80, 31, 0.28));
+  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(224, 0, 107, 0.28));
 }
 
 /**
- * Theme: Wite-Out
+ * Theme: Legal Pad
  *
- * Office fluro, correction-fluid half. Replaces the too-pale "Chill" —
- * same cool mint/blue family Pablo liked, but built from scratch with
- * a genuinely legible primary/accent duo instead of near-white-on-
- * near-white. Correction tape blue-white streak against warm cream.
+ * Fluro-lime legal pad. Acid highlighter-green ruled paper, flat on
+ * cream. The pad you only ever write one line on.
  */
-html[data-theme="wite-out"] {
-  /* Mascot gradient — chalky mint → correction-fluid blue */
-  --zl-mascot-gradient-start: #b8f2e6;
-  --zl-mascot-gradient-mid: #6fd8d1;
-  --zl-mascot-gradient-end: #2f8fdb;
+html[data-theme="legal-pad"] {
+  /* Mascot gradient — the fluro duo, the ONE place a gradient lives */
+  --zl-mascot-gradient-start: #c6f542;
+  --zl-mascot-gradient-mid: #a3e017;
+  --zl-mascot-gradient-end: #6fa300;
 
-  /* Card gradient — warm cream ground, cool pop at the edge only */
-  --zl-card-bg-gradient-angle: 125deg;
-  --zl-card-bg-gradient-color-start: #fdfefc;
-  --zl-card-bg-gradient-color-second: #eafaf5;
-  --zl-card-bg-gradient-color-mid: #d4f3ec;
-  --zl-card-bg-gradient-color-fourth: #b9e8f2;
-  --zl-card-bg-gradient-color-end: #9adcf0;
-  --zl-card-border-color: #1f6fa8;
-  --zl-card-box-shadow: 0 12px 30px rgba(47, 143, 219, 0.22);
+  /* Card — flat warm cream, same ground as Highlighter (no gradient) */
+  --zl-card-bg-gradient-angle: 180deg;
+  --zl-card-bg-gradient-color-start: #fff9f0;
+  --zl-card-bg-gradient-color-second: #fff9f0;
+  --zl-card-bg-gradient-color-mid: #fff9f0;
+  --zl-card-bg-gradient-color-fourth: #fff9f0;
+  --zl-card-bg-gradient-color-end: #fff9f0;
+  --zl-card-border-color: #1e1714;
+  --zl-card-box-shadow: 0 12px 30px rgba(30, 23, 20, 0.12);
   --zl-card-inner-border-gradient: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.7),
-    rgba(47, 143, 219, 0.2)
+    rgba(255, 255, 255, 0.6),
+    rgba(111, 163, 0, 0.2)
   );
 
-  /* Empty state styling overrides — this is the direct fix for the old
-     "chill" bug: title color is a real dark teal-blue, not a pale tint,
-     so "Your list awaits" stays legible against the mint/blue card. */
-  --zl-empty-state-bg: linear-gradient(
-    135deg,
-    rgba(234, 250, 245, 0.5),
-    rgba(185, 232, 242, 0.4)
-  );
-  --zl-empty-state-border: 3px dashed rgba(31, 111, 168, 0.45);
-  --zl-empty-title-color: var(--zl-primary-color, #1f6fa8);
+  /* Base theme colors */
+  --zl-primary-color: #4f7a00;
+  --zl-primary-color-rgb: 79, 122, 0;
+  --zl-secondary-color: #f0ffd1;
+  --zl-accent-color: #1e1714;
+  --zl-accent-color-rgb: 30, 23, 20;
+  --zl-cta-grad-start: #c6f542;
+  --zl-cta-grad-end: #6fa300;
+  --zl-highlight-color: #f0ffd1;
+  --zl-text-hover-color: #1e1714;
 
-  /* Base theme colors — deep enough to hold contrast against the
-     lightest card stop (#fdfefc); this is the fix for the chill bug */
-  --zl-primary-color: #1f6fa8;
-  --zl-primary-color-rgb: 31, 111, 168;
-  --zl-secondary-color: #6fd8d1;
-  --zl-accent-color: #146099;
-  --zl-cta-grad-start: #6fd8d1;
-  --zl-cta-grad-end: #1f6fa8;
-  --zl-accent-color-rgb: 20, 96, 153;
-  --zl-highlight-color: #eafaf5;
-  --zl-text-hover-color: #146099;
+  /* Text colors — warm near-black, never pure black */
+  --zl-text-color-primary: #1e1714;
+  --zl-text-color-secondary: #3a2f2a;
+  --zl-text-color-disabled: #7d7269;
 
-  /* Text colors — deepened from the old chill pass, warm near-black base */
-  --zl-text-color-primary: #1a2e33;
-  --zl-text-color-secondary: #33555e;
-  --zl-text-color-disabled: #7f9aa1;
-
-  /* Footer resting color — light theme, muted deep-teal ink */
-  --footer-text-color: #1f6fa8;
+  /* Footer resting color */
+  --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: rgba(255, 255, 255, 0.9);
-  --zl-item-hover-bg: rgba(255, 255, 255, 1);
-  --zl-item-border-color: rgba(31, 111, 168, 0.4);
-  --zl-item-border-hover-color: rgba(31, 111, 168, 0.75);
-  --zl-item-box-shadow: 0 4px 10px rgba(31, 111, 168, 0.12);
-  --zl-item-hover-box-shadow: 0 8px 20px rgba(31, 111, 168, 0.18);
+  --zl-item-bg: #fffef7;
+  --zl-item-hover-bg: #f0ffd1;
+  --zl-item-border-color: #1e1714;
+  --zl-item-border-hover-color: #1e1714;
 
   /* Checked item styling */
-  --zl-item-checked-opacity: 0.75;
-  --zl-item-checked-bg: rgba(234, 250, 245, 0.5);
-  --zl-item-checked-border-color: rgba(31, 111, 168, 0.28);
+  --zl-item-checked-opacity: 1;
+  --zl-item-checked-bg: #e8e2d8;
+  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
-  --zl-item-dragging-border: 3px solid rgba(31, 111, 168, 0.75);
-  --zl-item-dragging-bg: rgba(255, 255, 255, 1);
-  --zl-item-dragging-shadow: 0 15px 30px rgba(31, 111, 168, 0.28);
-  --zl-item-dragover-bg: rgba(234, 250, 245, 0.9);
-  --zl-item-dragover-border: 2px solid rgba(31, 111, 168, 0.6);
-  --zl-item-dragover-shadow: 0 8px 20px rgba(31, 111, 168, 0.22);
+  --zl-item-dragging-bg: #f0ffd1;
+  --zl-item-dragover-bg: #f0ffd1;
+  --zl-item-dragging-border: 3px solid rgba(30, 23, 20, 0.8);
+  --zl-item-dragover-border: 2px dashed rgba(30, 23, 20, 0.55);
+  --zl-item-dragover-shadow: 0 8px 20px rgba(30, 23, 20, 0.15);
 
   /* Checkbox styling */
-  --zl-checkbox-border: 2px solid rgba(31, 111, 168, 0.55);
-  --zl-checkbox-bg: rgba(255, 255, 255, 0.9);
-  --zl-checkbox-hover-border: 2px solid rgba(31, 111, 168, 0.8);
-  --zl-checkbox-hover-bg: rgba(234, 250, 245, 0.9);
-  --zl-checkbox-checked-gradient-start: #6fd8d1;
-  --zl-checkbox-checked-gradient-end: #1f6fa8;
-  --zl-checkbox-checked-shadow: 0 3px 8px rgba(31, 111, 168, 0.25);
-  --zl-checkbox-sparkle-color: rgba(255, 255, 255, 0.9);
+  --zl-checkbox-bg: #fffef7;
+  --zl-checkbox-border: 2px solid rgba(30, 23, 20, 0.68);
+  --zl-checkbox-hover-border: 2px solid #1e1714;
+  --zl-checkbox-hover-bg: #f0ffd1;
+  --zl-checkbox-checked-gradient-start: #1e1714;
+  --zl-checkbox-checked-gradient-end: #1e1714;
+  --zl-checkbox-sparkle-color: #a3e017;
 
   /* Text button styling */
-  --zl-text-button-hover-bg: linear-gradient(
-    135deg,
-    rgba(234, 250, 245, 0.8),
-    rgba(185, 232, 242, 0.65)
-  );
-  --zl-text-button-focus-shadow: 0 3px 8px rgba(31, 111, 168, 0.25);
+  --zl-text-button-hover-bg: #f0ffd1;
 
   /* Grab handle styling */
-  --zl-grab-handle-color: rgba(31, 111, 168, 0.8);
-  --zl-grab-handle-opacity: 0.6;
+  --zl-grab-handle-color: #1e1714;
+  --zl-grab-handle-opacity: 0.3;
   --zl-grab-handle-hover-opacity: 1;
 
   /* Delete button styling */
-  --zl-delete-button-hover-bg: rgba(234, 250, 245, 0.95);
-  --zl-delete-button-text-color: rgba(20, 96, 153, 0.9);
+  --zl-delete-button-hover-bg: #f0ffd1;
+  --zl-delete-button-text-color: #1e1714;
 
   /* Drop indicator styling */
-  --zl-drop-indicator-color: rgba(31, 111, 168, 0.8);
-  --zl-drop-arrow-bg: rgba(31, 111, 168, 0.9);
-  --zl-drop-arrow-shadow: 0 0 8px rgba(31, 111, 168, 0.32);
+  --zl-drop-indicator-color: #1e1714;
+  --zl-drop-arrow-bg: #1e1714;
+  --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-border: 2px solid rgba(31, 111, 168, 0.35);
-  --zl-edit-input-bg: rgba(255, 255, 255, 0.9);
-  --zl-edit-input-focus-border: rgba(31, 111, 168, 0.7);
-  --zl-edit-input-focus-shadow: 0 0 0 3px rgba(31, 111, 168, 0.15);
+  --zl-edit-input-bg: #fffef7;
+  --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
+  --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #4f7a00;
 
   /* New item input styling */
-  --zl-new-item-input-border: 2px solid rgba(31, 111, 168, 0.45);
-  --zl-new-item-input-focus-border: rgba(31, 111, 168, 0.75);
-  --zl-new-item-input-focus-shadow: 0 0 0 3px rgba(31, 111, 168, 0.15);
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #4f7a00;
 
-  /* AppSuffix (.app) token — mint-to-blue correction streak */
-  --app-suffix-gradient: linear-gradient(to right, #2f8fdb, #146099);
+  /* Empty state styling */
+  --zl-empty-state-bg: #f0ffd1;
+  --zl-empty-state-border: 3px dashed rgba(30, 23, 20, 0.3);
+  --zl-empty-title-color: #1e1714;
+
+  /* AppSuffix (.app) token */
+  --app-suffix-gradient: linear-gradient(to right, #4f7a00, #2f4d00);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(26, 46, 51, 0.15);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(31, 111, 168, 0.26));
+  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
+  --app-suffix-filter: drop-shadow(0 2px 4px rgba(111, 163, 0, 0.28));
 }
 
 /**

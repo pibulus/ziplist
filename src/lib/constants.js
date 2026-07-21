@@ -7,13 +7,15 @@
 
 // Theme Configuration — matches CSS in src/lib/styles/theme-variables.css
 // "The Desk Drawer": four office-supply fluro themes, one collective
-// concept — Highlighter / Sticky Note / Carbon Copy / Wite-Out. Curated
-// down from 8 (2026-07-20) per Pablo: fewer themes, one nameable idea.
+// concept — Highlighter / Sticky Note / Gel Pen / Legal Pad. All four sit
+// on the SAME flat cream ground with one fluro accent duo each; the
+// gradient-card pair (Carbon Copy / Wite-Out) was cut 2026-07-21 per
+// Pablo — neon fluro on cream, elegant, less gradienty.
 export const THEMES = {
   HIGHLIGHTER: "highlighter",
   STICKY_NOTE: "sticky-note",
-  CARBON_COPY: "carbon-copy",
-  WITE_OUT: "wite-out",
+  GEL_PEN: "gel-pen",
+  LEGAL_PAD: "legal-pad",
 };
 
 export const DEFAULT_THEME = THEMES.HIGHLIGHTER;
@@ -61,10 +63,16 @@ export const PROMPT_STYLES = {
 export const DEFAULT_PROMPT_STYLE = PROMPT_STYLES.STANDARD;
 
 // Product limits: keep ZipList focused on quick, graspable lists.
+// Contributor gates VOLUME, never FEATURES (2026-07-21): every feature —
+// live sharing included — works on the free tier, contributor just gives
+// more room. Live sharing is the app's headline pitch; locking it behind
+// payment made the intro modal promise something a new user couldn't do.
 export const PRODUCT_LIMITS = {
   RECORDING_SECONDS: 120,
   FREE_MAX_LISTS: 3,
   CONTRIBUTOR_MAX_LISTS: 12,
+  FREE_MAX_LIVE_LISTS: 1,
+  CONTRIBUTOR_MAX_LIVE_LISTS: 12,
   LONG_LIST_NUDGE_AT: 60,
   MAX_ITEM_TEXT_LENGTH: 140,
   MAX_LIST_NAME_LENGTH: 32,

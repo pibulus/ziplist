@@ -143,7 +143,7 @@
       }
 
       // Apply theme using storage helpers
-      // "The Desk Drawer" roster (curated 2026-07-20). Any stale saved
+      // "The Desk Drawer" roster (re-cut 2026-07-21). Any stale saved
       // theme not in this list (e.g. a retired one from an older roster)
       // falls back cleanly to DEFAULT_THEME below — never breaks.
       const THEME_KEY = "ziplist-vibe";
@@ -151,8 +151,8 @@
       const ALLOWED_THEMES = [
         "highlighter",
         "sticky-note",
-        "carbon-copy",
-        "wite-out",
+        "gel-pen",
+        "legal-pad",
       ];
 
       let savedTheme = getStorageItem(THEME_KEY, DEFAULT_THEME);

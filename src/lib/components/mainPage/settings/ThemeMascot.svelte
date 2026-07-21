@@ -8,13 +8,13 @@
   export let theme = "highlighter";
   export let size = "38px";
 
-  // Per-theme 3-stop palettes — "The Desk Drawer" roster (curated 2026-07-20),
+  // Per-theme 3-stop palettes — "The Desk Drawer" roster (re-cut 2026-07-21),
   // matching the --zl-mascot-gradient-* stops in theme-variables.css exactly.
   const mascotThemes = {
     highlighter: { start: "#ffcc33", mid: "#ffa36f", end: "#ff6ac2" },
-    "sticky-note": { start: "#c8ff33", mid: "#7dfad0", end: "#17e0e0" },
-    "carbon-copy": { start: "#ffb200", mid: "#ff7a3d", end: "#ff4d6a" },
-    "wite-out": { start: "#b8f2e6", mid: "#6fd8d1", end: "#2f8fdb" },
+    "sticky-note": { start: "#fff95c", mid: "#ffe14d", end: "#ffb300" },
+    "gel-pen": { start: "#ff4fa3", mid: "#ff2d87", end: "#e0006b" },
+    "legal-pad": { start: "#c6f542", mid: "#a3e017", end: "#6fa300" },
   };
 
   const uid = Math.random().toString(36).slice(2, 8);
