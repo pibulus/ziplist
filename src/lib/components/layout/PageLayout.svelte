@@ -81,7 +81,7 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs backdrop-blur-[3px] sm:pb-4 sm:pt-6 px-4 sm:px-6 md:px-8"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs sm:pb-4 sm:pt-6 px-4 sm:px-6 md:px-8"
   >
     <div
       class="footer-row mx-auto flex w-full flex-row items-center justify-center gap-3 sm:justify-between"
@@ -171,17 +171,26 @@
     );
     --zl-footer-shadow: 0 -4px 15px
       rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
+    /* Frosted glass. The Tailwind backdrop-blur-[3px] on the element was
+       computing to `none` (never actually applied), so the footer was a
+       flat 0.9-alpha panel with list text reading straight through it —
+       it looked accidentally transparent rather than deliberately glass.
+       Declared here so it can't be dropped, and 3px was too weak to hide
+       anything regardless: 14px + saturation is what makes it read as a
+       frosted surface instead of a weak veil. */
     --zl-footer-bg-image: linear-gradient(
       90deg,
-      rgba(var(--footer-surface-rgb), 0.92),
-      rgba(var(--footer-surface-rgb), 0.88),
-      rgba(var(--footer-surface-rgb), 0.92)
+      rgba(var(--footer-surface-rgb), 0.82),
+      rgba(var(--footer-surface-rgb), 0.76),
+      rgba(var(--footer-surface-rgb), 0.82)
     );
     --zl-footer-dot-color: rgba(
       var(--zl-accent-color-rgb, 255, 106, 194),
       0.78
     );
     background: var(--zl-footer-bg-image);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
     /* THE BUG FIX: resting text color is a TOKEN (defined per-theme in
        theme-variables.css), not the hardcoded text-gray-600 Tailwind literal —
        so it stays readable on every theme. */
@@ -192,6 +201,21 @@
   .zl-app-footer {
     border-color: var(--zl-footer-border-color);
     box-shadow: var(--zl-footer-shadow);
+  }
+
+  /* No backdrop-filter support (or it's disabled): go nearly opaque
+     instead. The translucency only earns its keep when the blur is
+     actually frosting what's behind it — without it, see-through is
+     exactly the bug we're fixing. */
+  @supports not (backdrop-filter: blur(1px)) {
+    footer {
+      --zl-footer-bg-image: linear-gradient(
+        90deg,
+        rgba(var(--footer-surface-rgb), 0.97),
+        rgba(var(--footer-surface-rgb), 0.95),
+        rgba(var(--footer-surface-rgb), 0.97)
+      );
+    }
   }
 
   .footer-dot {
@@ -259,8 +283,11 @@
     }
 
     footer {
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
+      /* Blur stays ON here. This used to force backdrop-filter:none on
+         mobile, which is where the footer looked worst — a 0.9-alpha
+         panel with list text legible straight through it. A blur on one
+         small fixed bar is cheap on any phone that ships a modern
+         browser; the frosted surface is worth it. */
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
     }
