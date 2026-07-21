@@ -6,6 +6,7 @@
   import FooterComponent from "./FooterComponent.svelte";
   import { geminiService } from "$lib/services/geminiService";
   import { modalService } from "$lib/services/modals";
+  import { wireTypewriterGlobally } from "$lib/services/infrastructure/typewriterWiring";
   import { transcriptionService } from "$lib/services/transcription/transcriptionService.js";
   import { firstVisitService } from "$lib/services/first-visit";
   import {
@@ -399,7 +400,12 @@
     }
   }
 
+  let unwireTypewriter = null;
+
   onDestroy(() => {
+    if (typeof unwireTypewriter === "function") {
+      unwireTypewriter();
+    }
     if (typeof preloadCleanup === "function") {
       preloadCleanup();
     }
@@ -739,6 +745,9 @@
       window.addEventListener("ziplist-setting-changed", handleSettingChanged);
       window.addEventListener("ziplist-storage-error", handleStorageError);
       window.addEventListener("ziplist-open-contributor", openContributorModal);
+      // Every text field clicks like a real keyboard (Cherry MX pack,
+      // lazy-fetched on first keystroke, honors the sound toggle).
+      unwireTypewriter = wireTypewriterGlobally();
       pwaService.setupEventListeners();
       void pwaService.checkIfRunningAsPwa();
       // PwaDeviceSetup retired 2026-07-22 (same pattern as PwaInstallPrompt

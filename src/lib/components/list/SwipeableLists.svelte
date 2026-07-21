@@ -77,11 +77,13 @@
       v *= Math.exp(-dt / FRICTION_TAU);
       x += v * dt;
 
-      // Ratchet: a soft tick each time a card boundary flies past.
+      // Ratchet: a soft tick each time a card boundary flies past — haptic
+      // AND audio, like a bike wheel.
       const passed = Math.round(currentPos());
       if (passed !== lastRatchet) {
         lastRatchet = passed;
         hapticService.impact?.("light");
+        soundService.ratchet();
       }
 
       if (Math.abs(v) < LAND_SPEED) {

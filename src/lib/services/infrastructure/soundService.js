@@ -220,6 +220,37 @@ const ZIPLIST_CUES = {
       ],
     ],
   },
+  // Drag-reorder landing — a real thunk instead of the generic select
+  // fallback (play() falls back to 'select' for unknown cues, so drops
+  // used to sound like taps).
+  drop: {
+    cooldownMs: 90,
+    detuneCents: 6,
+    variants: [
+      [
+        { frequency: 300, duration: 0.05, gain: 0.024, voice: "knock" },
+        {
+          frequency: 210,
+          offset: 0.04,
+          duration: 0.07,
+          gain: 0.018,
+          voice: "warm",
+        },
+      ],
+    ],
+  },
+  // Spin-mode ratchet — one soft tick per card flying past, the audio
+  // half of the slot-machine haptic. Quiet and quick so a full-revolution
+  // spin clicks like a bike wheel, never clatters.
+  ratchet: {
+    cooldownMs: 30,
+    detuneCents: 14,
+    gainJitter: 0.2,
+    variants: [
+      [{ frequency: 880, duration: 0.018, gain: 0.011, voice: "tap" }],
+      [{ frequency: 830, duration: 0.02, gain: 0.01, voice: "sparkle" }],
+    ],
+  },
   open: {
     variants: [[{ frequency: 520, duration: 0.05, gain: 0.022, voice: "tap" }]],
   },
