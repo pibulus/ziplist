@@ -39,7 +39,7 @@
       />
     </form>
 
-    <div class="space-y-5 sm:space-y-6 md:space-y-7">
+    <div class="space-y-5 sm:space-y-6">
       <!-- Mascot slot (skeleton) — the ZipList dude, decorative, smaller in
            the modal so it reads alongside the title without crowding it. -->
       <div class="flex justify-center intro-mascot-slot">
@@ -48,38 +48,34 @@
 
       <h1
         id="intro_modal_title"
-        class="text-center text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-gray-900"
+        class="text-center text-3xl sm:text-4xl font-black tracking-tight leading-[1.1] text-gray-900"
       >
-        Speak up a list, <br /> lickety split.
+        The shareable<br /> voice list thing.
       </h1>
 
-      <div class="space-y-3 sm:space-y-4">
-        <p
-          class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
-        >
-          The shareable voice list thing. Talk stuff in, type stuff in, tap
-          the tiny bits into place.
+      <!-- Three beats, each a headline + one plain line. The two things
+           people don't work out on their own — that saying "got the milk"
+           ticks it off, and that live lists need no account — get spelled
+           out instead of implied. Structured, not prose: first-run copy
+           gets skimmed, so each idea needs its own shape on the page. -->
+      <div class="intro-beats">
+        <p>
+          <strong>Talk it in.</strong>
+          Say the list out loud, it writes itself.
         </p>
-
-        <p
-          class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
-        >
-          Tell ZipList what you did and watch the boxes tick themselves. Add a
-          few things while you're at it.
+        <p>
+          <strong>Say what you did.</strong>
+          "Got the milk" — and milk ticks itself off.
         </p>
-
-        <p
-          class="text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed"
-        >
-          Shopping list, band set list, gear list, chores list, forever list.
-          Last box ticked, confetti in the air.
+        <p>
+          <strong>Share it live.</strong>
+          Two phones, one list, updating together.
         </p>
       </div>
 
-      <p
-        class="text-center text-teal-700 font-bold text-base sm:text-lg md:text-xl py-2"
-      >
-        Talk. List. Tick.
+      <p class="intro-footnote">
+        No account, no signup, no subscription.<br />
+        It's just a list. That's it.
       </p>
 
       <button
@@ -107,5 +103,54 @@
     --mascot-size-lg: 80px;
     --mascot-ink-pad: 0%;
     margin-bottom: 0;
+  }
+
+  /* Three beats: bold lead-in carries the idea, the line under it does the
+     explaining. Two type weights instead of one flat block, so the eye can
+     skim just the bold and still get the pitch. */
+  .intro-beats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    text-align: center;
+  }
+
+  .intro-beats p {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    color: var(--zl-text-color-secondary, #3a2f2a);
+  }
+
+  .intro-beats strong {
+    display: block;
+    font-weight: 800;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+    color: var(--zl-text-color-primary, #1e1714);
+  }
+
+  /* The quiet closer — the "no catch" line. Deliberately understated:
+     it's reassurance, not a sales pitch. */
+  .intro-footnote {
+    margin: 0;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--zl-text-color-disabled, #7d7269);
+  }
+
+  @media (min-width: 640px) {
+    .intro-beats p {
+      font-size: 1rem;
+    }
+
+    .intro-beats strong {
+      font-size: 1.125rem;
+    }
+
+    .intro-footnote {
+      font-size: 0.9375rem;
+    }
   }
 </style>
