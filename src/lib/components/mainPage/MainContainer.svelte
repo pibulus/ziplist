@@ -741,7 +741,12 @@
       window.addEventListener("ziplist-open-contributor", openContributorModal);
       pwaService.setupEventListeners();
       void pwaService.checkIfRunningAsPwa();
-      maybeLoadPwaDeviceSetup();
+      // PwaDeviceSetup retired 2026-07-22 (same pattern as PwaInstallPrompt
+      // below): mic permission is requested on first record and the offline
+      // model downloads on demand — the auto-popup was redundant friction and
+      // unreliable in standalone mode. Re-enable by restoring this call and
+      // the {#if false} guard on its render block.
+      // maybeLoadPwaDeviceSetup();
     }
 
     // Auto-open the intro on first visit. The historic root-scrollbar jump
@@ -828,7 +833,7 @@
     </div>
   {/if}
 
-  {#if showPwaDeviceSetup && PwaDeviceSetup && !loadingPwaDeviceSetup}
+  {#if false && showPwaDeviceSetup && PwaDeviceSetup && !loadingPwaDeviceSetup}
     <div class="mb-3 px-4" transition:fade={{ duration: 180 }}>
       <svelte:component
         this={PwaDeviceSetup}
