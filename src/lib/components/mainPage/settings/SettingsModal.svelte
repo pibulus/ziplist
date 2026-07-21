@@ -61,9 +61,12 @@
   const vibeOptions = [
     { id: THEMES.HIGHLIGHTER, name: "Highlighter" },
     { id: THEMES.STICKY_NOTE, name: "Sticky Note" },
-    { id: THEMES.CARBON_COPY, name: "Carbon Copy" },
-    { id: THEMES.WITE_OUT, name: "Wite-Out" },
+    { id: THEMES.GEL_PEN, name: "Gel Pen" },
+    { id: THEMES.LEGAL_PAD, name: "Legal Pad" },
   ];
+
+  $: selectedVibeName =
+    vibeOptions.find((v) => v.id === selectedVibe)?.name ?? "Highlighter";
 
   onMount(() => {
     avatarName = getOrCreateAvatar();
@@ -241,13 +244,21 @@
         </form>
       </div>
 
-      <section
-        class="zl-settings-section"
-        aria-labelledby="settings_vibe_title"
-      >
-        <h4 id="settings_vibe_title" class="zl-section-label">
-          Choose Your Vibe
-        </h4>
+      <!-- Vibe picker folds away by default: the 2×2 grid + Chunky row was
+           ~40% of the modal's scroll height, and theme is a set-once choice.
+           Summary shows the live mascot + name so it reads at a glance. -->
+      <details class="zl-settings-section zl-vibe-details">
+        <summary class="zl-vibe-summary">
+          <span class="zl-section-label">Vibe</span>
+          <span class="zl-vibe-current">
+            <span class="zl-vibe-art" aria-hidden="true">
+              <ThemeMascot theme={selectedVibe} size="26px" />
+            </span>
+            {selectedVibeName}
+          </span>
+          <span class="zl-vibe-chevron" aria-hidden="true">▾</span>
+        </summary>
+
         <div class="zl-vibe-grid">
           {#each vibeOptions as vibe}
             <button
@@ -284,7 +295,7 @@
             <span class="zl-toggle-slider"></span>
           </label>
         </div>
-      </section>
+      </details>
 
       <section
         class="zl-settings-section"
@@ -387,7 +398,7 @@
           <div class="zl-setting-info">
             <span class="zl-setting-name">Contributor</span>
             <p class="zl-setting-desc">
-              More lists, live sharing, and device unlocks
+              More lists, and more of them live at once
             </p>
           </div>
           <button
@@ -553,6 +564,71 @@
   /* The vibe grid hands off to its sibling Chunky Mode row */
   .zl-vibe-grid + .zl-setting-row {
     margin-top: 0.6rem;
+  }
+
+  /* Vibe pulldown — collapsed by default so the modal fits a phone
+     without scrolling. Native <details>, no JS state to keep in sync. */
+  .zl-vibe-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding: 0.4rem 0.85rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 16px;
+    cursor: pointer;
+    list-style: none;
+    transition: all 0.2s;
+  }
+
+  .zl-vibe-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .zl-vibe-summary:hover {
+    border-color: var(--zl-primary-color);
+    background: white;
+  }
+
+  .zl-vibe-summary:focus-visible {
+    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
+    outline-offset: 3px;
+  }
+
+  .zl-vibe-summary .zl-section-label {
+    margin-bottom: 0;
+  }
+
+  .zl-vibe-current {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+    font-family: "Space Mono", monospace;
+    font-size: var(--font-size-xs, 0.8rem);
+    font-weight: 800;
+    color: var(--zl-text-color-primary, #000);
+  }
+
+  .zl-vibe-chevron {
+    color: var(--zl-text-color-disabled, #999);
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+  }
+
+  .zl-vibe-details[open] .zl-vibe-chevron {
+    transform: rotate(180deg);
+  }
+
+  .zl-vibe-details[open] .zl-vibe-summary {
+    margin-bottom: 0.6rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zl-vibe-chevron {
+      transition: none;
+    }
   }
 
   .zl-section-label {
@@ -947,5 +1023,32 @@
     .zl-vibe-option {
       padding: 0.75rem 0.25rem;
     }
+
+    /* Avatar row stacks on narrow screens — the label + a 9.5rem input
+       side by side wrap into a tall, ragged block otherwise. */
+    .zl-setting-row {
+      padding: 0.6rem 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .zl-avatar-field {
+      width: 100%;
+      margin-top: 0.4rem;
+    }
+
+    .zl-avatar-input {
+      width: 100%;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .zl-settings-section {
+      margin-bottom: 0.85rem;
+    }
+  }
+
+  /* The avatar row is the one row that needs to wrap; the rest stay inline. */
+  .zl-settings-section .zl-setting-row:has(.zl-avatar-field) {
+    flex-wrap: wrap;
   }
 </style>

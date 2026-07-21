@@ -180,6 +180,18 @@ body::-webkit-scrollbar-corner {
   background: rgba(0, 0, 0, 0.26);
 }
 
+/* iOS Safari: -webkit-overflow-scrolling does NOT inherit, and a nested
+   overflow scroller inside a position:fixed body (what modalService's
+   scroll-lock creates) swallows touch drags without it — the panel reads
+   as completely unscrollable on a real iPhone while testing fine in
+   desktop Chromium at the same width. Every in-modal scroller needs it
+   explicitly. touch-action keeps the vertical gesture on the panel
+   instead of letting Safari hand it to the frozen body. */
+:where(.modal-box, .zl-scrollbar, .zl-settings-content) {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
 @media (hover: none) and (pointer: coarse) {
   :where(
     .modal-box,
