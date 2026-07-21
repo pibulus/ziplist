@@ -448,6 +448,8 @@
 .zl-live-button,
 .zl-add-list-button,
 .zl-share-button,
+.zl-shuffle-button,
+.zl-sort-button,
 .zl-live-indicator {
   width: 40px;
   min-width: 40px;
@@ -467,7 +469,9 @@
    tooltips carry the words. */
 .zl-add-list-button,
 .zl-live-button,
-.zl-share-button {
+.zl-share-button,
+.zl-shuffle-button,
+.zl-sort-button {
   border: 0;
   background: transparent;
   color: var(--zl-text-color-secondary);
@@ -490,8 +494,12 @@
 .zl-add-list-button:focus-visible:not(:disabled),
 .zl-live-button:hover:not(:disabled),
 .zl-share-button:hover:not(:disabled),
+.zl-shuffle-button:hover:not(:disabled),
+.zl-sort-button:hover:not(:disabled),
 .zl-live-button:focus-visible:not(:disabled),
-.zl-share-button:focus-visible:not(:disabled) {
+.zl-share-button:focus-visible:not(:disabled),
+.zl-shuffle-button:focus-visible:not(:disabled),
+.zl-sort-button:focus-visible:not(:disabled) {
   background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
   color: var(--zl-text-color-primary);
   opacity: 1;
@@ -1922,4 +1930,90 @@
 body.zl-touch-dragging {
   user-select: none;
   -webkit-user-select: none;
+}
+
+
+/* ── Tooltips — "icons carry the meaning, tooltips carry the words" ─────
+   Pure CSS, no library: data-tip renders a soft warm-black chip above the
+   button on hover/keyboard-focus after a beat. Hover-only surfaces, so
+   mobile relies on the aria-labels + the icons themselves. */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  background: #2b2118;
+  color: #fff6e6;
+  font-family: "Space Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 6px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 60;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  transition-delay: 0s;
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  transition-delay: 0.45s;
+}
+
+@media (pointer: coarse) {
+  [data-tip]::after {
+    display: none; /* no hover on touch — labels + icons do the work */
+  }
+}
+
+/* ── Full-clear confetti ────────────────────────────────────────────────
+   Bursts from the top of the card when a 5+ item list is fully ticked.
+   Pieces are plain DOM spans; drift (--dx), spin (--rot), and timing all
+   ride custom props set per-piece in JS. */
+.zl-confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.zl-confetti-piece {
+  position: absolute;
+  top: -8px;
+  width: var(--size, 8px);
+  height: calc(var(--size, 8px) * 0.45);
+  border-radius: 2px;
+  opacity: 0;
+  animation: zl-confetti-fall var(--dur, 1100ms) cubic-bezier(0.25, 0.46, 0.45, 0.94)
+    var(--delay, 0ms) forwards;
+}
+
+@keyframes zl-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 0px), 300px) rotate(var(--rot, 360deg));
+  }
 }

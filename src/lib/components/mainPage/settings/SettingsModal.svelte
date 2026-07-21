@@ -65,9 +65,6 @@
     { id: THEMES.LEGAL_PAD, name: "Legal Pad" },
   ];
 
-  $: selectedVibeName =
-    vibeOptions.find((v) => v.id === selectedVibe)?.name ?? "Highlighter";
-
   onMount(() => {
     avatarName = getOrCreateAvatar();
 
@@ -244,20 +241,15 @@
         </form>
       </div>
 
-      <!-- Vibe picker folds away by default: the 2×2 grid + Chunky row was
-           ~40% of the modal's scroll height, and theme is a set-once choice.
-           Summary shows the live mascot + name so it reads at a glance. -->
-      <details class="zl-settings-section zl-vibe-details">
-        <summary class="zl-vibe-summary">
-          <span class="zl-section-label">Vibe</span>
-          <span class="zl-vibe-current">
-            <span class="zl-vibe-art" aria-hidden="true">
-              <ThemeMascot theme={selectedVibe} size="26px" />
-            </span>
-            {selectedVibeName}
-          </span>
-          <span class="zl-vibe-chevron" aria-hidden="true">▾</span>
-        </summary>
+      <!-- Vibe picker sits in the open (Pablo's call 2026-07-22): the old
+           fold existed because the 2×2 grid ate ~40% of the modal, but as a
+           single row of four tiles the whole thing costs one slim strip —
+           themes are the app's outfit, they deserve to be seen. -->
+      <section
+        class="zl-settings-section zl-vibe-section"
+        aria-labelledby="settings_vibe_title"
+      >
+        <h4 id="settings_vibe_title" class="zl-section-label">Vibe</h4>
 
         <div class="zl-vibe-grid">
           {#each vibeOptions as vibe}
@@ -270,7 +262,7 @@
               aria-pressed={selectedVibe === vibe.id}
             >
               <span class="zl-vibe-art" aria-hidden="true">
-                <ThemeMascot theme={vibe.id} size="38px" />
+                <ThemeMascot theme={vibe.id} size="30px" />
               </span>
               <span>{vibe.name}</span>
               {#if selectedVibe === vibe.id}
@@ -295,7 +287,7 @@
             <span class="zl-toggle-slider"></span>
           </label>
         </div>
-      </details>
+      </section>
 
       <section
         class="zl-settings-section"
@@ -564,71 +556,6 @@
   /* The vibe grid hands off to its sibling Chunky Mode row */
   .zl-vibe-grid + .zl-setting-row {
     margin-top: 0.6rem;
-  }
-
-  /* Vibe pulldown — collapsed by default so the modal fits a phone
-     without scrolling. Native <details>, no JS state to keep in sync. */
-  .zl-vibe-summary {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 44px;
-    padding: 0.4rem 0.85rem;
-    background: rgba(255, 255, 255, 0.5);
-    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
-    cursor: pointer;
-    list-style: none;
-    transition: all 0.2s;
-  }
-
-  .zl-vibe-summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .zl-vibe-summary:hover {
-    border-color: var(--zl-primary-color);
-    background: white;
-  }
-
-  .zl-vibe-summary:focus-visible {
-    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
-    outline-offset: 3px;
-  }
-
-  .zl-vibe-summary .zl-section-label {
-    margin-bottom: 0;
-  }
-
-  .zl-vibe-current {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-left: auto;
-    font-family: "Space Mono", monospace;
-    font-size: var(--font-size-xs, 0.8rem);
-    font-weight: 800;
-    color: var(--zl-text-color-primary, #000);
-  }
-
-  .zl-vibe-chevron {
-    color: var(--zl-text-color-disabled, #999);
-    font-size: 0.9rem;
-    transition: transform 0.2s ease;
-  }
-
-  .zl-vibe-details[open] .zl-vibe-chevron {
-    transform: rotate(180deg);
-  }
-
-  .zl-vibe-details[open] .zl-vibe-summary {
-    margin-bottom: 0.6rem;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .zl-vibe-chevron {
-      transition: none;
-    }
   }
 
   .zl-section-label {
@@ -907,18 +834,28 @@
     transform: translate(-1px, -1px);
   }
 
-  /* Vibe Grid — 2×2 for the curated 4-theme roster (The Desk Drawer).
-     Keeps tiles at a comfortable size on mobile; a single row of 4 reads
-     cramped at 390px. */
+  /* Vibe Grid — one row of 4 (The Desk Drawer roster, Pablo's call
+     2026-07-22): the four vibes read as a single palette strip. Tiles
+     slim down so the row fits a 390px phone. */
   .zl-vibe-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem;
+    /* minmax(0, 1fr): plain 1fr won't shrink below "Highlighter"'s
+       min-content width, which made the four columns uneven. */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .zl-vibe-option > :global(span),
+  .zl-vibe-option {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .zl-vibe-option {
     position: relative;
-    padding: 0.65rem 0.4rem;
+    padding: 0.55rem 0.2rem;
     min-height: 44px;
     background: white;
     border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
@@ -927,7 +864,8 @@
     transition: all 0.2s;
     font-family: "Space Mono", monospace;
     font-weight: 700;
-    font-size: var(--font-size-xs, 0.8rem);
+    /* fits "Highlighter" in a 4-up tile on a 390px phone */
+    font-size: clamp(0.58rem, 2.5vw, 0.78rem);
     display: flex;
     flex-direction: column;
     gap: 0.35rem;

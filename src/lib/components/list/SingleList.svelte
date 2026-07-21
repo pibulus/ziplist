@@ -1216,6 +1216,73 @@
     settlingTimers.set(itemId, timer);
   }
 
+  // ── Order play: shuffle & entry-order sort ─────────────────────────────
+  function shuffleActiveItems() {
+    const active = list.items.filter((i) => !i.checked);
+    if (active.length < 2) return;
+    const shuffled = [...active];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const completed = list.items.filter((i) => i.checked);
+    listsService.reorderItems([...shuffled, ...completed], list.id);
+    soundService.ratchet({ force: true });
+    hapticService.impact("medium");
+    showListStatus("Shuffled. Fate decides.", true, 2200);
+  }
+
+  function sortItemsByAdded() {
+    const active = list.items.filter((i) => !i.checked);
+    if (active.length < 2) return;
+    // addedAt is epoch ms on items created since the stamp landed; older
+    // items fall back to their current index (tiny vs epoch), which sorts
+    // them first while preserving their relative order — correct, since
+    // they genuinely predate every stamped item.
+    const sorted = active
+      .map((item, index) => ({ item, index }))
+      .sort(
+        (a, b) =>
+          (a.item.addedAt ?? a.index) - (b.item.addedAt ?? b.index) ||
+          a.index - b.index,
+      )
+      .map((entry) => entry.item);
+    const completed = list.items.filter((i) => i.checked);
+    listsService.reorderItems([...sorted, ...completed], list.id);
+    soundService.select();
+    hapticService.impact("light");
+    showListStatus("Back in the order you added them.", true, 2200);
+  }
+
+  // ── Full-clear celebration (lists with 5+ items only) ──────────────────
+  let celebrationBurst = null;
+
+  function fireListCompleteCelebration() {
+    if (prefersReducedMotion) return;
+    const colors = [
+      list.primaryColor || "#ffb000",
+      list.accentColor || "#ff6ac2",
+      "#ffd166",
+      "#fff6e6",
+      "#76ead7",
+    ];
+    celebrationBurst = Array.from({ length: 28 }, (_, i) => ({
+      i,
+      left: 6 + Math.random() * 88,
+      dx: (Math.random() - 0.5) * 150,
+      rot: (Math.random() - 0.5) * 760,
+      delay: Math.random() * 180,
+      dur: 950 + Math.random() * 550,
+      size: 6 + Math.random() * 7,
+      color: colors[i % colors.length],
+    }));
+    const timer = setTimeout(() => {
+      celebrationBurst = null;
+      celebrationTimers.delete(timer);
+    }, 1900);
+    celebrationTimers.add(timer);
+  }
+
   // Handle item toggle with sparkle animation
   async function toggleItem(itemId, event) {
     const itemToToggle = list.items.find((item) => item.id === itemId);
@@ -1231,7 +1298,14 @@
     if (itemToToggle) {
       hapticService.impact(itemToToggle.checked ? "light" : "medium");
       if (willCompleteList) {
-        soundService.complete({ force: true });
+        // Five-plus items done = a real accomplishment: confetti + fanfare.
+        // Smaller lists keep the modest completion chime.
+        if (list.items.length >= 5) {
+          soundService.fanfare({ force: true });
+          fireListCompleteCelebration();
+        } else {
+          soundService.complete({ force: true });
+        }
       } else if (willCheckItem) {
         soundService.check();
       } else {
@@ -1493,6 +1567,18 @@
     {accessibleListName}
   </span>
   <div class="card-content">
+    {#if celebrationBurst}
+      <!-- Full-clear confetti — bursts from the top of the card, palette
+           pulled from the list's own colors. Removed after ~1.9s. -->
+      <div class="zl-confetti" aria-hidden="true">
+        {#each celebrationBurst as p (p.i)}
+          <span
+            class="zl-confetti-piece"
+            style="left: {p.left}%; --dx: {p.dx}px; --rot: {p.rot}deg; --delay: {p.delay}ms; --dur: {p.dur}ms; --size: {p.size}px; background: {p.color};"
+          ></span>
+        {/each}
+      </div>
+    {/if}
     <!-- List Header with Live Collaboration Toggle -->
     <div class="zl-list-header">
       <div class="zl-list-header-main">
@@ -1572,12 +1658,65 @@
       </div>
 
       <div class="zl-list-actions">
+        {#if activeItems.length >= 3}
+          <button
+            type="button"
+            class="zl-shuffle-button"
+            on:click={shuffleActiveItems}
+            data-tip="Shuffle the order"
+            aria-label={`Shuffle the items in ${list.name || "this list"}`}
+          >
+            <svg
+              class="zl-header-icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22"
+              ></path>
+              <path d="m18 2 4 4-4 4"></path>
+              <path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"></path>
+              <path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"></path>
+              <path d="m18 14 4 4-4 4"></path>
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="zl-sort-button"
+            on:click={sortItemsByAdded}
+            data-tip="Sort by when added"
+            aria-label={`Sort ${list.name || "this list"} by when items were added`}
+          >
+            <svg
+              class="zl-header-icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+              ></path>
+              <path d="M3 3v5h5"></path>
+              <path d="M12 7v5l4 2"></path>
+            </svg>
+          </button>
+        {/if}
         {#if showListManagement}
           <button
             type="button"
             class="zl-add-list-button"
             on:click={handleCreateList}
-            title="Create a new list"
+            data-tip="New list"
             aria-label="Create a new list"
           >
             <svg
@@ -1603,9 +1742,7 @@
               class="zl-live-button"
               disabled={isMakingLive}
               on:click={handleMakeLive}
-              title={isMakingLive
-                ? "Starting live list"
-                : "Enable real-time collaboration"}
+              data-tip={isMakingLive ? "Starting live list" : "Go live together"}
               aria-busy={isMakingLive}
               aria-label={isMakingLive
                 ? "Starting live list"
@@ -1638,7 +1775,7 @@
           type="button"
           class="zl-share-button"
           on:click={handleShareList}
-          title={isLive ? "Share live list link" : "Share list link"}
+          data-tip={isLive ? "Share the live link" : "Share this list"}
           aria-label={isLive
             ? `Share live link for ${list.name || "this list"}`
             : `Share ${list.name || "this list"}`}

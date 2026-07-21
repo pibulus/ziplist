@@ -116,6 +116,22 @@ const ZIPLIST_CUES = {
       ],
     ],
   },
+  // Full-clear fanfare — a rising five-note run for finishing a 5+ item
+  // list. Deliberately bigger than `complete` (which stays the modest
+  // chime for small lists).
+  fanfare: {
+    cooldownMs: 900,
+    detuneCents: 6,
+    variants: [
+      [
+        { frequency: 523, duration: 0.06, gain: 0.024, voice: "tap" },
+        { frequency: 659, offset: 0.07, duration: 0.06, gain: 0.024, voice: "bloom" },
+        { frequency: 784, offset: 0.14, duration: 0.07, gain: 0.024, voice: "sparkle" },
+        { frequency: 1046, offset: 0.22, duration: 0.13, gain: 0.026, voice: "sparkle" },
+        { frequency: 1568, offset: 0.31, duration: 0.18, gain: 0.014, voice: "bloom" },
+      ],
+    ],
+  },
   complete: {
     cooldownMs: 260,
     detuneCents: 8,

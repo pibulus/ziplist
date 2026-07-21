@@ -528,6 +528,7 @@ function createListsStore() {
                   id: crypto.randomUUID(),
                   text: normalizedText,
                   checked: false,
+                  addedAt: Date.now(), // entry-date sort key
                 },
               ],
               updatedAt: new Date().toISOString(),
@@ -575,11 +576,13 @@ function createListsStore() {
                 return true;
               });
 
+            const stamp = Date.now();
             const newItems = dedupedTexts.map((text, index) => ({
               id: crypto.randomUUID(),
               text,
               checked: false,
               order: list.items.length + index, // Add order field to maintain sort order
+              addedAt: stamp + index, // entry-date sort key (index keeps batch order)
             }));
 
             if (newItems.length === 0) {
