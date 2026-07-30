@@ -11,20 +11,48 @@ import { dev } from "$app/environment";
 //   ws://localhost:* so `npm run dev:party` (local PartyKit on :1999) and
 //   Vite HMR aren't blocked.
 //   It ALSO has to cover the offline Whisper fallback, which was silently
-//   dead in production until 2026-07-30: transformers.js pulls the model
-//   config/weights from huggingface.co (redirecting to *.hf.co for the LFS
-//   blobs) and its onnxruntime WASM from cdn.jsdelivr.net. Without these the
-//   local model throws "Refused to connect" and every transcription is
-//   forced to Gemini — i.e. no offline mode at all.
+//   dead in production until 2026-07-30.
+//
+//   The Whisper origins below are ported wholesale from TalkType's
+//   hooks.server.js (2026-07-31), which had already paid for this knowledge:
+//   * script-src needs 'wasm-unsafe-eval' for onnxruntime-web, and blob:
+//     because its JSPI loader (Chrome 137+) wraps fetched .mjs glue in a blob
+//     and dynamic-imports it. Without BOTH, the fetch succeeds and the model
+//     then dies at instantiation with "no available backend found" — which is
+//     where ZipList still was after the connect-src-only fix.
+//   * model weights redirect to the HF Xet CDN and legacy LFS hosts, which are
+//     separate origins from huggingface.co and must be listed explicitly.
+//   * *.cdn.hf.co, deliberately NOT *.hf.co — the latter would also cover
+//     user-controlled HF spaces.
 // - img-src allows data:/blob: for canvas confetti + generated avatars.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self' blob:",
-  `connect-src 'self' https://*.partykit.io wss://*.partykit.io https://*.partykit.dev wss://*.partykit.dev https://huggingface.co https://*.hf.co https://cdn.jsdelivr.net${dev ? " ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*" : ""}`,
+  [
+    "connect-src",
+    "'self'",
+    "https://*.partykit.io",
+    "wss://*.partykit.io",
+    "https://*.partykit.dev",
+    "wss://*.partykit.dev",
+    "https://huggingface.co", // Whisper model metadata (transformers.js)
+    "https://*.cdn.hf.co", // HF Xet CDN — where model files actually redirect
+    "https://cdn-lfs.huggingface.co", // HF legacy LFS large-file host
+    "https://cas-bridge.xethub.hf.co", // HF Xet bridge (alt host)
+    "https://cdn.jsdelivr.net", // transformers.js WASM + fallback path
+    ...(dev
+      ? [
+          "ws://localhost:*",
+          "ws://127.0.0.1:*",
+          "http://localhost:*",
+          "http://127.0.0.1:*",
+        ]
+      : []),
+  ].join(" "),
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "base-uri 'self'",
