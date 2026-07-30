@@ -1869,7 +1869,10 @@
   }
 
   .zl-empty-state {
-    min-height: 150px;
+    /* Phones are where the empty card looked most marooned — this is the
+       narrow-viewport override that was actually winning, so the base
+       min-height alone did nothing here. */
+    min-height: min(300px, 34svh);
     justify-content: center;
     margin: 0.4rem 0 0.1rem;
     padding: 0.7rem 0.8rem 0.85rem;
