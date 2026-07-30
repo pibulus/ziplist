@@ -14,6 +14,11 @@
 # an origin in one, add it in the other, or the same feature will work on a
 # server-rendered route and silently fail on the prerendered homepage — which
 # is exactly the kind of split-brain bug that is miserable to track down.
+#
+# This is also the ONLY static header source. A separate `_headers` file was
+# briefly added alongside it; two sources both claiming /* is the same trap as
+# the two hooks.server.* files that left this app with no CSP in the first
+# place. One file, or you get to find out which one wins at 2am.
 [[headers]]
   for = "/*"
   [headers.values]
