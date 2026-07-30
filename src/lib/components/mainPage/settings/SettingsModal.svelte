@@ -1,17 +1,13 @@
 <script>
   import { onMount } from "svelte";
-  import {
-    theme,
-    autoRecord,
-    listFirstMode,
-    soundCues,
-    applyTheme,
-    isContributor,
-  } from "$lib";
+  import { theme, listFirstMode, applyTheme, isContributor } from "$lib";
   import { STORAGE_KEYS, THEMES } from "$lib/constants";
   import { PRICING } from "$lib/config/pricing.js";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import { hapticService } from "$lib/services/infrastructure/hapticService";
+  import { listsStore, getMaxListCount } from "$lib/services/lists/listsStore";
+  import { listsService } from "$lib/services/lists/listsService";
   import {
     getOrCreateAvatar,
     setAvatarName,
@@ -26,9 +22,7 @@
   // Theme/vibe selection
   let selectedVibe;
   let avatarName = "";
-  let autoRecordValue = false;
   let listFirstModeValue = false;
-  let soundCuesValue = true;
   let chunkyModeValue = false;
   let contributorUnlocked = false;
   let avatarRerolling = false;
@@ -38,23 +32,34 @@
     selectedVibe = value;
   });
 
-  // Subscribe to autoRecord store
-  const unsubscribeAutoRecord = autoRecord.subscribe((value) => {
-    autoRecordValue = value === "true";
-  });
-
   const unsubscribeListFirstMode = listFirstMode.subscribe((value) => {
     listFirstModeValue = value === "true";
-  });
-
-  const unsubscribeSoundCues = soundCues.subscribe((value) => {
-    soundCuesValue = value !== "false";
-    soundService.setEnabled(soundCuesValue);
   });
 
   const unsubscribeContributor = isContributor.subscribe((value) => {
     contributorUnlocked = value;
   });
+
+  // New lists are made from here now — the card header lost its "+" so the
+  // list itself stays uncluttered. contributorUnlocked is in the dependency
+  // list because unlocking raises the ceiling mid-session.
+  $: listCount = $listsStore.lists.length;
+  $: maxLists = (contributorUnlocked, getMaxListCount());
+
+  function handleCreateList() {
+    const result = listsService.createList();
+    if (!result.ok) {
+      hapticService.notification("warning");
+      soundService.locked();
+      if (result.reason === "max-lists") {
+        window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
+      }
+      return;
+    }
+
+    hapticService.notification("success");
+    soundService.add({ force: true });
+  }
 
   // Theme options — "The Desk Drawer": four office-supply fluro themes,
   // one collective concept. Curated down from 8 (2026-07-20).
@@ -89,9 +94,7 @@
 
     return () => {
       unsubscribeTheme();
-      unsubscribeAutoRecord();
       unsubscribeListFirstMode();
-      unsubscribeSoundCues();
       unsubscribeContributor();
       if (dialog) {
         dialog.removeEventListener("close", onDialogClose);
@@ -135,19 +138,6 @@
     );
   }
 
-  // Handle auto-record toggle
-  function toggleAutoRecord() {
-    autoRecordValue = !autoRecordValue;
-    soundService.select();
-    autoRecord.set(autoRecordValue.toString());
-
-    window.dispatchEvent(
-      new CustomEvent("ziplist-setting-changed", {
-        detail: { setting: "autoRecord", value: autoRecordValue },
-      }),
-    );
-  }
-
   function toggleListFirstMode() {
     listFirstModeValue = !listFirstModeValue;
     soundService.select();
@@ -156,22 +146,6 @@
     window.dispatchEvent(
       new CustomEvent("ziplist-setting-changed", {
         detail: { setting: "listFirstMode", value: listFirstModeValue },
-      }),
-    );
-  }
-
-  function toggleSoundCues() {
-    soundCuesValue = !soundCuesValue;
-    soundService.setEnabled(soundCuesValue);
-    soundCues.set(soundCuesValue.toString());
-
-    if (soundCuesValue) {
-      soundService.select({ force: true });
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("ziplist-setting-changed", {
-        detail: { setting: "soundCues", value: soundCuesValue },
       }),
     );
   }
@@ -298,22 +272,6 @@
         <div class="zl-toggle-grid">
           <div class="zl-toggle-tile">
             <div class="zl-setting-info">
-              <span class="zl-setting-name">Ready Mic</span>
-              <p class="zl-setting-desc">Prep the recorder on open</p>
-            </div>
-            <label class="zl-toggle">
-              <input
-                type="checkbox"
-                checked={autoRecordValue}
-                on:change={toggleAutoRecord}
-                aria-label="Ready microphone on start"
-              />
-              <span class="zl-toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="zl-toggle-tile">
-            <div class="zl-setting-info">
               <span class="zl-setting-name">List First</span>
               <p class="zl-setting-desc">Hide mascot &amp; title</p>
             </div>
@@ -327,22 +285,23 @@
               <span class="zl-toggle-slider"></span>
             </label>
           </div>
+        </div>
 
-          <div class="zl-toggle-tile">
-            <div class="zl-setting-info">
-              <span class="zl-setting-name">Sound Cues</span>
-              <p class="zl-setting-desc">Taps, pops, finishes</p>
-            </div>
-            <label class="zl-toggle">
-              <input
-                type="checkbox"
-                checked={soundCuesValue}
-                on:change={toggleSoundCues}
-                aria-label="Sound Cues"
-              />
-              <span class="zl-toggle-slider"></span>
-            </label>
+        <div class="zl-setting-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Lists</span>
+            <p class="zl-setting-desc">
+              {listCount} of {maxLists} in play
+            </p>
           </div>
+          <button
+            type="button"
+            class="zl-settings-action"
+            on:click={handleCreateList}
+            disabled={listCount >= maxLists}
+          >
+            {listCount >= maxLists ? "All unlocked" : "New list"}
+          </button>
         </div>
 
         <div class="zl-setting-row">
@@ -581,15 +540,43 @@
     transition: all 0.2s;
   }
 
-  /* Flow's three boolean toggles — was three full-width rows (biggest
-     scroll-height offender), now a balanced 2-up grid. Ready Mic + List
-     First pair up top; Sound Cues spans full width since three won't
-     split evenly and a half-width orphan reads unbalanced. */
+  /* Flow is down to one toggle. Ready Mic wrote a preference nothing ever
+     read, and Sound Cues is no longer a choice — sound is just part of the
+     feel. A single tile in a 2-up grid would sit as a half-width orphan, so
+     the grid is one column now. */
   .zl-toggle-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 0.6rem;
     margin-bottom: 0.6rem;
+  }
+
+  /* Making a list moved here from the card header, so it needs to read as
+     the row's action — flat brand-yellow CTA, per the design laws. */
+  .zl-settings-action {
+    flex-shrink: 0;
+    padding: 0.5rem 0.9rem;
+    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 12px;
+    background: var(--zl-cta-color, #ffb000);
+    color: var(--zl-text-color-primary, #1e1714);
+    font-family: "Space Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+      transform 0.16s ease,
+      opacity 0.16s ease;
+  }
+
+  .zl-settings-action:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .zl-settings-action:disabled {
+    opacity: 0.5;
+    cursor: default;
+    background: transparent;
   }
 
   .zl-toggle-tile {

@@ -453,27 +453,22 @@
       subscribeToLiveStores(list.id);
     } catch (error) {
       console.error("Failed to make list live:", error);
-      showListStatus("Live sharing needs one more try.", false, 5000);
+      // Only promise a retry when retrying could actually help. A 503 with
+      // live_misconfigured is a server-side config fault that will fail
+      // identically every time until someone fixes the deployment.
+      const isConfigFault =
+        error?.code === "live_misconfigured" || error?.status === 503;
+      showListStatus(
+        isConfigFault
+          ? "Live sharing is down right now. Static share still works."
+          : "Live sharing needs one more try.",
+        false,
+        5000,
+      );
       soundService.error({ force: true });
     } finally {
       isMakingLive = false;
     }
-  }
-
-  function handleCreateList() {
-    const result = listsService.createList();
-    if (!result.ok) {
-      showListStatus(result.message);
-      hapticService.notification("warning");
-      soundService.locked();
-      if (result.reason === "max-lists") {
-        requestContributorUnlock();
-      }
-      return;
-    }
-
-    hapticService.notification("success");
-    soundService.add({ force: true });
   }
 
   function requestContributorUnlock() {
@@ -1711,30 +1706,10 @@
             </svg>
           </button>
         {/if}
-        {#if showListManagement}
-          <button
-            type="button"
-            class="zl-add-list-button"
-            on:click={handleCreateList}
-            data-tip="New list"
-            aria-label="Create a new list"
-          >
-            <svg
-              class="zl-header-icon"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-          </button>
-        {/if}
+        <!-- The "+" that used to live here made the header read as a
+             toolbar. Making a list is a rare, settings-shaped act, so it
+             moved to Options; the header is now just this list's own
+             actions. -->
         {#if liveFeatureAvailable}
           {#if !isLive}
             <button

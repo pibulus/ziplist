@@ -446,7 +446,6 @@
 }
 
 .zl-live-button,
-.zl-add-list-button,
 .zl-share-button,
 .zl-shuffle-button,
 .zl-sort-button,
@@ -467,7 +466,6 @@
 /* Ghost icon buttons — one quiet action language for the whole card:
    header trio up top, ≡/× twins in the rows. Icons carry the meaning,
    tooltips carry the words. */
-.zl-add-list-button,
 .zl-live-button,
 .zl-share-button,
 .zl-shuffle-button,
@@ -490,8 +488,6 @@
   opacity: 0.5;
 }
 
-.zl-add-list-button:hover:not(:disabled),
-.zl-add-list-button:focus-visible:not(:disabled),
 .zl-live-button:hover:not(:disabled),
 .zl-share-button:hover:not(:disabled),
 .zl-shuffle-button:hover:not(:disabled),
@@ -567,7 +563,6 @@
   }
 
   .zl-live-button,
-  .zl-add-list-button,
   .zl-share-button {
     border-radius: 16px;
   }
@@ -1779,7 +1774,6 @@
   }
 
   .zl-live-button,
-  .zl-add-list-button,
   .zl-share-button,
   .zl-live-indicator {
     gap: 0;

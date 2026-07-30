@@ -126,6 +126,25 @@ export async function POST(event) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
+      // 401/403 here is never the user's doing: it means this app's
+      // PARTYKIT_CREATE_SECRET doesn't match the room server's. Forwarding
+      // PartyKit's bare "Forbidden" told the user nothing and read as a
+      // transient blip. Name it as ours, and make it loud in the logs.
+      if (response.status === 401 || response.status === 403) {
+        console.error(
+          "[LiveCreate] PartyKit rejected the create secret — the app's " +
+            "PARTYKIT_CREATE_SECRET does not match the room server's. " +
+            "Live sharing stays down until they are re-synced.",
+        );
+        return json(
+          {
+            code: "live_misconfigured",
+            error: "Live sharing isn't set up right on our end.",
+          },
+          { status: 503 },
+        );
+      }
+
       return json(
         { error: payload.error || "Could not create live list." },
         { status: response.status },

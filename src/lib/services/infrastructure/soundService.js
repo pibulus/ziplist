@@ -277,11 +277,6 @@ const ZIPLIST_CUES = {
   },
 };
 
-function getStoredEnabled() {
-  if (typeof localStorage === "undefined") return true;
-  return localStorage.getItem(STORAGE_KEYS.SOUND_CUES) !== "false";
-}
-
 /**
  * The Ziplist Sound Service
  * Powered by 🪶 Weightless
@@ -291,7 +286,10 @@ class ZiplistSoundService extends Weightless {
     super({
       cues: ZIPLIST_CUES,
       voices: ZIPLIST_VOICES,
-      enabled: getStoredEnabled(),
+      // Sound is part of the feel now, not a preference — the toggle is gone.
+      // Deliberately ignores any legacy "ziplist-sound-cues" value so someone
+      // who switched it off long ago isn't left permanently silent.
+      enabled: true,
     });
   }
 

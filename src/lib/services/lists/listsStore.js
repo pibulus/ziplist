@@ -183,7 +183,7 @@ function getLongListNudge(previousCount, nextCount) {
     : "";
 }
 
-function getMaxListCount() {
+export function getMaxListCount() {
   return getContributorSnapshot()
     ? PRODUCT_LIMITS.CONTRIBUTOR_MAX_LISTS
     : PRODUCT_LIMITS.FREE_MAX_LISTS;

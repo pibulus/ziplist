@@ -242,10 +242,12 @@
     }
   }
 
-  /* List-first docks the record button above the footer — reserve the
-     extra lane so the list's tail never hides beneath it. */
+  /* List-first tucks the round voice button into the bottom-right corner.
+     Reserve just enough that the list's last row still clears it — the old
+     11rem was sized for a full-width pill plus a docked dot row, both of
+     which are gone. 4.25rem offset + 4rem button = 8.25rem, rounded up. */
   .page-shell.list-first-shell {
-    padding-bottom: calc(11rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(8.5rem + env(safe-area-inset-bottom)) !important;
   }
 
   /* Short viewports (SE-class phones, landscape): compress the hero

@@ -27,7 +27,7 @@
   } from "$lib/services/infrastructure/stores.js";
   import { AudioStates } from "$lib/services/audio/audioStates.js";
   import { PageLayout } from "$lib/components/layout";
-  import { listFirstMode, soundCues } from "$lib";
+  import { listFirstMode } from "$lib";
   import { listsStore } from "$lib/services/lists/listsStore";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
@@ -79,7 +79,6 @@
   let settingsModalPreloadTimeout = null;
   let autoRecordTimeout = null;
   let postTranscriptionScrollTimeout = null;
-  let soundCuesUnsubscribe = null;
   let recordingLiveListId = null;
 
   function stopStream(stream) {
@@ -423,11 +422,6 @@
 
     clearPostTranscriptionScroll();
 
-    if (soundCuesUnsubscribe) {
-      soundCuesUnsubscribe();
-      soundCuesUnsubscribe = null;
-    }
-
     if (mediaRecorder) {
       mediaRecorder.onstart = null;
       mediaRecorder.ondataavailable = null;
@@ -726,10 +720,6 @@
     listsStore.initialize();
 
     if (browser) {
-      soundCuesUnsubscribe = soundCues.subscribe((value) => {
-        soundService.setEnabled(value !== "false");
-      });
-
       const preloadOnInteraction = () => {
         preloadSpeechModel();
         window.removeEventListener("pointerdown", preloadOnInteraction);
@@ -846,6 +836,7 @@
     class:list-first-record-button={$listFirstMode === "true"}
   >
     <RecordButtonWithTimer
+      compact={$listFirstMode === "true"}
       recording={$isRecording}
       transcribing={$isTranscribing}
       disabled={recordButtonDisabled}
@@ -923,29 +914,26 @@
 {/if}
 
 <style>
-  /* List-first: the voice button docks above the footer like a compose
-     bar — thumb zone on phones, grounded instead of orphaned top-middle
-     on desktop. Normal mode keeps it in the hero flow. */
+  /* List-first: the voice button tucks into the bottom-right corner as a
+     round glyph. It used to be a 380px pill pinned across the middle,
+     which sat on top of the list items you were trying to read. Corner +
+     round means it never covers the content column. */
   .list-first-record-button {
     position: fixed;
-    bottom: calc(4rem + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: calc(4.25rem + env(safe-area-inset-bottom));
+    right: max(env(safe-area-inset-right), 1rem);
+    left: auto;
     z-index: 40;
     margin: 0;
-    width: min(92vw, 380px);
-    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.14));
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.18));
   }
 
-  /* The picker dots dock too, just above the pill — both are chrome in
-     list-first, so neither fights the layout for its spot */
+  /* The picker dots stay centred in the flow now — with the button out of
+     the middle there's nothing for them to collide with. */
   :global(.list-first-shell .pagination-dots) {
-    position: fixed;
-    bottom: calc(9.9rem + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 39;
-    margin: 0;
+    margin-top: 0.5rem;
   }
 </style>
 

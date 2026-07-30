@@ -17,6 +17,10 @@
   export let recordingDuration = 0;
   export let buttonLabel = "";
   export let progress = 0;
+  // List-first mode docks this button over the list, where a 380px-wide pill
+  // covered the very items you were reading. Compact swaps the label for the
+  // waveform glyph and goes round, so it can tuck into a corner instead.
+  export let compact = false;
 
   let recordButtonElement;
   const WAVE_BAR_COUNT = 12;
@@ -181,8 +185,9 @@
       ? `${buttonLabel}. Add to your list`
       : `${buttonLabel}. Create a new list`;
 
-  $: baseButtonClasses =
-    "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[380px] px-6 py-4 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black select-none touch-manipulation";
+  $: baseButtonClasses = compact
+    ? "record-button record-button-compact duration-400 rounded-full transition-all ease-out flex items-center justify-center font-bold shadow-md text-black select-none touch-manipulation"
+    : "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[380px] px-6 py-4 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black select-none touch-manipulation";
 
   // ── Push-to-talk (hybrid) ─────────────────────────────────────────────
   // Quick tap keeps the classic toggle. Press-and-hold past HOLD_MS turns
@@ -237,26 +242,32 @@
     ? `--progress: ${Math.min((recordingDuration / ANIMATION.RECORDING.LIMIT) * 100, 100)}%`
     : "";
 
-  $: baseStyle = `min-width: min(260px, 88vw); min-height: 62px; transform-origin: center center; position: relative; ${progressStyle}`;
+  $: baseStyle = compact
+    ? `width: 64px; height: 64px; min-width: 64px; min-height: 64px; padding: 0; transform-origin: center center; position: relative; ${progressStyle}`
+    : `min-width: min(260px, 88vw); min-height: 62px; transform-origin: center center; position: relative; ${progressStyle}`;
   const dispatch = createEventDispatcher();
 </script>
 
-<div class="fixed-button-container">
+<div class="fixed-button-container" class:compact-container={compact}>
   {#if transcribing}
     <div
-      class="progress-container h-[64px] w-[75%] max-w-[420px] overflow-hidden rounded-full shadow-md shadow-black/10 sm:h-[64px] sm:w-[85%] mx-auto"
+      class="progress-container overflow-hidden rounded-full shadow-md shadow-black/10 {compact
+        ? 'h-[64px] w-[64px]'
+        : 'h-[64px] w-[75%] max-w-[420px] sm:h-[64px] sm:w-[85%] mx-auto'}"
       role="progressbar"
       aria-label="List-making progress"
       aria-valuenow={progress}
       aria-valuemin="0"
       aria-valuemax="100"
       aria-valuetext={`Making list ${Math.round(progress)} percent complete`}
-      >
-        <div
+    >
+      <div
         class="flex items-center justify-center h-full transition-all duration-300 progress-bar"
         style="width: {progress}%;"
       >
-        <span class="text-white font-bold z-10 relative">Ziplisting...</span>
+        {#if !compact}
+          <span class="text-white font-bold z-10 relative">Ziplisting...</span>
+        {/if}
       </div>
     </div>
   {:else}
@@ -306,33 +317,64 @@
         </div>
       {/if}
 
-      <span
-        class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
-        style="letter-spacing: 0.02em;"
-      >
+      {#if compact}
+        <!-- The glyph carries the meaning here; the button's aria-label
+             carries the words. Same stroke language as the card header. -->
+        {#if !recording}
+          <svg
+            class="compact-glyph relative z-10"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          >
+            <line x1="4" y1="10" x2="4" y2="14"></line>
+            <line x1="8" y1="7" x2="8" y2="17"></line>
+            <line x1="12" y1="4" x2="12" y2="20"></line>
+            <line x1="16" y1="7" x2="16" y2="17"></line>
+            <line x1="20" y1="10" x2="20" y2="14"></line>
+          </svg>
+        {/if}
+        <span class="sr-only">
+          {buttonLabel}
+          {#if recording}
+            {formatTime(recordingDuration)} of {formatTime(
+              ANIMATION.RECORDING.LIMIT,
+            )}
+          {/if}
+        </span>
+      {:else}
         <span
-          class="transform transition-all duration-300 ease-out scale-100 opacity-100"
+          class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
+          style="letter-spacing: 0.02em;"
         >
-          <span class="button-content relative z-10">
-            <span class="flex items-center justify-center relative w-full">
-              <span
-                class="cta__label relative z-10 px-1 py-0.5 rounded-lg"
-                class:text-shadow-recording={recording}
-                style="font-size: clamp(1.05rem, 0.4vw + 1rem, 1.2rem); letter-spacing: .02em; text-align: center; width: 100%;"
-              >
-                {buttonLabel}
-              </span>
-              <span class="sr-only">
-                {#if recording}
-                  {formatTime(recordingDuration)} of {formatTime(
-                    ANIMATION.RECORDING.LIMIT,
-                  )}
-                {/if}
+          <span
+            class="transform transition-all duration-300 ease-out scale-100 opacity-100"
+          >
+            <span class="button-content relative z-10">
+              <span class="flex items-center justify-center relative w-full">
+                <span
+                  class="cta__label relative z-10 px-1 py-0.5 rounded-lg"
+                  class:text-shadow-recording={recording}
+                  style="font-size: clamp(1.05rem, 0.4vw + 1rem, 1.2rem); letter-spacing: .02em; text-align: center; width: 100%;"
+                >
+                  {buttonLabel}
+                </span>
+                <span class="sr-only">
+                  {#if recording}
+                    {formatTime(recordingDuration)} of {formatTime(
+                      ANIMATION.RECORDING.LIMIT,
+                    )}
+                  {/if}
+                </span>
               </span>
             </span>
           </span>
         </span>
-      </span>
+      {/if}
 
       {#if recording}
         <div class="recording-indicator" aria-hidden="true"></div>
@@ -342,6 +384,20 @@
 </div>
 
 <style>
+  /* Compact (list-first) variant — a round glyph button that tucks into a
+     corner instead of a full-width pill lying across the list. Everything
+     else about the button (states, pulse, waveform, hold-to-talk) is
+     unchanged; only its shape and label are. */
+  .record-button-compact {
+    padding: 0;
+    aspect-ratio: 1;
+  }
+
+  .compact-glyph {
+    width: 26px;
+    height: 26px;
+  }
+
   /* Base button styling */
   .record-button {
     position: relative;
@@ -768,9 +824,13 @@
     animation: fadeIn 0.3s ease-in-out;
   }
 
-  /* Responsive adjustments for mobile */
+  /* Responsive adjustments for mobile.
+     :not(.record-button-compact) matters: these are !important, so without
+     the guard they beat the compact variant's inline 64px sizing and the
+     round button silently inflates back into a 248px-wide pill on exactly
+     the screens the compact variant exists for. */
   @media (max-width: 640px) {
-    .record-button {
+    .fixed-button-container:not(.compact-container) .record-button {
       width: 72% !important;
       max-width: 320px !important;
       min-width: 248px !important;
@@ -778,14 +838,14 @@
       padding: 0.85rem 1.2rem !important;
     }
 
-    .progress-container {
+    .fixed-button-container:not(.compact-container) .progress-container {
       width: 72% !important;
       max-width: 320px !important;
       min-width: 248px !important;
       height: 56px !important;
     }
 
-    .fixed-button-container {
+    .fixed-button-container:not(.compact-container) {
       height: 58px;
       margin: 0.25rem 0 0.45rem;
     }
@@ -851,6 +911,15 @@
     position: relative;
     margin: 1rem 0;
     z-index: 5; /* Ensure it stays on top during transitions */
+  }
+
+  /* Compact shrink-wraps to the button. The 100%/70px/1rem defaults above
+     exist to hold a stable lane in the hero flow; the corner FAB has no
+     lane to hold. */
+  .fixed-button-container.compact-container {
+    width: auto;
+    height: auto;
+    margin: 0;
   }
 
   /* Recording indicator - more noticeable pulsing dot */

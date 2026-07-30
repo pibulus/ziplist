@@ -10,6 +10,12 @@ import { dev } from "$app/environment";
 //   the server-side API still looks healthy. Dev additionally allows
 //   ws://localhost:* so `npm run dev:party` (local PartyKit on :1999) and
 //   Vite HMR aren't blocked.
+//   It ALSO has to cover the offline Whisper fallback, which was silently
+//   dead in production until 2026-07-30: transformers.js pulls the model
+//   config/weights from huggingface.co (redirecting to *.hf.co for the LFS
+//   blobs) and its onnxruntime WASM from cdn.jsdelivr.net. Without these the
+//   local model throws "Refused to connect" and every transcription is
+//   forced to Gemini — i.e. no offline mode at all.
 // - img-src allows data:/blob: for canvas confetti + generated avatars.
 const CSP = [
   "default-src 'self'",
@@ -18,7 +24,7 @@ const CSP = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self' blob:",
-  `connect-src 'self' https://*.partykit.io wss://*.partykit.io https://*.partykit.dev wss://*.partykit.dev${dev ? " ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*" : ""}`,
+  `connect-src 'self' https://*.partykit.io wss://*.partykit.io https://*.partykit.dev wss://*.partykit.dev https://huggingface.co https://*.hf.co https://cdn.jsdelivr.net${dev ? " ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*" : ""}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "base-uri 'self'",

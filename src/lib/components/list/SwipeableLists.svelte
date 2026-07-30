@@ -377,6 +377,14 @@
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
+    /* The card's hard shadow sits 12px right of its border box in chunky
+       mode, but the clip boundary used to land on the slide's 4px padding
+       edge — slicing the right-hand shadow off and making a perfectly
+       centred card read as off-centre. Push the clip boundary out past the
+       shadow (keep this >= --zl-card-box-shadow's offset). Paint-only: it
+       never adds scrollable width, and the off-screen slides park ~358px
+       away, so nothing else leaks through. */
+    overflow-clip-margin: 16px;
     overflow-y: visible;
     position: relative;
     display: flex;
@@ -408,6 +416,15 @@
 
   .list-slide.active {
     pointer-events: auto;
+  }
+
+  /* The card's ambient gradient animates background-position, which the
+     compositor can't take — it repaints on the main thread every frame. It
+     was running on all three slides at once, two of them invisible, which is
+     most of why the app heats up and stops feeling snappy. Only the card you
+     can actually see gets to shimmer. */
+  .list-slide:not(.active) :global(.zl-card) {
+    animation-play-state: paused;
   }
 
   @media (prefers-reduced-motion: reduce) {

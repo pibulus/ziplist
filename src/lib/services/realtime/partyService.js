@@ -86,9 +86,16 @@ export async function createLiveList(listData, password = null) {
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(
+    // Keep the status and code on the error. Without them every failure
+    // arrives at the UI as an anonymous throw, so a permanent config fault
+    // (bad PartyKit create secret) gets shown as "give it one more try" —
+    // which is advice that can never work.
+    const error = new Error(
       payload.error || `Failed to create live list: ${response.statusText}`,
     );
+    error.status = response.status;
+    error.code = payload.code || "";
+    throw error;
   }
 
   return payload;

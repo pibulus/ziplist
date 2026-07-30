@@ -591,42 +591,48 @@ html[data-theme="legal-pad"] {
  * to ANY active color theme.
  */
 html.mode-neo-brutalist {
+  /* Chunky got chunkier (2026-07-30): borders 3px -> 4px, card shadow
+     8px -> 12px, item shadows up a notch. Also retired the #000000 that
+     ran through this whole block — the house rule is warm near-black,
+     never absolute black, on every surface and every ink. */
+  --zl-chunky-ink: #1e1714;
+
   /* Borders and Shadows */
-  --zl-card-border-color: #000000;
-  --zl-card-border-width: 3px;
-  --zl-card-border-radius: 12px;
-  --zl-card-box-shadow: 8px 8px 0px 0px #000000;
+  --zl-card-border-color: var(--zl-chunky-ink);
+  --zl-card-border-width: 4px;
+  --zl-card-border-radius: 14px;
+  --zl-card-box-shadow: 12px 12px 0px 0px var(--zl-chunky-ink);
   --zl-card-inner-border-gradient: none;
 
   /* Empty state */
-  --zl-empty-state-border: 3px dashed #000000;
+  --zl-empty-state-border: 4px dashed var(--zl-chunky-ink);
 
   /* List items */
-  --zl-item-border-radius: 8px;
-  --zl-item-box-shadow: 4px 4px 0px 0px #000000;
-  --zl-item-hover-box-shadow: 6px 6px 0px 0px #000000;
+  --zl-item-border-radius: 10px;
+  --zl-item-box-shadow: 6px 6px 0px 0px var(--zl-chunky-ink);
+  --zl-item-hover-box-shadow: 8px 8px 0px 0px var(--zl-chunky-ink);
 
   /* Dragging */
-  --zl-item-dragging-border: 3px solid #000000;
-  --zl-item-dragging-shadow: 10px 10px 0px 0px #000000;
-  --zl-item-dragover-border: 3px dashed #000000;
-  --zl-item-dragover-shadow: 4px 4px 0px 0px #000000;
+  --zl-item-dragging-border: 4px solid var(--zl-chunky-ink);
+  --zl-item-dragging-shadow: 14px 14px 0px 0px var(--zl-chunky-ink);
+  --zl-item-dragover-border: 4px dashed var(--zl-chunky-ink);
+  --zl-item-dragover-shadow: 6px 6px 0px 0px var(--zl-chunky-ink);
 
   /* Checkbox */
-  --zl-checkbox-border: 3px solid #000000;
-  --zl-checkbox-hover-border: 3px solid #000000;
-  --zl-checkbox-checked-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.2);
-  --zl-checkbox-size: 28px;
-  --zl-checkbox-border-radius: 6px;
+  --zl-checkbox-border: 4px solid var(--zl-chunky-ink);
+  --zl-checkbox-hover-border: 4px solid var(--zl-chunky-ink);
+  --zl-checkbox-checked-shadow: 3px 3px 0px 0px rgba(30, 23, 20, 0.25);
+  --zl-checkbox-size: 30px;
+  --zl-checkbox-border-radius: 7px;
 
   /* Text Button */
-  --zl-text-button-focus-shadow: 4px 4px 0px 0px #000000;
+  --zl-text-button-focus-shadow: 6px 6px 0px 0px var(--zl-chunky-ink);
 
   /* Inputs */
-  --zl-edit-input-border: 3px solid #000000;
-  --zl-edit-input-focus-border: #000000;
-  --zl-new-item-input-border: 3px solid #000000;
-  --zl-new-item-input-focus-border: #000000;
+  --zl-edit-input-border: 4px solid var(--zl-chunky-ink);
+  --zl-edit-input-focus-border: var(--zl-chunky-ink);
+  --zl-new-item-input-border: 4px solid var(--zl-chunky-ink);
+  --zl-new-item-input-focus-border: var(--zl-chunky-ink);
 }
 
 /* Note: per-component transitions are defined in each component.
