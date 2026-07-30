@@ -1,8 +1,7 @@
 # ZipList Architecture
 
 ZipList is a SvelteKit app with a local-first checklist core, server-side Gemini
-transcription, optional local Whisper, optional PartyKit live sharing, and PWA
-support.
+transcription, optional PartyKit live sharing, and PWA support.
 
 ## Entry Points
 
@@ -34,8 +33,8 @@ support.
 ## Service Ownership
 
 - `src/lib/services/audio/` - Browser recording and audio state.
-- `src/lib/services/transcription/` - End-to-end transcription orchestration,
-  Gemini/Whisper selection, and target-list locking.
+- `src/lib/services/transcription/` - End-to-end transcription orchestration
+  and target-list locking.
 - `src/lib/services/lists/` - List store, persistence, limits, commands, item
   operations, and completion matching.
 - `src/lib/services/realtime/` - PartyKit client protocol, socket connection,
@@ -55,17 +54,21 @@ support.
 RecordButtonWithTimer
   -> audioService
   -> transcriptionService
-  -> simpleHybridService
-  -> Gemini or Whisper
+  -> geminiService
   -> responseParser/listParser
   -> listsService
   -> listsStore
   -> SingleList
 ```
 
-Gemini can return `{ items, complete }`. `items` are added to the captured target
-list. `complete` entries are matched against existing unchecked items and toggled.
-Whisper returns text only and does not perform semantic completion matching.
+Gemini returns `{ items, complete }` from the audio in one pass — it is not
+transcribe-then-parse. `items` are added to the captured target list. `complete`
+entries are matched against existing unchecked items and toggled.
+
+The local Whisper fallback was removed on 2026-07-31. It only produced raw text,
+which left `listParser`'s regex guessing at item boundaries and dropped semantic
+completion matching altogether — a 117MB model download for a visibly worse
+list. `listParser` remains as the fallback for an unstructured Gemini response.
 
 ### Static Sharing
 
@@ -109,7 +112,7 @@ active connections and is not durable list data.
 - The service worker owns the offline app shell only. It intentionally skips
   API/live/import routes and third-party/model downloads.
 - Installed mobile PWAs can show `PwaDeviceSetup.svelte`, which primes
-  microphone permission, requests persistent storage, and preloads Whisper.
+  microphone permission and requests persistent storage.
 - `wakeLockService` is requested while recording and released when recording
   stops or errors. Unsupported browsers are treated as a no-op.
 

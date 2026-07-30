@@ -56,12 +56,16 @@ nested items, no multi-list rooms, no accounts).
 
 ### Key Services
 
-- **geminiService.js**: Wrapper for audio transcription via Gemini API
+- **geminiService.js**: Wrapper for audio transcription via Gemini API. Gemini
+  takes the audio and returns the transcript AND the parsed items/completions
+  in one pass — it is not transcribe-then-parse. The local Whisper fallback was
+  removed 2026-07-31 (text only, so item splitting fell back to a regex and
+  completion detection was lost — 117MB for a worse list).
 - **geminiApiService.js**: Low-level Gemini API calls (REQUIRED - do not delete)
 - **transcriptionService.js**: Manages recording-to-list transcription flow,
   target-list locking, and progress animation
-- **simpleHybridService.js**: Chooses Gemini or local Whisper and handles
-  fallback timing
+- **listParser.js**: Regex splitter, used only when a Gemini response comes back
+  unstructured
 - **responseParser.js**: Parses structured model responses into new items and
   completed-item matches
 - **promptTemplates.js**: Prompt styles and existing-item context for completion

@@ -17,7 +17,7 @@ instead of reaching into those details directly.
 - `realtime/` - PartyKit live-list client bridge, protocol, presence, typing,
   and anonymous avatar names.
 - `share/` - Static snapshot share/import URL generation.
-- `transcription/` - Recording-to-text orchestration plus local Whisper support.
+- `transcription/` - Recording-to-text orchestration.
 - Root files - Gemini wrappers, prompt templates, and parser helpers.
 
 Theme application lives in `src/lib/index.js` (`applyTheme()`), not in a
@@ -30,8 +30,10 @@ service directory.
 1. UI records audio through `audioService`.
 2. `transcriptionService` captures the target list id before transcription
    starts.
-3. `simpleHybridService` chooses Gemini or local Whisper.
-4. Gemini can return structured `{ items, complete }`; Whisper returns text only.
+3. `geminiService` sends the audio to Gemini, which returns the transcript and
+   the parsed `{ items, complete }` in a single pass.
+4. If a response comes back unstructured, `listParser` splits the raw text as a
+   last resort.
 5. `responseParser` and `listsService` add new items and mark completion matches
    on the captured target list.
 
@@ -55,8 +57,8 @@ service directory.
 
 1. `pwaService.shouldShowDeviceSetup()` detects an installed mobile PWA that has
    not completed setup.
-2. `PwaDeviceSetup.svelte` primes microphone permission, asks for persistent
-   storage, and force-loads Whisper with progress from `whisperStatus`.
+2. `PwaDeviceSetup.svelte` primes microphone permission and asks for
+   persistent storage.
 3. `wakeLockService` keeps supported screens awake only while recording.
 
 ## Ownership Rules

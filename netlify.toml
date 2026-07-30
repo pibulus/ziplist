@@ -1,3 +1,25 @@
 [build]
   command = "npm run build"
   publish = "build"
+
+# Security headers for STATIC responses.
+#
+# src/hooks.server.js already sets these, but it only runs for server-rendered
+# responses. src/routes/+page.js sets `prerender = true`, so the homepage is
+# built to static HTML and served straight off the CDN — the hook never runs
+# for it, and ziplist.app was consequently serving no Content-Security-Policy
+# at all on its main page.
+#
+# This block and the CSP in src/hooks.server.js must stay in sync. If you add
+# an origin in one, add it in the other, or the same feature will work on a
+# server-rendered route and silently fail on the prerendered homepage — which
+# is exactly the kind of split-brain bug that is miserable to track down.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' blob:; connect-src 'self' https://*.partykit.io wss://*.partykit.io https://*.partykit.dev wss://*.partykit.dev; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "microphone=(self), camera=(), geolocation=(), payment=()"

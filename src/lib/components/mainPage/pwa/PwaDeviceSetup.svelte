@@ -5,16 +5,12 @@
   import { hapticService } from "$lib/services/infrastructure/hapticService";
 
   const dispatch = createEventDispatcher();
-  const OFFLINE_MODEL_TIMEOUT_MS = 90000;
-  const OFFLINE_MODEL_TIMEOUT_MESSAGE =
-    "Offline voice is still downloading. ZipList works online; try setup again later.";
 
   let isRunning = false;
   let isComplete = false;
   let progress = 0;
-  let statusText = "Ready mic and offline mode for this device.";
+  let statusText = "Ready the mic and local storage for this device.";
   let errorMessage = "";
-  let unsubscribeWhisperStatus = null;
   let completeTimeout = null;
   let isDismissed = false;
   let setupRunId = 0;
@@ -28,10 +24,6 @@
       window.clearTimeout(completeTimeout);
       completeTimeout = null;
     }
-  }
-
-  function clampProgress(value) {
-    return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
   }
 
   async function primeMicrophone() {
@@ -48,44 +40,6 @@
 
     stopStream(stream);
     return true;
-  }
-
-  async function preloadOfflineModel() {
-    const [{ simpleHybridService }, { whisperStatus }] = await Promise.all([
-      import("$lib/services/transcription/simpleHybridService"),
-      import("$lib/services/transcription/whisper/whisperService"),
-    ]);
-
-    unsubscribeWhisperStatus?.();
-    unsubscribeWhisperStatus = whisperStatus.subscribe((status) => {
-      if (isDismissed) return;
-
-      if (status.isLoading || status.progress > 0) {
-        progress = Math.max(10, clampProgress(status.progress));
-        statusText = `Loading offline voice ${progress}%`;
-      }
-
-      if (status.error) {
-        errorMessage = status.error;
-      }
-    });
-
-    return simpleHybridService.startBackgroundLoad({ force: true });
-  }
-
-  function withTimeout(promise, timeoutMs, message) {
-    let timeoutId;
-
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = window.setTimeout(
-        () => reject(new Error(message)),
-        timeoutMs,
-      );
-    });
-
-    return Promise.race([promise, timeoutPromise]).finally(() => {
-      window.clearTimeout(timeoutId);
-    });
   }
 
   async function runSetup() {
@@ -105,21 +59,10 @@
       await primeMicrophone();
       if (isDismissed || runId !== setupRunId) return;
 
+      progress = 50;
       statusText = "Protecting local storage...";
       await pwaService.requestPersistentStorage();
       if (isDismissed || runId !== setupRunId) return;
-
-      statusText = "Loading offline voice...";
-      const modelResult = await withTimeout(
-        preloadOfflineModel(),
-        OFFLINE_MODEL_TIMEOUT_MS,
-        OFFLINE_MODEL_TIMEOUT_MESSAGE,
-      );
-      if (isDismissed || runId !== setupRunId) return;
-
-      if (!modelResult?.success) {
-        throw modelResult?.error || new Error("Offline voice needs one more try");
-      }
 
       progress = 100;
       isComplete = true;
@@ -139,9 +82,6 @@
       statusText = "Setup paused. Try again when you have a steady connection.";
       hapticService.notification("warning");
     } finally {
-      unsubscribeWhisperStatus?.();
-      unsubscribeWhisperStatus = null;
-
       if (!isDismissed && runId === setupRunId) {
         isRunning = false;
       }
@@ -152,9 +92,6 @@
     isDismissed = true;
     setupRunId += 1;
     isRunning = false;
-    unsubscribeWhisperStatus?.();
-    unsubscribeWhisperStatus = null;
-
     clearCompleteTimeout();
 
     pwaService.snoozeDeviceSetup();
@@ -162,8 +99,6 @@
   }
 
   onDestroy(() => {
-    unsubscribeWhisperStatus?.();
-
     clearCompleteTimeout();
   });
 </script>

@@ -1,4 +1,4 @@
-import { simpleHybridService } from "./simpleHybridService";
+import { geminiService } from "../geminiService";
 import { listParser } from "../listParser.js"; // Import the listParser
 import { listsService } from "../lists/listsService"; // Import the listsService
 import { listsStore } from "../lists/listsStore";
@@ -51,9 +51,13 @@ export class TranscriptionService {
             .map((item) => item.text)
         : [];
 
-      // Transcribe using hybrid service (Whisper if ready, Gemini API as fallback)
-      // Returns { text, items, complete } — items/complete may be empty for Whisper
-      const transcriptResult = await simpleHybridService.transcribeAudio(
+      // Gemini takes the audio directly and returns BOTH the transcript and the
+      // parsed items/completions in one pass — it isn't transcribe-then-think.
+      // That's why the offline Whisper path was dropped (2026-07-31): Whisper
+      // only produces text, leaving listParser's regex to guess at item
+      // boundaries and losing completion detection entirely. A 117MB download
+      // for a visibly worse list wasn't worth its weight.
+      const transcriptResult = await geminiService.transcribeAudio(
         audioBlob,
         existingItems,
       );
