@@ -450,8 +450,8 @@
 .zl-shuffle-button,
 .zl-sort-button,
 .zl-live-indicator {
-  width: 40px;
-  min-width: 40px;
+  width: 44px;
+  min-width: 44px;
   height: 44px;
   min-height: 44px;
   border-radius: 12px;
@@ -1090,7 +1090,13 @@
   border: var(--zl-empty-state-border);
   border-radius: 24px;
   margin: 0.5rem 0;
-  min-height: 200px;
+  /* The empty card used to leave ~51% of a phone screen blank below it.
+     Growing the empty state (rather than vertically centring the card, the
+     obvious-looking fix) is deliberate: the card is top-anchored and grows
+     downward, so centring it would re-anchor and visibly jump the moment
+     the first item lands — at the single most important moment in the
+     flow. Here the top edge never moves. */
+  min-height: min(300px, 34svh);
   height: auto;
   transition: var(--zl-transition-fast);
   appearance: none;
@@ -1764,9 +1770,12 @@
     width: auto;
   }
 
+  /* 44px, not 40: these are the smallest touch targets in the app and they
+     sit in the corner of a card, which is exactly where thumbs are least
+     accurate. Height was already 44. */
   .zl-list-actions > * {
-    flex: 0 0 40px;
-    width: 40px;
+    flex: 0 0 44px;
+    width: 44px;
   }
 
   .zl-share-button {
@@ -1777,7 +1786,7 @@
   .zl-share-button,
   .zl-live-indicator {
     gap: 0;
-    min-width: 40px;
+    min-width: 44px;
     min-height: 44px;
     padding: 0;
   }

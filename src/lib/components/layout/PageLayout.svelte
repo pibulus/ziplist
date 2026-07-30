@@ -290,8 +290,13 @@
          panel with list text legible straight through it. A blur on one
          small fixed bar is cheap on any phone that ships a modern
          browser; the frosted surface is worth it. */
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
+      /* padding-bottom MUST keep the safe-area term. A flat 0.5rem here
+         silently overrode the base rule's
+         max(1rem, env(safe-area-inset-bottom)) on phones — the one place
+         the inset actually exists — so on a notched iPhone the footer row
+         sat under the home indicator. */
+      padding-top: 0.75rem;
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
     }
 
     footer .footer-row {
