@@ -1,5 +1,4 @@
 import { Weightless } from "./weightless";
-import { STORAGE_KEYS } from "$lib/constants";
 
 /**
  * Ziplist Specific Voice Presets
