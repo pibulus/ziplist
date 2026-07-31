@@ -24,19 +24,37 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - PartyKit real-time collaboration (optional — works without server)
 - Canvas confetti celebrations, particle effects
 
-**Current State**: ~99% complete, v1.0 runway. Security/correctness audits
-(through 2026-07-05) hardened CSP, rate limiting, PartyKit room auth, Square
-webhook idempotency, and server stores. The 2026-07-09→10 design-coherence
-arc (merged to main, see docs/FABLE-AUDIT.md) settled the design laws:
-constant cream page ground, one flat brand-yellow CTA (`--zl-cta-color`),
-within-family gradients only, one ghost stroke-icon language, branded
-share/live landing pages (BrandMark letterhead), DiceBear room avatars with
-editable names, and the copy voice rules (no all-caps, no imperatives at
-users, never speak as the user). Remaining is hands-on only: deploy main to
-the Pi, BODY_SIZE_LIMIT=16M (see KEYS.md), real-device iPhone + two-phone
-live pass, sandbox-card checkout, screenshots → tag v1.0.0. Post-launch
-charter lives in docs/V1.1.md (including the hard cutoffs: no dates, no
-nested items, no multi-list rooms, no accounts).
+**Current State**: ~99% complete, v1.0 runway. The 2026-07-09→10
+design-coherence arc (merged to main, see docs/FABLE-AUDIT.md) settled the
+design laws: constant cream page ground, one flat brand-yellow CTA
+(`--zl-cta-color`), within-family gradients only, one ghost stroke-icon
+language, branded share/live landing pages (BrandMark letterhead), DiceBear
+room avatars with editable names, and the copy voice rules (no all-caps, no
+imperatives at users, never speak as the user).
+
+**DEPLOY TARGET IS NETLIFY, NOT THE PI** (corrected 2026-07-31 — this file
+said Pi for weeks and it was wrong). `ziplist.app` is served by Netlify
+(`ziplist-netlify`); `netlify deploy --prod --build` is the ship command, and
+env vars live in the Netlify dashboard, NOT in `~/.config/fleet/keys.env`.
+The fleet `keys-sync ziplist` / `/etc/ziplist.env` path does not touch this
+app. `scripts/deploy-pi.sh` and adapter-node are still there for a Pi deploy
+that isn't currently used. Verify with: `curl -sI https://ziplist.app | grep -i server`.
+
+`BODY_SIZE_LIMIT=16M` is no longer a v1.0 blocker: that was a Pi concern.
+Recording is capped at 120s at 48kbps, so the worst case is ~720KB of audio
+→ ~1MB base64 request, comfortably under Netlify's 6MB function payload
+limit (which is a hard platform limit and cannot be raised).
+
+Remaining for v1.0 is hands-on only: real-device iPhone + two-phone live
+pass, sandbox-card checkout, screenshots → tag v1.0.0. Post-launch charter
+lives in docs/V1.1.md (including the hard cutoffs: no dates, no nested items,
+no multi-list rooms, no accounts).
+
+**Security headers**: exactly TWO sources, and they must stay in sync —
+`src/hooks.server.js` (server-rendered) and `netlify.toml` (prerendered
+homepage, which no hook can reach). Do NOT add a second `hooks.server.*` or a
+`_headers` file; both were tried on 2026-07-31 and each silently shadowed the
+real CSP, leaving the live site with no Content-Security-Policy at all.
 
 ## Code Style Guidelines
 
