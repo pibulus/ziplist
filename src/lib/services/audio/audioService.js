@@ -1,6 +1,7 @@
 import { AudioStateManager, AudioStates } from "./audioStates";
 import { audioState, audioActions, uiActions } from "../infrastructure/stores";
 import { wakeLockService } from "../pwa/wakeLockService";
+import { getMicErrorMessage } from "./inAppBrowser";
 
 // Speech doesn't need music bitrates. Browsers default MediaRecorder to
 // ~128kbps, which blows through the server's request-body limit in ~30s of
@@ -311,9 +312,10 @@ export class AudioService {
       console.error("Error starting recording:", error);
       this.stateManager.setState(AudioStates.ERROR, { error });
 
-      uiActions.setErrorMessage(
-        `Recording error: ${error.message || "Unknown error"}`,
-      );
+      // Never surface error.message directly — it is developer text. Someone
+      // arriving from a Messenger link used to be told
+      // "Recording error: MediaDevices API not available".
+      uiActions.setErrorMessage(getMicErrorMessage(error));
 
       await this.cleanup();
       throw error;
