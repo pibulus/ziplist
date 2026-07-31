@@ -308,11 +308,11 @@ class ZiplistSoundService extends Weightless {
     return this.play("stop", opts);
   }
 
+  // Runtime only — deliberately does NOT persist. Sound stopped being a
+  // preference on 2026-07-31, so writing a "sound cues" key would imply a
+  // setting the app no longer has, and nothing reads it back.
   setEnabled(enabled) {
     this.enabled = enabled;
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(STORAGE_KEYS.SOUND_CUES, enabled.toString());
-    }
     if (!enabled && this.context) {
       this.context.suspend().catch(() => {});
     }

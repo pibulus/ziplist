@@ -25,9 +25,12 @@ export const STORAGE_KEYS = {
   // Application Settings
   THEME: "ziplist-vibe",
   FIRST_VISIT: "hasSeenZiplistIntro",
-  AUTO_RECORD: "ziplist-autoRecord",
+  // AUTO_RECORD and SOUND_CUES lived here until 2026-07-31. Their settings were
+  // removed; the keys outlived them by a few hours, one being written with
+  // nothing reading it and the other read with nothing able to write it. Both
+  // are gone rather than left looking live. Old values in localStorage are
+  // simply ignored.
   LIST_FIRST_MODE: "ziplist-list-first-mode",
-  SOUND_CUES: "ziplist-sound-cues",
   PROMPT_STYLE: "ziplist-prompt-style",
   DEBUG_MODE: "ziplist-debug-mode",
   CHUNKY_MODE: "ziplist-chunky-mode",

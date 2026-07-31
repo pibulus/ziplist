@@ -756,13 +756,19 @@
       settingsModalPreloadTimeout = null;
     }, 1000);
 
-    // Mobile PWAs cannot reliably open the microphone on launch without a fresh tap.
-    // Treat launch intents as "ready the recorder" instead of forcing a permission prompt.
-    if (
-      browser &&
-      (StorageUtils.getBooleanItem(STORAGE_KEYS.AUTO_RECORD, false) ||
-        hasLaunchRecordIntent())
-    ) {
+    // Mobile PWAs cannot reliably open the microphone on launch without a fresh
+    // tap. Treat a launch intent as "ready the recorder" instead of forcing a
+    // permission prompt.
+    //
+    // The old STORAGE_KEYS.AUTO_RECORD check that also sat here is gone. The
+    // "Ready Mic" toggle that set it was removed on 2026-07-31, so the read
+    // could only ever return false — a condition that looked live and wasn't.
+    // (It was removed on the belief that nothing read the flag; this line is
+    // the proof that was wrong. The removal still stands as a product call,
+    // but the dead read should not linger pretending to be a feature.)
+    // Launching with ?action= still readies the recorder, which is the path
+    // that actually gets used.
+    if (browser && hasLaunchRecordIntent()) {
       prepareRecorderOnLaunch();
     }
 
