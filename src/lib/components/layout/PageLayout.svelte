@@ -13,7 +13,9 @@
   export let ogDescription = "";
   export let ogUrl = "";
   export let ogImage = "https://ziplist.app/og-image.png";
-  export let ogImageAlt = "ZipList warm voice checklist app preview";
+  // Describes og-image.png as it actually is — mascot-only since 2026-07-31.
+  export let ogImageAlt =
+    "ZipList's speech-bubble mascot with a small checklist for a mouth, on a warm cream background.";
   export let ogType = "website";
   export let footerYear = new Date().getFullYear();
   export let appName = "ZipList";
