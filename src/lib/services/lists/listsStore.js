@@ -2,6 +2,7 @@ import { writable, derived, get } from "svelte/store";
 import { browser } from "$app/environment";
 import { getContributorSnapshot } from "$lib";
 import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
+import { ensureDurableStorage } from "../infrastructure/durableStorage.js";
 
 export const LIST_COLOR_PRESETS = [
   {
@@ -356,6 +357,11 @@ function createListsStore() {
         state.activeListId || "",
       );
       localStorage.setItem(STORAGE_KEYS.LISTS_VERSION, String(state.version));
+
+      // Every write lands here, so this is the one place that knows the user
+      // has data worth keeping. Fire-and-forget, at most once per browser —
+      // asking earlier would prompt about protecting data that doesn't exist.
+      void ensureDurableStorage();
     } catch (error) {
       console.error("Error persisting lists to storage:", error);
       if (error.name === "QuotaExceededError" || error.code === 22) {
