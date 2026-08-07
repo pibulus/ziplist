@@ -188,11 +188,20 @@
     listsStore.initialize();
     listsService.getAllLists();
 
-    // Check if this list is already live
+    // Check if this list is already live. A reload wipes the in-memory
+    // connection map, so a list that IS in a room comes back looking local —
+    // resumeLive() reconnects it to the SAME room using the id saved on the
+    // list. Without this, tapping "Go live" again minted a new room and
+    // silently separated people who were already sharing.
     if (list && list.id) {
       isLive = liveListsService.isLive(list.id);
       if (isLive) {
         subscribeToLiveStores(list.id);
+        liveListsService.resumeLive(list.id).then((rejoined) => {
+          if (rejoined) return;
+          // resumeLive clears the flags when the room is gone; follow the store.
+          isLive = liveListsService.isLive(list.id);
+        });
       }
     }
 

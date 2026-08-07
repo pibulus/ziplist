@@ -462,8 +462,54 @@ export function broadcastVoiceActivity(listId, data = {}) {
   sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.VOICE_ACTIVITY, data);
 }
 
+/**
+ * Rejoin the room a list was already in, after a reload.
+ *
+ * `activeConnections` is an in-memory Map, so a refresh wipes every live
+ * session while the list itself still carries `liveRoomId`/`isLive` in
+ * localStorage. Nothing read those fields back, so both sides came back
+ * looking un-live — and tapping "Go live" again called makeLive(), which
+ * mints a BRAND NEW room id. That is why two people who were sharing a list
+ * an hour ago end up in different rooms.
+ *
+ * Safe to call on every mount: connectToLive() no-ops when a connection
+ * already exists, and a dead room closes with a terminal code that clears
+ * the stale live flags rather than reconnecting forever.
+ *
+ * @param {string} listId
+ * @returns {Promise<boolean>} true when a rejoin was attempted
+ */
+export async function resumeLive(listId) {
+  if (!listId || activeConnections.has(listId)) return false;
+  if (!isPartyKitAvailable()) return false;
+
+  const list = getListSnapshot(listId);
+  const roomId = list?.liveRoomId;
+  if (!list?.isLive || !roomId) return false;
+
+  try {
+    await connectToLive(listId, roomId);
+    return true;
+  } catch (error) {
+    // The room is gone (expired/not found). Drop the stale live flags so the
+    // list reads as plain local rather than pretending to be shared.
+    if (error?.code === "room_expired" || error?.code === "room_not_found") {
+      listsStore.upsertList(
+        { ...list, liveRoomId: null, isLive: false },
+        listId,
+      );
+      announceLiveNotice(error.message || "That live room has popped.");
+    }
+    return false;
+  }
+}
+
 export function isLive(listId) {
-  return activeConnections.has(listId);
+  if (activeConnections.has(listId)) return true;
+  // Persisted truth: a reload empties activeConnections, but the list still
+  // belongs to its room until resumeLive() proves otherwise.
+  const list = getListSnapshot(listId);
+  return Boolean(list?.isLive && list?.liveRoomId);
 }
 
 export function getLiveListCount() {
@@ -475,7 +521,11 @@ export function isLiveCollaborationAvailable() {
 }
 
 export function getRoomId(listId) {
-  return activeConnections.get(listId)?.roomId || null;
+  return (
+    activeConnections.get(listId)?.roomId ||
+    getListSnapshot(listId)?.liveRoomId ||
+    null
+  );
 }
 
 export function getShareUrl(listId, password = null) {
