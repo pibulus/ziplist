@@ -263,12 +263,7 @@
         </div>
       </section>
 
-      <section
-        class="zl-settings-section"
-        aria-labelledby="settings_flow_title"
-      >
-        <h4 id="settings_flow_title" class="zl-section-label">Flow</h4>
-
+      <section class="zl-settings-section" aria-label="List display">
         <div class="zl-toggle-grid">
           <div class="zl-toggle-tile">
             <div class="zl-setting-info">
@@ -285,23 +280,6 @@
               <span class="zl-toggle-slider"></span>
             </label>
           </div>
-        </div>
-
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Lists</span>
-            <p class="zl-setting-desc">
-              {listCount} of {maxLists} in play
-            </p>
-          </div>
-          <button
-            type="button"
-            class="zl-settings-action"
-            on:click={handleCreateList}
-            disabled={listCount >= maxLists}
-          >
-            {listCount >= maxLists ? "All unlocked" : "New list"}
-          </button>
         </div>
 
         <div class="zl-setting-row">
@@ -345,21 +323,19 @@
         class="zl-settings-section zl-settings-footer"
         aria-label="Contributor"
       >
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Contributor</span>
-            <p class="zl-setting-desc">
-              More lists, and more of them live at once
-            </p>
-          </div>
-          <button
-            type="button"
-            class="zl-setting-action"
-            on:click={openContributorModal}
-          >
-            {contributorUnlocked ? "Unlocked" : PRICING.displayPrice}
-          </button>
-        </div>
+        <button
+          type="button"
+          class="zl-contributor-cta"
+          title="More lists, and more of them live at once"
+          on:click={openContributorModal}
+        >
+          <span aria-hidden="true">✦</span>
+          <span class="zl-contributor-label">
+            {contributorUnlocked
+              ? "Contributor unlocked"
+              : `Become a Contributor · ${PRICING.displayPrice}`}
+          </span>
+        </button>
       </section>
     </div>
   </div>
@@ -374,6 +350,36 @@
 </dialog>
 
 <style>
+  /* One yummy button, same family curve as the app's other squishy controls.
+     Was a quiet label with a small amber pill; it now says what you get. */
+  .zl-contributor-cta {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.25rem;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ffcc33, #ff6ac2 60%, #ff5c9f);
+    color: #fffdf5;
+    font-weight: 900;
+    font-size: 0.98rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    box-shadow: 0 10px 22px rgba(255, 106, 194, 0.35);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .zl-contributor-cta:hover {
+    transform: scale(1.02);
+    box-shadow: 0 14px 30px rgba(255, 106, 194, 0.5);
+  }
+  .zl-contributor-cta:active {
+    transform: scale(0.97);
+  }
+
   :global(dialog.zl-settings-dialog) {
     display: none;
     align-items: center;
