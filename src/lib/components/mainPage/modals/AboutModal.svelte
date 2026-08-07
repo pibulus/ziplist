@@ -115,7 +115,7 @@
 
       <div class="flex justify-between items-end pt-2">
         <div>
-          <p class="text-xs text-gray-500">Melbourne, Australia</p>
+          <p class="text-xs text-gray-500">Made by Pablo in Melbourne</p>
         </div>
         <div class="flex items-center gap-2 text-xs font-medium text-gray-600">
           Pablo
