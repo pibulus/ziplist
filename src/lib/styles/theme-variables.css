@@ -258,7 +258,7 @@ html[data-theme="sticky-note"] {
   /* Mascot gradient — the fluro duo, the ONE place a gradient lives */
   --zl-mascot-gradient-start: #fff95c;
   --zl-mascot-gradient-mid: #ffe14d;
-  --zl-mascot-gradient-end: #ffb300;
+  --zl-mascot-gradient-end: #ffbf1a;
 
   /* Card — flat warm cream, same ground as Highlighter (no gradient) */
   --zl-card-bg-gradient-angle: 180deg;
@@ -276,13 +276,13 @@ html[data-theme="sticky-note"] {
   );
 
   /* Base theme colors */
-  --zl-primary-color: #c98a00;
-  --zl-primary-color-rgb: 201, 138, 0;
+  --zl-primary-color: #e6a300;
+  --zl-primary-color-rgb: 230, 163, 0;
   --zl-secondary-color: #fffbcc;
   --zl-accent-color: #1e1714;
   --zl-accent-color-rgb: 30, 23, 20;
   --zl-cta-grad-start: #fff95c;
-  --zl-cta-grad-end: #ffc400;
+  --zl-cta-grad-end: #ffcd1f;
   --zl-highlight-color: #fffbcc;
   --zl-text-hover-color: #1e1714;
 
@@ -342,10 +342,10 @@ html[data-theme="sticky-note"] {
   --zl-edit-input-bg: #fffef7;
   --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
   --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
-  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #c98a00;
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #e6a300;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #c98a00;
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #e6a300;
 
   /* Empty state styling */
   --zl-empty-state-bg: #fffbcc;
@@ -353,7 +353,7 @@ html[data-theme="sticky-note"] {
   --zl-empty-title-color: #1e1714;
 
   /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to right, #c98a00, #8a5f00);
+  --app-suffix-gradient: linear-gradient(to right, #e6a300, #a87b00);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
   --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
@@ -368,9 +368,9 @@ html[data-theme="sticky-note"] {
  */
 html[data-theme="gel-pen"] {
   /* Mascot gradient — the fluro duo, the ONE place a gradient lives */
-  --zl-mascot-gradient-start: #ff4fa3;
-  --zl-mascot-gradient-mid: #ff2d87;
-  --zl-mascot-gradient-end: #e0006b;
+  --zl-mascot-gradient-start: #ff7ab8;
+  --zl-mascot-gradient-mid: #ff4f9e;
+  --zl-mascot-gradient-end: #f5157f;
 
   /* Card — flat warm cream, same ground as Highlighter (no gradient) */
   --zl-card-bg-gradient-angle: 180deg;
@@ -388,13 +388,13 @@ html[data-theme="gel-pen"] {
   );
 
   /* Base theme colors */
-  --zl-primary-color: #d1005f;
-  --zl-primary-color-rgb: 209, 0, 95;
+  --zl-primary-color: #ed1a75;
+  --zl-primary-color-rgb: 237, 26, 117;
   --zl-secondary-color: #ffe0ef;
   --zl-accent-color: #1e1714;
   --zl-accent-color-rgb: 30, 23, 20;
-  --zl-cta-grad-start: #ff4fa3;
-  --zl-cta-grad-end: #e0006b;
+  --zl-cta-grad-start: #ff7ab8;
+  --zl-cta-grad-end: #f5157f;
   --zl-highlight-color: #ffe0ef;
   --zl-text-hover-color: #1e1714;
 
@@ -454,10 +454,10 @@ html[data-theme="gel-pen"] {
   --zl-edit-input-bg: #fffef7;
   --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
   --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
-  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #d1005f;
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #ed1a75;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #d1005f;
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #ed1a75;
 
   /* Empty state styling */
   --zl-empty-state-bg: #ffe0ef;
@@ -465,7 +465,7 @@ html[data-theme="gel-pen"] {
   --zl-empty-title-color: #1e1714;
 
   /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to right, #d1005f, #8f0041);
+  --app-suffix-gradient: linear-gradient(to right, #ed1a75, #b8005a);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
   --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
@@ -480,9 +480,9 @@ html[data-theme="gel-pen"] {
  */
 html[data-theme="legal-pad"] {
   /* Mascot gradient — the fluro duo, the ONE place a gradient lives */
-  --zl-mascot-gradient-start: #c6f542;
-  --zl-mascot-gradient-mid: #a3e017;
-  --zl-mascot-gradient-end: #6fa300;
+  --zl-mascot-gradient-start: #d8fa6e;
+  --zl-mascot-gradient-mid: #b4e83a;
+  --zl-mascot-gradient-end: #85c203;
 
   /* Card — flat warm cream, same ground as Highlighter (no gradient) */
   --zl-card-bg-gradient-angle: 180deg;
@@ -500,13 +500,13 @@ html[data-theme="legal-pad"] {
   );
 
   /* Base theme colors */
-  --zl-primary-color: #4f7a00;
-  --zl-primary-color-rgb: 79, 122, 0;
+  --zl-primary-color: #68a000;
+  --zl-primary-color-rgb: 104, 160, 0;
   --zl-secondary-color: #f0ffd1;
   --zl-accent-color: #1e1714;
   --zl-accent-color-rgb: 30, 23, 20;
-  --zl-cta-grad-start: #c6f542;
-  --zl-cta-grad-end: #6fa300;
+  --zl-cta-grad-start: #d8fa6e;
+  --zl-cta-grad-end: #85c203;
   --zl-highlight-color: #f0ffd1;
   --zl-text-hover-color: #1e1714;
 
@@ -543,7 +543,7 @@ html[data-theme="legal-pad"] {
   --zl-checkbox-hover-bg: #f0ffd1;
   --zl-checkbox-checked-gradient-start: #1e1714;
   --zl-checkbox-checked-gradient-end: #1e1714;
-  --zl-checkbox-sparkle-color: #a3e017;
+  --zl-checkbox-sparkle-color: #b4e83a;
 
   /* Text button styling */
   --zl-text-button-hover-bg: #f0ffd1;
@@ -566,10 +566,10 @@ html[data-theme="legal-pad"] {
   --zl-edit-input-bg: #fffef7;
   --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
   --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
-  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #4f7a00;
+  --zl-edit-input-focus-shadow: 4px 4px 0px 0px #68a000;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #4f7a00;
+  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #68a000;
 
   /* Empty state styling */
   --zl-empty-state-bg: #f0ffd1;
@@ -577,7 +577,7 @@ html[data-theme="legal-pad"] {
   --zl-empty-title-color: #1e1714;
 
   /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to right, #4f7a00, #2f4d00);
+  --app-suffix-gradient: linear-gradient(to right, #68a000, #4a7500);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
   --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
@@ -591,36 +591,37 @@ html[data-theme="legal-pad"] {
  * to ANY active color theme.
  */
 html.mode-neo-brutalist {
-  /* Chunky got chunkier (2026-07-30): borders 3px -> 4px, card shadow
-     8px -> 12px, item shadows up a notch. Also retired the #000000 that
-     ran through this whole block — the house rule is warm near-black,
-     never absolute black, on every surface and every ink. */
+  /* Chunky got chunkier again (2026-08-07): card border 4px -> 5px, card
+     shadow 12px -> 14px, item borders now scale up too (2px -> 3px via
+     --zl-item-border-width), radius squared off a touch. House rule holds:
+     warm near-black, never absolute black, on every surface and ink. */
   --zl-chunky-ink: #1e1714;
 
   /* Borders and Shadows */
   --zl-card-border-color: var(--zl-chunky-ink);
-  --zl-card-border-width: 4px;
-  --zl-card-border-radius: 14px;
-  --zl-card-box-shadow: 12px 12px 0px 0px var(--zl-chunky-ink);
+  --zl-card-border-width: 5px;
+  --zl-card-border-radius: 12px;
+  --zl-card-box-shadow: 14px 14px 0px 0px var(--zl-chunky-ink);
   /* Shadow offsets split out so centered surfaces (settings modal) can
      optically compensate for the hard shadow's right+down mass. */
-  --zl-card-shadow-x: 12px;
-  --zl-card-shadow-y: 12px;
+  --zl-card-shadow-x: 14px;
+  --zl-card-shadow-y: 14px;
   --zl-card-inner-border-gradient: none;
 
   /* Empty state */
   --zl-empty-state-border: 4px dashed var(--zl-chunky-ink);
 
   /* List items */
+  --zl-item-border-width: 3px;
   --zl-item-border-radius: 10px;
-  --zl-item-box-shadow: 6px 6px 0px 0px var(--zl-chunky-ink);
-  --zl-item-hover-box-shadow: 8px 8px 0px 0px var(--zl-chunky-ink);
+  --zl-item-box-shadow: 7px 7px 0px 0px var(--zl-chunky-ink);
+  --zl-item-hover-box-shadow: 9px 9px 0px 0px var(--zl-chunky-ink);
 
   /* Dragging */
   --zl-item-dragging-border: 4px solid var(--zl-chunky-ink);
-  --zl-item-dragging-shadow: 14px 14px 0px 0px var(--zl-chunky-ink);
+  --zl-item-dragging-shadow: 16px 16px 0px 0px var(--zl-chunky-ink);
   --zl-item-dragover-border: 4px dashed var(--zl-chunky-ink);
-  --zl-item-dragover-shadow: 6px 6px 0px 0px var(--zl-chunky-ink);
+  --zl-item-dragover-shadow: 7px 7px 0px 0px var(--zl-chunky-ink);
 
   /* Checkbox */
   --zl-checkbox-border: 4px solid var(--zl-chunky-ink);

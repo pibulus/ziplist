@@ -5,9 +5,6 @@
   import { PRICING } from "$lib/config/pricing.js";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { soundService } from "$lib/services/infrastructure/soundService";
-  import { hapticService } from "$lib/services/infrastructure/hapticService";
-  import { listsStore, getMaxListCount } from "$lib/services/lists/listsStore";
-  import { listsService } from "$lib/services/lists/listsService";
   import {
     getOrCreateAvatar,
     setAvatarName,
@@ -39,27 +36,6 @@
   const unsubscribeContributor = isContributor.subscribe((value) => {
     contributorUnlocked = value;
   });
-
-  // New lists are made from here now — the card header lost its "+" so the
-  // list itself stays uncluttered. contributorUnlocked is in the dependency
-  // list because unlocking raises the ceiling mid-session.
-  $: listCount = $listsStore.lists.length;
-  $: maxLists = (contributorUnlocked, getMaxListCount());
-
-  function handleCreateList() {
-    const result = listsService.createList();
-    if (!result.ok) {
-      hapticService.notification("warning");
-      soundService.locked();
-      if (result.reason === "max-lists") {
-        window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
-      }
-      return;
-    }
-
-    hapticService.notification("success");
-    soundService.add({ force: true });
-  }
 
   // Theme options — "The Desk Drawer": four office-supply fluro themes,
   // one collective concept. Curated down from 8 (2026-07-20).
@@ -185,35 +161,37 @@
 >
   <div class="zl-settings-card">
     <div class="zl-settings-content">
-      <div class="zl-settings-header">
-        <h3 id="settings_modal_title" class="zl-settings-title">Options</h3>
-        <p id="settings_modal_description" class="sr-only">
-          Adjust startup, sound, contributor, and theme settings.
-        </p>
-        <form method="dialog">
-          <button
-            type="button"
-            class="zl-settings-close"
-            on:click={handleModalClose}
-            aria-label="Close settings"
+      <!-- No visible "Options" header — the footer link you just tapped
+           already said it (Pablo's call 2026-08-07). The title survives for
+           screen readers; the X floats in the corner and shares its line
+           with the VIBE eyebrow. -->
+      <h3 id="settings_modal_title" class="sr-only">Options</h3>
+      <p id="settings_modal_description" class="sr-only">
+        Adjust startup, sound, contributor, and theme settings.
+      </p>
+      <form method="dialog">
+        <button
+          type="button"
+          class="zl-settings-close"
+          on:click={handleModalClose}
+          aria-label="Close settings"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </form>
-      </div>
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </form>
 
       <!-- Vibe picker sits in the open (Pablo's call 2026-07-22): the old
            fold existed because the 2×2 grid ate ~40% of the modal, but as a
@@ -264,49 +242,49 @@
       </section>
 
       <section class="zl-settings-section" aria-label="List display">
-        <div class="zl-toggle-grid">
-          <div class="zl-toggle-tile">
-            <div class="zl-setting-info">
-              <span class="zl-setting-name">List First</span>
-              <p class="zl-setting-desc">Hide mascot &amp; title</p>
-            </div>
-            <label class="zl-toggle">
-              <input
-                type="checkbox"
-                checked={listFirstModeValue}
-                on:change={toggleListFirstMode}
-                aria-label="List First mode"
-              />
-              <span class="zl-toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
         <div class="zl-setting-row">
           <div class="zl-setting-info">
+            <span class="zl-setting-name">List First</span>
+            <p class="zl-setting-desc">Hide mascot &amp; title</p>
+          </div>
+          <label class="zl-toggle">
+            <input
+              type="checkbox"
+              checked={listFirstModeValue}
+              on:change={toggleListFirstMode}
+              aria-label="List First mode"
+            />
+            <span class="zl-toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Face wears the glyph seat on the left (TalkType's setting-row
+             anatomy); title + hint in the middle, input on the right. One
+             row tall — this card used to stack title, hint, and controls
+             into the biggest block in the modal for the least-used option. -->
+        <div class="zl-setting-row">
+          {#if avatarName}
+            <button
+              type="button"
+              class="zl-avatar-face-btn"
+              class:rerolling={avatarRerolling}
+              on:click={rerollAvatarFace}
+              title="Tap for a new face"
+              aria-label="Re-roll avatar face"
+            >
+              <img
+                class="zl-avatar-face"
+                src={getAvatarImage(avatarName)}
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
+          {/if}
+          <div class="zl-setting-info">
             <span class="zl-setting-name">Name in shared rooms</span>
-            <p class="zl-setting-desc">
-              Your face and name when a list goes live
-            </p>
+            <p class="zl-setting-desc">Your face when a list goes live</p>
           </div>
           <div class="zl-avatar-field">
-            {#if avatarName}
-              <button
-                type="button"
-                class="zl-avatar-face-btn"
-                class:rerolling={avatarRerolling}
-                on:click={rerollAvatarFace}
-                title="Tap for a new face"
-                aria-label="Re-roll avatar face"
-              >
-                <img
-                  class="zl-avatar-face"
-                  src={getAvatarImage(avatarName)}
-                  alt=""
-                  aria-hidden="true"
-                />
-              </button>
-            {/if}
             <input
               type="text"
               class="zl-avatar-input"
@@ -458,27 +436,16 @@
     }
   }
 
-  .zl-settings-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: -0.25rem 0 0.85rem;
-    padding: 0.25rem 0 0.5rem;
-    background: var(--zl-card-bg-gradient-color-start, #fff);
-  }
-
-  .zl-settings-title {
-    font-family: "Space Mono", monospace;
-    font-size: var(--font-size-xl, 1.5rem);
-    font-weight: 900;
-    color: var(--zl-text-color-primary, #000);
-    margin: 0;
-  }
+  /* The modal chrome speaks the sans-black voice (TalkType's recipe —
+     Pablo's call 2026-08-07: Space Mono everywhere read "squeezed/skinny"
+     in a settings context). The mono survives only in the name input,
+     where typed text matches the list items' typewriter identity. */
 
   .zl-settings-close {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    z-index: 3;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -499,7 +466,6 @@
   }
 
   .zl-settings-close:focus-visible,
-  .zl-setting-action:focus-visible,
   .zl-vibe-option:focus-visible {
     outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
     outline-offset: 3px;
@@ -520,23 +486,24 @@
     padding-top: 0.85rem;
   }
 
-  .zl-settings-footer .zl-setting-row {
-    margin-bottom: 0;
-  }
-
   /* The vibe grid hands off to its sibling Chunky Mode row */
   .zl-vibe-grid + .zl-setting-row {
     margin-top: 0.6rem;
   }
 
+  /* The eyebrow IS the header line now: label left, floating X right.
+     min-height keeps the tiles clear of the X's 44px tap circle. */
   .zl-section-label {
-    font-family: "Space Mono", monospace;
-    font-size: var(--font-size-xs, 0.8rem);
-    font-weight: 800;
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
     text-transform: uppercase;
     color: var(--zl-text-color-disabled, #999);
-    margin-bottom: 0.6rem;
-    letter-spacing: 0;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
   }
 
   .zl-setting-row {
@@ -546,105 +513,51 @@
     gap: 0.75rem;
     padding: 0.75rem 0.85rem;
     background: rgba(255, 255, 255, 0.5);
-    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    border: var(--zl-item-border-width, 2px) solid
+      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
     border-radius: 16px;
     margin-bottom: 0.6rem;
     transition: all 0.2s;
-  }
-
-  /* Flow is down to one toggle. Ready Mic wrote a preference nothing ever
-     read, and Sound Cues is no longer a choice — sound is just part of the
-     feel. A single tile in a 2-up grid would sit as a half-width orphan, so
-     the grid is one column now. */
-  .zl-toggle-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.6rem;
-    margin-bottom: 0.6rem;
-  }
-
-  /* Making a list moved here from the card header, so it needs to read as
-     the row's action — flat brand-yellow CTA, per the design laws. */
-  .zl-settings-action {
-    flex-shrink: 0;
-    padding: 0.5rem 0.9rem;
-    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 12px;
-    background: var(--zl-cta-color, #ffb000);
-    color: var(--zl-text-color-primary, #1e1714);
-    font-family: "Space Mono", monospace;
-    font-size: 0.8rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition:
-      transform 0.16s ease,
-      opacity 0.16s ease;
-  }
-
-  .zl-settings-action:hover:not(:disabled) {
-    transform: translateY(-1px);
-  }
-
-  .zl-settings-action:disabled {
-    opacity: 0.5;
-    cursor: default;
-    background: transparent;
-  }
-
-  .zl-toggle-tile {
-    grid-column: span 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.65rem 0.75rem;
-    background: rgba(255, 255, 255, 0.5);
-    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
-    transition: all 0.2s;
-  }
-
-  .zl-toggle-tile:hover {
-    border-color: var(--zl-primary-color);
-    background: white;
-  }
-
-  .zl-toggle-tile:last-child {
-    grid-column: span 2;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .zl-toggle-tile .zl-setting-name {
-    font-size: var(--font-size-xs, 0.8rem);
-  }
-
-  .zl-toggle-tile .zl-setting-desc {
-    font-size: 0.68rem;
   }
 
   .zl-setting-row:hover {
     border-color: var(--zl-primary-color);
-    background: white;
+    background: #fffef7;
   }
 
+  /* Info block always stretches — keeps it hugging a leading glyph (the
+     avatar face) instead of floating to the row's center, and pushes the
+     control to the right edge. */
+  .zl-setting-info {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* ONE title scale for every row — "Chunky Mode", "List First", and
+     "Name in shared rooms" used to arrive at three sizes via two container
+     variants (Pablo clocked it 2026-08-07). */
   .zl-setting-name {
-    font-weight: 800;
-    color: var(--zl-text-color-primary, #000);
+    font-size: 0.92rem;
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--zl-text-color-primary, #1e1714);
     display: block;
   }
 
   .zl-setting-desc {
-    font-size: var(--font-size-xs, 0.75rem);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
     color: var(--zl-text-color-secondary, #666);
-    margin: 0.25rem 0 0 0;
+    margin: 0.2rem 0 0 0;
   }
 
   .zl-avatar-field {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex-shrink: 0;
+    flex: 0 1 auto;
     min-width: 0;
   }
 
@@ -720,7 +633,8 @@
   }
 
   .zl-avatar-input {
-    width: 9.5rem;
+    width: 8.5rem;
+    min-width: 6rem;
     min-height: 44px;
     padding: 0.3rem 0.6rem;
     border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
@@ -779,7 +693,7 @@
     width: 22px;
     left: 4px;
     bottom: 2px;
-    background-color: white;
+    background-color: #fffdf5;
     transition: 0.4s;
     border-radius: 50%;
   }
@@ -797,40 +711,34 @@
     outline-offset: 3px;
   }
 
-  .zl-setting-action {
-    background: var(--zl-cta-color, #ffb000);
-    border: 0;
-    border-radius: 999px;
-    box-shadow: 0 3px 8px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.25);
-    color: #111111;
-    cursor: pointer;
-    flex-shrink: 0;
-    font-family: "Space Mono", monospace;
-    font-size: var(--font-size-xs, 0.78rem);
-    font-weight: 900;
-    min-height: 44px;
-    padding: 0.35rem 0.85rem;
-    transition: var(--zl-transition-fast, all 0.2s ease);
+  /* Chunky mode gets its hard-shadow identity back — gated, not leaked.
+     Warm ink per the house law, never absolute black. The rows and tiles
+     pick up their thicker borders automatically via --zl-item-border-width;
+     these rules add the hard-shadow half of the look so flipping the toggle
+     visibly chonks the very modal you're standing in. */
+  :global(html.mode-neo-brutalist) .zl-setting-row,
+  :global(html.mode-neo-brutalist) .zl-vibe-option {
+    border-radius: 10px;
+    box-shadow: 3px 3px 0 0 var(--zl-chunky-ink, #1e1714);
   }
 
-  .zl-setting-action:hover,
-  .zl-setting-action:focus-visible {
-    box-shadow: 0 5px 14px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.32);
-    filter: saturate(1.08) brightness(1.04);
-    transform: translateY(-1px);
+  :global(html.mode-neo-brutalist) .zl-vibe-option:hover {
+    box-shadow: 4px 4px 0 0 var(--zl-chunky-ink, #1e1714);
   }
 
-  /* Chunky mode gets its hard-shadow identity back — gated, not leaked */
-  :global(html.mode-neo-brutalist) .zl-setting-action {
-    border: 2px solid #000000;
-    box-shadow: 3px 3px 0 #000000;
+  :global(html.mode-neo-brutalist) .zl-toggle-slider {
+    border-color: var(--zl-chunky-ink, #1e1714);
   }
 
-  :global(html.mode-neo-brutalist) .zl-setting-action:hover,
-  :global(html.mode-neo-brutalist) .zl-setting-action:focus-visible {
-    box-shadow: 4px 4px 0 #000000;
-    filter: none;
+  :global(html.mode-neo-brutalist) .zl-contributor-cta {
+    border: 3px solid var(--zl-chunky-ink, #1e1714);
+    border-radius: 14px;
+    box-shadow: 5px 5px 0 var(--zl-chunky-ink, #1e1714);
+  }
+
+  :global(html.mode-neo-brutalist) .zl-contributor-cta:hover {
     transform: translate(-1px, -1px);
+    box-shadow: 6px 6px 0 var(--zl-chunky-ink, #1e1714);
   }
 
   /* Vibe Grid — one row of 4 (The Desk Drawer roster, Pablo's call
@@ -856,15 +764,16 @@
     position: relative;
     padding: 0.55rem 0.2rem;
     min-height: 44px;
-    background: white;
-    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    background: #fffef7;
+    border: var(--zl-item-border-width, 2px) solid
+      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
     border-radius: 16px;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: "Space Mono", monospace;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: -0.01em;
     /* fits "Highlighter" in a 4-up tile on a 390px phone */
-    font-size: clamp(0.58rem, 2.5vw, 0.78rem);
+    font-size: clamp(0.6rem, 2.5vw, 0.76rem);
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -896,18 +805,17 @@
     }
   }
 
-  .zl-vibe-option.active {
-    border-color: var(--zl-primary-color);
-    background: var(--zl-highlight-color, #fff9f5);
-    box-shadow: 0 4px 12px rgba(var(--zl-primary-color-rgb, 0, 0, 0), 0.1);
-  }
+  /* Selected = the check badge, full stop. The old mint-fill + amber-border
+     + badge trio was three signals doing one job (Pablo's call 2026-08-07);
+     the tile itself stays identical to its siblings so the four vibes read
+     as one calm palette strip. */
 
   .zl-vibe-check {
     position: absolute;
     top: 4px;
     right: 4px;
     background: var(--zl-primary-color);
-    color: white;
+    color: #fffdf5;
     width: 18px;
     height: 18px;
     border-radius: 50%;
@@ -916,7 +824,7 @@
     justify-content: center;
     font-size: 0.7rem;
     font-weight: bold;
-    border: 2px solid white;
+    border: 2px solid #fffdf5;
   }
 
   .zl-modal-backdrop {
@@ -939,17 +847,10 @@
       max-height: calc(min(88dvh, 42rem) - 2rem);
     }
 
-    .zl-settings-header {
-      margin-bottom: 0.75rem;
-    }
-
-    .zl-setting-row {
-      align-items: flex-start;
-    }
-
-    .zl-setting-info {
-      min-width: 0;
-      flex: 1;
+    /* Card padding is tighter here, so the eyebrow line needs the full
+       44px to keep tiles clear of the X. */
+    .zl-section-label {
+      min-height: 44px;
     }
 
     /* Canonical 4-up holds on mobile; tighten padding so tiles fit. */

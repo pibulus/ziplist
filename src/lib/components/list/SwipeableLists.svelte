@@ -467,7 +467,7 @@
     height: 12px;
     border-radius: 50%;
     background-color: var(--dot-accent);
-    opacity: 0.4;
+    opacity: 0.6;
     transition: all 0.22s linear(0, 0.5 15%, 1.15 40%, 0.97 65%, 1);
   }
 
