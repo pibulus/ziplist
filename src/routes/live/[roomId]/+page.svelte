@@ -72,10 +72,10 @@
     property="og:description"
     content="Hop in — you'll tick things off together, live."
   />
-  <meta property="og:image" content="https://ziplist.app/og-image.png" />
+  <meta property="og:image" content="https://ziplist.app/og-card.png" />
   <meta
     property="og:image:secure_url"
-    content="https://ziplist.app/og-image.png"
+    content="https://ziplist.app/og-card.png"
   />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
@@ -88,7 +88,7 @@
     name="twitter:description"
     content="Hop in — you'll tick things off together, live."
   />
-  <meta name="twitter:image" content="https://ziplist.app/og-image.png" />
+  <meta name="twitter:image" content="https://ziplist.app/og-card.png" />
   <meta name="twitter:image:alt" content="ZipList live shared list room" />
 </svelte:head>
 

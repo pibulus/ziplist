@@ -12,10 +12,10 @@
   export let ogTitle = "";
   export let ogDescription = "";
   export let ogUrl = "";
-  export let ogImage = "https://ziplist.app/og-image.png";
-  // Describes og-image.png as it actually is — mascot-only since 2026-07-31.
+  export let ogImage = "https://ziplist.app/og-card.png";
+  // Describes og-card.png as it actually is — TalkType-formula card since 2026-08-07.
   export let ogImageAlt =
-    "ZipList's speech-bubble mascot with a small checklist for a mouth, on a warm cream background.";
+    "ZipList's speech-bubble mascot above the ZipList.app wordmark and a yellow strip reading: talk a list, tick it off.";
   export let ogType = "website";
   export let footerYear = new Date().getFullYear();
   export let appName = "ZipList";
