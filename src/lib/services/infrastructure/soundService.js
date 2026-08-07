@@ -124,10 +124,34 @@ const ZIPLIST_CUES = {
     variants: [
       [
         { frequency: 523, duration: 0.06, gain: 0.024, voice: "tap" },
-        { frequency: 659, offset: 0.07, duration: 0.06, gain: 0.024, voice: "bloom" },
-        { frequency: 784, offset: 0.14, duration: 0.07, gain: 0.024, voice: "sparkle" },
-        { frequency: 1046, offset: 0.22, duration: 0.13, gain: 0.026, voice: "sparkle" },
-        { frequency: 1568, offset: 0.31, duration: 0.18, gain: 0.014, voice: "bloom" },
+        {
+          frequency: 659,
+          offset: 0.07,
+          duration: 0.06,
+          gain: 0.024,
+          voice: "bloom",
+        },
+        {
+          frequency: 784,
+          offset: 0.14,
+          duration: 0.07,
+          gain: 0.024,
+          voice: "sparkle",
+        },
+        {
+          frequency: 1046,
+          offset: 0.22,
+          duration: 0.13,
+          gain: 0.026,
+          voice: "sparkle",
+        },
+        {
+          frequency: 1568,
+          offset: 0.31,
+          duration: 0.18,
+          gain: 0.014,
+          voice: "bloom",
+        },
       ],
     ],
   },

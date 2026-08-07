@@ -18,7 +18,7 @@ full roster, derived from live connections — never durable), and client-sent
 `avatar` + `pwd` query params; server checks password/existence/expiry, sends `init`,
 broadcasts presence. Leave = close → presence broadcast excluding the leaver.
 Every message is normalized through `liveListProtocol.js` on the **server** (before
-store/broadcast) *and* re-validated on the **client** (before applying) — good.
+store/broadcast) _and_ re-validated on the **client** (before applying) — good.
 
 Deploy: was undocumented; `npm run party:deploy` added (commit bb5f4f4). Dev: `npm run
 dev:party`. Smoke: `npm run smoke:live`.
@@ -40,16 +40,16 @@ dev:party`. Smoke: `npm run smoke:live`.
 
 Ran `partykit dev` + a two-WebSocket-client script (scratchpad `party-test.mjs`):
 
-| Test | Observed result |
-|---|---|
-| Create without secret | 403 (fail-closed) |
-| Create with secret | 200, roomId echoed |
-| Join | full-snapshot `init`, presence roster `Alpha,Beta` |
-| **Concurrent delete + stale edit** | **deleted item RESURRECTED** — B deleted `x2`, A's concurrent snapshot (still containing `x2`) landed last; stored state had `x2` back. Whole-snapshot LWW confirmed live. |
-| Malformed input fuzz (garbage JSON, wrong-typed `items`, empty ids, unknown types, binary frame, 50,000-char item text) | room survived everything; 50k text clamped to 140 chars; next valid update still flowed A→B |
-| B disconnects | A's presence roster immediately drops to `Alpha` — no ghost |
-| B reconnects | fresh `init` with current full state — **full-state resync on reconnect is real** |
-| Password room | GET no-pwd 403, wrong-pwd 403, right-pwd 200; wrong-pwd WS closed with 1008, which the client treats as terminal (no infinite reconnect loop) |
+| Test                                                                                                                    | Observed result                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create without secret                                                                                                   | 403 (fail-closed)                                                                                                                                                          |
+| Create with secret                                                                                                      | 200, roomId echoed                                                                                                                                                         |
+| Join                                                                                                                    | full-snapshot `init`, presence roster `Alpha,Beta`                                                                                                                         |
+| **Concurrent delete + stale edit**                                                                                      | **deleted item RESURRECTED** — B deleted `x2`, A's concurrent snapshot (still containing `x2`) landed last; stored state had `x2` back. Whole-snapshot LWW confirmed live. |
+| Malformed input fuzz (garbage JSON, wrong-typed `items`, empty ids, unknown types, binary frame, 50,000-char item text) | room survived everything; 50k text clamped to 140 chars; next valid update still flowed A→B                                                                                |
+| B disconnects                                                                                                           | A's presence roster immediately drops to `Alpha` — no ghost                                                                                                                |
+| B reconnects                                                                                                            | fresh `init` with current full state — **full-state resync on reconnect is real**                                                                                          |
+| Password room                                                                                                           | GET no-pwd 403, wrong-pwd 403, right-pwd 200; wrong-pwd WS closed with 1008, which the client treats as terminal (no infinite reconnect loop)                              |
 
 `npm run build`, eslint, prettier: all green after fixes.
 
