@@ -285,7 +285,14 @@ export class AudioService {
         this.analyser.fftSize = 256;
         source.connect(this.analyser);
 
-        this.startWaveformMonitoring();
+        // NOT started here — see below. The rAF loop guards on
+        // state === RECORDING and returns WITHOUT rescheduling if it isn't,
+        // and setState(RECORDING) is still an `await` away. This only
+        // survives today because wakeLockService.request() settles as a
+        // microtask (ahead of any frame); swap in anything slower and the
+        // first frame kills the waveform permanently. That is exactly how
+        // TalkType's visualizer died for three months (its await became an
+        // IndexedDB write). Start it where its precondition is actually true.
       } catch (mrError) {
         stream.getTracks().forEach((track) => track.stop());
         throw mrError;
@@ -300,6 +307,7 @@ export class AudioService {
       await wakeLockService.request();
       this.mediaRecorder.start(1000);
       this.stateManager.setState(AudioStates.RECORDING);
+      this.startWaveformMonitoring();
 
       // Update the store with mimeType
       audioState.update((current) => ({
