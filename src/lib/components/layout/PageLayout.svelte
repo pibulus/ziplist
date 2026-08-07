@@ -15,7 +15,7 @@
   export let ogImage = "https://ziplist.app/og-card.png";
   // Describes og-card.png as it actually is — TalkType-formula card since 2026-08-07.
   export let ogImageAlt =
-    "ZipList's speech-bubble mascot above the ZipList.app wordmark and a yellow strip reading: talk a list, tick it off.";
+    "ZipList's speech-bubble mascot above the ZipList.app wordmark and a yellow strip reading: talk a list, tick it off, with a pink no-signup badge.";
   export let ogType = "website";
   export let footerYear = new Date().getFullYear();
   export let appName = "ZipList";
