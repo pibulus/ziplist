@@ -9,12 +9,7 @@
   import { wireTypewriterGlobally } from "$lib/services/infrastructure/typewriterWiring";
   import { transcriptionService } from "$lib/services/transcription/transcriptionService.js";
   import { firstVisitService } from "$lib/services/first-visit";
-  import {
-    pwaService,
-    deferredInstallPrompt,
-    showPwaInstallPrompt,
-    wakeLockService,
-  } from "$lib/services/pwa";
+  import { pwaService, wakeLockService } from "$lib/services/pwa";
   import {
     isRecording,
     isTranscribing,
@@ -58,13 +53,6 @@
   // Lazy load contributor modal - only import when needed
   let ContributorModal;
   let loadingContributorModal = false;
-
-  // PWA Install Prompt component - lazy loaded
-  let PwaInstallPrompt;
-  let loadingPwaPrompt = false;
-  let PwaDeviceSetup;
-  let loadingPwaDeviceSetup = false;
-  let showPwaDeviceSetup = false;
 
   let speechModelPreloaded = false;
   let mediaRecorder = null;
@@ -676,44 +664,6 @@
     }
   }
 
-  function closePwaInstallPrompt() {
-    soundService.close();
-    pwaService.dismissPrompt();
-  }
-
-  async function maybeLoadPwaDeviceSetup() {
-    if (!browser || !pwaService.shouldShowDeviceSetup()) {
-      showPwaDeviceSetup = false;
-      return;
-    }
-
-    showPwaDeviceSetup = true;
-
-    if (PwaDeviceSetup || loadingPwaDeviceSetup) return;
-
-    loadingPwaDeviceSetup = true;
-
-    try {
-      const module = await import("./pwa/PwaDeviceSetup.svelte");
-      PwaDeviceSetup = module.default;
-    } catch (err) {
-      console.error("Error loading PWA device setup:", err);
-      showPwaDeviceSetup = false;
-    } finally {
-      loadingPwaDeviceSetup = false;
-    }
-  }
-
-  function handlePwaDeviceSetupDone() {
-    soundService.success();
-    showPwaDeviceSetup = false;
-  }
-
-  function handlePwaDeviceSetupDismissed() {
-    soundService.close();
-    showPwaDeviceSetup = false;
-  }
-
   // Lifecycle hooks
   onMount(() => {
     // Initialize lists store from localStorage
@@ -782,12 +732,10 @@
       unwireTypewriter = wireTypewriterGlobally();
       pwaService.setupEventListeners();
       void pwaService.checkIfRunningAsPwa();
-      // PwaDeviceSetup retired 2026-07-22 (same pattern as PwaInstallPrompt
-      // below): mic permission is requested on first record and the offline
-      // model downloads on demand — the auto-popup was redundant friction and
-      // unreliable in standalone mode. Re-enable by restoring this call and
-      // the {#if false} guard on its render block.
-      // maybeLoadPwaDeviceSetup();
+      // PwaDeviceSetup + PwaInstallPrompt popups retired (2026-07-22): mic
+      // permission is asked on first record, the model downloads on demand,
+      // and installs go through the family PwaInstallCard in +layout.svelte.
+      // Their loaders/render blocks were removed 2026-08-07 — git has them.
     }
 
     // Auto-open the intro on first visit. The historic root-scrollbar jump
@@ -810,25 +758,6 @@
     mediaRecorder.stop();
   }
 
-  // Reactive statement for lazy loading PWA Install Prompt
-  $: if (
-    browser &&
-    $showPwaInstallPrompt &&
-    !PwaInstallPrompt &&
-    !loadingPwaPrompt
-  ) {
-    (async () => {
-      loadingPwaPrompt = true;
-      try {
-        const module = await import("./pwa/PwaInstallPrompt.svelte");
-        PwaInstallPrompt = module.default;
-      } catch (err) {
-        console.error("Error loading PWA install prompt:", err);
-      } finally {
-        loadingPwaPrompt = false;
-      }
-    })();
-  }
 </script>
 
 <PageLayout listFirst={$listFirstMode === "true"}>
@@ -874,16 +803,6 @@
       >
         Dismiss
       </button>
-    </div>
-  {/if}
-
-  {#if false && showPwaDeviceSetup && PwaDeviceSetup && !loadingPwaDeviceSetup}
-    <div class="mb-3 px-4" transition:fade={{ duration: 180 }}>
-      <svelte:component
-        this={PwaDeviceSetup}
-        on:complete={handlePwaDeviceSetupDone}
-        on:dismiss={handlePwaDeviceSetupDismissed}
-      />
     </div>
   {/if}
 
@@ -951,15 +870,3 @@
   />
 {/if}
 
-<!-- PWA Install Prompt — retired in favor of the family PwaInstallCard
-     (chassis kernel, rendered in +layout.svelte). The old pwa service stays
-     intact; re-enable by restoring this block. -->
-{#if false && $showPwaInstallPrompt && PwaInstallPrompt && !loadingPwaPrompt}
-  <div transition:fade={{ duration: 300 }}>
-    <svelte:component
-      this={PwaInstallPrompt}
-      installPromptEvent={$deferredInstallPrompt}
-      on:closeprompt={closePwaInstallPrompt}
-    />
-  </div>
-{/if}

@@ -39,7 +39,7 @@
 
   // Quick, satisfying exit for deletes — collapse + fade in sub-200ms so the
   // list closes the gap cleanly. Reduced-motion gets a bare fast fade.
-  function itemOut(node) {
+  function itemOut() {
     if (prefersReducedMotion) {
       return { duration: 120, css: (t) => `opacity: ${t}` };
     }

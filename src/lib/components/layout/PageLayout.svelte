@@ -233,17 +233,6 @@
     opacity: 0.92;
   }
 
-  .footer-heart {
-    color: var(--footer-heart-color, var(--zl-accent-color, #ff6ac2));
-    display: inline-block;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .footer-heart {
-      animation: none;
-    }
-  }
-
   /* List-first tucks the round voice button into the bottom-right corner.
      Reserve just enough that the list's last row still clears it — the old
      11rem was sized for a full-width pill plus a docked dot row, both of
