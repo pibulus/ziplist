@@ -82,7 +82,7 @@
 
       <!-- Privacy / local-first one-liner (skeleton link set) -->
       <p class="text-xs text-gray-500 leading-relaxed">
-        Your lists live on your device, not our servers.
+        Your lists live on your device, not on a server.
       </p>
 
       <div class="flex flex-wrap items-center gap-3 pt-2">
