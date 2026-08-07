@@ -361,7 +361,7 @@
     padding: 0.85rem 1.25rem;
     border: 0;
     border-radius: 999px;
-    background: linear-gradient(90deg, #ffcc33, #ff6ac2 60%, #ff5c9f);
+    background: #ff6ac2;
     color: #fffdf5;
     font-weight: 900;
     font-size: 0.98rem;
@@ -391,8 +391,10 @@
       max(16px, env(safe-area-inset-bottom))
       max(12px, env(safe-area-inset-left));
     margin: 0;
-    width: 100vw;
-    height: 100vh;
+    /* inset stretches the dialog; 100vw included the desktop scrollbar and
+       biased the flex-center a few px right. */
+    width: auto;
+    height: auto;
     max-width: none;
     max-height: none;
     position: fixed;
@@ -414,6 +416,10 @@
   .zl-settings-card {
     position: relative;
     z-index: 1001;
+    /* Chunky's hard 12px shadow hangs right+down; these margins make the
+       flex-center split that extra mass so the card+shadow unit sits
+       optically centered instead of leaning right. 0 in soft modes. */
+    margin: 0 var(--zl-card-shadow-x, 0px) var(--zl-card-shadow-y, 0px) 0;
     width: min(92vw, 30rem);
     max-height: min(92dvh, 58rem);
     background: var(--zl-card-bg-gradient-color-start, #fff);

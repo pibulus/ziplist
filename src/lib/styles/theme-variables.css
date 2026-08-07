@@ -602,6 +602,10 @@ html.mode-neo-brutalist {
   --zl-card-border-width: 4px;
   --zl-card-border-radius: 14px;
   --zl-card-box-shadow: 12px 12px 0px 0px var(--zl-chunky-ink);
+  /* Shadow offsets split out so centered surfaces (settings modal) can
+     optically compensate for the hard shadow's right+down mass. */
+  --zl-card-shadow-x: 12px;
+  --zl-card-shadow-y: 12px;
   --zl-card-inner-border-gradient: none;
 
   /* Empty state */
