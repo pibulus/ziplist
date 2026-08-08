@@ -24,17 +24,17 @@
   <path
     d="M308 118H716C815 118 878 181 878 280V574C878 673 815 736 716 736H600L542 846C529 870 495 870 482 846L424 736H308C209 736 146 673 146 574V280C146 181 209 118 308 118Z"
     fill="url(#ziplistIconGradient)"
-    stroke="#000000"
+    stroke="#1e1714"
     stroke-width="54"
     stroke-linejoin="round"
   />
 
-  <ellipse cx="424" cy="326" rx="39" ry="60" fill="#000000" />
-  <ellipse cx="600" cy="326" rx="39" ry="60" fill="#000000" />
+  <ellipse cx="424" cy="326" rx="39" ry="60" fill="#1e1714" />
+  <ellipse cx="600" cy="326" rx="39" ry="60" fill="#1e1714" />
 
   <g
     fill="none"
-    stroke="#000000"
+    stroke="#1e1714"
     stroke-linecap="round"
     stroke-linejoin="round"
   >
