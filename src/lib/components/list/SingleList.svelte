@@ -64,6 +64,7 @@
   import { getTypingStore } from "$lib/services/realtime/typingStore";
   import { ANIMATION, PRODUCT_LIMITS } from "$lib/constants";
   import { isContributor } from "$lib";
+  import { autoFocus } from "./autoFocus.js";
   import CompletedDivider from "./CompletedDivider.svelte";
   import DraftItemRow from "./DraftItemRow.svelte";
   import LiveActivityRow from "./LiveActivityRow.svelte";
@@ -668,12 +669,6 @@
     return remoteFocus
       ? `--remote-color: ${remoteFocus.color}; --remote-glow: ${remoteFocus.color}33;`
       : "";
-  }
-
-  // Action to auto-focus an input element when it's created
-  function autoFocus(node) {
-    node.focus();
-    return {};
   }
 
   function registerItemNode(node, itemId) {
@@ -1528,6 +1523,9 @@
       draftItemText = "";
       broadcastDraftActivity({ text: "", mode: "typing" });
       draftInputNode?.focus();
+      // Each add pushes the draft row one item lower — keep it above the
+      // open keyboard instead of letting it drift under it.
+      draftInputNode?.scrollIntoView({ block: "center", behavior: "smooth" });
       return true;
     }
 

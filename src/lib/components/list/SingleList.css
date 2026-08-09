@@ -193,10 +193,17 @@
      views don't set it (colour-coding is the owner's filing system), so the
      strip falls back to invisible there. */
   box-shadow:
-    inset 0 8px 0 0 var(--list-primary, transparent),
+    inset 0 12px 0 0 var(--list-primary, transparent),
     var(--zl-card-box-shadow);
 
+  /* Top layer: the list's own colour as a soft wash over the whole card —
+     the strip says it, the wash makes the card FEEL it. Falls to
+     transparent on guest/share views like the strip. */
   background:
+    linear-gradient(
+      color-mix(in srgb, var(--list-primary, transparent) 10%, transparent),
+      color-mix(in srgb, var(--list-primary, transparent) 10%, transparent)
+    ),
     linear-gradient(
       var(--zl-card-veil, rgba(255, 255, 255, 0.3)),
       var(--zl-card-veil, rgba(255, 255, 255, 0.3))
@@ -211,6 +218,7 @@
     );
   background-size:
     100% 100%,
+    100% 100%,
     var(--zl-card-bg-gradient-size);
   animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease
     infinite;
@@ -222,7 +230,14 @@
     border-radius: 18px;
     margin-top: 0.25rem;
     margin-bottom: 0.35rem;
-    max-width: 100%;
+    /* Reserve the chunky hard shadow's width instead of letting the card
+       span the full slide — otherwise the shadow (and the card's right
+       edge) fall off the viewport and a centred card reads shoved-right.
+       Same optical trick SettingsModal uses. Non-chunky themes have no
+       --zl-card-shadow-x, so this collapses back to max-width: 100%. */
+    max-width: calc(100% - var(--zl-card-shadow-x, 0px));
+    margin-left: auto;
+    margin-right: var(--zl-card-shadow-x, 0px);
   }
 
   .zl-list-title-input {

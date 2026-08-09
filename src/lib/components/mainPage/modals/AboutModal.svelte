@@ -1,16 +1,7 @@
 <script>
   import { ModalCloseButton } from "./index.js";
   import { Mascot } from "$lib/components/ui";
-  import { isContributor } from "$lib";
   export let closeModal;
-
-  // Contributor lives here (and in Options) instead of a permanent footer
-  // spot — same "ziplist-open-contributor" hook SettingsModal and the
-  // max-lists/live-share gates already use, no new tracking added.
-  function openContributor() {
-    closeModal();
-    window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
-  }
 </script>
 
 <dialog
@@ -32,9 +23,9 @@
     </form>
 
     <div class="space-y-4">
-      <!-- pr-10 keeps the title clear of the absolute close X -->
-      <div class="flex items-center gap-3 mb-1 pr-10">
-        <!-- Mascot slot (skeleton) — the real ZipList dude, not an emoji. -->
+      <!-- pr-14 keeps the title clear of the absolute close X (40px button
+           + right-2.5 offset on touch screens). -->
+      <div class="flex items-center gap-3 mb-1 pr-14">
         <div class="about-mascot-slot shrink-0">
           <Mascot interactive={false} aura={false} />
         </div>
@@ -50,42 +41,18 @@
         class="bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 rounded-lg border border-pink-200/60 shadow-sm"
       >
         <p class="text-sm leading-relaxed text-gray-700">
-          ZipList is a quick shareable voice list thing. Talk stuff in, type
-          stuff in, tap the tiny bits into place, share a list live with
-          someone else. Tell it what you did and the boxes can tick themselves.
+          Talk stuff in, type stuff in, tap the tiny bits into place. Share a
+          list live with someone else — tell it what you did and the boxes can
+          tick themselves.
         </p>
       </div>
 
-      <div>
-        <h4 class="font-bold text-sm text-gray-700 mb-2">What it does:</h4>
-        <ul class="space-y-1.5 text-sm text-gray-600">
-          <li class="flex items-start gap-2">
-            <span class="text-teal-600 text-lg">⬩</span>
-            <span>Shopping lists, set lists, gear lists, forever lists</span>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-teal-600 text-lg">⬩</span>
-            <span>Talk stuff in, type stuff in, edit the bits</span>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-teal-600 text-lg">⬩</span>
-            <span>Tell ZipList what you did; boxes can tick themselves</span>
-          </li>
-        </ul>
-      </div>
-
-      <div
-        class="border-l-3 border-pink-300 py-1 pl-4 ml-1 my-2 italic text-gray-600"
-      >
-        "Talk. List. Tick."
-      </div>
-
-      <!-- Privacy / local-first one-liner (skeleton link set) -->
       <p class="text-xs text-gray-500 leading-relaxed">
         Your lists live on your device, not on a server.
       </p>
 
-      <div class="flex flex-wrap items-center gap-3 pt-2">
+      <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
+        <p class="text-xs text-gray-500">Made by Pablo in Melbourne 💛</p>
         <a
           href="https://ko-fi.com/madebypablo"
           target="_blank"
@@ -94,32 +61,6 @@
         >
           ☕ Coffee jar
         </a>
-        <a
-          href="https://github.com/pibulus"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="about-link text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
-        >
-          GitHub
-        </a>
-        {#if !$isContributor}
-          <button
-            type="button"
-            class="about-link about-contributor-link text-xs font-medium transition-colors"
-            on:click={openContributor}
-          >
-            Become a contributor
-          </button>
-        {/if}
-      </div>
-
-      <div class="flex justify-between items-end pt-2">
-        <div>
-          <p class="text-xs text-gray-500">Made by Pablo in Melbourne</p>
-        </div>
-        <div class="flex items-center gap-2 text-xs font-medium text-gray-600">
-          Pablo
-        </div>
       </div>
     </div>
   </div>
@@ -144,22 +85,10 @@
     margin-bottom: 0;
   }
 
-  /* Skeleton link set — ~44px tap target for thumbs. */
+  /* ~44px tap target for thumbs. */
   .about-link {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-  }
-
-  .about-contributor-link {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: var(--zl-accent-color, #ff6ac2);
-  }
-
-  .about-contributor-link:hover {
-    color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
   }
 </style>

@@ -1,5 +1,6 @@
 <script>
   import { fade, fly } from "svelte/transition";
+  import { autoFocus } from "./autoFocus.js";
 
   export let listId;
   export let draftItemText = "";
@@ -9,11 +10,6 @@
   export let onDraftKeyDown = () => {};
   export let onTyping = () => {};
   export let onCancelDraft = () => {};
-
-  function autoFocus(node) {
-    node.focus();
-    return {};
-  }
 </script>
 
 <li

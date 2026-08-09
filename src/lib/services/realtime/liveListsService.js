@@ -491,13 +491,20 @@ export async function resumeLive(listId) {
     await connectToLive(listId, roomId);
     return true;
   } catch (error) {
-    // The room is gone (expired/not found). Drop the stale live flags so the
-    // list reads as plain local rather than pretending to be shared.
+    // The room is gone (expired/not found). Your OWN list drops its stale
+    // live flags and goes back to plain local. A guest copy (live_* id,
+    // upserted when you opened someone's share link) is just a husk once its
+    // room dies — delete it, or every share link ever opened piles up as a
+    // dead clone of the owner's list in the carousel.
     if (error?.code === "room_expired" || error?.code === "room_not_found") {
-      listsStore.upsertList(
-        { ...list, liveRoomId: null, isLive: false },
-        listId,
-      );
+      if (listId.startsWith("live_")) {
+        listsStore.deleteList(listId);
+      } else {
+        listsStore.upsertList(
+          { ...list, liveRoomId: null, isLive: false },
+          listId,
+        );
+      }
       announceLiveNotice(error.message || "That live room has popped.");
     }
     return false;

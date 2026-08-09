@@ -1,5 +1,6 @@
 <script>
   import { fade } from "svelte/transition";
+  import { autoFocus } from "./autoFocus.js";
 
   export let listId;
   export let item;
@@ -18,11 +19,6 @@
   export let onReorderKeyDown = () => {};
   export let onTouchGrabStart = () => {};
   export let onDelete = () => {};
-
-  function autoFocus(node) {
-    node.focus();
-    return {};
-  }
 </script>
 
 {#if showDropIndicator}

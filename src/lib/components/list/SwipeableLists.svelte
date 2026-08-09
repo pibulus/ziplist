@@ -341,6 +341,7 @@
         id="list-slide-{list.id}"
         class="list-slide"
         class:active={list.id === activeListId}
+        class:parked={Math.abs(sx) >= 100}
         inert={list.id !== activeListId}
         aria-hidden={list.id !== activeListId}
         style="--list-primary: {list.primaryColor}; --list-accent: {list.accentColor}; --list-glow: {list.glowColor}; --sx: {sx}%; --away: {Math.min(
@@ -416,6 +417,21 @@
 
   .list-slide.active {
     pointer-events: auto;
+  }
+
+  /* Perf: every mounted card runs an infinite animated background gradient,
+     which repaints the full card every frame. Only the card you're looking
+     at earns that — the rest freeze mid-shift. */
+  .list-slide:not(.active) :global(.zl-card) {
+    animation-play-state: paused;
+  }
+
+  /* Perf: a slide parked at |sx| >= 100 is fully off-screen (translate one
+     full width + the 0.95 scale pulls its near edge past the viewport).
+     visibility: hidden lets the compositor skip painting it entirely, so a
+     spin only ever paints the two-or-three slides actually streaming past. */
+  .list-slide.parked {
+    visibility: hidden;
   }
 
   /* The card's ambient gradient animates background-position, which the
