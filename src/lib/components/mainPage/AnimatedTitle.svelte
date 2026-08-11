@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte";
   import { AppSuffix, Mascot } from "$lib/components/ui";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
-  import { isRecording } from "$lib/services/infrastructure/stores.js";
+  import { isRecording, isTranscribing } from "$lib/services/infrastructure/stores.js";
 
   const dispatch = createEventDispatcher();
 
@@ -49,10 +49,13 @@
        Named label + live state so screen readers can tell it apart from the
        record button (the old static "Start recording" never flipped). -->
   <Mascot
-    ariaLabel={$isRecording
-      ? "ZipList mascot — stop recording"
-      : "ZipList mascot — start recording"}
+    ariaLabel={$isTranscribing
+      ? "ZipList mascot — working on your list"
+      : $isRecording
+        ? "ZipList mascot — stop recording"
+        : "ZipList mascot — start recording"}
     active={$isRecording}
+    thinking={$isTranscribing}
     on:click={handleDudeClick}
   />
 

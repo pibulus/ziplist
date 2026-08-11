@@ -48,6 +48,9 @@
   export let aura = true;
   /** Listening/recording look — stronger, faster aura + a warm glow. */
   export let active = false;
+  /** Working-on-it look — quicker sway, dimmer aura. Distinct from `active`
+      on purpose: two states the user can tell apart without reading anything. */
+  export let thinking = false;
 
   // Tap squish — the dude acknowledges every poke with a squash-and-stretch
   // before whatever the click actually does (usually: start recording).
@@ -83,6 +86,7 @@
   class:is-interactive={interactive}
   class:has-aura={aura && interactive}
   class:is-active={active}
+  class:is-thinking={thinking}
   aria-label={interactive ? ariaLabel : undefined}
   aria-hidden={interactive ? undefined : "true"}
   on:click={handleClick}
@@ -293,6 +297,67 @@
     animation-delay: 0s;
   }
 
+  /* Two states, two tempos — same idea as TalkType's ghost, so the family
+     signals "listening" and "working" the same way. These ride on .mascot-svg,
+     not .mascot-art, because the wrapper already owns float + tap-squish and a
+     third animation there would clobber them. scale/rotate are individual
+     properties, so they compose with the wrapper's transform instead of
+     replacing it. */
+  .mascot-svg,
+  .mascot-base {
+    transform-origin: center center;
+  }
+
+  .mascot.is-active .mascot-svg,
+  .mascot.is-active .mascot-base {
+    animation: mascot-breathe 2.6s ease-in-out infinite;
+  }
+
+  .mascot.is-thinking .mascot-svg,
+  .mascot.is-thinking .mascot-base {
+    animation: mascot-think-sway 1.25s ease-in-out infinite;
+  }
+
+  .mascot.is-thinking.has-aura::after {
+    animation: mascot-aura 1.05s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  /* Slow, volume-preserving breath: wide-and-short, then narrow-and-tall. */
+  @keyframes mascot-breathe {
+    0%,
+    100% {
+      scale: 1 1;
+    }
+    32% {
+      scale: 1.04 0.968;
+    }
+    66% {
+      scale: 0.978 1.03;
+    }
+  }
+
+  /* Quicker, with a lean — reads as "hang on, working on it". */
+  @keyframes mascot-think-sway {
+    0%,
+    100% {
+      rotate: 0deg;
+      scale: 1 1;
+    }
+    25% {
+      rotate: -2.2deg;
+      scale: 0.985 1.022;
+    }
+    50% {
+      rotate: 0deg;
+      scale: 1.022 0.982;
+    }
+    75% {
+      rotate: 2.2deg;
+      scale: 0.985 1.022;
+    }
+  }
+
   .mascot.is-interactive:hover .mascot-art {
     filter: drop-shadow(0 0 15px var(--mascot-hover-glow));
   }
@@ -385,6 +450,8 @@
     .mascot-art.tapped,
     .mascot-eyes,
     .mascot-eyes-group,
+    .mascot-svg,
+    .mascot-base,
     .mascot.has-aura::after {
       animation: none;
     }

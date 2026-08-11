@@ -1724,11 +1724,11 @@
               class="zl-live-button"
               disabled={isMakingLive}
               on:click={handleMakeLive}
-              data-tip={isMakingLive ? "Starting live list" : "Go live together"}
+              data-tip={isMakingLive ? "Starting…" : "Edit it together, live"}
               aria-busy={isMakingLive}
               aria-label={isMakingLive
                 ? "Starting live list"
-                : `Make Live. Enable real-time collaboration for ${
+                : `Edit together live. Anyone with the link can add and tick items on ${
                     list.name || "this list"
                   }`}
             >
@@ -1757,10 +1757,10 @@
           type="button"
           class="zl-share-button"
           on:click={handleShareList}
-          data-tip={isLive ? "Share the live link" : "Share this list"}
+          data-tip={isLive ? "Copy the live link" : "Send a copy"}
           aria-label={isLive
-            ? `Share live link for ${list.name || "this list"}`
-            : `Share ${list.name || "this list"}`}
+            ? `Copy the live link for ${list.name || "this list"}`
+            : `Send a copy of ${list.name || "this list"}. The link holds the list as it is now, and does not stay in sync.`}
         >
           <svg
             class="zl-header-icon"
