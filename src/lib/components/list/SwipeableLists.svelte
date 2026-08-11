@@ -406,7 +406,13 @@
     grid-area: 1 / 1;
     width: 100%;
     max-width: 100%;
-    padding: 0 4px;
+    /* The chunky theme's hard shadow is 14px of solid ink on the RIGHT only,
+       so a perfectly centred card reads shoved-left — the card is centred but
+       its visual mass isn't. Reserving the shadow's width here narrows the
+       centring box, which moves the card left by half the offset and puts
+       card+shadow dead centre. Non-chunky themes define no --zl-card-shadow-x,
+       so this collapses to the original 4px and nothing moves. */
+    padding: 0 calc(4px + var(--zl-card-shadow-x, 0px)) 0 4px;
     box-sizing: border-box;
     opacity: calc(1 - 0.6 * var(--away, 1));
     transform: translateX(var(--sx, 0%))

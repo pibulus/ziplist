@@ -230,14 +230,11 @@
     border-radius: 18px;
     margin-top: 0.25rem;
     margin-bottom: 0.35rem;
-    /* Reserve the chunky hard shadow's width instead of letting the card
-       span the full slide — otherwise the shadow (and the card's right
-       edge) fall off the viewport and a centred card reads shoved-right.
-       Same optical trick SettingsModal uses. Non-chunky themes have no
-       --zl-card-shadow-x, so this collapses back to max-width: 100%. */
-    max-width: calc(100% - var(--zl-card-shadow-x, 0px));
+    /* Shadow compensation moved to .list-slide so it applies at every width,
+       not just here — desktop had none, which is where the card read offset.
+       Leaving it in both places would double-compensate. */
     margin-left: auto;
-    margin-right: var(--zl-card-shadow-x, 0px);
+    margin-right: auto;
   }
 
   .zl-list-title-input {
@@ -1977,9 +1974,12 @@ body.zl-touch-dragging {
 [data-tip]::after {
   content: attr(data-tip);
   position: absolute;
-  bottom: calc(100% + 7px);
+  /* BELOW, not above. Every data-tip in here sits in the card header, and
+     .zl-card is overflow:clip — a tip drawn upward gets sliced off at the card
+     boundary no matter how high its z-index. Downward keeps it inside. */
+  top: calc(100% + 7px);
   left: 50%;
-  transform: translateX(-50%) translateY(3px);
+  transform: translateX(-50%) translateY(-3px);
   background: #2b2118;
   color: #fff6e6;
   font-family: "Space Mono", monospace;

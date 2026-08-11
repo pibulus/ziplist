@@ -1,25 +1,9 @@
 <script>
-  import { createEventDispatcher, onDestroy } from "svelte";
-  import { soundService } from "$lib/services/infrastructure/soundService";
+  import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
   const footerButtonClass =
     "footer-nav-button btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-colors duration-150 focus-visible:ring-0 sm:px-3 sm:text-base";
-  let shareStatus = "";
-  let shareStatusTimer = null;
-
-  onDestroy(() => {
-    if (shareStatusTimer) clearTimeout(shareStatusTimer);
-  });
-
-  function setShareStatus(message) {
-    if (shareStatusTimer) clearTimeout(shareStatusTimer);
-    shareStatus = message;
-    shareStatusTimer = setTimeout(() => {
-      shareStatus = "";
-      shareStatusTimer = null;
-    }, 2500);
-  }
 
   function showAbout() {
     dispatch("showAbout");
@@ -29,43 +13,17 @@
     dispatch("showSettings");
   }
 
+  /* Parked with their footer buttons — Extension and Share are hidden for now.
+     The extension isn't ready to be advertised and the row reads calmer at two.
+     Restoring means uncommenting this and the two <button>s below, plus the
+     onDestroy + soundService imports these used.
+
   function showExtension() {
     dispatch("showExtension");
   }
 
-  async function shareApp() {
-    soundService.select();
-
-    const url =
-      typeof window !== "undefined"
-        ? window.location.href
-        : "https://ziplist.app";
-    const shareData = {
-      title: "ZipList",
-      text: "Make a checklist by talking. Quick, warm, and simple.",
-      url,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        setShareStatus("Shared ZipList");
-        soundService.copySuccess({ force: true });
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareData.url);
-        setShareStatus("ZipList link copied");
-        soundService.copySuccess({ force: true });
-      } else {
-        setShareStatus("Share unavailable");
-        soundService.locked({ force: true });
-      }
-    } catch (err) {
-      if (err?.name === "AbortError") return;
-      setShareStatus("Share needs one more try");
-      soundService.error({ force: true });
-      console.error("Error sharing:", err);
-    }
-  }
+  async function shareApp() { ... see git history for the full body ... }
+  */
 </script>
 
 <nav
@@ -88,24 +46,8 @@
   >
     Options
   </button>
-  <button
-    type="button"
-    class={footerButtonClass}
-    on:click={showExtension}
-    aria-label="Open Chrome Extension info"
-  >
-    <span class="hidden sm:inline">Extension</span>
-    <span class="sm:hidden">Ext</span>
-  </button>
-  <button
-    type="button"
-    class={footerButtonClass}
-    on:click={shareApp}
-    aria-label="Share ZipList"
-  >
-    Share
-  </button>
-  <span class="sr-only" role="status" aria-live="polite">{shareStatus}</span>
+  <!-- Extension and Share parked, same as TalkType — the extension isn't ready
+       to be advertised and the row reads calmer at two. -->
 </nav>
 
 <style>

@@ -201,7 +201,7 @@
         class="zl-settings-section zl-vibe-section"
         aria-labelledby="settings_vibe_title"
       >
-        <h4 id="settings_vibe_title" class="zl-section-label">Vibe</h4>
+        <h4 id="settings_vibe_title" class="sr-only">Vibe</h4>
 
         <div class="zl-vibe-grid">
           {#each vibeOptions as vibe}
@@ -244,15 +244,15 @@
       <section class="zl-settings-section" aria-label="List display">
         <div class="zl-setting-row">
           <div class="zl-setting-info">
-            <span class="zl-setting-name">List First</span>
-            <p class="zl-setting-desc">Hide mascot &amp; title</p>
+            <span class="zl-setting-name">Straight to the list</span>
+            <p class="zl-setting-desc">Skip the mascot on open</p>
           </div>
           <label class="zl-toggle">
             <input
               type="checkbox"
               checked={listFirstModeValue}
               on:change={toggleListFirstMode}
-              aria-label="List First mode"
+              aria-label="Open straight to the list"
             />
             <span class="zl-toggle-slider"></span>
           </label>
@@ -493,18 +493,6 @@
 
   /* The eyebrow IS the header line now: label left, floating X right.
      min-height keeps the tiles clear of the X's 44px tap circle. */
-  .zl-section-label {
-    display: flex;
-    align-items: center;
-    min-height: 36px;
-    font-size: 0.72rem;
-    font-weight: 900;
-    line-height: 1;
-    text-transform: uppercase;
-    color: var(--zl-text-color-disabled, #999);
-    margin-bottom: 0.5rem;
-    letter-spacing: 0.05em;
-  }
 
   .zl-setting-row {
     display: flex;
@@ -849,9 +837,6 @@
 
     /* Card padding is tighter here, so the eyebrow line needs the full
        44px to keep tiles clear of the X. */
-    .zl-section-label {
-      min-height: 44px;
-    }
 
     /* Canonical 4-up holds on mobile; tighten padding so tiles fit. */
     .zl-vibe-grid {

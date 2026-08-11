@@ -80,7 +80,7 @@
 
       <button
         type="button"
-        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-gradient-to-r from-[#ffcc33] to-[#ff6ac2] text-slate-950 shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
+        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-[#ff6ac2] text-slate-950 shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
         on:click={handleActionButton}
       >
         Zip it up

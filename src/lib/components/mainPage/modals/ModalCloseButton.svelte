@@ -51,6 +51,9 @@
   /* Family X: small, tucked into the corner, squishy on press.
      Fingers get a bigger target via the coarse-pointer bump below. */
   .modal-close-btn {
+    /* Same tuck as TalkType's X so the two apps close the same way. */
+    top: 0.35rem;
+    right: 0.35rem;
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     user-select: none;
@@ -68,7 +71,7 @@
   }
 
   .modal-close-btn:active {
-    transform: scale(0.86);
+    transform: scale(0.82);
   }
 
   .modal-close-btn:focus-visible {
