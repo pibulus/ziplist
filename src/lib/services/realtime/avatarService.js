@@ -53,32 +53,31 @@ const ANIMALS = [
 ];
 
 const STORAGE_KEY = "ziplist_user_avatar";
-// Ten faces, and the number that decides them is CONTRAST, not taste.
+// Six faces. Contrast decides the shade; SPACING decides how many.
 //
 // DiceBear "thumbs" draws white eyes and a white mouth on an opaque blob, so
-// the blob has to be dark enough for white to read. Every colour here is solved
-// to sit at 3.4:1 against white — bright enough to stay cute, dark enough that
-// the face has a face.
+// each colour is solved to sit at ~3.4:1 against white — bright enough to stay
+// cute, dark enough to have a face.
 //
-// The 45°-105° band (yellow through olive) is deliberately absent. Green is
-// perceptually bright, so darkening it far enough for white features turns it
-// into forest floor. What's left is the vivid half of the wheel, which happens
-// to be the half that looks like ZipList anyway.
+// It started at ten and looked shouty. Three warm reds (rose, coral, hot pink)
+// within 40° of each other, and two blues 18° apart, is a lot of near-misses
+// competing in one row of dots. Cut rose, coral, teal and magenta; nothing is
+// closer than 24° now and a room reads calm.
 //
-// This is ALSO the CSS background behind the image: the blob doesn't fill its
-// circle, so a different background would show as a crescent at the edge. One
-// colour for both keeps each dot reading as a single solid thing.
+// The 45°-105° band (yellow through olive) is absent on purpose: green is
+// perceptually bright, so darkening it enough for white features turns it to
+// forest floor.
+//
+// This is ALSO the CSS background behind the image — the blob doesn't fill its
+// circle, so a different background shows as a crescent at the rim. One colour
+// for both keeps each dot reading as a single solid thing.
 const AVATAR_COLORS = [
   "#e6579a", // hot pink
-  "#e75d6f", // rose
-  "#e36444", // coral
   "#d2721f", // tangerine
   "#179d82", // jade
-  "#1999a8", // teal
   "#2191dc", // ocean
   "#6c85e9", // cornflower
   "#a970ea", // violet
-  "#e343e3", // magenta
 ];
 
 /**

@@ -21,7 +21,7 @@ const hexes = [
   ...block.slice(0, block.indexOf("];")).matchAll(/#([0-9a-f]{6})/gi),
 ].map((m) => `#${m[1]}`);
 
-assert.ok(hexes.length >= 8, `expected a decent spread, got ${hexes.length}`);
+assert.ok(hexes.length >= 5, `expected a decent spread, got ${hexes.length}`);
 
 function contrastVsWhite(hex) {
   const ch = [1, 3, 5].map((i) => {
@@ -75,5 +75,5 @@ for (const h of hexes) {
 
 const worst = Math.min(...hexes.map(contrastVsWhite));
 console.log(
-  `✓ avatar palette: ${hexes.length} faces, worst white contrast ${worst.toFixed(2)}:1, all >= 15° apart`,
+  `✓ avatar palette: ${hexes.length} faces, worst white contrast ${worst.toFixed(2)}:1, all >= 20° apart`,
 );
