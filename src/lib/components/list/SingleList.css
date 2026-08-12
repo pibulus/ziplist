@@ -852,11 +852,16 @@
   padding: 0.85rem;
 
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto auto;
+  /* Three columns now: checkbox | text | side column. The grab handle and the
+     move/delete buttons used to sit side by side in the middle of the row;
+     they're stacked top and bottom of the side column instead. That needs real
+     height — 72px minus 1.7rem of padding left ~45px, and two 44px touch
+     targets do not fit in 45px. Hence the taller min-height. */
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.65rem;
 
-  min-height: 72px;
+  min-height: 104px;
   height: auto;
   max-height: none;
 
@@ -1595,7 +1600,7 @@
   min-height: 44px;
   justify-content: center;
   align-items: center;
-  align-self: center;
+  align-self: flex-start;
   cursor: grab;
   position: relative;
   touch-action: pan-y;
@@ -1647,7 +1652,18 @@
   align-items: center;
   display: flex;
   flex-shrink: 0;
-  justify-content: center;
+  justify-content: flex-end;
+}
+
+/* Grab rides the top-right corner, delete/move the bottom-right — a diagonal
+   instead of three controls crowded into one horizontal cluster. */
+.zl-item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  align-self: stretch;
+  gap: 0.25rem;
 }
 
 .zl-item-delete-button {

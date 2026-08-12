@@ -80,47 +80,49 @@
   {/if}
 </div>
 
-{#if !item.checked && !isEditing && activeItemsCount > 1}
-  <button
-    type="button"
-    class="grab-indicator"
-    class:touch-active={isTouchActive}
-    data-swipe-ignore="true"
-    aria-label={`Reorder ${item.text}`}
-    title="Press and hold to reorder"
-    on:click|stopPropagation={() => onReorderClick(item.id)}
-    on:keydown={(event) => onReorderKeyDown(event, item.id)}
-    on:touchstart={(event) => onTouchGrabStart(event, item.id)}
-  >
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-{/if}
-
-<div class="zl-item-actions">
-  {#if moveTargets.length}
+<div class="zl-item-side">
+  {#if !item.checked && !isEditing && activeItemsCount > 1}
     <button
       type="button"
-      class="zl-item-move-button"
-      class:is-open={isMoving}
+      class="grab-indicator"
+      class:touch-active={isTouchActive}
       data-swipe-ignore="true"
-      on:click|stopPropagation={() => onRequestMove(item.id)}
-      aria-expanded={isMoving}
-      aria-label={`Send ${item.text} to another list`}
+      aria-label={`Reorder ${item.text}`}
+      title="Press and hold to reorder"
+      on:click|stopPropagation={() => onReorderClick(item.id)}
+      on:keydown={(event) => onReorderKeyDown(event, item.id)}
+      on:touchstart={(event) => onTouchGrabStart(event, item.id)}
     >
-      <span aria-hidden="true">⇢</span>
+      <span></span>
+      <span></span>
+      <span></span>
     </button>
   {/if}
-  <button
-    type="button"
-    class="zl-item-delete-button"
-    data-swipe-ignore="true"
-    on:click|stopPropagation={() => onDelete(item.id)}
-    aria-label={`Delete ${item.text}`}
-  >
-    <span aria-hidden="true">×</span>
-  </button>
+  
+  <div class="zl-item-actions">
+    {#if moveTargets.length}
+      <button
+        type="button"
+        class="zl-item-move-button"
+        class:is-open={isMoving}
+        data-swipe-ignore="true"
+        on:click|stopPropagation={() => onRequestMove(item.id)}
+        aria-expanded={isMoving}
+        aria-label={`Send ${item.text} to another list`}
+      >
+        <span aria-hidden="true">⇢</span>
+      </button>
+    {/if}
+    <button
+      type="button"
+      class="zl-item-delete-button"
+      data-swipe-ignore="true"
+      on:click|stopPropagation={() => onDelete(item.id)}
+      aria-label={`Delete ${item.text}`}
+    >
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
 </div>
 
 <!-- Inline, not a popover. .zl-card is overflow:clip, so anything floating out
