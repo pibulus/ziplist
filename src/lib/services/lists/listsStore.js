@@ -569,12 +569,22 @@ function createListsStore() {
             const existingTexts = new Set(
               list.items.map((item) => getItemDedupeKey(item.text)),
             );
-            // Map text strings to item objects
-            const dedupedTexts = items
-              .map((text) => normalizeItemText(text))
-              .filter((text) => text.length > 0)
-              .filter((text) => {
-                const key = getItemDedupeKey(text);
+            // Accepts plain strings (speech path) or {text, checked} objects
+            // (pasted text, which can carry ticked items). Hardcoding
+            // checked:false meant a copy-then-paste round trip silently lost
+            // everything the user had already ticked off.
+            const dedupedEntries = items
+              .map((entry) =>
+                typeof entry === "string"
+                  ? { text: normalizeItemText(entry), checked: false }
+                  : {
+                      text: normalizeItemText(entry?.text),
+                      checked: Boolean(entry?.checked),
+                    },
+              )
+              .filter((entry) => entry.text.length > 0)
+              .filter((entry) => {
+                const key = getItemDedupeKey(entry.text);
                 if (existingTexts.has(key)) {
                   return false;
                 }
@@ -583,10 +593,10 @@ function createListsStore() {
               });
 
             const stamp = Date.now();
-            const newItems = dedupedTexts.map((text, index) => ({
+            const newItems = dedupedEntries.map((entry, index) => ({
               id: crypto.randomUUID(),
-              text,
-              checked: false,
+              text: entry.text,
+              checked: entry.checked,
               order: list.items.length + index, // Add order field to maintain sort order
               addedAt: stamp + index, // entry-date sort key (index keeps batch order)
             }));

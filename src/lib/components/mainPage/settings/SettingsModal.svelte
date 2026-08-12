@@ -14,6 +14,10 @@
   import ThemeMascot from "./ThemeMascot.svelte";
   import { listsService } from "$lib/services/lists/listsService";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
+  import {
+    listToText,
+    splitPastedList,
+  } from "$lib/services/lists/listTextFormat.js";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -98,6 +102,53 @@
         detail: { setting: "chunkyMode", value: chunkyModeValue },
       }),
     );
+  }
+
+  // ── List as text ───────────────────────────────────────────────────────
+  // Appends into the ACTIVE list rather than making a new one: free tier caps
+  // lists at three, and an import that can fail on a limit is a worse feature
+  // than one that always works.
+  let pasteText = "";
+  let textStatus = "";
+
+  async function copyListAsText() {
+    const activeList = listsService.getActiveList();
+    if (!activeList) {
+      textStatus = "Open a list first.";
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(listToText(activeList));
+      textStatus = `Copied ${activeList.name || "the list"} as text.`;
+      soundService.copySuccess({ force: true });
+    } catch {
+      textStatus = "Copy did not take this time.";
+    }
+  }
+
+  function pasteItemsIn() {
+    const activeList = listsService.getActiveList();
+    if (!activeList) {
+      textStatus = "Open a list first.";
+      return;
+    }
+    const { items } = splitPastedList(pasteText);
+    if (!items.length) {
+      textStatus = "Nothing in there to add.";
+      return;
+    }
+    // One batched update, and it keeps the ticks: paste back what you copied
+    // and the done ones are still done.
+    const result = listsService.addItems(items, activeList.id);
+    const added = result?.addedCount ?? 0;
+    pasteText = "";
+    textStatus =
+      added === 0
+        ? "Those were all here already."
+        : added === items.length
+          ? `Added ${added} ${added === 1 ? "thing" : "things"}.`
+          : `Added ${added} of ${items.length} — the rest were already there.`;
+    soundService.copySuccess({ force: true });
   }
 
   // ── Device sync ────────────────────────────────────────────────────────
@@ -357,6 +408,46 @@
             />
           </div>
         </div>
+      </section>
+
+      <!-- A list as plain text — pastes into Notes, Messages, anywhere. -->
+      <section class="zl-settings-section" aria-label="Copy or paste a list as text">
+        <div class="zl-setting-row zl-sync-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Copy this list as text</span>
+            <p class="zl-setting-desc">Paste it anywhere</p>
+          </div>
+          <button type="button" class="zl-sync-action" on:click={copyListAsText}>
+            Copy
+          </button>
+        </div>
+
+        <div class="zl-setting-row zl-sync-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Paste things in</span>
+            <p class="zl-setting-desc">One per line, bullets welcome</p>
+          </div>
+          <div class="zl-sync-receive">
+            <textarea
+              class="zl-sync-input zl-paste-input"
+              bind:value={pasteText}
+              rows="1"
+              placeholder="- milk&#10;- bread"
+              aria-label="Paste a list, one item per line"
+            ></textarea>
+            <button
+              type="button"
+              class="zl-sync-copy"
+              disabled={!pasteText.trim()}
+              on:click={pasteItemsIn}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+        {#if textStatus}
+          <p class="zl-sync-hint" role="status">{textStatus}</p>
+        {/if}
       </section>
 
       <!-- Carry a list to another device. No account, no login: four words
@@ -651,6 +742,13 @@
     background: rgba(30, 23, 20, 0.04);
     color: #1e1714;
     overflow-wrap: anywhere;
+  }
+
+  .zl-paste-input {
+    resize: vertical;
+    min-height: 2.4rem;
+    max-height: 8rem;
+    line-height: 1.35;
   }
 
   .zl-sync-hint {

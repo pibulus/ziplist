@@ -235,6 +235,14 @@ export class ListsService {
   }
 
   /**
+   * Add several items at once. Entries may be plain strings or
+   * {text, checked} objects — pasted lists carry ticked items.
+   */
+  addItems(items, listId = null) {
+    return listsStore.addItems(items, listId);
+  }
+
+  /**
    * Toggle the checked state of an item
    * @param {number|string} itemId - ID of the item to toggle
    * @param {string} [listId] - Optional list ID

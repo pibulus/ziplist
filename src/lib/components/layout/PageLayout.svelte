@@ -96,10 +96,14 @@
           {appName}
         </span>
         <span class="footer-dot mx-2">•</span>
+        <!-- "Made with ❤️" alone is a sentence fragment — it asks for an ending
+             that isn't there, which is why the truncated mobile version read as
+             abrupt. Mobile drops the lead-in and the "in" instead, landing on
+             "❤️ Melbourne": short, complete, still warm. -->
         <span class="footer-meta text-sm font-medium">
-          Made with
+          <span class="footer-lead">Made with</span>
           <FooterCharm charms={['❤️']} rare={['🍒', '⚡']} />
-          <span class="footer-place">in Melbourne</span>
+          <span class="footer-place"><span class="footer-in">in&nbsp;</span>Melbourne</span>
         </span>
       </div>
       <div class="flex shrink-0 items-center">
@@ -210,7 +214,8 @@
     /* 390px cannot hold the full attribution AND three nav words — they ran
        into each other. Keep the charm (that's the personality) and shed the
        rest; the nav is the load-bearing half. */
-    .copyright .footer-place,
+    .copyright .footer-lead,
+    .copyright .footer-in,
     .copyright .footer-copy,
     .copyright .footer-dot {
       display: none;
