@@ -19,6 +19,11 @@
   export let onReorderKeyDown = () => {};
   export let onTouchGrabStart = () => {};
   export let onDelete = () => {};
+  /** Other lists this item can be sent to. Empty = only one list exists. */
+  export let moveTargets = [];
+  export let isMoving = false;
+  export let onRequestMove = () => {};
+  export let onMoveTo = () => {};
 </script>
 
 {#if showDropIndicator}
@@ -94,6 +99,19 @@
 {/if}
 
 <div class="zl-item-actions">
+  {#if moveTargets.length}
+    <button
+      type="button"
+      class="zl-item-move-button"
+      class:is-open={isMoving}
+      data-swipe-ignore="true"
+      on:click|stopPropagation={() => onRequestMove(item.id)}
+      aria-expanded={isMoving}
+      aria-label={`Send ${item.text} to another list`}
+    >
+      <span aria-hidden="true">⇢</span>
+    </button>
+  {/if}
   <button
     type="button"
     class="zl-item-delete-button"
@@ -104,3 +122,22 @@
     <span aria-hidden="true">×</span>
   </button>
 </div>
+
+<!-- Inline, not a popover. .zl-card is overflow:clip, so anything floating out
+     of the row gets sliced — the same trap the header tooltips were in. -->
+{#if isMoving && moveTargets.length}
+  <div class="zl-item-move-tray" transition:fade={{ duration: 120 }}>
+    <span class="zl-item-move-label">Send to</span>
+    {#each moveTargets as target (target.id)}
+      <button
+        type="button"
+        class="zl-item-move-target"
+        data-swipe-ignore="true"
+        style={target.primary ? `--target-colour: ${target.primary}` : ""}
+        on:click|stopPropagation={() => onMoveTo(item.id, target.id)}
+      >
+        {target.name}
+      </button>
+    {/each}
+  </div>
+{/if}

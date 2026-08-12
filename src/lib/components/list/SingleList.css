@@ -2050,3 +2050,100 @@ body.zl-touch-dragging {
     transform: translate(var(--dx, 0px), 300px) rotate(var(--rot, 360deg));
   }
 }
+
+/* Sort direction is legible at a glance: the glyph flips when the next press
+   will sort newest-first. */
+.zl-sort-button.is-reversed .zl-header-icon {
+  transform: scaleY(-1);
+}
+
+.zl-sort-button .zl-header-icon {
+  transition: transform 0.2s ease;
+}
+
+/* ── Send an item to another list ───────────────────────────────────────
+   The tray is INLINE under the row, never a popover: .zl-card is
+   overflow:clip and anything floating out of the row gets sliced. */
+.zl-item-move-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--zl-item-text-color, #1e1714);
+  opacity: 0.4;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-item-move-button:hover,
+.zl-item-move-button:focus-visible {
+  opacity: 1;
+  background: rgba(30, 23, 20, 0.07);
+}
+
+.zl-item-move-button:active {
+  transform: scale(0.86);
+}
+
+.zl-item-move-button.is-open {
+  opacity: 1;
+  background: rgba(30, 23, 20, 0.1);
+}
+
+.zl-item-move-tray {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.15rem 0.15rem;
+}
+
+.zl-item-move-label {
+  font-family: "Space Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+
+.zl-item-move-target {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.34rem 0.7rem;
+  border-radius: 999px;
+  border: 2px solid var(--target-colour, rgba(30, 23, 20, 0.25));
+  background: var(--zl-surface-warm, #fffdf5);
+  color: #1e1714;
+  cursor: pointer;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease;
+}
+
+.zl-item-move-target:hover,
+.zl-item-move-target:focus-visible {
+  background: color-mix(in srgb, var(--target-colour, #1e1714) 14%, #fffdf5);
+}
+
+.zl-item-move-target:active {
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-item-move-button,
+  .zl-item-move-target {
+    transition: none;
+  }
+}

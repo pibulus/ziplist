@@ -1231,6 +1231,43 @@
     showListStatus("Shuffled. Fate decides.", true, 2200);
   }
 
+  // Sort is a toggle, not a one-way trip: press once for oldest-first, again
+  // for newest-first. The tooltip advertises what the NEXT press does.
+  let sortNewestFirst = false;
+
+  // ── Send an item to another list ───────────────────────────────────────
+  // listsStore.moveItem has been fully implemented (dedupe guard, insert
+  // above the checked block, reindex both sides) and completely unreachable —
+  // nothing ever called it. This is the UI it was waiting for.
+  let movingItemId = null;
+
+  $: moveTargets = ($listsStore?.lists ?? [])
+    .filter((candidate) => candidate.id !== list.id)
+    .map((candidate) => ({
+      id: candidate.id,
+      name: candidate.name || "Untitled list",
+      primary: candidate.primaryColor || candidate.color || "",
+    }));
+
+  function requestMove(itemId) {
+    movingItemId = movingItemId === itemId ? null : itemId;
+    if (movingItemId) soundService.select();
+  }
+
+  function moveItemToList(itemId, targetListId) {
+    const result = listsService.moveItem(itemId, list.id, targetListId);
+    movingItemId = null;
+
+    if (result?.success) {
+      soundService.copySuccess({ force: true });
+      hapticService.impact("light");
+      showListStatus(result.message || "Moved.", true, 2200);
+    } else {
+      soundService.locked();
+      showListStatus(result?.message || "Could not move that item.", false, 2600);
+    }
+  }
+
   function sortItemsByAdded() {
     const active = list.items.filter((i) => !i.checked);
     if (active.length < 2) return;
@@ -1246,11 +1283,17 @@
           a.index - b.index,
       )
       .map((entry) => entry.item);
+    if (sortNewestFirst) sorted.reverse();
     const completed = list.items.filter((i) => i.checked);
     listsService.reorderItems([...sorted, ...completed], list.id);
     soundService.select();
     hapticService.impact("light");
-    showListStatus("Back in the order you added them.", true, 2200);
+    showListStatus(
+      sortNewestFirst ? "Newest first." : "Back in the order you added them.",
+      true,
+      2200,
+    );
+    sortNewestFirst = !sortNewestFirst;
   }
 
   // ── Full-clear celebration (lists with 5+ items only) ──────────────────
@@ -1691,9 +1734,12 @@
           <button
             type="button"
             class="zl-sort-button"
+            class:is-reversed={sortNewestFirst}
             on:click={sortItemsByAdded}
-            data-tip="Sort by when added"
-            aria-label={`Sort ${list.name || "this list"} by when items were added`}
+            data-tip={sortNewestFirst ? "Newest first" : "Oldest first"}
+            aria-label={`Sort ${list.name || "this list"} ${
+              sortNewestFirst ? "newest first" : "oldest first"
+            }`}
           >
             <svg
               class="zl-header-icon"
@@ -1879,6 +1925,10 @@
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
+                {moveTargets}
+                isMoving={movingItemId === item.id}
+                onRequestMove={requestMove}
+                onMoveTo={moveItemToList}
               />
             </li>
           {/each}
@@ -1979,6 +2029,10 @@
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
+                {moveTargets}
+                isMoving={movingItemId === item.id}
+                onRequestMove={requestMove}
+                onMoveTo={moveItemToList}
               />
             </li>
           {/each}
