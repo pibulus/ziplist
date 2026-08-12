@@ -1481,6 +1481,11 @@
     }
   }
 
+  // Tell the room which line you're in, so two people don't quietly overwrite
+  // each other. The whole pipeline for this already existed — sender, protocol,
+  // worker relay, receiving store, even a focus-by-item Map in this component.
+  // Nothing had ever called it.
+
   function startEditingItem(item) {
     if (item.checked) return;
     clearDraftActivity();
@@ -2049,6 +2054,7 @@
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
+                remoteFocus={remoteFocusByItem.get(item.id) || null}
                 {moveTargets}
                 isMoving={movingItemId === item.id}
                 onRequestMove={requestMove}
@@ -2153,6 +2159,7 @@
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
+                remoteFocus={remoteFocusByItem.get(item.id) || null}
                 {moveTargets}
                 isMoving={movingItemId === item.id}
                 onRequestMove={requestMove}

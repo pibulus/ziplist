@@ -21,10 +21,23 @@
   export let onDelete = () => {};
   /** Other lists this item can be sent to. Empty = only one list exists. */
   export let moveTargets = [];
+  /** Someone else is editing this line right now: {id, avatar, color}. */
+  export let remoteFocus = null;
   export let isMoving = false;
   export let onRequestMove = () => {};
   export let onMoveTo = () => {};
 </script>
+
+{#if remoteFocus}
+  <!-- Someone else is in this line. Their own avatar colour, so the glow says
+       WHO without needing a label. -->
+  <span
+    class="zl-item-focus-halo"
+    style={`--focus-colour: ${remoteFocus.color || "#a970ea"}`}
+    aria-hidden="true"
+  ></span>
+  <span class="sr-only">{remoteFocus.avatar} is editing this item</span>
+{/if}
 
 {#if showDropIndicator}
   <div class="drop-indicator" class:after={dragOverPosition === "after"}>

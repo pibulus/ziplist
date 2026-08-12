@@ -2318,3 +2318,35 @@ body.zl-touch-dragging {
 .zl-item.checked .zl-item-tag {
   opacity: 0.55;
 }
+
+/* ── Someone else is in this line ───────────────────────────────────────
+   The colour is THEIR avatar colour, so the glow answers "who" without a
+   label. Inset, not an outer shadow: .zl-card is overflow:clip and an outer
+   glow on the last row would be sliced. */
+.zl-item-focus-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 2px var(--focus-colour),
+    inset 0 0 14px -4px var(--focus-colour);
+  animation: focus-halo-breathe 1.9s ease-in-out infinite;
+}
+
+@keyframes focus-halo-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-item-focus-halo {
+    animation: none;
+    opacity: 0.8;
+  }
+}
