@@ -1749,12 +1749,9 @@
                 aria-label="Live list. {presence.length} collaborators online"
               >
                 <span class="zl-live-presence-pulse" aria-hidden="true"></span>
-                <span class="zl-live-presence-label" aria-hidden="true"
-                  >Live</span
-                >
                 {#if presence.length > 0}
                   <div class="zl-presence-dots" aria-hidden="true">
-                    {#each presence.slice(0, 4) as user (user.id)}
+                    {#each presence.slice(0, 3) as user (user.id)}
                       <img
                         class="zl-presence-dot"
                         title={user.avatar}
@@ -1765,7 +1762,7 @@
                     {/each}
                   </div>
                 {/if}
-                {#if presence.length > 4}
+                {#if presence.length > 3}
                   <span class="zl-live-presence-count" aria-hidden="true"
                     >+{presence.length - 4}</span
                   >

@@ -530,8 +530,9 @@
   text-align: center;
 }
 
-/* Live presence: a soft pill that says "live" warmly (never alarming red),
-   the avatar dots say who's here. A count only appears when dots overflow. */
+/* Live presence: a soft pill that says "live" warmly (never alarming red).
+   No text label — the pulse says "syncing now," the faces say who's here.
+   A count only appears when the stack overflows past 4. */
 .zl-live-presence {
   align-items: center;
   display: inline-flex;
@@ -540,7 +541,7 @@
   font-size: 0.72rem;
   font-weight: 800;
   gap: 0.4rem;
-  height: 30px;
+  height: 32px;
   line-height: 1;
   color: var(--zl-text-color-secondary, #888);
   padding: 0 0.5rem 0 0.5rem;
@@ -556,12 +557,6 @@
   box-shadow: 0 0 0 3px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
   height: 8px;
   width: 8px;
-}
-
-.zl-live-presence-label {
-  color: var(--zl-text-color-secondary, #888);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
 }
 
 .zl-live-presence-count {
@@ -595,15 +590,11 @@
     height: 13px;
   }
 
-  /* Tight phones: the pulse + avatar dots carry "live"; drop the word so
-     the header row stays uncramped alongside the title and actions. */
+  /* Tight phones: no label to drop anymore, just tuck the pill's own
+     padding in so bigger avatars still leave the title room to breathe. */
   .zl-live-presence {
     padding: 0 0.3rem;
     gap: 0.28rem;
-  }
-
-  .zl-live-presence-label {
-    display: none;
   }
 }
 
@@ -613,17 +604,28 @@
 }
 
 .zl-presence-dot {
-  border: 2px solid rgba(255, 255, 255, 0.9);
+  /* Was 20px — at that size the DiceBear face was just a smudge. This is
+     the whole point of a shared list: someone else is actually here. */
+  border: 2px solid var(--zl-item-bg, #fffef7);
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  height: 20px;
-  margin-left: -5px;
-  width: 20px;
+  height: 28px;
+  margin-left: -8px;
+  width: 28px;
   display: inline-block;
+  animation: swatch-pop 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
 .zl-presence-dot:first-child {
   margin-left: 0;
+}
+
+/* The list's own name must survive its guests. Going 20px -> 28px squeezed the
+   title from 80px to 28px at 390px — about two characters — because the row
+   let it give up all its space. A floor stops that; the presence pill shrinks
+   or the count absorbs it instead. */
+.zl-list-title {
+  min-width: 4.5rem;
 }
 
 .zl-undo-toast {
@@ -1960,6 +1962,7 @@
   .zl-live-draft-empty > span,
   .zl-live-voice-wave > span,
   .zl-live-presence-pulse,
+  .zl-presence-dot,
   .zl-live-voice-row .zl-live-activity-orb > span {
     animation: none;
   }
