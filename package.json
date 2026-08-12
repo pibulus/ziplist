@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "deploy:pi": "bash scripts/deploy-pi.sh",
     "smoke:live": "node scripts/smoke-live-sharing.mjs",
+    "check": "node scripts/check-sync-phrase.mjs && node scripts/check-list-text.mjs",
     "prepare": "svelte-kit sync || echo ''",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
