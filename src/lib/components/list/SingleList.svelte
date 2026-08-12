@@ -1764,7 +1764,7 @@
                 {/if}
                 {#if presence.length > 3}
                   <span class="zl-live-presence-count" aria-hidden="true"
-                    >+{presence.length - 4}</span
+                    >+{presence.length - 3}</span
                   >
                 {/if}
               </div>
