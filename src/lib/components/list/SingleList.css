@@ -2147,3 +2147,97 @@ body.zl-touch-dragging {
     transition: none;
   }
 }
+
+/* ── Share / export tray ────────────────────────────────────────────────
+   Inline under the header, never a popover — .zl-card is overflow:clip. */
+.zl-share-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0.15rem 0.25rem;
+}
+
+.zl-share-option {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.36rem 0.72rem;
+  border-radius: 999px;
+  border: 2px solid rgba(30, 23, 20, 0.2);
+  background: var(--zl-surface-warm, #fffdf5);
+  color: #1e1714;
+  cursor: pointer;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease;
+}
+
+.zl-share-option:hover:not(:disabled),
+.zl-share-option:focus-visible {
+  background: rgba(30, 23, 20, 0.06);
+}
+
+.zl-share-option:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.zl-share-option:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.zl-share-button.is-open {
+  opacity: 1;
+  background: rgba(30, 23, 20, 0.08);
+  border-radius: 10px;
+}
+
+.zl-share-phrase {
+  flex: 1 1 100%;
+  margin: 0.25rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.zl-share-phrase code {
+  display: inline-block;
+  font-family: "Space Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.3rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(30, 23, 20, 0.06);
+  margin-right: 0.4rem;
+  overflow-wrap: anywhere;
+}
+
+.zl-share-phrase span {
+  opacity: 0.62;
+}
+
+.zl-share-paste {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.zl-share-paste textarea {
+  flex: 1;
+  min-width: 0;
+  font-family: "Space Mono", monospace;
+  font-size: 0.78rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 2px solid rgba(30, 23, 20, 0.16);
+  background: rgba(30, 23, 20, 0.04);
+  color: #1e1714;
+  resize: vertical;
+  max-height: 8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-share-option {
+    transition: none;
+  }
+}

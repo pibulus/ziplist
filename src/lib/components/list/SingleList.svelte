@@ -9,6 +9,10 @@
     LIST_COLOR_PRESETS.map((p) => p.defaultName),
   );
   import { listsService } from "$lib/services/lists/listsService";
+  import {
+    listToText,
+    splitPastedList,
+  } from "$lib/services/lists/listTextFormat.js";
   import { shareList } from "$lib/services/share";
   import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
   import { fade } from "svelte/transition";
@@ -1249,6 +1253,76 @@
       primary: candidate.primaryColor || candidate.color || "",
     }));
 
+  // ── Share / export tray ────────────────────────────────────────────────
+  let shareTrayOpen = false;
+  let shareInputMode = null;
+  let pasteText = "";
+  let syncPhrase = "";
+  let syncBusy = false;
+
+  function toggleShareTray() {
+    shareTrayOpen = !shareTrayOpen;
+    if (!shareTrayOpen) {
+      shareInputMode = null;
+      syncPhrase = "";
+    }
+    soundService.select();
+  }
+
+  function toggleShareInput() {
+    shareInputMode = shareInputMode === "paste" ? null : "paste";
+  }
+
+  async function shareAsLink() {
+    shareTrayOpen = false;
+    await handleShareList();
+  }
+
+  async function copyAsText() {
+    try {
+      await navigator.clipboard.writeText(listToText(list));
+      shareTrayOpen = false;
+      showListStatus("Copied as text.", true, 2200);
+      soundService.copySuccess({ force: true });
+    } catch {
+      showListStatus("Copy did not take this time.", false, 2400);
+    }
+  }
+
+  function pasteItemsIn() {
+    const { items } = splitPastedList(pasteText);
+    if (!items.length) {
+      showListStatus("Nothing in there to add.", false, 2200);
+      return;
+    }
+    const result = listsService.addItems(items, list.id);
+    const added = result?.addedCount ?? 0;
+    pasteText = "";
+    shareInputMode = null;
+    shareTrayOpen = false;
+    showListStatus(
+      added === 0
+        ? "Those were all here already."
+        : `Added ${added} ${added === 1 ? "thing" : "things"}.`,
+      added > 0,
+      2400,
+    );
+    if (added) soundService.copySuccess({ force: true });
+  }
+
+  async function sendToDevice() {
+    syncBusy = true;
+    try {
+      const result = await liveListsService.startPhraseSync(list.id);
+      syncPhrase = result.phrase;
+    } catch (error) {
+      console.error("Sync start failed:", error);
+      showListStatus("Could not start the handover.", false, 2600);
+    } finally {
+      syncBusy = false;
+    }
+  }
+
   function requestMove(itemId) {
     movingItemId = movingItemId === itemId ? null : itemId;
     if (movingItemId) soundService.select();
@@ -1802,8 +1876,10 @@
         <button
           type="button"
           class="zl-share-button"
-          on:click={handleShareList}
-          data-tip={isLive ? "Copy the live link" : "Send a copy"}
+          class:is-open={shareTrayOpen}
+          on:click={toggleShareTray}
+          aria-expanded={shareTrayOpen}
+          data-tip={isLive ? "Copy the live link" : "Share or export"}
           aria-label={isLive
             ? `Copy the live link for ${list.name || "this list"}`
             : `Send a copy of ${list.name || "this list"}. The link holds the list as it is now, and does not stay in sync.`}
@@ -1829,6 +1905,57 @@
         </button>
       </div>
     </div>
+
+    <!-- Getting a list in or out lives WITH the list, not in app Options —
+         these are things you do to this list, not preferences. Inline tray, not
+         a popover: .zl-card is overflow:clip and anything floating gets sliced. -->
+    {#if shareTrayOpen}
+      <div class="zl-share-tray" transition:fade={{ duration: 130 }}>
+        <button type="button" class="zl-share-option" on:click={shareAsLink}>
+          {isLive ? "Copy live link" : "Send a copy"}
+        </button>
+        <button type="button" class="zl-share-option" on:click={copyAsText}>
+          Copy as text
+        </button>
+        <button type="button" class="zl-share-option" on:click={toggleShareInput}>
+          {shareInputMode === "paste" ? "Close paste" : "Paste things in"}
+        </button>
+        <button
+          type="button"
+          class="zl-share-option"
+          disabled={syncBusy}
+          on:click={sendToDevice}
+        >
+          {syncBusy ? "…" : "Send to a device"}
+        </button>
+
+        {#if syncPhrase}
+          <p class="zl-share-phrase">
+            <code>{syncPhrase}</code>
+            <span>Type these into your other device, under Options.</span>
+          </p>
+        {/if}
+
+        {#if shareInputMode === "paste"}
+          <div class="zl-share-paste">
+            <textarea
+              bind:value={pasteText}
+              rows="2"
+              placeholder="- milk&#10;- bread"
+              aria-label="Paste a list, one item per line"
+            ></textarea>
+            <button
+              type="button"
+              class="zl-share-option"
+              disabled={!pasteText.trim()}
+              on:click={pasteItemsIn}
+            >
+              Add
+            </button>
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     <!-- Share status notification -->
     {#if shareStatus}

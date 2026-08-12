@@ -12,12 +12,7 @@
     rerollAvatar,
   } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
-  import { listsService } from "$lib/services/lists/listsService";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
-  import {
-    listToText,
-    splitPastedList,
-  } from "$lib/services/lists/listTextFormat.js";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -108,85 +103,15 @@
   // Appends into the ACTIVE list rather than making a new one: free tier caps
   // lists at three, and an import that can fail on a limit is a worse feature
   // than one that always works.
-  let pasteText = "";
-  let textStatus = "";
 
-  async function copyListAsText() {
-    const activeList = listsService.getActiveList();
-    if (!activeList) {
-      textStatus = "Open a list first.";
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(listToText(activeList));
-      textStatus = `Copied ${activeList.name || "the list"} as text.`;
-      soundService.copySuccess({ force: true });
-    } catch {
-      textStatus = "Copy did not take this time.";
-    }
-  }
 
-  function pasteItemsIn() {
-    const activeList = listsService.getActiveList();
-    if (!activeList) {
-      textStatus = "Open a list first.";
-      return;
-    }
-    const { items } = splitPastedList(pasteText);
-    if (!items.length) {
-      textStatus = "Nothing in there to add.";
-      return;
-    }
-    // One batched update, and it keeps the ticks: paste back what you copied
-    // and the done ones are still done.
-    const result = listsService.addItems(items, activeList.id);
-    const added = result?.addedCount ?? 0;
-    pasteText = "";
-    textStatus =
-      added === 0
-        ? "Those were all here already."
-        : added === items.length
-          ? `Added ${added} ${added === 1 ? "thing" : "things"}.`
-          : `Added ${added} of ${items.length} — the rest were already there.`;
-    soundService.copySuccess({ force: true });
-  }
 
   // ── Device sync ────────────────────────────────────────────────────────
-  let syncPhrase = "";
   let joinPhrase = "";
   let syncStatus = "";
   let syncBusy = false;
-  let syncCopied = false;
 
-  async function handleStartSync() {
-    syncBusy = true;
-    syncStatus = "";
-    try {
-      const activeList = listsService.getActiveList();
-      if (!activeList) {
-        syncStatus = "Open a list first.";
-        return;
-      }
-      const result = await liveListsService.startPhraseSync(activeList.id);
-      syncPhrase = result.phrase;
-      syncCopied = false;
-    } catch (error) {
-      console.error("Sync start failed:", error);
-      syncStatus = "Could not start the handover. Try again in a moment.";
-    } finally {
-      syncBusy = false;
-    }
-  }
 
-  async function copySyncPhrase() {
-    try {
-      await navigator.clipboard.writeText(syncPhrase);
-      syncCopied = true;
-      setTimeout(() => (syncCopied = false), 1600);
-    } catch {
-      syncStatus = "Copy did not take — read the words out instead.";
-    }
-  }
 
   async function handleJoinSync() {
     if (!joinPhrase.trim()) return;
@@ -410,82 +335,13 @@
         </div>
       </section>
 
-      <!-- A list as plain text — pastes into Notes, Messages, anywhere. -->
-      <section class="zl-settings-section" aria-label="Copy or paste a list as text">
-        <div class="zl-setting-row zl-sync-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Copy this list as text</span>
-            <p class="zl-setting-desc">Paste it anywhere</p>
-          </div>
-          <button type="button" class="zl-sync-action" on:click={copyListAsText}>
-            Copy
-          </button>
-        </div>
-
-        <div class="zl-setting-row zl-sync-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Paste things in</span>
-            <p class="zl-setting-desc">One per line, bullets welcome</p>
-          </div>
-          <div class="zl-sync-receive">
-            <textarea
-              class="zl-sync-input zl-paste-input"
-              bind:value={pasteText}
-              rows="1"
-              placeholder="- milk&#10;- bread"
-              aria-label="Paste a list, one item per line"
-            ></textarea>
-            <button
-              type="button"
-              class="zl-sync-copy"
-              disabled={!pasteText.trim()}
-              on:click={pasteItemsIn}
-            >
-              Add
-            </button>
-          </div>
-        </div>
-        {#if textStatus}
-          <p class="zl-sync-hint" role="status">{textStatus}</p>
-        {/if}
-      </section>
-
-      <!-- Carry a list to another device. No account, no login: four words
-           off this screen, typed into the other one. -->
-      <section class="zl-settings-section" aria-label="Move a list to another device">
-        <div class="zl-setting-row zl-sync-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Send a list to another device</span>
-            <p class="zl-setting-desc">Four words, no account</p>
-          </div>
-          <button
-            type="button"
-            class="zl-sync-action"
-            disabled={syncBusy}
-            on:click={handleStartSync}
-          >
-            {syncBusy ? "…" : "Get words"}
-          </button>
-        </div>
-
-        {#if syncPhrase}
-          <div class="zl-sync-phrase-box">
-            <code class="zl-sync-phrase">{syncPhrase}</code>
-            <button type="button" class="zl-sync-copy" on:click={copySyncPhrase}>
-              {syncCopied ? "Copied" : "Copy"}
-            </button>
-          </div>
-          <p class="zl-sync-hint">
-            Type these into the other device, in this same spot.
-          </p>
-        {/if}
-
-        <!-- Control stays inside the row, like every other setting here — the
-             input used to float outside the card and read as unattached. -->
+      <!-- Receiving is the one inbound action with no list to hang off — you
+           haven't got the list yet. Sending lives on the list itself. -->
+      <section class="zl-settings-section" aria-label="Receive a list">
         <div class="zl-setting-row zl-sync-row">
           <div class="zl-setting-info">
             <span class="zl-setting-name">Receive a list</span>
-            <p class="zl-setting-desc">Type the four words here</p>
+            <p class="zl-setting-desc">Type the four words from your other device</p>
           </div>
           <div class="zl-sync-receive">
             <input
@@ -688,7 +544,6 @@
     align-items: flex-start;
   }
 
-  .zl-sync-action,
   .zl-sync-copy {
     font-family: inherit;
     font-size: 0.8rem;
@@ -703,12 +558,10 @@
     transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  .zl-sync-action:active,
   .zl-sync-copy:active {
     transform: scale(0.94);
   }
 
-  .zl-sync-action:disabled,
   .zl-sync-copy:disabled {
     opacity: 0.45;
     cursor: default;
@@ -722,14 +575,7 @@
     flex: 1 1 55%;
   }
 
-  .zl-sync-phrase-box {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0.15rem 0 0.35rem;
-  }
 
-  .zl-sync-phrase,
   .zl-sync-input {
     flex: 1;
     min-width: 0;
@@ -744,12 +590,6 @@
     overflow-wrap: anywhere;
   }
 
-  .zl-paste-input {
-    resize: vertical;
-    min-height: 2.4rem;
-    max-height: 8rem;
-    line-height: 1.35;
-  }
 
   .zl-sync-hint {
     font-size: 0.72rem;
