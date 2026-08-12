@@ -152,6 +152,12 @@ export function connectToLiveList(roomId, callbacks = {}, password = null) {
         case LIVE_MESSAGE_TYPES.DRAFT_CLEAR:
         case LIVE_MESSAGE_TYPES.ITEM_FOCUS:
         case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY:
+        case LIVE_MESSAGE_TYPES.HEART:
+          // NOTE: a new message type has to be added in THREE places or it
+          // vanishes without an error anyone will notice — the protocol
+          // normaliser (both ends validate with it), the worker's relay, and
+          // this switch. Miss this one and the message arrives on the socket
+          // and dies here as a console.warn.
           callbacks.onUpdate?.(message);
           break;
 

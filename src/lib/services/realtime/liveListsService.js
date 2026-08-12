@@ -359,6 +359,18 @@ export async function connectToLive(listId, roomId, password = null) {
                 }
                 break;
 
+              case LIVE_MESSAGE_TYPES.HEART:
+                // Transient by nature — no store, no TTL to prune. The same
+                // window-event channel the list notices already ride on.
+                if (sender && typeof window !== "undefined") {
+                  window.dispatchEvent(
+                    new CustomEvent("ziplist-heart", {
+                      detail: { listId, sender },
+                    }),
+                  );
+                }
+                break;
+
               case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY:
                 if (sender) {
                   activityStore.setVoiceActivity(sender, message.data);
@@ -530,6 +542,17 @@ export function broadcastItemFocus(listId, itemId = null) {
   if (!connection) return;
 
   sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.ITEM_FOCUS, { itemId });
+}
+
+/**
+ * Tap the heart. Fire-and-forget: no payload, no state, no history — if it
+ * doesn't arrive, the moment has passed anyway.
+ */
+export function broadcastHeart(listId) {
+  const connection = activeConnections.get(listId);
+  if (!connection) return;
+
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.HEART, {});
 }
 
 export function broadcastVoiceActivity(listId, data = {}) {

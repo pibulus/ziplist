@@ -10,6 +10,7 @@ export const LIVE_MESSAGE_TYPES = Object.freeze({
   DRAFT_CLEAR: "draft_clear",
   ITEM_FOCUS: "item_focus",
   VOICE_ACTIVITY: "voice_activity",
+  HEART: "heart",
 });
 
 export const LIVE_CLOSE_CODES = Object.freeze({
@@ -307,6 +308,11 @@ export function normalizeLiveMessage(input) {
       const data = normalizeItemFocusData(input.data);
       return data ? { type: LIVE_MESSAGE_TYPES.ITEM_FOCUS, data } : null;
     }
+
+    case LIVE_MESSAGE_TYPES.HEART:
+      // No payload — a heart is just "someone tapped it", and the server
+      // stamps who. Nothing to validate, nothing to store, nothing to leak.
+      return { type: LIVE_MESSAGE_TYPES.HEART, data: {} };
 
     case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY: {
       const data = normalizeVoiceActivityData(input.data);

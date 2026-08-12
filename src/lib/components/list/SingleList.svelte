@@ -62,6 +62,7 @@
   import {
     getAvatarColor,
     getAvatarImage,
+    getOrCreateAvatar,
   } from "$lib/services/realtime/avatarService";
   import { getLiveActivityStore } from "$lib/services/realtime/liveActivityStore";
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
@@ -213,6 +214,7 @@
 
     if (typeof window !== "undefined") {
       window.addEventListener("ziplist-list-notice", handleListNotice);
+      window.addEventListener("ziplist-heart", handleRemoteHeart);
     }
   });
 
@@ -240,6 +242,7 @@
     }
     if (typeof window !== "undefined") {
       window.removeEventListener("ziplist-list-notice", handleListNotice);
+        window.removeEventListener("ziplist-heart", handleRemoteHeart);
     }
   });
 
@@ -644,6 +647,37 @@
 
     liveListsService.broadcastItemFocus(list.id, itemId);
     broadcastDraftActivity({ text, itemId, mode: "typing" });
+  }
+
+  // ── The heart ──────────────────────────────────────────────────────
+  // The whole feature: someone taps it, everyone's screen blooms in that
+  // person's colour. No count, no leaderboard, no persistence — it's the
+  // multiplayer equivalent of catching someone's eye across a room.
+  let hearts = [];
+  let heartSeq = 0;
+
+  function bloom(colour) {
+    const id = (heartSeq += 1);
+    // Slight horizontal scatter so two taps never stack identically.
+    const drift = Math.round((id * 37) % 40) - 20;
+    hearts = [...hearts, { id, colour, drift }];
+    setTimeout(() => {
+      hearts = hearts.filter((heart) => heart.id !== id);
+    }, 1500);
+  }
+
+  function tapHeart() {
+    hapticService.selection();
+    soundService.select();
+    bloom(myAvatarColour);
+    if (isLive) {
+      liveListsService.broadcastHeart(list.id);
+    }
+  }
+
+  function handleRemoteHeart(event) {
+    if (event.detail?.listId !== list.id) return;
+    bloom(getAvatarColor(event.detail.sender.avatar));
   }
 
   function clearItemFocus() {
@@ -1523,6 +1557,8 @@
   // Tags already living in this list, so people reuse rather than reinvent —
   // a list where half the items say #shop and half say #shopping is worse
   // than one with no tags at all.
+  $: myAvatarColour = getAvatarColor(getOrCreateAvatar());
+
   $: suggestedTags = [
     ...new Set((list?.items ?? []).flatMap((entry) => entry.tags ?? [])),
   ];
@@ -1774,10 +1810,16 @@
               </h2>
             {/if}
             {#if isLive}
-              <div
+              <!-- The presence pill IS the heart button. A separate ♥ next to
+                   it added a fourth control to a header already called busy —
+                   and tapping the people to wave at them is the more obvious
+                   gesture anyway. -->
+              <button
+                type="button"
                 class="zl-live-presence"
-                title="Live — {presence.length} here"
-                aria-label="Live list. {presence.length} collaborators online"
+                on:click={tapHeart}
+                title="Live — {presence.length} here. Tap to send a heart"
+                aria-label="Live list. {presence.length} collaborators online. Send a heart"
               >
                 <span class="zl-live-presence-pulse" aria-hidden="true"></span>
                 {#if presence.length > 0}
@@ -1798,7 +1840,15 @@
                     >+{presence.length - 3}</span
                   >
                 {/if}
-              </div>
+                <span class="zl-presence-heart" aria-hidden="true">♥</span>
+                {#each hearts as heart (heart.id)}
+                  <span
+                    class="zl-heart-bloom"
+                    style={`--bloom-colour: ${heart.colour}; --bloom-drift: ${heart.drift}px`}
+                    aria-hidden="true">♥</span
+                  >
+                {/each}
+              </button>
             {/if}
           </div>
         {/if}
