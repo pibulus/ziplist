@@ -53,32 +53,32 @@ const ANIMALS = [
 ];
 
 const STORAGE_KEY = "ziplist_user_avatar";
-// Twelve slots, evenly spaced 30° around the wheel and held at a single
-// lightness, so no two people in a room ever get near-twins and nobody's dot
-// reads heavier than anyone else's. Anchored on ZipList's own hot pink rather
-// than picked at random.
+// Ten faces, and the number that decides them is CONTRAST, not taste.
 //
-// What was here before was a grab-bag of stock Open Color library values
-// (#51cf66, #4dabf7, #20c997, #f783ac are all straight out of the box) — two
-// near-identical yellows 5° apart, and a lightness spread of 46%-74% that made
-// some avatars look washed out beside others.
+// DiceBear "thumbs" draws white eyes and a white mouth on an opaque blob, so
+// the blob has to be dark enough for white to read. Every colour here is solved
+// to sit at 3.4:1 against white — bright enough to stay cute, dark enough that
+// the face has a face.
 //
-// The colour is the FACE: DiceBear "thumbs" renders with a transparent
-// background, so this shows through as the avatar's own body colour.
-// Saturation dips through the yellow-green band, where full chroma glows.
+// The 45°-105° band (yellow through olive) is deliberately absent. Green is
+// perceptually bright, so darkening it far enough for white features turns it
+// into forest floor. What's left is the vivid half of the wheel, which happens
+// to be the half that looks like ZipList anyway.
+//
+// This is ALSO the CSS background behind the image: the blob doesn't fill its
+// circle, so a different background would show as a crescent at the edge. One
+// colour for both keeps each dot reading as a single solid thing.
 const AVATAR_COLORS = [
-  "#f764ba", // hot pink — the brand anchor
-  "#f76470", // blossom
-  "#f7a164", // tangerine
-  "#e0d87b", // honey
-  "#b6e07b", // citron
-  "#83e07b", // lime
-  "#7be0a5", // mint
-  "#64f7eb", // lagoon
-  "#64baf7", // sky
-  "#6470f7", // cornflower
-  "#a164f7", // periwinkle
-  "#eb64f7", // orchid
+  "#e6579a", // hot pink
+  "#e75d6f", // rose
+  "#e36444", // coral
+  "#d2721f", // tangerine
+  "#179d82", // jade
+  "#1999a8", // teal
+  "#2191dc", // ocean
+  "#6c85e9", // cornflower
+  "#a970ea", // violet
+  "#e343e3", // magenta
 ];
 
 /**
@@ -182,6 +182,9 @@ export function getAvatarImage(name) {
       scale: 92,
       backgroundType: ["solid"],
       backgroundColor: ["transparent"],
+      // Without this, DiceBear picks from ITS defaults and the faces are
+      // whatever the library felt like — the palette below never touched them.
+      shapeColor: [getAvatarColor(seed).replace("#", "")],
     }).toDataUri();
   } catch (error) {
     console.warn("Avatar image generation failed:", error);
