@@ -8,6 +8,25 @@
 
 /* Base variables used across all themes */
 :root {
+  /* The item's colour identity. Derived, not hand-picked, so it follows each
+     vibe's own primary and can never drift out of sync with it. */
+  --zl-item-accent: var(--zl-primary-color);
+
+  /* Finishing something should feel like a small win. These were #e8e2d8 and
+     #6b6259, hand-copied identically into all four vibes, so completing an item
+     turned the row the same dead beige no matter which pen you'd picked. As a
+     formula each vibe gets a pale tint of its own hue for free. */
+  --zl-item-checked-bg: color-mix(
+    in srgb,
+    var(--zl-primary-color) 14%,
+    var(--zl-item-bg, #fffef7)
+  );
+  --zl-item-checked-border-color: color-mix(
+    in srgb,
+    var(--zl-primary-color) 55%,
+    #1e1714
+  );
+
   /* Family design-system aliases (chassis components like PwaInstallCard
      read --ds-*; map them to ZipList's brand duo so shared surfaces stay
      on-palette instead of falling back to kernel defaults). */
@@ -197,8 +216,6 @@ html[data-theme="highlighter"] {
 
   /* Checked item styling */
   --zl-item-checked-opacity: 1;
-  --zl-item-checked-bg: #e8e2d8;
-  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
   --zl-item-dragging-bg: #ffd1dc;
@@ -215,9 +232,9 @@ html[data-theme="highlighter"] {
   --zl-item-dragging-border: 3px solid rgba(30, 23, 20, 0.8);
   --zl-item-dragover-border: 2px dashed rgba(30, 23, 20, 0.55);
   --zl-item-dragover-shadow: 0 8px 20px rgba(30, 23, 20, 0.15);
-  --zl-checkbox-hover-bg: #a0e7e5;
-  --zl-checkbox-checked-gradient-start: #1e1714;
-  --zl-checkbox-checked-gradient-end: #1e1714;
+  --zl-checkbox-hover-bg: #fff8e1;
+  --zl-checkbox-checked-gradient-start: var(--zl-mascot-gradient-end);
+  --zl-checkbox-checked-gradient-end: var(--zl-primary-color);
   --zl-checkbox-sparkle-color: #ffb000;
 
   /* Text button styling */
@@ -309,8 +326,6 @@ html[data-theme="sticky-note"] {
 
   /* Checked item styling */
   --zl-item-checked-opacity: 1;
-  --zl-item-checked-bg: #e8e2d8;
-  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
   --zl-item-dragging-bg: #fffbcc;
@@ -324,8 +339,8 @@ html[data-theme="sticky-note"] {
   --zl-checkbox-border: 2px solid rgba(30, 23, 20, 0.68);
   --zl-checkbox-hover-border: 2px solid #1e1714;
   --zl-checkbox-hover-bg: #fffbcc;
-  --zl-checkbox-checked-gradient-start: #1e1714;
-  --zl-checkbox-checked-gradient-end: #1e1714;
+  --zl-checkbox-checked-gradient-start: var(--zl-mascot-gradient-mid);
+  --zl-checkbox-checked-gradient-end: var(--zl-primary-color);
   --zl-checkbox-sparkle-color: #ffe14d;
 
   /* Text button styling */
@@ -415,8 +430,6 @@ html[data-theme="gel-pen"] {
 
   /* Checked item styling */
   --zl-item-checked-opacity: 1;
-  --zl-item-checked-bg: #e8e2d8;
-  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
   --zl-item-dragging-bg: #ffe0ef;
@@ -430,8 +443,8 @@ html[data-theme="gel-pen"] {
   --zl-checkbox-border: 2px solid rgba(30, 23, 20, 0.68);
   --zl-checkbox-hover-border: 2px solid #1e1714;
   --zl-checkbox-hover-bg: #ffe0ef;
-  --zl-checkbox-checked-gradient-start: #1e1714;
-  --zl-checkbox-checked-gradient-end: #1e1714;
+  --zl-checkbox-checked-gradient-start: var(--zl-mascot-gradient-start);
+  --zl-checkbox-checked-gradient-end: var(--zl-primary-color);
   --zl-checkbox-sparkle-color: #ff8cc4;
 
   /* Text button styling */
@@ -521,8 +534,6 @@ html[data-theme="legal-pad"] {
 
   /* Checked item styling */
   --zl-item-checked-opacity: 1;
-  --zl-item-checked-bg: #e8e2d8;
-  --zl-item-checked-border-color: #6b6259;
 
   /* Drag and drop styling */
   --zl-item-dragging-bg: #f0ffd1;
@@ -536,8 +547,8 @@ html[data-theme="legal-pad"] {
   --zl-checkbox-border: 2px solid rgba(30, 23, 20, 0.68);
   --zl-checkbox-hover-border: 2px solid #1e1714;
   --zl-checkbox-hover-bg: #f0ffd1;
-  --zl-checkbox-checked-gradient-start: #1e1714;
-  --zl-checkbox-checked-gradient-end: #1e1714;
+  --zl-checkbox-checked-gradient-start: var(--zl-mascot-gradient-start);
+  --zl-checkbox-checked-gradient-end: var(--zl-primary-color);
   --zl-checkbox-sparkle-color: #b4e83a;
 
   /* Text button styling */

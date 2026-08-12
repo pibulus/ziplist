@@ -878,11 +878,13 @@
   );
   border: var(--zl-item-border-width, 2px) solid
     var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
+  /* The one place colour lives on an item. This border-left was already split
+     out as its own property — the structure for a colour spine existed, it was
+     just pointed at --zl-item-border-color, which is warm-black in EVERY vibe.
+     That single line is most of why four themes rendered as the same beige
+     rectangles. Muted at rest, full saturation on hover. */
   border-left: 4px solid
-    var(
-      --zl-item-border-color,
-      rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.3)
-    );
+    color-mix(in srgb, var(--zl-item-accent) 62%, var(--zl-item-bg, #fffef7));
 
   position: relative;
   cursor: grab;
@@ -901,11 +903,7 @@
     --zl-item-hover-box-shadow,
     0 8px 20px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.2)
   );
-  border-left: 4px solid
-    var(
-      --zl-item-border-hover-color,
-      rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.7)
-    );
+  border-left: 4px solid var(--zl-item-accent);
   border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
 }
 

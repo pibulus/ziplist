@@ -245,6 +245,22 @@ function createListsStore() {
         console.error("Error parsing lists JSON:", parseError);
       }
 
+      // A `live_<roomId>` list is a VIEW of somebody else's list, minted when
+      // you open their share link. It was never meant to outlive the visit, but
+      // nothing removed it — so every link you opened deposited a permanent
+      // extra list in your carousel.
+      //
+      // Cleaning up on disconnect isn't enough on its own: onDestroy doesn't
+      // run when a tab is closed or the page is hard-navigated away from, which
+      // is exactly how people leave a shared list. Sweeping on load catches
+      // every exit. If you're actually still in the room, connectToLive mints
+      // it again a moment later, so nothing is lost.
+      if (Array.isArray(storedLists)) {
+        storedLists = storedLists.filter(
+          (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
+        );
+      }
+
       const storedActiveListId = localStorage.getItem(
         STORAGE_KEYS.ACTIVE_LIST_ID,
       );

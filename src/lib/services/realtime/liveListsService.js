@@ -61,18 +61,26 @@ function getSenderWithId(sender) {
     : null;
 }
 
-function createPlaceholderList(listId, seedList = null, roomId = null) {
-  const fallbackList = get(listsStore).lists[0] ?? {};
+// Violet on purpose, and deliberately NOT one of the three LIST_COLOR_PRESETS
+// (blue / pink / yellow). This placeholder is a list you're VISITING, and the
+// free tier caps you at three of your own — so borrowing lists[0]'s colour, as
+// this used to, guaranteed a visited list looked like a duplicate of one you
+// already had. A colour outside the rotation says "this one isn't yours".
+const VISITOR_LIST_COLORS = {
+  color: "violet",
+  primaryColor: "#a970ea",
+  accentColor: "#c9a3f2",
+  glowColor: "rgba(169, 112, 234, 0.3)",
+};
 
+function createPlaceholderList(listId, seedList = null, roomId = null) {
   return {
     id: listId,
     name: seedList?.name || "Live List",
-    color: seedList?.color || fallbackList.color || "blue",
-    primaryColor:
-      seedList?.primaryColor || fallbackList.primaryColor || "#00d4ff",
-    accentColor: seedList?.accentColor || fallbackList.accentColor || "#4dd0e1",
-    glowColor:
-      seedList?.glowColor || fallbackList.glowColor || "rgba(0, 212, 255, 0.3)",
+    color: seedList?.color || VISITOR_LIST_COLORS.color,
+    primaryColor: seedList?.primaryColor || VISITOR_LIST_COLORS.primaryColor,
+    accentColor: seedList?.accentColor || VISITOR_LIST_COLORS.accentColor,
+    glowColor: seedList?.glowColor || VISITOR_LIST_COLORS.glowColor,
     items: Array.isArray(seedList?.items) ? seedList.items : [],
     createdAt: seedList?.createdAt || new Date().toISOString(),
     updatedAt: seedList?.updatedAt || new Date().toISOString(),
@@ -420,7 +428,7 @@ export async function connectToLive(listId, roomId, password = null) {
     // Settles the ready promise if socket creation threw before any socket
     // event could — otherwise the join timeout would fire into nothing.
     failReady(error);
-    disconnectFromLive(listId);
+    disconnectFromLive(listId, { discardGuestList: true });
     throw error;
   }
 }
@@ -451,7 +459,13 @@ function setupLocalChangeSync(listId, socket) {
   });
 }
 
-export function disconnectFromLive(listId) {
+/**
+ * @param {string} listId
+ * @param {{discardGuestList?: boolean}} [options] - discardGuestList removes the
+ *   placeholder that connectToLive created for a room you were only VISITING.
+ *   Guarded on the `live_` prefix so it can never touch a list you actually own.
+ */
+export function disconnectFromLive(listId, options = {}) {
   const connection = activeConnections.get(listId);
   if (!connection) return;
 
@@ -464,6 +478,23 @@ export function disconnectFromLive(listId) {
   cleanupTypingStore(listId);
   cleanupLiveActivityStore(listId);
   activeConnections.delete(listId);
+
+  // A guest's list is a VIEW of someone else's, minted by connectToLive as a
+  // placeholder. Nothing ever removed it, so every visit deposited a permanent
+  // list in the visitor's carousel — and because the placeholder copies the
+  // colour of lists[0], it arrived looking like a duplicate of a list they
+  // already had. Two yellow lists, one of them a ghost.
+  //
+  // The `live_` guard matters: an owner's live list has its own real id, and a
+  // room-change rebuild disconnects mid-flight expecting to reconnect. Neither
+  // must ever be deleted here.
+  if (
+    options.discardGuestList &&
+    typeof listId === "string" &&
+    listId.startsWith("live_")
+  ) {
+    listsStore.deleteList(listId);
+  }
 }
 
 export function broadcastTypingStart(listId) {

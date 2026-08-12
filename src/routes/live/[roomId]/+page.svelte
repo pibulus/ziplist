@@ -59,7 +59,8 @@
 
   onDestroy(() => {
     if (listId) {
-      disconnectFromLive(listId);
+      // Leaving a room you were visiting shouldn't leave a list behind.
+      disconnectFromLive(listId, { discardGuestList: true });
     }
   });
 </script>
