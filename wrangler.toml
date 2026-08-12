@@ -1,0 +1,23 @@
+# ZipList live rooms, on Pablo's own Cloudflare account.
+#
+# Replaces partykit.json. PartyKit's deploy pipeline broke when Cloudflare
+# started requiring SQLite-backed namespaces for free-plan Durable Objects —
+# that's the `new_sqlite_classes` migration below, the one PartyKit never
+# shipped and now never will.
+
+name = "ziplist-rooms"
+main = "worker/index.ts"
+compatibility_date = "2026-05-26"
+
+[[durable_objects.bindings]]
+name = "LIST_ROOM"
+class_name = "ListRoom"
+
+# SQLite-backed, which is what the free plan requires. Same get/put/delete
+# storage API as before, so nothing in the room logic changed.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ListRoom"]
+
+[observability]
+enabled = true
