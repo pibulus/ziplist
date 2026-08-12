@@ -57,3 +57,36 @@ export function normalizeTags(value) {
   }
   return out;
 }
+
+// ── Tag colour ────────────────────────────────────────────────────────
+// Lifted from ProMapper, which had the better idea: a tag's colour comes from
+// its NAME, so #urgent is the same red on every item and in every list without
+// anyone picking it. That's the cheapest possible answer to "the lists are
+// samey and cream and flat" — the colour arrives with the content instead of
+// being another thing to choose.
+//
+// Same six as the avatars on purpose: one colour vocabulary for the whole app.
+// A chip is a cream tint with dark text and an avatar is a solid fill, so they
+// never read as the same kind of object even when they share a hue.
+//
+// Restated here rather than imported because this module stays pure —
+// avatarService touches localStorage, and check-item-tags.mjs runs it outside
+// any SvelteKit build.
+export const TAG_COLOURS = Object.freeze([
+  "#e6579a", // hot pink
+  "#d2721f", // tangerine
+  "#179d82", // jade
+  "#2191dc", // ocean
+  "#6c85e9", // cornflower
+  "#a970ea", // violet
+]);
+
+/** A tag's stable colour. Same tag, same colour, everywhere, forever. */
+export function tagColour(tag) {
+  const key = String(tag ?? "").toLowerCase();
+  let hash = 0;
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 31 + key.charCodeAt(index)) % 2147483647;
+  }
+  return TAG_COLOURS[Math.abs(hash) % TAG_COLOURS.length];
+}

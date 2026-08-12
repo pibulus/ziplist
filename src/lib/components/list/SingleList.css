@@ -630,11 +630,11 @@
 
 .zl-undo-toast {
   align-items: center;
-  background: rgba(24, 24, 27, 0.92);
-  border: 2px solid rgba(0, 0, 0, 0.78);
+  background: rgba(30, 23, 20, 0.93);
+  border: 2px solid rgba(30, 23, 20, 0.8);
   border-radius: 16px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
-  color: #ffffff;
+  color: #fffef7;
   display: flex;
   font-family: "Space Mono", monospace;
   font-size: 0.82rem;
@@ -658,9 +658,9 @@
 
 .zl-undo-button {
   background: #ffb000;
-  border: 2px solid #000000;
+  border: 2px solid #1e1714;
   border-radius: 999px;
-  color: #111111;
+  color: #1e1714;
   cursor: pointer;
   flex-shrink: 0;
   font-family: "Space Mono", monospace;
@@ -803,10 +803,10 @@
 .zl-add-item-icon {
   align-items: center;
   background: var(--zl-primary-color, #ffb000);
-  border: 2px solid rgba(0, 0, 0, 0.72);
+  border: 2px solid rgba(30, 23, 20, 0.72);
   border-radius: 50%;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
-  color: #111111;
+  box-shadow: 0 3px 0 rgba(30, 23, 20, 0.14);
+  color: #1e1714;
   display: inline-flex;
   font-size: 1rem;
   height: 24px;
@@ -882,9 +882,22 @@
      out as its own property — the structure for a colour spine existed, it was
      just pointed at --zl-item-border-color, which is warm-black in EVERY vibe.
      That single line is most of why four themes rendered as the same beige
-     rectangles. Muted at rest, full saturation on hover. */
-  border-left: 4px solid
-    color-mix(in srgb, var(--zl-item-accent) 62%, var(--zl-item-bg, #fffef7));
+     rectangles.
+
+     Full saturation AT REST, not on hover. The muted-until-hover version
+     shipped the good state to the one platform that can never reach it —
+     phones have no hover, so the resting paint is what touch users see
+     forever. Hover now changes weight instead of colour, which it can
+     afford to, being a pointer-only luxury. */
+  border-left: 4px solid var(--zl-item-accent);
+  /* A whisper of the same accent through the row, so the colour is the item's
+     and not just a stripe stuck to its edge. 6% survives on cream without
+     tinting the text. */
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent) 6%,
+    var(--zl-item-bg, #fffef7)
+  );
 
   position: relative;
   cursor: grab;
@@ -903,7 +916,8 @@
     --zl-item-hover-box-shadow,
     0 8px 20px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.2)
   );
-  border-left: 4px solid var(--zl-item-accent);
+  /* Colour already arrived at rest; hover just leans in. */
+  border-left-width: 6px;
   border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
 }
 
@@ -1083,8 +1097,8 @@
   left: 50%;
   width: 38%;
   height: 20%;
-  border-left: 3px solid white;
-  border-bottom: 3px solid white;
+  border-left: 3px solid #fffef7;
+  border-bottom: 3px solid #fffef7;
   border-radius: 1px;
   transform: translate(-50%, -50%) rotate(-45deg);
   /* Soft shadow keeps the white tick legible on light theme fills
@@ -1432,29 +1446,6 @@
   animation-delay: 0.3s;
 }
 
-.zl-item.remote-focused:not(.touch-placeholder) {
-  border-color: color-mix(in srgb, var(--remote-color) 46%, white);
-  border-left-color: var(--remote-color);
-  box-shadow:
-    0 0 0 4px var(--remote-glow),
-    0 10px 22px rgba(0, 0, 0, 0.08);
-}
-
-.zl-item.remote-focused:not(.touch-placeholder)::before {
-  background: var(--remote-color);
-  border: 2px solid rgba(255, 255, 255, 0.88);
-  border-radius: 50%;
-  box-shadow: 0 0 0 5px var(--remote-glow);
-  content: "";
-  height: 12px;
-  left: -8px;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  z-index: 3;
-}
-
 @keyframes float {
   0%,
   100% {
@@ -1568,8 +1559,8 @@
   left: 3px;
   width: 8px;
   height: 8px;
-  border-right: 2px solid white;
-  border-bottom: 2px solid white;
+  border-right: 2px solid #fffef7;
+  border-bottom: 2px solid #fffef7;
   transform: rotate(45deg);
 }
 
@@ -2180,12 +2171,12 @@ body.zl-touch-dragging {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 44px;
+  min-height: 44px;
   border: none;
   background: transparent;
   color: var(--zl-text-color-primary, #1e1714);
-  opacity: 0.35;
+  opacity: 0.62;
   font-size: 1.15rem;
   line-height: 1;
   letter-spacing: 0.06em;
@@ -2238,17 +2229,22 @@ body.zl-touch-dragging {
    out of a row gets sliced. */
 .zl-item-tray {
   grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  padding: 0.15rem 0.1rem 0.35rem;
+  /* A grid, not flex-wrap. Five pills of wildly different word-lengths
+     ("Edit" next to "Send to Yellow List") wrapped into an accidental rag
+     with dead space beside the orphan. Equal columns make the shape
+     deliberate, and the tray still reflows to one column when the names are
+     long. Spacing on the 8px system. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem;
+  padding: 0.25rem 0 0.5rem;
 }
 
 .zl-item-tray-action {
   font-family: inherit;
   font-size: 0.76rem;
   font-weight: 700;
-  min-height: 34px;
+  min-height: 44px;
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
   border: 2px solid rgba(30, 23, 20, 0.18);
@@ -2274,7 +2270,12 @@ body.zl-touch-dragging {
 }
 
 .zl-item-tray-remove {
-  opacity: 0.72;
+  /* Same clay as the sheet's Delete. One destructive action reached from two
+     places shouldn't wear two different faces — and dimming it with opacity
+     was backwards: the one action you can't undo by tapping again was the
+     hardest to read. */
+  color: #b4614f;
+  border-color: color-mix(in srgb, #b4614f 34%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2304,13 +2305,25 @@ body.zl-touch-dragging {
   line-height: 1;
   padding: 0.2rem 0.42rem;
   border-radius: 999px;
-  color: color-mix(in srgb, var(--zl-item-accent) 68%, #1e1714);
+  /* --tag-colour comes from the tag's NAME (see itemTags.tagColour), so a list
+     of eight items isn't eight chips in one accent. Falls back to the list
+     accent if a chip somehow renders without one. */
+  color: color-mix(
+    in srgb,
+    var(--tag-colour, var(--zl-item-accent)) 72%,
+    #1e1714
+  );
   background: color-mix(
     in srgb,
-    var(--zl-item-accent) 16%,
+    var(--tag-colour, var(--zl-item-accent)) 24%,
     var(--zl-item-bg, #fffef7)
   );
-  border: 1px solid color-mix(in srgb, var(--zl-item-accent) 32%, transparent);
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--tag-colour, var(--zl-item-accent)) 34%,
+      transparent
+    );
   white-space: nowrap;
 }
 

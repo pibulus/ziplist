@@ -1,4 +1,5 @@
 <script>
+  import { tagColour } from "$lib/services/lists/itemTags";
   import { fade } from "svelte/transition";
   import { autoFocus } from "./autoFocus.js";
 
@@ -96,7 +97,9 @@
       {#if item.tags?.length}
         <span class="zl-item-tags">
           {#each item.tags as tag (tag)}
-            <span class="zl-item-tag">#{tag}</span>
+            <span class="zl-item-tag" style={`--tag-colour: ${tagColour(tag)}`}
+              >#{tag}</span
+            >
           {/each}
         </span>
       {/if}
@@ -162,7 +165,10 @@
         style={target.primary ? `--target-colour: ${target.primary}` : ""}
         on:click|stopPropagation={() => onMoveTo(item.id, target.id)}
       >
-        Send to {target.name}
+        <!-- The list is already called "Blue List" — "Send to Blue List" spent
+             two words repeating the noun and wrapped the pill onto two lines.
+             The arrow carries the verb. -->
+        → {target.name}
       </button>
     {/each}
     <button

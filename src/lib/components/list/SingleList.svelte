@@ -665,16 +665,7 @@
       : "false";
   }
 
-  function getRemoteFocus(itemId) {
-    return remoteFocusByItem.get(itemId) || null;
-  }
 
-  function getRemoteItemStyle(itemId) {
-    const remoteFocus = getRemoteFocus(itemId);
-    return remoteFocus
-      ? `--remote-color: ${remoteFocus.color}; --remote-glow: ${remoteFocus.color}33;`
-      : "";
-  }
 
   function registerItemNode(node, itemId) {
     itemNodes.set(itemId, node);
@@ -2054,8 +2045,6 @@
               class:just-edited={recentlyEditedItems.has(item.id)}
               class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
-              class:remote-focused={!!getRemoteFocus(item.id)}
-              style={getRemoteItemStyle(item.id)}
               draggable={!item.checked &&
                 editingItemId !== item.id &&
                 !touchDragItemId}
@@ -2158,8 +2147,6 @@
               class:just-edited={recentlyEditedItems.has(item.id)}
               class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
-              class:remote-focused={!!getRemoteFocus(item.id)}
-              style={getRemoteItemStyle(item.id)}
               draggable={!item.checked &&
                 editingItemId !== item.id &&
                 !touchDragItemId}

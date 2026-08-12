@@ -62,3 +62,52 @@ assert.deepEqual(normalizeTags("nope"), []);
 assert.deepEqual(normalizeTags(null), []);
 
 console.log("✓ item tags: extracts cleanly, never eats an entry, C# stays C#");
+
+// ── Tag colours ───────────────────────────────────────────────────────
+// The whole point is that a tag's colour is STABLE. If this drifts, every
+// list silently reshuffles its palette and #urgent stops meaning one thing.
+{
+  const { tagColour, TAG_COLOURS } =
+    await import("../src/lib/services/lists/itemTags.js");
+
+  assert.equal(
+    tagColour("urgent"),
+    tagColour("urgent"),
+    "same tag, same colour",
+  );
+  assert.equal(
+    tagColour("Urgent"),
+    tagColour("urgent"),
+    "case can't change it",
+  );
+  assert.ok(
+    TAG_COLOURS.includes(tagColour("anything-at-all")),
+    "stays in palette",
+  );
+  assert.ok(
+    TAG_COLOURS.includes(tagColour("")),
+    "empty tag still yields a colour",
+  );
+
+  // Spread matters more than any single assignment: a hash that piles common
+  // tags onto one colour would pass every check above and still look broken.
+  const common = [
+    "urgent",
+    "shop",
+    "home",
+    "work",
+    "today",
+    "later",
+    "food",
+    "gift",
+  ];
+  const used = new Set(common.map(tagColour));
+  assert.ok(
+    used.size >= 4,
+    `common tags spread thin: only ${used.size} colours`,
+  );
+
+  console.log(
+    `✓ tag colours: stable, case-proof, ${used.size}/${TAG_COLOURS.length} across common tags`,
+  );
+}

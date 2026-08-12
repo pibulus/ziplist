@@ -230,8 +230,12 @@
     position: absolute;
     top: -9px;
     right: -9px;
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
+    /* Thumb-sized hit area; the visible disc stays the small tucked family X
+       via an inset background rather than a smaller box. */
+    background-clip: content-box;
+    padding: 7px;
     border-radius: 999px;
     border: 2px solid rgba(30, 23, 20, 0.16);
     background: var(--zl-item-bg, #fffef7);
@@ -255,7 +259,9 @@
     line-height: 1.35;
     color: var(--zl-text-color-primary, #1e1714);
     background: var(--zl-item-bg, #fffef7);
-    border: 2px solid rgba(30, 23, 20, 0.14);
+    /* Darker than the card's own 0.14 border, or the box doesn't read as a
+       box until you focus it. */
+    border: 2px solid rgba(30, 23, 20, 0.26);
     border-radius: 14px;
     padding: 0.7rem 0.8rem;
     resize: none;
@@ -288,7 +294,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.22rem;
-    padding: 0.34rem 0.55rem;
+    min-height: 40px;
+    padding: 0 0.7rem;
     border-radius: 999px;
     cursor: pointer;
     color: color-mix(
@@ -332,7 +339,10 @@
     font-family: inherit;
     font-size: 0.8rem;
     font-weight: 700;
-    padding: 0.5rem 0.2rem;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.5rem 0.4rem;
     border: none;
     background: none;
     /* Warm clay, not an alarm red — deleting a shopping line is not a crisis. */
