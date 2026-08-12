@@ -53,17 +53,32 @@ const ANIMALS = [
 ];
 
 const STORAGE_KEY = "ziplist_user_avatar";
+// Twelve slots, evenly spaced 30° around the wheel and held at a single
+// lightness, so no two people in a room ever get near-twins and nobody's dot
+// reads heavier than anyone else's. Anchored on ZipList's own hot pink rather
+// than picked at random.
+//
+// What was here before was a grab-bag of stock Open Color library values
+// (#51cf66, #4dabf7, #20c997, #f783ac are all straight out of the box) — two
+// near-identical yellows 5° apart, and a lightness spread of 46%-74% that made
+// some avatars look washed out beside others.
+//
+// The colour is the FACE: DiceBear "thumbs" renders with a transparent
+// background, so this shows through as the avatar's own body colour.
+// Saturation dips through the yellow-green band, where full chroma glows.
 const AVATAR_COLORS = [
-  "#ff6ac2",
-  "#00d4ff",
-  "#ffb000",
-  "#51cf66",
-  "#c978ff",
-  "#38d9a9",
-  "#4dabf7",
-  "#20c997",
-  "#f783ac",
-  "#ffd43b",
+  "#f764ba", // hot pink — the brand anchor
+  "#f76470", // blossom
+  "#f7a164", // tangerine
+  "#e0d87b", // honey
+  "#b6e07b", // citron
+  "#83e07b", // lime
+  "#7be0a5", // mint
+  "#64f7eb", // lagoon
+  "#64baf7", // sky
+  "#6470f7", // cornflower
+  "#a164f7", // periwinkle
+  "#eb64f7", // orchid
 ];
 
 /**

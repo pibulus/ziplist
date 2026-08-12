@@ -320,7 +320,7 @@
           {/if}
           <div class="zl-setting-info">
             <span class="zl-setting-name">Name in shared rooms</span>
-            <p class="zl-setting-desc">Your face when a list goes live</p>
+            <p class="zl-setting-desc">Your face when a list goes live — tap it to re-roll</p>
           </div>
           <div class="zl-avatar-field">
             <input
