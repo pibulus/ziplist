@@ -264,9 +264,12 @@ html[data-theme="highlighter"] {
  */
 html[data-theme="sticky-note"] {
   /* Mascot gradient — the fluro duo, the ONE place a gradient lives */
-  --zl-mascot-gradient-start: #fff95c;
-  --zl-mascot-gradient-mid: #ffe14d;
-  --zl-mascot-gradient-end: #ffbf1a;
+  /* Softer paper yellow (Pablo's pick, 2026-08-12). Highlighter went fluro, so
+     these two vibes both opened on the same yellow note. A real sticky note IS
+     paler than a highlighter — separating them makes both names honest. */
+  --zl-mascot-gradient-start: #fff3a0;
+  --zl-mascot-gradient-mid: #ffe873;
+  --zl-mascot-gradient-end: #ffd633;
 
   /* Card — flat warm cream, same ground as Highlighter (no gradient) */
   --zl-card-bg-gradient-angle: 180deg;
