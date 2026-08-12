@@ -2116,6 +2116,7 @@
               onDraftKeyDown={handleDraftItemKeyDown}
               onTyping={handleDraftTyping}
               onCancelDraft={cancelDraftItem}
+              {suggestedTags}
             />
           {:else}
             <li class="zl-add-row" role="listitem">

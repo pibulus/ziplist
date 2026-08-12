@@ -1,6 +1,7 @@
 <script>
   import { fade, fly } from "svelte/transition";
   import { autoFocus } from "./autoFocus.js";
+  import { extractTags, tagColour } from "$lib/services/lists/itemTags";
 
   export let listId;
   export let draftItemText = "";
@@ -10,6 +11,17 @@
   export let onDraftKeyDown = () => {};
   export let onTyping = () => {};
   export let onCancelDraft = () => {};
+  /** Tags this list already uses — offered while you type, not after. */
+  export let suggestedTags = [];
+
+  // Only offer what isn't already in the box.
+  $: typedTags = extractTags(draftItemText).tags;
+  $: offers = suggestedTags.filter((tag) => !typedTags.includes(tag)).slice(0, 5);
+
+  function appendTag(tag) {
+    draftItemText = `${draftItemText.trim()} #${tag}`.trim();
+    inputNode?.focus();
+  }
 </script>
 
 <li
@@ -61,4 +73,23 @@
       <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>
   </button>
+  {#if offers.length}
+    <!-- pointerdown|preventDefault is load-bearing: the input saves on blur,
+         so without it tapping a tag would commit the half-typed item. Same
+         guard the cancel button below already needs. -->
+    <div class="zl-draft-tags">
+      {#each offers as tag (tag)}
+        <button
+          type="button"
+          class="zl-draft-tag"
+          style={`--tag-colour: ${tagColour(tag)}`}
+          data-swipe-ignore="true"
+          on:pointerdown|preventDefault
+          on:click|stopPropagation={() => appendTag(tag)}
+        >
+          #{tag}
+        </button>
+      {/each}
+    </div>
+  {/if}
 </li>

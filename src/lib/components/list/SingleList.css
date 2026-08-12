@@ -2363,3 +2363,51 @@ body.zl-touch-dragging {
     opacity: 0.8;
   }
 }
+
+/* ── Tag offers while capturing ────────────────────────────────────────
+   The tags this list already uses, shown while you type rather than after.
+   Dashed like the sheet's suggestions — same grammar: dashed is on offer,
+   solid is on. Each wears the colour it will actually become, so you pick
+   the colour by picking the word. */
+.zl-draft-tags {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.4rem 0 0.15rem;
+}
+
+.zl-draft-tag {
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  min-height: 32px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--tag-colour, #a970ea) 72%, #1e1714);
+  background: var(--zl-item-bg, #fffef7);
+  border: 1px dashed
+    color-mix(in srgb, var(--tag-colour, #a970ea) 42%, transparent);
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-draft-tag:hover {
+  transform: scale(1.06);
+  background: color-mix(
+    in srgb,
+    var(--tag-colour, #a970ea) 12%,
+    var(--zl-item-bg, #fffef7)
+  );
+}
+
+.zl-draft-tag:active {
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-draft-tag {
+    transition: none;
+  }
+}
