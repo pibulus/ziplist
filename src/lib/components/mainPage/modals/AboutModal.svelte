@@ -41,26 +41,40 @@
         class="bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 rounded-lg border border-pink-200/60 shadow-sm"
       >
         <p class="text-sm leading-relaxed text-gray-700">
-          Talk stuff in, type stuff in, tap the tiny bits into place. Share a
-          list live with someone else — tell it what you did and the boxes can
-          tick themselves.
+          Say the thing, and it's on the list. That's the whole trick.
         </p>
       </div>
 
-      <p class="text-xs text-gray-500 leading-relaxed">
-        Your lists live on your device, not on a server.
-      </p>
+      <!-- Same short-line rhythm as the intro modal, and as TalkType's About —
+           the family should sound like one person wrote all of it. -->
+      <div class="space-y-1.5 text-sm leading-relaxed text-gray-600">
+        <p>No account. No sign-up. No upsell to use it.</p>
+        <p>Lists live on the device, not on somebody's server.</p>
+        <p>Share one live and two people can tick the same boxes.</p>
+        <p>Four words carry a list to another phone. No login, no fuss.</p>
+      </div>
 
       <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
-        <p class="text-xs text-gray-500">Made by Pablo in Melbourne 💛</p>
-        <a
-          href="https://ko-fi.com/madebypablo"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="about-link text-xs text-teal-700 hover:text-teal-900 font-medium transition-colors"
-        >
-          ☕ Coffee jar
-        </a>
+        <p class="text-xs text-gray-500">Made by Pablo in Melbourne</p>
+        <div class="flex items-center gap-1">
+          <a
+            href="https://github.com/pibulus"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="about-link text-xs text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            aria-label="Source code on GitHub"
+          >
+            🐙 Peek at the guts
+          </a>
+          <a
+            href="https://ko-fi.com/madebypablo"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="about-link text-xs text-teal-700 hover:text-teal-900 font-medium transition-colors"
+          >
+            ☕ Buy me a coffee
+          </a>
+        </div>
       </div>
     </div>
   </div>

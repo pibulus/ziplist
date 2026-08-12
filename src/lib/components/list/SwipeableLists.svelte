@@ -55,6 +55,25 @@
     return -x / 100;
   }
 
+  let wrapperEl;
+
+  // Coming off a long list onto a short one used to leave you parked in the
+  // dead space below it, having to scroll back up to find the card. Pull the
+  // page back to the top of the deck instead — but only ever UPWARD, so a swipe
+  // never yanks the page down under someone mid-read.
+  function bounceToTop() {
+    if (typeof window === "undefined" || !wrapperEl) return;
+    requestAnimationFrame(() => {
+      const top = wrapperEl.getBoundingClientRect().top + window.scrollY - 12;
+      if (window.scrollY <= top) return;
+      const still = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      window.scrollTo({
+        top: Math.max(0, top),
+        behavior: still ? "auto" : "smooth",
+      });
+    });
+  }
+
   function landOn(pos) {
     // Choosing the landing card is the moment of commitment: update the
     // store here so the dots + aria flip while the card settles in.
@@ -65,6 +84,7 @@
       listsStore.setActiveList(list.id);
       hapticService.impact("medium");
       soundService.select();
+      bounceToTop();
     }
   }
 
@@ -334,7 +354,7 @@
   on:touchend={handleTouchEnd}
   on:touchcancel={handleTouchCancel}
 >
-  <div class="lists-wrapper" style="--tilt: {tilt}deg;">
+  <div class="lists-wrapper" bind:this={wrapperEl} style="--tilt: {tilt}deg;">
     {#each lists as list, i (list.id)}
       {@const sx = slideX(i, x)}
       <div

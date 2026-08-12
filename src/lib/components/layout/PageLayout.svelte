@@ -86,20 +86,20 @@
     class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs sm:pb-4 sm:pt-6 px-4 sm:px-6 md:px-8"
   >
     <div
-      class="footer-row mx-auto flex w-full flex-row items-center justify-center gap-3 sm:justify-between"
+      class="footer-row mx-auto flex w-full flex-row items-center justify-between gap-2 sm:gap-3"
     >
       <div
-        class="copyright hidden items-center justify-center sm:flex min-w-0 shrink whitespace-nowrap"
+        class="copyright flex items-center justify-center min-w-0 shrink whitespace-nowrap"
       >
-        <span class="mr-1 text-sm font-medium tracking-normal">
+        <span class="footer-copy mr-1 text-sm font-medium tracking-normal">
           © {footerYear}
           {appName}
         </span>
         <span class="footer-dot mx-2">•</span>
         <span class="footer-meta text-sm font-medium">
           Made with
-          <FooterCharm charms={['❤️', '🍒', '⚡']} />
-          in Melbourne
+          <FooterCharm charms={['❤️']} rare={['🍒', '⚡']} />
+          <span class="footer-place">in Melbourne</span>
         </span>
       </div>
       <div class="flex shrink-0 items-center">
@@ -166,13 +166,15 @@
   }
 
   footer {
-    --footer-surface-rgb: 255, 246, 230;
-    --zl-footer-border-color: rgba(
-      var(--zl-primary-color-rgb, 255, 176, 0),
-      0.26
-    );
-    --zl-footer-shadow: 0 -4px 15px
-      rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
+    /* FROZEN ACROSS VIBES (Pablo's call, 2026-08-12), and deliberately the same
+       values TalkType uses — four sibling apps wear this bar, so it holding
+       still IS the family resemblance. Border and dot used to ride
+       --zl-primary/accent-color-rgb, which made the whole shelf change colour
+       with the theme. A shade deeper than the page so it reads as its own
+       surface rather than a seam. */
+    --footer-surface-rgb: 252, 243, 228;
+    --zl-footer-border-color: rgba(30, 23, 20, 0.1);
+    --zl-footer-shadow: 0 -4px 16px rgba(30, 23, 20, 0.06);
     /* Frosted glass. The Tailwind backdrop-blur-[3px] on the element was
        computing to `none` (never actually applied), so the footer was a
        flat 0.9-alpha panel with list text reading straight through it —
@@ -182,27 +184,46 @@
        frosted surface instead of a weak veil. */
     --zl-footer-bg-image: linear-gradient(
       90deg,
-      rgba(var(--footer-surface-rgb), 0.82),
-      rgba(var(--footer-surface-rgb), 0.76),
-      rgba(var(--footer-surface-rgb), 0.82)
+      rgba(var(--footer-surface-rgb), 0.86),
+      rgba(var(--footer-surface-rgb), 0.86)
     );
-    --zl-footer-dot-color: rgba(
-      var(--zl-accent-color-rgb, 255, 106, 194),
-      0.78
-    );
+    --zl-footer-dot-color: rgba(30, 23, 20, 0.3);
     background: var(--zl-footer-bg-image);
     -webkit-backdrop-filter: blur(14px) saturate(1.5);
     backdrop-filter: blur(14px) saturate(1.5);
     /* THE BUG FIX: resting text color is a TOKEN (defined per-theme in
        theme-variables.css), not the hardcoded text-gray-600 Tailwind literal —
        so it stays readable on every theme. */
-    color: var(--footer-text-color, #4b5563);
+    color: var(--footer-text-color, #463f3a);
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .zl-app-footer {
     border-color: var(--zl-footer-border-color);
     box-shadow: var(--zl-footer-shadow);
+  }
+
+  /* On a phone the copyright used to vanish entirely, leaving a couple of nav
+     words adrift in an empty band. Keep the row anchored; shed the place name
+     and shrink the type instead. */
+  @media (max-width: 639px) {
+    /* 390px cannot hold the full attribution AND three nav words — they ran
+       into each other. Keep the charm (that's the personality) and shed the
+       rest; the nav is the load-bearing half. */
+    .copyright .footer-place,
+    .copyright .footer-copy,
+    .copyright .footer-dot {
+      display: none;
+    }
+
+    .copyright {
+      font-size: 0.72rem;
+    }
+
+    .copyright .footer-dot {
+      margin-left: 0.4rem;
+      margin-right: 0.4rem;
+    }
   }
 
   /* No backdrop-filter support (or it's disabled): go nearly opaque
@@ -229,7 +250,7 @@
      rest of the footer (never black), just weighted so it's genuinely
      legible instead of merely present. */
   .footer-meta {
-    color: var(--footer-text-color, #4b5563);
+    color: var(--footer-text-color, #463f3a);
     opacity: 0.92;
   }
 
