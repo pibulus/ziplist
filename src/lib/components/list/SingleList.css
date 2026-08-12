@@ -557,20 +557,37 @@
   font-size: 0.72rem;
   font-weight: 800;
   gap: 0.4rem;
-  height: 32px;
+  /* 38, not 32: the avatars are 32 now and were filling the pill edge to
+     edge with nowhere to sit. */
+  height: 38px;
   line-height: 1;
   color: var(--zl-text-color-secondary, #888);
-  padding: 0 0.5rem 0 0.5rem;
+  padding: 0 0.6rem;
   border-radius: 999px;
-  background: rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.1);
-  border: 1px solid rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22);
+  /* The LIST's colour, not the theme's CTA amber. Live now reads as "this
+     list is open" rather than as a generic app-coloured badge — which is the
+     "a tad more obvious" without adding a word of copy. */
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffb000) 14%,
+    var(--zl-item-bg, #fffef7)
+  );
+  border: 2px solid
+    color-mix(in srgb, var(--zl-item-accent, #ffb000) 40%, transparent);
+  /* Anchors the heart blooms — without it they resolve against a far-off
+     ancestor and rise out of the middle of the list. */
+  position: relative;
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .zl-live-presence-pulse {
   animation: soft-pulse 1.6s ease-in-out infinite;
-  background: var(--zl-cta-color, #ffb000);
+  background: var(--zl-item-accent, #ffb000);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--zl-item-accent, #ffb000) 24%, transparent);
   height: 8px;
   width: 8px;
 }
@@ -2433,15 +2450,6 @@ body.zl-touch-dragging {
    that's the entire feature. No count, no leaderboard, nothing kept. */
 /* The pill is a button now — it keeps its own look, just gains a cursor,
    a squish, and a small heart to say it's tappable. */
-.zl-live-presence {
-  /* Anchors the blooms — without it they resolve against a far-off ancestor
-     and rise from the middle of the list. */
-  position: relative;
-  cursor: pointer;
-  border: none;
-  font: inherit;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
 
 .zl-live-presence:active {
   transform: scale(0.94);
