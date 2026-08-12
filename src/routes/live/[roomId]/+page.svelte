@@ -143,8 +143,12 @@
     </div>
     <div class="live-welcome" in:fade={{ duration: 260 }}>
       <span class="live-welcome-badge" aria-hidden="true">You're in</span>
+      <!-- Says BOTH things you can do. The old line was "tick things off
+           together", which reads as read-and-tick — a guest could reasonably
+           assume adding wasn't theirs to do. It always was: showListManagement
+           only gates renaming the list, never the add row. -->
       <p class="live-welcome-line">
-        Tick things off together — changes show up for everyone, live.
+        Add things, tick things off — everyone sees it the moment you do.
       </p>
     </div>
     <SingleList {listId} showListManagement={false} />
