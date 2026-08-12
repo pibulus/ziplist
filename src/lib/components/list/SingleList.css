@@ -2284,3 +2284,37 @@ body.zl-touch-dragging {
     transition: none;
   }
 }
+
+/* ── #tags ──────────────────────────────────────────────────────────────
+   Typed, not picked. "milk #urgent" reads as Milk wearing an urgent chip.
+   Coloured from the item accent so tags belong to the active vibe rather
+   than introducing a fifth hue nobody chose. */
+.zl-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  margin-top: 0.22rem;
+}
+
+.zl-item-tag {
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  padding: 0.2rem 0.42rem;
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--zl-item-accent) 68%, #1e1714);
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent) 16%,
+    var(--zl-item-bg, #fffef7)
+  );
+  border: 1px solid color-mix(in srgb, var(--zl-item-accent) 32%, transparent);
+  white-space: nowrap;
+}
+
+/* A finished item's tags step back with it rather than staying loud. */
+.zl-item.checked .zl-item-tag {
+  opacity: 0.55;
+}

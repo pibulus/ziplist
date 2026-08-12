@@ -76,6 +76,15 @@
       <span class="zl-item-text {item.checked ? 'checked' : ''}">
         {item.text}
       </span>
+      <!-- Chips sit INSIDE the text button, so the whole row including its tags
+           is one tap target for editing. The row only grows when tags exist. -->
+      {#if item.tags?.length}
+        <span class="zl-item-tags">
+          {#each item.tags as tag (tag)}
+            <span class="zl-item-tag">#{tag}</span>
+          {/each}
+        </span>
+      {/if}
     </button>
   {/if}
 </div>

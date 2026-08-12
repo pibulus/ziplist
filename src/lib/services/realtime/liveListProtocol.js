@@ -105,6 +105,23 @@ function sanitizeLiveItem(item, index) {
     sanitized.completedAt = completedAt;
   }
 
+  // This sanitiser is a WHITELIST — anything not copied here is erased on every
+  // remote frame. Tags added to the store without this line would vanish the
+  // moment a shared list synced, which is the same shape as the bug that used
+  // to wipe notes and whiteboard state off ProMapper's cards.
+  if (Array.isArray(item.tags) && item.tags.length) {
+    const tags = item.tags
+      .map((t) =>
+        String(t ?? "")
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}_-]/gu, "")
+          .slice(0, 20),
+      )
+      .filter(Boolean)
+      .slice(0, 4);
+    if (tags.length) sanitized.tags = tags;
+  }
+
   return sanitized;
 }
 

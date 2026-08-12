@@ -2,6 +2,7 @@ import { writable, derived, get } from "svelte/store";
 import { browser } from "$app/environment";
 import { getContributorSnapshot } from "$lib";
 import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
+import { extractTags, normalizeTags } from "./itemTags.js";
 import { ensureDurableStorage } from "../infrastructure/durableStorage.js";
 
 export const LIST_COLOR_PRESETS = [
@@ -534,7 +535,10 @@ function createListsStore() {
 
   // Add an item to a specific list (or active list by default)
   function addItem(text, listId = null) {
-    const normalizedText = normalizeItemText(text);
+    // Tags come off the RAW text: normalizeItemText strips trailing punctuation
+    // and would happily mangle a hashtag on the way past.
+    const { text: bodyText, tags } = extractTags(text);
+    const normalizedText = normalizeItemText(bodyText);
     if (!normalizedText) {
       return createLimitResult("Add a few words first.", "empty");
     }
@@ -569,6 +573,7 @@ function createListsStore() {
                   id: crypto.randomUUID(),
                   text: normalizedText,
                   checked: false,
+                  tags,
                   addedAt: Date.now(), // entry-date sort key
                 },
               ],
@@ -609,14 +614,16 @@ function createListsStore() {
             // checked:false meant a copy-then-paste round trip silently lost
             // everything the user had already ticked off.
             const dedupedEntries = items
-              .map((entry) =>
-                typeof entry === "string"
-                  ? { text: normalizeItemText(entry), checked: false }
-                  : {
-                      text: normalizeItemText(entry?.text),
-                      checked: Boolean(entry?.checked),
-                    },
-              )
+              .map((entry) => {
+                const raw = typeof entry === "string" ? entry : entry?.text;
+                const { text: bodyText, tags } = extractTags(raw);
+                return {
+                  text: normalizeItemText(bodyText),
+                  checked:
+                    typeof entry === "string" ? false : Boolean(entry?.checked),
+                  tags: tags.length ? tags : normalizeTags(entry?.tags),
+                };
+              })
               .filter((entry) => entry.text.length > 0)
               .filter((entry) => {
                 const key = getItemDedupeKey(entry.text);
@@ -632,6 +639,7 @@ function createListsStore() {
               id: crypto.randomUUID(),
               text: entry.text,
               checked: entry.checked,
+              tags: entry.tags ?? [],
               order: list.items.length + index, // Add order field to maintain sort order
               addedAt: stamp + index, // entry-date sort key (index keeps batch order)
             }));
@@ -714,7 +722,8 @@ function createListsStore() {
 
   // Edit an item's text
   function editItem(itemId, newText, listId = null) {
-    const normalizedText = normalizeItemText(newText);
+    const { text: bodyText, tags } = extractTags(newText);
+    const normalizedText = normalizeItemText(bodyText);
     if (!normalizedText) return;
 
     update((state) => {
@@ -726,7 +735,17 @@ function createListsStore() {
             return {
               ...list,
               items: list.items.map((item) =>
-                item.id === itemId ? { ...item, text: normalizedText } : item,
+                item.id === itemId
+                  ? {
+                      ...item,
+                      text: normalizedText,
+                      // Typing a #tag while editing adds it; removing the
+                      // hashtag from the text removes the tag. The text IS the
+                      // source of truth, so there's no second thing to keep in
+                      // sync and no way for the two to disagree.
+                      tags,
+                    }
+                  : item,
               ),
               updatedAt: new Date().toISOString(),
             };
