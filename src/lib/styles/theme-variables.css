@@ -96,8 +96,13 @@
      blend of the two end colors, so it still reads as ONE gradient, not three.
      Overridden per-theme below so the hero RECOLORS with the vibe. Matches the
      ThemeMascot swatch palettes. */
-  --zl-mascot-gradient-start: #ffcc33;
-  --zl-mascot-gradient-mid: #ffa36f;
+  /* Pure fluro (Pablo's pick, 2026-08-12). The old amber -> coral -> pink
+     crossed three colour families, which is what made it read muddy against the
+     tight-brand-duo rule — the problem was never the hue, it was that three
+     colours were pretending to be one. Fluro yellow into the brand pink keeps
+     the duo tight AND keeps the dude related to TalkType's ghost. */
+  --zl-mascot-gradient-start: #fbff26;
+  --zl-mascot-gradient-mid: #ffd84d;
   --zl-mascot-gradient-end: #ff6ac2;
 
   /* AppSuffix (.app) token — defaults mirror DEFAULT_THEME (neo) so the
@@ -142,8 +147,13 @@ html[data-theme="highlighter"] {
      (from-[#ffcc33] to-[#ff6ac2]), lifted stop-for-stop as the app's default
      signature look (matches ThemeMascot highlighter swatch). Unchanged from
      the original "neo" theme — Pablo explicitly approved this gradient. */
-  --zl-mascot-gradient-start: #ffcc33;
-  --zl-mascot-gradient-mid: #ffa36f;
+  /* Pure fluro (Pablo's pick, 2026-08-12). The old amber -> coral -> pink
+     crossed three colour families, which is what made it read muddy against the
+     tight-brand-duo rule — the problem was never the hue, it was that three
+     colours were pretending to be one. Fluro yellow into the brand pink keeps
+     the duo tight AND keeps the dude related to TalkType's ghost. */
+  --zl-mascot-gradient-start: #fbff26;
+  --zl-mascot-gradient-mid: #ffd84d;
   --zl-mascot-gradient-end: #ff6ac2;
 
   /* Card gradient */

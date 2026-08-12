@@ -122,15 +122,15 @@
           >
             <stop
               offset="0"
-              stop-color="var(--zl-mascot-gradient-start, #ffe86b)"
+              stop-color="var(--zl-mascot-gradient-start, #fbff26)"
             />
             <stop
               offset="0.42"
-              stop-color="var(--zl-mascot-gradient-mid, #ff9a8c)"
+              stop-color="var(--zl-mascot-gradient-mid, #ffd84d)"
             />
             <stop
               offset="1"
-              stop-color="var(--zl-mascot-gradient-end, #76ead7)"
+              stop-color="var(--zl-mascot-gradient-end, #ff6ac2)"
             />
           </linearGradient>
         </defs>
@@ -139,7 +139,7 @@
         <path
           d="M308 118H716C815 118 878 181 878 280V574C878 673 815 736 716 736H600L542 846C529 870 495 870 482 846L424 736H308C209 736 146 673 146 574V280C146 181 209 118 308 118Z"
           fill="url(#{gid})"
-          stroke="#000000"
+          stroke="#1e1714"
           stroke-width="54"
           stroke-linejoin="round"
         />
@@ -147,7 +147,7 @@
         <!-- List rows. -->
         <g
           fill="none"
-          stroke="#000000"
+          stroke="#1e1714"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -159,8 +159,8 @@
 
         <!-- Eyes (blink). -->
         <g class="mascot-eyes-group">
-          <ellipse cx="424" cy="326" rx="39" ry="60" fill="#000000" />
-          <ellipse cx="600" cy="326" rx="39" ry="60" fill="#000000" />
+          <ellipse cx="424" cy="326" rx="39" ry="60" fill="#1e1714" />
+          <ellipse cx="600" cy="326" rx="39" ry="60" fill="#1e1714" />
         </g>
       </svg>
     {/if}
