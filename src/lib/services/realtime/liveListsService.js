@@ -14,6 +14,7 @@ import {
   sendUpdate,
   disconnectFromLiveList,
   generateShareUrl,
+  generatePhraseShareUrl,
   isLiveCollaborationAvailable as isPartyKitAvailable,
 } from "./partyService.js";
 import { getPresenceStore, cleanupPresenceStore } from "./presenceStore.js";
@@ -197,7 +198,20 @@ export async function startPhraseSync(listId) {
   if (!roomId) throw new Error("Could not build a sync phrase.");
 
   await makeLive(listId, null, roomId);
-  return { phrase, roomId };
+
+  // Remember the words. The room id can always be re-derived from them, but
+  // not the other way round — lose the phrase and the short link is gone
+  // while the room lives on.
+  const current = getListSnapshot(listId);
+  if (current) {
+    listsStore.upsertList({ ...current, liveSyncPhrase: phrase }, listId);
+  }
+
+  return {
+    phrase,
+    roomId,
+    shareUrl: generatePhraseShareUrl(phrase),
+  };
 }
 
 export async function joinByPhrase(phrase) {

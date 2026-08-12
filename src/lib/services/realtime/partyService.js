@@ -224,6 +224,18 @@ export function disconnectFromLiveList(socket) {
  * @param {string} [password] - Optional password
  * @returns {string} Shareable URL
  */
+/**
+ * The short, SAYABLE link: /j/<four-words>. You can read it down the phone,
+ * which a 36-character uuid can never be. Same room either way — the phrase
+ * derives the id — so this is a nicer front door, not a second address.
+ */
+export function generatePhraseShareUrl(phrase, password = null) {
+  if (typeof window === "undefined" || !phrase) return "";
+
+  const baseUrl = `${window.location.origin}/j/${phrase}`;
+  return password ? `${baseUrl}?pwd=${encodeURIComponent(password)}` : baseUrl;
+}
+
 export function generateShareUrl(roomId, password = null) {
   if (typeof window === "undefined") return "";
 

@@ -350,6 +350,16 @@
   flex-shrink: 0;
   width: 15px;
   height: 15px;
+  transition:
+    width 0.2s ease,
+    height 0.2s ease;
+}
+
+/* On a default-named list the dot carries the header alone, so it stops being
+   a small marker next to words and becomes the thing itself. */
+.zl-list-color-dot.is-sole {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: inline-block;
   border: 2px solid rgba(30, 23, 20, 0.8);
@@ -400,8 +410,14 @@
 }
 
 /* Default names are placeholders — present but quiet, inviting a rename */
-.zl-list-title.is-default {
-  color: var(--zl-text-color-secondary);
+/* The dot is the whole title on a default-named list, so it has to read as a
+   tap target on its own. */
+.zl-list-title-trigger .zl-list-color-dot {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-list-title-trigger:hover .zl-list-color-dot {
+  transform: scale(1.18);
 }
 
 .zl-list-actions {
@@ -609,9 +625,9 @@
   border: 2px solid var(--zl-item-bg, #fffef7);
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  height: 28px;
-  margin-left: -8px;
-  width: 28px;
+  height: 32px;
+  margin-left: -9px;
+  width: 32px;
   display: inline-block;
   animation: swatch-pop 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
@@ -2532,5 +2548,80 @@ body.zl-touch-dragging {
     30% {
       opacity: 0.8;
     }
+  }
+}
+
+/* ── Share tray ────────────────────────────────────────────────────────
+   Was four pills of different word-lengths flex-wrapping into a rag. The two
+   things that SEND now share a row at equal width; the phrase sits under
+   them because it's the thing you actually hand over; and paste — which
+   brings things IN — is visibly not one of them. */
+.zl-share-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* The words are the link, so they're a button, not a caption. */
+.zl-share-phrase {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 14px;
+  border: 2px dashed
+    color-mix(in srgb, var(--zl-primary-color, #a970ea) 38%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--zl-primary-color, #a970ea) 8%,
+    var(--zl-item-bg, #fffef7)
+  );
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-share-phrase:hover {
+  transform: scale(1.01);
+}
+
+.zl-share-phrase:active {
+  transform: scale(0.98);
+}
+
+.zl-share-phrase code {
+  font-family: "Space Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--zl-primary-color, #a970ea) 72%, #1e1714);
+}
+
+/* Quieter than the send buttons on purpose — different kind of action. */
+.zl-share-import {
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  min-height: 44px;
+  padding: 0 0.7rem;
+  border: none;
+  background: none;
+  color: color-mix(
+    in srgb,
+    var(--zl-text-color-primary, #1e1714) 62%,
+    transparent
+  );
+  cursor: pointer;
+  border-radius: 999px;
+  align-self: center;
+}
+
+.zl-share-import:hover {
+  color: var(--zl-text-color-primary, #1e1714);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-share-phrase {
+    transition: none;
   }
 }

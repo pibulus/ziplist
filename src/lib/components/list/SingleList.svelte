@@ -455,7 +455,14 @@
     isMakingLive = true;
 
     try {
-      const { shareUrl } = await liveListsService.makeLive(list.id);
+      // startPhraseSync, not makeLive: it mints four words, derives the room
+      // from them and hands back /j/<words>. "Send it to my other device" and
+      // "share it with someone" were always the same room — now they're the
+      // same link too, and it's one you can say out loud.
+      const { shareUrl, phrase } = await liveListsService.startPhraseSync(
+        list.id,
+      );
+      syncPhrase = phrase;
       isLive = true;
 
       let copied = false;
@@ -467,8 +474,8 @@
 
       showListStatus(
         copied
-          ? "Live list ready. Link copied!"
-          : "Live list ready. Tap Share to send the link.",
+          ? "Live. Link copied — or read out the words."
+          : "Live. Tap the link icon to grab the link.",
         true,
       );
       soundService.success({ force: true });
@@ -1309,7 +1316,6 @@
   let shareInputMode = null;
   let pasteText = "";
   let syncPhrase = "";
-  let syncBusy = false;
 
   function toggleShareTray() {
     shareTrayOpen = !shareTrayOpen;
@@ -1361,18 +1367,19 @@
     if (added) soundService.copySuccess({ force: true });
   }
 
-  async function sendToDevice() {
-    syncBusy = true;
-    try {
-      const result = await liveListsService.startPhraseSync(list.id);
-      syncPhrase = result.phrase;
-    } catch (error) {
-      console.error("Sync start failed:", error);
-      showListStatus("Could not start the handover.", false, 2600);
-    } finally {
-      syncBusy = false;
-    }
+  async function copyPhraseLink() {
+    if (!syncPhrase) return;
+    const url = `${window.location.origin}/j/${syncPhrase}`;
+    const copied = await copyText(url).catch(() => false);
+    hapticService.selection();
+    soundService.select();
+    showListStatus(
+      copied ? "Link copied" : "Couldn't copy — read the words out instead",
+      copied,
+      2400,
+    );
   }
+
 
   function requestMove(itemId) {
     movingItemId = movingItemId === itemId ? null : itemId;
@@ -1776,8 +1783,15 @@
   }
 </script>
 
+<!-- The list's OWN colour, not the theme's. --zl-item-accent defaulted to
+     --zl-primary-color, which is the vibe's colour and identical across all
+     three lists — so every spine, on every list, came out the same amber and
+     the lists still read as one beige family. The colour was already sitting
+     on the list record, powering the header dot; it just never reached the
+     items. -->
 <section
   class="zl-card"
+  style={list.primaryColor ? `--zl-item-accent: ${list.primaryColor}` : ""}
   aria-labelledby="list-title-{list.id || 'active'}"
 >
   <span id="list-title-{list.id || 'active'}" class="zl-visually-hidden">
@@ -1824,12 +1838,17 @@
                   <span class="zl-list-title-inner">
                     <span
                       class="zl-list-color-dot"
+                      class:is-sole={isDefaultName}
                       style="background: {list.primaryColor};"
                       aria-hidden="true"
                     ></span>
-                    <span class="zl-list-title" class:is-default={isDefaultName}>
-                      {list.name}
-                    </span>
+                    <!-- A blue dot next to the words "Blue List" is the same
+                         fact twice. Default-named lists show the dot alone and
+                         let the items be the content; the moment you name it
+                         something real, the name appears. -->
+                    {#if !isDefaultName}
+                      <span class="zl-list-title">{list.name}</span>
+                    {/if}
                   </span>
                 </button>
               </h2>
@@ -2020,30 +2039,39 @@
          a popover: .zl-card is overflow:clip and anything floating gets sliced. -->
     {#if shareTrayOpen}
       <div class="zl-share-tray" transition:fade={{ duration: 130 }}>
-        <button type="button" class="zl-share-option" on:click={shareAsLink}>
-          {isLive ? "Copy live link" : "Send a copy"}
-        </button>
-        <button type="button" class="zl-share-option" on:click={copyAsText}>
-          Copy as text
-        </button>
-        <button type="button" class="zl-share-option" on:click={toggleShareInput}>
-          {shareInputMode === "paste" ? "Close paste" : "Paste things in"}
-        </button>
-        <button
-          type="button"
-          class="zl-share-option"
-          disabled={syncBusy}
-          on:click={sendToDevice}
-        >
-          {syncBusy ? "…" : "Send to a device"}
-        </button>
+        <!-- Two send actions, equal width. "Send to a device" used to sit here
+             as a fourth pill; it called startPhraseSync, which is what going
+             live now does — it was the same room by another name. -->
+        <div class="zl-share-actions">
+          <button type="button" class="zl-share-option" on:click={shareAsLink}>
+            {isLive ? "Copy link" : "Send a copy"}
+          </button>
+          <button type="button" class="zl-share-option" on:click={copyAsText}>
+            Copy as text
+          </button>
+        </div>
 
         {#if syncPhrase}
-          <p class="zl-share-phrase">
+          <!-- The words ARE the link. Say them down the phone, or let someone
+               type them in on another device — same room either way. -->
+          <button
+            type="button"
+            class="zl-share-phrase"
+            on:click={copyPhraseLink}
+          >
             <code>{syncPhrase}</code>
-            <span>Type these into your other device, under Options.</span>
-          </p>
+          </button>
         {/if}
+
+        <!-- Bringing things IN is not sharing, so it doesn't wear the same
+             chrome as the two buttons that send things out. -->
+        <button
+          type="button"
+          class="zl-share-import"
+          on:click={toggleShareInput}
+        >
+          {shareInputMode === "paste" ? "Close paste" : "Paste things in"}
+        </button>
 
         {#if shareInputMode === "paste"}
           <div class="zl-share-paste">
