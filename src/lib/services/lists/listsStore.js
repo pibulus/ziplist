@@ -89,7 +89,26 @@ function normalizeItemText(text) {
       ? `${normalized.slice(0, PRODUCT_LIMITS.MAX_ITEM_TEXT_LENGTH - 3).trim()}...`
       : normalized;
 
-  return clipped.charAt(0).toUpperCase() + clipped.slice(1);
+  return capitalizeFirstWord(clipped);
+}
+
+/**
+ * Sentence-case the entry, but never fight a word that already knows its own
+ * shape. Blindly upper-casing character zero turned "iPhone charger" into
+ * "IPhone charger" and "eBay parcel" into "EBay parcel" — the app tidying
+ * someone's list into something worse than they typed.
+ *
+ * The tell is an uppercase letter LATER in the first word: iPhone, eBay, pH,
+ * iOS all carry one, and none of them want our help.
+ */
+function capitalizeFirstWord(text) {
+  const first = text.charAt(0);
+  if (!first || first === first.toUpperCase()) return text;
+
+  const firstWord = text.split(/\s/)[0];
+  if (/[A-Z]/.test(firstWord.slice(1))) return text;
+
+  return first.toUpperCase() + text.slice(1);
 }
 
 export function getItemDedupeKey(text) {

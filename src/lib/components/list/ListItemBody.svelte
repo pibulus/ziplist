@@ -81,6 +81,9 @@
 </div>
 
 <div class="zl-item-side">
+  <!-- Reorder is a POINTER affordance: on touch, long-press on the row already
+       starts a drag, so a permanent handle there is clutter for a gesture that
+       already exists. Hidden until hover/focus; see the CSS. -->
   {#if !item.checked && !isEditing && activeItemsCount > 1}
     <button
       type="button"
@@ -98,48 +101,53 @@
       <span></span>
     </button>
   {/if}
-  
-  <div class="zl-item-actions">
-    {#if moveTargets.length}
-      <button
-        type="button"
-        class="zl-item-move-button"
-        class:is-open={isMoving}
-        data-swipe-ignore="true"
-        on:click|stopPropagation={() => onRequestMove(item.id)}
-        aria-expanded={isMoving}
-        aria-label={`Send ${item.text} to another list`}
-      >
-        <span aria-hidden="true">⇢</span>
-      </button>
-    {/if}
-    <button
-      type="button"
-      class="zl-item-delete-button"
-      data-swipe-ignore="true"
-      on:click|stopPropagation={() => onDelete(item.id)}
-      aria-label={`Delete ${item.text}`}
-    >
-      <span aria-hidden="true">×</span>
-    </button>
-  </div>
+
+  <!-- One affordance, not three. Send-to and delete used to sit on every row
+       permanently; three icons per item on a list whose whole job is ticking
+       things competed with the tick. They live in the tray now. -->
+  <button
+    type="button"
+    class="zl-item-more-button"
+    class:is-open={isMoving}
+    data-swipe-ignore="true"
+    on:click|stopPropagation={() => onRequestMove(item.id)}
+    aria-expanded={isMoving}
+    aria-label={`More for ${item.text}`}
+  >
+    <span aria-hidden="true">⋯</span>
+  </button>
 </div>
 
 <!-- Inline, not a popover. .zl-card is overflow:clip, so anything floating out
      of the row gets sliced — the same trap the header tooltips were in. -->
-{#if isMoving && moveTargets.length}
-  <div class="zl-item-move-tray" transition:fade={{ duration: 120 }}>
-    <span class="zl-item-move-label">Send to</span>
+{#if isMoving}
+  <div class="zl-item-tray" transition:fade={{ duration: 120 }}>
+    <button
+      type="button"
+      class="zl-item-tray-action"
+      data-swipe-ignore="true"
+      on:click|stopPropagation={() => onStartEdit(item)}
+    >
+      Edit
+    </button>
     {#each moveTargets as target (target.id)}
       <button
         type="button"
-        class="zl-item-move-target"
+        class="zl-item-tray-action zl-item-tray-target"
         data-swipe-ignore="true"
         style={target.primary ? `--target-colour: ${target.primary}` : ""}
         on:click|stopPropagation={() => onMoveTo(item.id, target.id)}
       >
-        {target.name}
+        Send to {target.name}
       </button>
     {/each}
+    <button
+      type="button"
+      class="zl-item-tray-action zl-item-tray-remove"
+      data-swipe-ignore="true"
+      on:click|stopPropagation={() => onDelete(item.id)}
+    >
+      Remove
+    </button>
   </div>
 {/if}

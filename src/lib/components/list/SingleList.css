@@ -863,7 +863,12 @@
   align-items: center;
   gap: 0.65rem;
 
-  min-height: 104px;
+  /* Was 104px. That height existed ONLY to stack a grab handle above a
+     delete button in a side column — two 44px targets don't fit in less.
+     With the row's extra controls moved into a tray behind one button,
+     there is nothing to stack and nothing to make room for, so the item is
+     as tall as its text again instead of as tall as its widgets. */
+  min-height: 64px;
   height: auto;
   max-height: none;
 
@@ -1661,11 +1666,9 @@
    instead of three controls crowded into one horizontal cluster. */
 .zl-item-side {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  align-self: stretch;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.15rem;
+  align-self: center;
 }
 
 .zl-item-delete-button {
@@ -1862,11 +1865,15 @@
     min-width: 1.3rem;
   }
 
+  /* Was a TWO-ROW grid at min-height 104px — built when the row had to stack a
+     grab handle above a delete button on the right. This is what made items on
+     a phone look tall and empty: a whole second 44px row reserved for widgets
+     that have since moved into the tray. One row, one line of text, done. */
   .zl-item {
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-    grid-template-rows: repeat(2, minmax(44px, auto));
-    gap: 0.25rem 0.45rem;
-    min-height: 104px;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-rows: minmax(44px, auto);
+    gap: 0.45rem;
+    min-height: 60px;
     padding: 0.45rem 0.6rem;
     border-radius: 16px;
   }
@@ -1885,7 +1892,7 @@
 
   .zl-checkbox-wrapper,
   .edit-wrapper {
-    grid-row: 1 / -1;
+    grid-row: 1;
   }
 
   .zl-item-text {
@@ -1895,20 +1902,6 @@
 
   .zl-item-text-button {
     padding: 0.25rem 0.15rem;
-  }
-
-  .grab-indicator {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .zl-item-actions {
-    grid-column: 3;
-    grid-row: 1 / -1;
-  }
-
-  .grab-indicator + .zl-item-actions {
-    grid-row: 2;
   }
 
   .zl-empty-state {
@@ -2083,88 +2076,8 @@ body.zl-touch-dragging {
 /* ── Send an item to another list ───────────────────────────────────────
    The tray is INLINE under the row, never a popover: .zl-card is
    overflow:clip and anything floating out of the row gets sliced. */
-.zl-item-move-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
-  border: none;
-  background: transparent;
-  color: var(--zl-text-color-primary, #1e1714);
-  opacity: 0.4;
-  font-size: 1.05rem;
-  line-height: 1;
-  cursor: pointer;
-  border-radius: 8px;
-  transition:
-    opacity 0.15s ease,
-    background 0.15s ease,
-    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.zl-item-move-button:hover,
-.zl-item-move-button:focus-visible {
-  opacity: 1;
-  background: rgba(30, 23, 20, 0.07);
-}
-
-.zl-item-move-button:active {
-  transform: scale(0.86);
-}
-
-.zl-item-move-button.is-open {
-  opacity: 1;
-  background: rgba(30, 23, 20, 0.1);
-}
-
-.zl-item-move-tray {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.15rem 0.15rem;
-}
-
-.zl-item-move-label {
-  font-family: "Space Mono", monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.55;
-}
-
-.zl-item-move-target {
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 0.34rem 0.7rem;
-  border-radius: 999px;
-  border: 2px solid var(--target-colour, rgba(30, 23, 20, 0.25));
-  background: var(--zl-item-bg, #fffef7);
-  color: #1e1714;
-  cursor: pointer;
-  transition:
-    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.15s ease;
-}
-
-.zl-item-move-target:hover,
-.zl-item-move-target:focus-visible {
-  background: color-mix(in srgb, var(--target-colour, #1e1714) 14%, #fffdf5);
-}
-
-.zl-item-move-target:active {
-  transform: scale(0.94);
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .zl-item-move-button,
-  .zl-item-move-target {
-    transition: none;
-  }
 }
 
 /* ── Share / export tray ────────────────────────────────────────────────
@@ -2257,6 +2170,119 @@ body.zl-touch-dragging {
 
 @media (prefers-reduced-motion: reduce) {
   .zl-share-option {
+    transition: none;
+  }
+}
+
+/* ── One button, one tray ───────────────────────────────────────────────
+   Send-to and delete used to sit on every row permanently. Three icons on a
+   list whose entire job is ticking things competed with the tick, and forced
+   the row taller to hold them. Now: checkbox, text, and a single "more". */
+.zl-item-more-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 34px;
+  border: none;
+  background: transparent;
+  color: var(--zl-text-color-primary, #1e1714);
+  opacity: 0.35;
+  font-size: 1.15rem;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border-radius: 10px;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-item-more-button:hover,
+.zl-item-more-button:focus-visible {
+  opacity: 1;
+  background: rgba(30, 23, 20, 0.07);
+}
+
+.zl-item-more-button:active {
+  transform: scale(0.86);
+}
+
+.zl-item-more-button.is-open {
+  opacity: 1;
+  background: rgba(30, 23, 20, 0.1);
+}
+
+/* Reorder is a POINTER affordance. On touch, long-press on the row already
+   starts a drag — a permanent handle advertises a gesture that already works
+   and costs a slot on every single row. */
+@media (hover: hover) and (pointer: fine) {
+  .grab-indicator {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .zl-item:hover .grab-indicator,
+  .zl-item:focus-within .grab-indicator,
+  .grab-indicator:focus-visible {
+    opacity: var(--zl-grab-handle-opacity, 0.55);
+  }
+}
+
+@media (hover: none) {
+  .grab-indicator {
+    display: none;
+  }
+}
+
+/* Inline, never a popover — .zl-card is overflow:clip and anything floating
+   out of a row gets sliced. */
+.zl-item-tray {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.15rem 0.1rem 0.35rem;
+}
+
+.zl-item-tray-action {
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  min-height: 34px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 2px solid rgba(30, 23, 20, 0.18);
+  background: var(--zl-item-bg, #fffef7);
+  color: var(--zl-text-color-primary, #1e1714);
+  cursor: pointer;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease;
+}
+
+.zl-item-tray-action:hover,
+.zl-item-tray-action:focus-visible {
+  background: rgba(30, 23, 20, 0.06);
+}
+
+.zl-item-tray-action:active {
+  transform: scale(0.94);
+}
+
+.zl-item-tray-target {
+  border-color: var(--target-colour, rgba(30, 23, 20, 0.18));
+}
+
+.zl-item-tray-remove {
+  opacity: 0.72;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-item-more-button,
+  .zl-item-tray-action,
+  .grab-indicator {
     transition: none;
   }
 }
