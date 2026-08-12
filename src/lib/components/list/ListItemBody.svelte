@@ -12,6 +12,8 @@
   export let isTouchActive = false;
   export let onToggle = () => {};
   export let onStartEdit = () => {};
+  /** Tray "Edit" opens the sheet; tapping the words stays the fast inline path. */
+  export let onOpenSheet = () => {};
   export let onSaveEdit = () => {};
   export let onEditKeyDown = () => {};
   export let onTyping = () => {};
@@ -148,7 +150,7 @@
       type="button"
       class="zl-item-tray-action"
       data-swipe-ignore="true"
-      on:click|stopPropagation={() => onStartEdit(item)}
+      on:click|stopPropagation={() => onOpenSheet(item)}
     >
       Edit
     </button>

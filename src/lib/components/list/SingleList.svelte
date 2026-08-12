@@ -73,6 +73,7 @@
   import DraftItemRow from "./DraftItemRow.svelte";
   import LiveActivityRow from "./LiveActivityRow.svelte";
   import ListItemBody from "./ListItemBody.svelte";
+  import ItemEditSheet from "./ItemEditSheet.svelte";
   import "./SingleList.css";
 
   // State variables
@@ -1523,6 +1524,40 @@
     }
   }
 
+  // ── The edit sheet — the deeper layer behind the tray ──────────────
+  // Inline editing stays for a quick rename. This is for when the line needs
+  // tags or a considered rewrite.
+  let sheetItem = null;
+
+  // Tags already living in this list, so people reuse rather than reinvent —
+  // a list where half the items say #shop and half say #shopping is worse
+  // than one with no tags at all.
+  $: suggestedTags = [
+    ...new Set((list?.items ?? []).flatMap((entry) => entry.tags ?? [])),
+  ];
+
+  function openItemSheet(item) {
+    if (item.checked) return;
+    hapticService.selection();
+    sheetItem = item;
+    // Same courtesy as inline editing: tell the room you're in this line.
+    if (isLive) {
+      liveListsService.broadcastItemFocus(list.id, item.id);
+    }
+  }
+
+  function closeItemSheet() {
+    sheetItem = null;
+    clearItemFocus();
+  }
+
+  function saveItemSheet(event) {
+    const { itemId, text } = event.detail;
+    listsService.editItem(itemId, text, list.id);
+    hapticService.selection();
+    soundService.select();
+  }
+
   function cancelItemEdit() {
     editingItemId = null;
     editedItemText = "";
@@ -2047,6 +2082,7 @@
                 isTouchActive={touchDragItemId === item.id}
                 onToggle={toggleItem}
                 onStartEdit={startEditingItem}
+                onOpenSheet={openItemSheet}
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
                 onTyping={handleEditTyping}
@@ -2152,6 +2188,7 @@
                 isTouchActive={touchDragItemId === item.id}
                 onToggle={toggleItem}
                 onStartEdit={startEditingItem}
+                onOpenSheet={openItemSheet}
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
                 onTyping={handleEditTyping}
@@ -2208,4 +2245,14 @@
       </div>
     </div>
   </div>
+{/if}
+
+{#if sheetItem}
+  <ItemEditSheet
+    item={sheetItem}
+    {suggestedTags}
+    on:save={saveItemSheet}
+    on:delete={(event) => deleteItem(event.detail.itemId)}
+    on:close={closeItemSheet}
+  />
 {/if}
