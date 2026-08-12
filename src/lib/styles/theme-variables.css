@@ -19,13 +19,9 @@
 
   /* Default fallback colors */
   --zl-primary-color: #ffcc33;
-  --zl-secondary-color: #ffd4da;
   --zl-accent-color: #ff6ac2;
   --zl-cta-color: #ffb000; /* Brand voice-button yellow — constant across themes */
   --zl-cta-color-rgb: 255, 176, 0;
-  --zl-cta-grad-start: #ffd54f;
-  --zl-cta-grad-end: #ffb000;
-  --zl-highlight-color: #ffecf0;
 
   /* Card gradient defaults */
   --zl-card-bg-gradient-animation-duration: 30s;
@@ -39,6 +35,14 @@
   );
 
   /* Text colors */
+  /* Referenced across the app with var(..., literal) but never actually
+     declared, so every theme silently wore the same hardcoded teal checkbox
+     shadow and white veil. Declared once here and derived from the active
+     vibe's own RGB, so they follow the theme without needing a copy per vibe. */
+  --zl-card-veil: rgba(255, 255, 255, 0.3);
+  --zl-checkbox-shadow: 0 3px 7px rgba(var(--zl-primary-color-rgb), 0.18);
+  --zl-checkbox-hover-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb), 0.28);
+
   --zl-text-color-primary: #444444;
   --zl-text-color-secondary: #666666;
   --zl-text-color-disabled: #9d9d9d;
@@ -67,7 +71,6 @@
   /* Animation durations */
   --zl-transition-duration-fast: 0.2s;
   --zl-transition-duration-normal: 0.3s;
-  --zl-transition-duration-slow: 0.5s;
 
   /* Transition easings */
   --zl-transition-easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -78,21 +81,12 @@
     var(--zl-transition-easing-smooth);
   --zl-transition-fast: all var(--zl-transition-duration-fast)
     var(--zl-transition-easing-smooth);
-  --zl-transition-bounce: all var(--zl-transition-duration-normal)
-    var(--zl-transition-easing-bounce);
 
   /* Spacing units */
-  --zl-spacing-xs: 0.5rem;
   --zl-spacing-s: 1rem;
   --zl-spacing-m: 1.5rem;
-  --zl-spacing-l: 2rem;
-  --zl-spacing-xl: 2.5rem;
 
   /* Animation parameters */
-  --zl-sparkle-opacity-start: 0;
-  --zl-sparkle-scale-start: 0;
-  --zl-sparkle-opacity-mid: 1;
-  --zl-sparkle-scale-mid: 1;
 
   /* Mascot (the floating ZipList dude) gradient — 3 stops the hero silhouette
      reads via fill="url(#themeGradient)". Defaults mirror DEFAULT_THEME (neo)
@@ -161,14 +155,20 @@ html[data-theme="highlighter"] {
   --zl-card-bg-gradient-color-end: #fff9f0;
 
   /* Base theme colors */
+  /* These two used to fall through to :root, which is violet — so the one
+     amber theme wore a purple dashed empty-state and a purple card gradient
+     while every sibling used warm ink and its own accent. */
+  --zl-empty-state-border: 3px dashed rgba(30, 23, 20, 0.3);
+  --zl-card-inner-border-gradient: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 176, 0, 0.2)
+  );
+
   --zl-primary-color: #ffb000; /* Amber/Egg Yolk */
-  --zl-primary-color-rgb: 255, 176, 0;
-  --zl-secondary-color: #ffd1dc; /* Pastel Pink */
+  --zl-primary-color-rgb: 255, 176, 0; /* Pastel Pink */
   --zl-accent-color: #1e1714; /* warm near-black, not pure black */
-  --zl-cta-grad-start: #ffd54f;
-  --zl-cta-grad-end: #ffb000;
-  --zl-accent-color-rgb: 30, 23, 20;
-  --zl-highlight-color: #a0e7e5; /* Tiffany Blue / Mint */
+  --zl-accent-color-rgb: 30, 23, 20; /* Tiffany Blue / Mint */
   --zl-text-hover-color: #1e1714;
 
   /* Text colors — warm near-black, never pure black */
@@ -228,11 +228,9 @@ html[data-theme="highlighter"] {
   --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-bg: #fffef7;
   --zl-edit-input-focus-shadow: 4px 4px 0px 0px #a0e7e5;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #ffb000;
 
   /* Empty state styling */
   --zl-empty-state-bg: #fff0f5;
@@ -278,12 +276,8 @@ html[data-theme="sticky-note"] {
   /* Base theme colors */
   --zl-primary-color: #e6a300;
   --zl-primary-color-rgb: 230, 163, 0;
-  --zl-secondary-color: #fffbcc;
   --zl-accent-color: #1e1714;
   --zl-accent-color-rgb: 30, 23, 20;
-  --zl-cta-grad-start: #fff95c;
-  --zl-cta-grad-end: #ffcd1f;
-  --zl-highlight-color: #fffbcc;
   --zl-text-hover-color: #1e1714;
 
   /* Text colors — warm near-black, never pure black */
@@ -339,13 +333,11 @@ html[data-theme="sticky-note"] {
   --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-bg: #fffef7;
   --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
   --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
   --zl-edit-input-focus-shadow: 4px 4px 0px 0px #e6a300;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #e6a300;
 
   /* Empty state styling */
   --zl-empty-state-bg: #fffbcc;
@@ -390,12 +382,8 @@ html[data-theme="gel-pen"] {
   /* Base theme colors */
   --zl-primary-color: #ed1a75;
   --zl-primary-color-rgb: 237, 26, 117;
-  --zl-secondary-color: #ffe0ef;
   --zl-accent-color: #1e1714;
   --zl-accent-color-rgb: 30, 23, 20;
-  --zl-cta-grad-start: #ff7ab8;
-  --zl-cta-grad-end: #f5157f;
-  --zl-highlight-color: #ffe0ef;
   --zl-text-hover-color: #1e1714;
 
   /* Text colors — warm near-black, never pure black */
@@ -451,13 +439,11 @@ html[data-theme="gel-pen"] {
   --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-bg: #fffef7;
   --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
   --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
   --zl-edit-input-focus-shadow: 4px 4px 0px 0px #ed1a75;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #ed1a75;
 
   /* Empty state styling */
   --zl-empty-state-bg: #ffe0ef;
@@ -502,12 +488,8 @@ html[data-theme="legal-pad"] {
   /* Base theme colors */
   --zl-primary-color: #68a000;
   --zl-primary-color-rgb: 104, 160, 0;
-  --zl-secondary-color: #f0ffd1;
   --zl-accent-color: #1e1714;
   --zl-accent-color-rgb: 30, 23, 20;
-  --zl-cta-grad-start: #d8fa6e;
-  --zl-cta-grad-end: #85c203;
-  --zl-highlight-color: #f0ffd1;
   --zl-text-hover-color: #1e1714;
 
   /* Text colors — warm near-black, never pure black */
@@ -563,13 +545,11 @@ html[data-theme="legal-pad"] {
   --zl-drop-arrow-shadow: 0px 0px 0px 0px transparent;
 
   /* Edit input styling */
-  --zl-edit-input-bg: #fffef7;
   --zl-edit-input-border: 2px solid rgba(30, 23, 20, 0.35);
   --zl-edit-input-focus-border: rgba(30, 23, 20, 0.7);
   --zl-edit-input-focus-shadow: 4px 4px 0px 0px #68a000;
 
   /* New item input styling */
-  --zl-new-item-input-focus-shadow: 4px 4px 0px 0px #68a000;
 
   /* Empty state styling */
   --zl-empty-state-bg: #f0ffd1;
@@ -636,8 +616,6 @@ html.mode-neo-brutalist {
   /* Inputs */
   --zl-edit-input-border: 4px solid var(--zl-chunky-ink);
   --zl-edit-input-focus-border: var(--zl-chunky-ink);
-  --zl-new-item-input-border: 4px solid var(--zl-chunky-ink);
-  --zl-new-item-input-focus-border: var(--zl-chunky-ink);
 }
 
 /* Note: per-component transitions are defined in each component.

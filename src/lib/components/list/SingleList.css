@@ -2088,7 +2088,7 @@ body.zl-touch-dragging {
   min-height: 32px;
   border: none;
   background: transparent;
-  color: var(--zl-item-text-color, #1e1714);
+  color: var(--zl-text-color-primary, #1e1714);
   opacity: 0.4;
   font-size: 1.05rem;
   line-height: 1;
@@ -2140,7 +2140,7 @@ body.zl-touch-dragging {
   padding: 0.34rem 0.7rem;
   border-radius: 999px;
   border: 2px solid var(--target-colour, rgba(30, 23, 20, 0.25));
-  background: var(--zl-surface-warm, #fffdf5);
+  background: var(--zl-item-bg, #fffef7);
   color: #1e1714;
   cursor: pointer;
   transition:
@@ -2180,7 +2180,7 @@ body.zl-touch-dragging {
   padding: 0.36rem 0.72rem;
   border-radius: 999px;
   border: 2px solid rgba(30, 23, 20, 0.2);
-  background: var(--zl-surface-warm, #fffdf5);
+  background: var(--zl-item-bg, #fffef7);
   color: #1e1714;
   cursor: pointer;
   transition:
