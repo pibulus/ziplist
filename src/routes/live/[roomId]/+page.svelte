@@ -1,5 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
+  import { get } from "svelte/store";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { listsStore } from "$lib/services/lists/listsStore";
@@ -26,8 +27,15 @@
     avatar = getOrCreateAvatar();
 
     try {
-      // Create a temporary list ID for this session
-      listId = `live_${roomId}`;
+      // If a local list ALREADY owns this room, bind to it. Minting
+      // `live_<roomId>` unconditionally meant opening your own share link — to
+      // check it worked, or because someone bounced it back — created a SECOND
+      // card for the same room. The two then fought: local-change sync is keyed
+      // per listId, so a remote update applied to the clone fired the original's
+      // subscription, which isn't suppressed, so it pushed its whole snapshot
+      // back into the same room. Whole-snapshot last-write-wins, forever.
+      const owned = get(listsStore).lists.find((l) => l.liveRoomId === roomId);
+      listId = owned?.id ?? `live_${roomId}`;
 
       // Connect to the live room
       await connectToLive(listId, roomId, password);

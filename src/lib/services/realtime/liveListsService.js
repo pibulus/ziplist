@@ -217,7 +217,13 @@ export async function joinByPhrase(phrase) {
 export async function connectToLive(listId, roomId, password = null) {
   const existingConnection = activeConnections.get(listId);
   if (existingConnection) {
-    return existingConnection.readyPromise || Promise.resolve();
+    // Reuse only if it's the SAME room. Returning a connection pointed at a
+    // different room reports success while leaving the caller wired to the old
+    // one — the quiet half of how one list ends up split across two rooms.
+    if (existingConnection.roomId === roomId) {
+      return existingConnection.readyPromise || Promise.resolve();
+    }
+    disconnectFromLive(listId);
   }
 
   if (!getListSnapshot(listId)) {

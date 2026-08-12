@@ -22,8 +22,16 @@ export const LIVE_ROOM_TIERS = Object.freeze({
   SUPPORTER: "supporter",
 });
 
+// A shared shopping list is not a 24-hour object. Free rooms expiring after one
+// idle day was the third way a shared list drifted apart: the room popped, the
+// owner saw the "Go live" button return, tapped it, and got a BRAND NEW room and
+// link — which the other person never received. Seven days outlasts the actual
+// use case. Supporters keep a year.
+// NOTE: this constant is read by BOTH /api/live/create (Netlify) and
+// party/listRoom.ts (the worker), so changing it needs `npm run party:deploy`
+// AND a Netlify deploy or the two disagree about when a room dies.
 export const LIVE_ROOM_TTL_MS = Object.freeze({
-  [LIVE_ROOM_TIERS.FREE]: 24 * 60 * 60 * 1000,
+  [LIVE_ROOM_TIERS.FREE]: 7 * 24 * 60 * 60 * 1000,
   [LIVE_ROOM_TIERS.SUPPORTER]: 365 * 24 * 60 * 60 * 1000,
 });
 
