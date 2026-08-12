@@ -19,11 +19,18 @@ assert.ok(isValidSyncPhrase(phrase), "generated phrase must validate");
 const a = await deriveRoomIdFromPhrase(phrase);
 const b = await deriveRoomIdFromPhrase(phrase);
 assert.equal(a, b, "same phrase must derive the same room id");
-assert.ok(SYNC_ROOM_PATTERN.test(a), `room id must match the pattern, got ${a}`);
+assert.ok(
+  SYNC_ROOM_PATTERN.test(a),
+  `room id must match the pattern, got ${a}`,
+);
 
 // People retype these by hand — case, spacing and punctuation must not matter.
 const messy = `  ${phrase.replace(/-/g, " ").toUpperCase()}!  `;
-assert.equal(normalizeSyncPhrase(messy), phrase, "normalize should be forgiving");
+assert.equal(
+  normalizeSyncPhrase(messy),
+  phrase,
+  "normalize should be forgiving",
+);
 assert.equal(
   await deriveRoomIdFromPhrase(messy),
   a,
@@ -36,14 +43,26 @@ const third = await deriveRoomIdFromPhrase("neon-turtle-drifts-yonder");
 assert.notEqual(other, third, "different phrases must derive different rooms");
 
 // Junk in, nothing out — never a half-valid room id.
-for (const junk of ["", "  ", "only-three-words", "way-too-many-words-here-friend"]) {
-  assert.equal(await deriveRoomIdFromPhrase(junk), "", `junk should derive nothing: ${junk}`);
+for (const junk of [
+  "",
+  "  ",
+  "only-three-words",
+  "way-too-many-words-here-friend",
+]) {
+  assert.equal(
+    await deriveRoomIdFromPhrase(junk),
+    "",
+    `junk should derive nothing: ${junk}`,
+  );
 }
 
 // Spread check: 400 phrases should be overwhelmingly distinct.
 const seen = new Set();
 for (let i = 0; i < 400; i++) seen.add(generateSyncPhrase());
-assert.ok(seen.size > 395, `phrases should rarely repeat, got ${seen.size}/400`);
+assert.ok(
+  seen.size > 395,
+  `phrases should rarely repeat, got ${seen.size}/400`,
+);
 
 console.log("✓ sync phrase checks passed");
 console.log(`  example: ${phrase}`);

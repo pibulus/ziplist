@@ -42,7 +42,17 @@ const items = textToItems(messy);
 assert.equal(items.length, 9, `expected 9 items, got ${items.length}`);
 assert.deepEqual(
   items.map((i) => i.text),
-  ["eggs","butter","jam","tea","coffee","paid rent","call mum","washed up","plain line"],
+  [
+    "eggs",
+    "butter",
+    "jam",
+    "tea",
+    "coffee",
+    "paid rent",
+    "call mum",
+    "washed up",
+    "plain line",
+  ],
   "every bullet style should strip cleanly",
 );
 assert.equal(items[5].checked, true, "[x] should read as done");
@@ -60,4 +70,10 @@ assert.deepEqual(textToItems(null), []);
 assert.deepEqual(textToItems("   \n  \n"), []);
 
 console.log("✓ list text checks passed");
-console.log(listToText(list).trimEnd().split("\n").map((l) => "  " + l).join("\n"));
+console.log(
+  listToText(list)
+    .trimEnd()
+    .split("\n")
+    .map((l) => "  " + l)
+    .join("\n"),
+);
