@@ -12,6 +12,8 @@
     rerollAvatar,
   } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
+  import { listsService } from "$lib/services/lists/listsService";
+  import * as liveListsService from "$lib/services/realtime/liveListsService";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -96,6 +98,66 @@
         detail: { setting: "chunkyMode", value: chunkyModeValue },
       }),
     );
+  }
+
+  // ── Device sync ────────────────────────────────────────────────────────
+  let syncPhrase = "";
+  let joinPhrase = "";
+  let syncStatus = "";
+  let syncBusy = false;
+  let syncCopied = false;
+
+  async function handleStartSync() {
+    syncBusy = true;
+    syncStatus = "";
+    try {
+      const activeList = listsService.getActiveList();
+      if (!activeList) {
+        syncStatus = "Open a list first.";
+        return;
+      }
+      const result = await liveListsService.startPhraseSync(activeList.id);
+      syncPhrase = result.phrase;
+      syncCopied = false;
+    } catch (error) {
+      console.error("Sync start failed:", error);
+      syncStatus = "Could not start the handover. Try again in a moment.";
+    } finally {
+      syncBusy = false;
+    }
+  }
+
+  async function copySyncPhrase() {
+    try {
+      await navigator.clipboard.writeText(syncPhrase);
+      syncCopied = true;
+      setTimeout(() => (syncCopied = false), 1600);
+    } catch {
+      syncStatus = "Copy did not take — read the words out instead.";
+    }
+  }
+
+  async function handleJoinSync() {
+    if (!joinPhrase.trim()) return;
+    syncBusy = true;
+    syncStatus = "";
+    try {
+      const result = await liveListsService.joinByPhrase(joinPhrase);
+      if (result.success) {
+        syncStatus = "Got it — the list is here.";
+        joinPhrase = "";
+      } else {
+        syncStatus =
+          result.reason === "invalid"
+            ? "That should be four words, like quiet-satchel-sighs-midair."
+            : "No list waiting on those words. Check the spelling?";
+      }
+    } catch (error) {
+      console.error("Sync join failed:", error);
+      syncStatus = "That did not connect. Try again in a moment.";
+    } finally {
+      syncBusy = false;
+    }
   }
 
   // Handle vibe change
@@ -297,6 +359,66 @@
         </div>
       </section>
 
+      <!-- Carry a list to another device. No account, no login: four words
+           off this screen, typed into the other one. -->
+      <section class="zl-settings-section" aria-label="Move a list to another device">
+        <div class="zl-setting-row zl-sync-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Send a list to another device</span>
+            <p class="zl-setting-desc">Four words, no account</p>
+          </div>
+          <button
+            type="button"
+            class="zl-sync-action"
+            disabled={syncBusy}
+            on:click={handleStartSync}
+          >
+            {syncBusy ? "…" : "Get words"}
+          </button>
+        </div>
+
+        {#if syncPhrase}
+          <div class="zl-sync-phrase-box">
+            <code class="zl-sync-phrase">{syncPhrase}</code>
+            <button type="button" class="zl-sync-copy" on:click={copySyncPhrase}>
+              {syncCopied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <p class="zl-sync-hint">
+            Type these into the other device, in this same spot.
+          </p>
+        {/if}
+
+        <!-- Control stays inside the row, like every other setting here — the
+             input used to float outside the card and read as unattached. -->
+        <div class="zl-setting-row zl-sync-row">
+          <div class="zl-setting-info">
+            <span class="zl-setting-name">Receive a list</span>
+            <p class="zl-setting-desc">Type the four words here</p>
+          </div>
+          <div class="zl-sync-receive">
+            <input
+              class="zl-sync-input"
+              bind:value={joinPhrase}
+              placeholder="quiet-satchel-sighs-midair"
+              aria-label="Four-word phrase from your other device"
+              on:keydown={(e) => e.key === "Enter" && handleJoinSync()}
+            />
+            <button
+              type="button"
+              class="zl-sync-copy"
+              disabled={syncBusy || !joinPhrase}
+              on:click={handleJoinSync}
+            >
+              Go
+            </button>
+          </div>
+        </div>
+        {#if syncStatus}
+          <p class="zl-sync-hint" role="status">{syncStatus}</p>
+        {/if}
+      </section>
+
       <section
         class="zl-settings-section zl-settings-footer"
         aria-label="Contributor"
@@ -469,6 +591,72 @@
   .zl-vibe-option:focus-visible {
     outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
     outline-offset: 3px;
+  }
+
+  .zl-sync-row {
+    align-items: flex-start;
+  }
+
+  .zl-sync-action,
+  .zl-sync-copy {
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 0.42rem 0.8rem;
+    border-radius: 999px;
+    border: 2px solid rgba(30, 23, 20, 0.22);
+    background: #fffdf5;
+    color: #1e1714;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .zl-sync-action:active,
+  .zl-sync-copy:active {
+    transform: scale(0.94);
+  }
+
+  .zl-sync-action:disabled,
+  .zl-sync-copy:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .zl-sync-receive {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    flex: 1 1 55%;
+  }
+
+  .zl-sync-phrase-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.15rem 0 0.35rem;
+  }
+
+  .zl-sync-phrase,
+  .zl-sync-input {
+    flex: 1;
+    min-width: 0;
+    font-family: "Space Mono", monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.5rem 0.65rem;
+    border-radius: 10px;
+    border: 2px solid rgba(30, 23, 20, 0.16);
+    background: rgba(30, 23, 20, 0.04);
+    color: #1e1714;
+    overflow-wrap: anywhere;
+  }
+
+  .zl-sync-hint {
+    font-size: 0.72rem;
+    opacity: 0.62;
+    margin: 0 0 0.35rem;
   }
 
   .zl-settings-section {

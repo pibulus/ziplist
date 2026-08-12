@@ -2,6 +2,7 @@ import { dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
 import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter.js";
+import { SYNC_ROOM_PATTERN } from "$lib/services/realtime/syncPhrase.js";
 import { verifyContributorToken } from "$lib/server/contributor/licenseCrypto.js";
 import {
   createLiveRoomMetadata,
@@ -91,14 +92,26 @@ export async function POST(event) {
   }
 
   try {
-    const { listData, password = null } = await event.request.json();
+    const {
+      listData,
+      password = null,
+      roomId: requestedRoomId = null,
+    } = await event.request.json();
     const sanitizedListData = sanitizeLiveListData(listData);
 
     if (!sanitizedListData) {
       return json({ error: "Invalid list data." }, { status: 400 });
     }
 
-    const roomId = generateLiveRoomId();
+    // Device sync hands us a room id derived from the user's four-word phrase
+    // so the other device can find it by typing the same words. Only that exact
+    // shape is accepted — anything else still gets a fresh random room, so a
+    // client can never name an arbitrary room and squat on someone else's.
+    const roomId =
+      typeof requestedRoomId === "string" &&
+      SYNC_ROOM_PATTERN.test(requestedRoomId)
+        ? requestedRoomId
+        : generateLiveRoomId();
     const protocol = getPartyKitProtocol(host);
     const sanitizedPassword = sanitizeLivePassword(password);
     const roomMetadata = createLiveRoomMetadata({

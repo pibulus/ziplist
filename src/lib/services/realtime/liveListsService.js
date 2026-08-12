@@ -17,6 +17,7 @@ import {
   isLiveCollaborationAvailable as isPartyKitAvailable,
 } from "./partyService.js";
 import { getPresenceStore, cleanupPresenceStore } from "./presenceStore.js";
+import { generateSyncPhrase, deriveRoomIdFromPhrase } from "./syncPhrase.js";
 import { getTypingStore, cleanupTypingStore } from "./typingStore.js";
 import {
   LIVE_CLOSE_CODES,
@@ -150,20 +151,59 @@ function createJoinError(event) {
  * @param {string} [password]
  * @returns {Promise<{roomId: string, shareUrl: string}>}
  */
-export async function makeLive(listId, password = null) {
+export async function makeLive(listId, password = null, desiredRoomId = null) {
   const listData = getListSnapshot(listId);
 
   if (!listData) {
     throw new Error(`List ${listId} not found`);
   }
 
-  const { roomId } = await createLiveList(listData, password);
+  // Rejoin before creating. Without this, a second call mints a fresh room and
+  // hands out its link while the sender stays wired to the old one — two rooms
+  // for one list, and the recipient never hears about the new address.
+  const existingRoom = getRoomId(listId);
+  if (existingRoom && !desiredRoomId) {
+    await connectToLive(listId, existingRoom, password);
+    return {
+      roomId: existingRoom,
+      shareUrl: generateShareUrl(existingRoom, password),
+    };
+  }
+
+  const { roomId } = await createLiveList(listData, password, desiredRoomId);
   await connectToLive(listId, roomId, password);
 
   return {
     roomId,
     shareUrl: generateShareUrl(roomId, password),
   };
+}
+
+// ── Carry a list to another device with four words ──────────────────────
+// Both halves lean entirely on the live-list rig that already works: sync is
+// just a live room whose id came from a phrase instead of a random uuid.
+
+export async function startPhraseSync(listId) {
+  const phrase = generateSyncPhrase();
+  const roomId = await deriveRoomIdFromPhrase(phrase);
+  if (!roomId) throw new Error("Could not build a sync phrase.");
+
+  await makeLive(listId, null, roomId);
+  return { phrase, roomId };
+}
+
+export async function joinByPhrase(phrase) {
+  const roomId = await deriveRoomIdFromPhrase(phrase);
+  if (!roomId) return { success: false, reason: "invalid" };
+
+  const listId = `live_${roomId}`;
+  try {
+    await connectToLive(listId, roomId, null);
+    return { success: true, listId, roomId };
+  } catch (error) {
+    // A wrong phrase is an unremarkable typo, not a fault worth shouting about.
+    return { success: false, reason: "not-found", error };
+  }
 }
 
 /**

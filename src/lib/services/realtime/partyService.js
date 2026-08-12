@@ -71,7 +71,7 @@ function requirePartyKitHost() {
  * @param {string} [password] - Optional password for the room
  * @returns {Promise<{roomId: string, listId: string}>}
  */
-export async function createLiveList(listData, password = null) {
+export async function createLiveList(listData, password = null, roomId = null) {
   requirePartyKitHost();
 
   const token = getContributorTokenSnapshot();
@@ -81,7 +81,7 @@ export async function createLiveList(listData, password = null) {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ listData, password }),
+    body: JSON.stringify({ listData, password, roomId }),
   });
 
   const payload = await response.json().catch(() => ({}));
