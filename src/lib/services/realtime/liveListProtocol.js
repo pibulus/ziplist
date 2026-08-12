@@ -11,6 +11,7 @@ export const LIVE_MESSAGE_TYPES = Object.freeze({
   ITEM_FOCUS: "item_focus",
   VOICE_ACTIVITY: "voice_activity",
   HEART: "heart",
+  ITEM_CHECKED: "item_checked",
 });
 
 export const LIVE_CLOSE_CODES = Object.freeze({
@@ -307,6 +308,15 @@ export function normalizeLiveMessage(input) {
     case LIVE_MESSAGE_TYPES.ITEM_FOCUS: {
       const data = normalizeItemFocusData(input.data);
       return data ? { type: LIVE_MESSAGE_TYPES.ITEM_FOCUS, data } : null;
+    }
+
+    case LIVE_MESSAGE_TYPES.ITEM_CHECKED: {
+      // Which line got ticked. The list_update carrying the actual state
+      // change rides separately — this is only the celebration.
+      const data = normalizeItemFocusData(input.data);
+      return data?.itemId
+        ? { type: LIVE_MESSAGE_TYPES.ITEM_CHECKED, data }
+        : null;
     }
 
     case LIVE_MESSAGE_TYPES.HEART:

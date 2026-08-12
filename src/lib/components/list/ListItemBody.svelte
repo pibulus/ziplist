@@ -26,10 +26,22 @@
   export let moveTargets = [];
   /** Someone else is editing this line right now: {id, avatar, color}. */
   export let remoteFocus = null;
+  /** Someone else just ticked this off: {colour, key}. */
+  export let checkedBloom = null;
   export let isMoving = false;
   export let onRequestMove = () => {};
   export let onMoveTo = () => {};
 </script>
+
+{#if checkedBloom}
+  {#key checkedBloom.key}
+    <span
+      class="zl-item-checked-bloom"
+      style={`--bloom-colour: ${checkedBloom.colour}`}
+      aria-hidden="true"
+    ></span>
+  {/key}
+{/if}
 
 {#if remoteFocus}
   <!-- Someone else is in this line. Their own avatar colour, so the glow says

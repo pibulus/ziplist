@@ -371,6 +371,16 @@ export async function connectToLive(listId, roomId, password = null) {
                 }
                 break;
 
+              case LIVE_MESSAGE_TYPES.ITEM_CHECKED:
+                if (sender && typeof window !== "undefined") {
+                  window.dispatchEvent(
+                    new CustomEvent("ziplist-item-checked", {
+                      detail: { listId, sender, itemId: message.data?.itemId },
+                    }),
+                  );
+                }
+                break;
+
               case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY:
                 if (sender) {
                   activityStore.setVoiceActivity(sender, message.data);
@@ -553,6 +563,15 @@ export function broadcastHeart(listId) {
   if (!connection) return;
 
   sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.HEART, {});
+}
+
+/** Someone ticked something off. Pure celebration — the state change rides
+ *  in the list_update that follows. */
+export function broadcastItemChecked(listId, itemId) {
+  const connection = activeConnections.get(listId);
+  if (!connection || !itemId) return;
+
+  sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.ITEM_CHECKED, { itemId });
 }
 
 export function broadcastVoiceActivity(listId, data = {}) {

@@ -215,6 +215,7 @@
     if (typeof window !== "undefined") {
       window.addEventListener("ziplist-list-notice", handleListNotice);
       window.addEventListener("ziplist-heart", handleRemoteHeart);
+      window.addEventListener("ziplist-item-checked", handleRemoteItemChecked);
     }
   });
 
@@ -243,6 +244,10 @@
     if (typeof window !== "undefined") {
       window.removeEventListener("ziplist-list-notice", handleListNotice);
         window.removeEventListener("ziplist-heart", handleRemoteHeart);
+        window.removeEventListener(
+          "ziplist-item-checked",
+          handleRemoteItemChecked,
+        );
     }
   });
 
@@ -673,6 +678,26 @@
     if (isLive) {
       liveListsService.broadcastHeart(list.id);
     }
+  }
+
+  // Someone else ticked something off. You already feel your own checks —
+  // this is for knowing the milk got got while you were looking elsewhere.
+  let checkedBlooms = new Map();
+
+  function handleRemoteItemChecked(event) {
+    if (event.detail?.listId !== list.id) return;
+    const { itemId, sender } = event.detail;
+    if (!itemId) return;
+
+    checkedBlooms = new Map(checkedBlooms).set(itemId, {
+      colour: getAvatarColor(sender.avatar),
+      key: (heartSeq += 1),
+    });
+    setTimeout(() => {
+      const next = new Map(checkedBlooms);
+      next.delete(itemId);
+      checkedBlooms = next;
+    }, 1400);
   }
 
   function handleRemoteHeart(event) {
@@ -1436,6 +1461,12 @@
         .filter((item) => item.id !== itemId)
         .every((item) => item.checked);
 
+    // Tell the room — but only on the way IN. Un-checking is a correction,
+    // not an accomplishment, and celebrating it would be sarcasm.
+    if (willCheckItem && isLive) {
+      liveListsService.broadcastItemChecked(list.id, itemId);
+    }
+
     // Apply haptic feedback
     if (itemToToggle) {
       hapticService.impact(itemToToggle.checked ? "light" : "medium");
@@ -2130,6 +2161,7 @@
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
                 remoteFocus={remoteFocusByItem.get(item.id) || null}
+                checkedBloom={checkedBlooms.get(item.id) || null}
                 {moveTargets}
                 isMoving={movingItemId === item.id}
                 onRequestMove={requestMove}
@@ -2235,6 +2267,7 @@
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
                 remoteFocus={remoteFocusByItem.get(item.id) || null}
+                checkedBloom={checkedBlooms.get(item.id) || null}
                 {moveTargets}
                 isMoving={movingItemId === item.id}
                 onRequestMove={requestMove}
