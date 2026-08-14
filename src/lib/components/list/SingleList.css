@@ -2566,7 +2566,9 @@ body.zl-touch-dragging {
    brings things IN — is visibly not one of them. */
 .zl-share-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Three ways out now (link, clipboard, file); let them share a row where
+     the tray is wide enough and wrap where it isn't. */
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
   gap: 0.5rem;
 }
 

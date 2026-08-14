@@ -1346,6 +1346,21 @@
     }
   }
 
+  function downloadAsText() {
+    const name =
+      (list.name || "ziplist").replace(/[^\w\- ]+/g, "").trim() || "ziplist";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(
+      new Blob([listToText(list)], { type: "text/plain" }),
+    );
+    a.download = `${name}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    shareTrayOpen = false;
+    showListStatus("Saved as a text file.", true, 2200);
+    soundService.copySuccess({ force: true });
+  }
+
   function pasteItemsIn() {
     const { items } = splitPastedList(pasteText);
     if (!items.length) {
@@ -2048,6 +2063,13 @@
           </button>
           <button type="button" class="zl-share-option" on:click={copyAsText}>
             Copy as text
+          </button>
+          <button
+            type="button"
+            class="zl-share-option"
+            on:click={downloadAsText}
+          >
+            Save as file
           </button>
         </div>
 
