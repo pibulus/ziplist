@@ -209,7 +209,7 @@ html[data-theme="highlighter"] {
   --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: #fffef7;
+  --zl-item-bg: #fbf1e4;
   --zl-item-hover-bg: #fff8e1;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;
@@ -319,7 +319,7 @@ html[data-theme="sticky-note"] {
   --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: #fffef7;
+  --zl-item-bg: #fbf1e4;
   --zl-item-hover-bg: #fffbcc;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;
@@ -423,7 +423,7 @@ html[data-theme="gel-pen"] {
   --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: #fffef7;
+  --zl-item-bg: #fbf1e4;
   --zl-item-hover-bg: #ffe0ef;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;
@@ -527,7 +527,7 @@ html[data-theme="legal-pad"] {
   --footer-text-color: #3a2f2a;
 
   /* List item styling */
-  --zl-item-bg: #fffef7;
+  --zl-item-bg: #fbf1e4;
   --zl-item-hover-bg: #f0ffd1;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;

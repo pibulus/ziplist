@@ -923,14 +923,14 @@
      forever. Hover now changes weight instead of colour, which it can
      afford to, being a pointer-only luxury. */
   border-left: 4px solid var(--zl-item-accent);
-  /* A whisper of the same accent through the row, so the colour is the item's
-     and not just a stripe stuck to its edge. 6% survives on cream without
-     tinting the text. */
-  background: color-mix(
-    in srgb,
-    var(--zl-item-accent) 6%,
-    var(--zl-item-bg, #fffef7)
-  );
+  /* Genuinely CREAMY (#fbf1e4-ish via --zl-item-bg), and deliberately NOT
+     tinted with the list's accent. The container behind these rows wears the
+     list's 10% colour wash, and a card washed with the same hue was the same
+     colour — rows disappeared into the list. A 6% accent whisper was tried
+     here and pulled the cream right back toward the container. Warm cream on
+     the tinted ground reads as its own surface; the border-left spine and the
+     checked-state tint carry the item's colour. */
+  background: var(--zl-item-bg, #fbf1e4);
 
   position: relative;
   cursor: grab;
