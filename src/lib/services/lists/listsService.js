@@ -62,6 +62,24 @@ export class ListsService {
     if (items && items.length > 0) {
       this._addItemsToActiveList(items, targetListId);
     }
+
+    // Nothing came out of the recording at all — say so warmly instead of
+    // silently doing nothing (the list just sitting unchanged reads as broken).
+    const nothingHappened =
+      !(commands && commands.length > 0) &&
+      !(complete && complete.length > 0) &&
+      !(items && items.length > 0);
+    if (nothingHappened && typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("ziplist-list-notice", {
+          detail: {
+            message:
+              "Couldn't catch any items in that one — the mic's ready for another go.",
+            success: false,
+          },
+        }),
+      );
+    }
   }
 
   /**
