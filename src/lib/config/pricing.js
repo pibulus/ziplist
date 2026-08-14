@@ -4,8 +4,8 @@
  * Keep this boring on purpose: one clear once-off price, no fake anchor.
  */
 export const PRICING = {
-  currentPrice: 9,
-  currency: "AUD", // Square charge currency; displayed price is just "$9" (≈ same in USD)
+  currentPrice: 24,
+  currency: "AUD", // Square charge currency; displayed price is just displayPrice (≈ same in USD)
   productName: "ZipList Contributor Pass",
   termDays: 365,
 
@@ -26,8 +26,9 @@ export const CONTRIBUTOR_BENEFITS = [
 ];
 
 export const CONTRIBUTOR_COPY = {
-  summary:
-    "$9 a year, no subscription — every feature is free, this just buys more room and keeps ZipList going.",
+  get summary() {
+    return `${PRICING.displayPrice} a year, no subscription — every feature is free, this just buys more room and keeps ZipList going.`;
+  },
   checkoutError:
     "Checkout needs server setup first. Contributor codes still work.",
 };
