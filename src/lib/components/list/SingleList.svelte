@@ -1,5 +1,6 @@
 <script>
   import { onMount, onDestroy, tick } from "svelte";
+  import { get } from "svelte/store";
   import {
     listsStore,
     LIST_COLOR_PRESETS,
@@ -216,6 +217,7 @@
       window.addEventListener("ziplist-list-notice", handleListNotice);
       window.addEventListener("ziplist-heart", handleRemoteHeart);
       window.addEventListener("ziplist-item-checked", handleRemoteItemChecked);
+      window.addEventListener("keydown", handleGlobalKeyDown);
     }
   });
 
@@ -248,6 +250,7 @@
           "ziplist-item-checked",
           handleRemoteItemChecked,
         );
+      window.removeEventListener("keydown", handleGlobalKeyDown);
     }
   });
 
@@ -1650,6 +1653,13 @@
       saveItemEdit();
     } else if (event.key === "Escape") {
       cancelItemEdit();
+    } else if (
+      event.key === "Backspace" &&
+      (event.metaKey || event.ctrlKey)
+    ) {
+      // Cmd/Ctrl+Backspace while editing deletes the whole item.
+      event.preventDefault();
+      deleteItem(editingItemId);
     }
   }
 
@@ -1791,6 +1801,34 @@
 
   async function handleAddItemClick() {
     await startDraftItem();
+  }
+
+  // A bare Enter with nothing focused opens the draft row on the active list —
+  // keyboard users get straight into the same rapid-fire add flow the Add item
+  // button starts, without reaching for the mouse first.
+  function handleGlobalKeyDown(event) {
+    if (
+      event.key !== "Enter" ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.shiftKey
+    ) {
+      return;
+    }
+    if (draftItemActive || editingItemId || editingListName) return;
+    // Only the active list answers; every carousel slide hears this event.
+    if (get(listsStore).activeListId !== list.id) return;
+    const target = event.target;
+    if (
+      target instanceof HTMLElement &&
+      target.closest("input, textarea, select, button, a, [contenteditable]")
+    ) {
+      return;
+    }
+    if (document.querySelector("dialog[open]")) return;
+    event.preventDefault();
+    startDraftItem();
   }
 
   async function handleEmptyStateClick() {
