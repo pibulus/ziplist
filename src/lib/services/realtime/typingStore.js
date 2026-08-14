@@ -20,21 +20,27 @@ import { writable } from "svelte/store";
 export function createTypingStore() {
   const { subscribe, set, update } = writable(/** @type {TypingUser[]} */ ([]));
 
-  // Auto-cleanup: Remove typing indicators after 5 seconds of inactivity
-  let cleanupInterval;
+  // Auto-cleanup: Remove typing indicators after 5 seconds of inactivity.
+  // The interval only runs while someone is actually typing — it starts on
+  // the first entry and stops itself once the store drains. (It used to run
+  // forever for every list ever viewed, ticking Svelte once a second each.)
+  let cleanupInterval = null;
 
-  function startAutoCleanup() {
-    if (cleanupInterval) clearInterval(cleanupInterval);
+  function ensureAutoCleanup() {
+    if (cleanupInterval) return;
 
     cleanupInterval = setInterval(() => {
       update((users) => {
         const now = Date.now();
-        return users.filter((user) => now - user.startedAt < 5000);
+        const fresh = users.filter((user) => now - user.startedAt < 5000);
+        if (fresh.length === 0 && cleanupInterval) {
+          clearInterval(cleanupInterval);
+          cleanupInterval = null;
+        }
+        return fresh;
       });
     }, 1000);
   }
-
-  startAutoCleanup();
 
   return {
     subscribe,
@@ -44,6 +50,7 @@ export function createTypingStore() {
      * @param {TypingUser} user
      */
     startTyping(user) {
+      ensureAutoCleanup();
       update((users) => {
         // Remove existing entry for this user
         const filtered = users.filter((u) => u.id !== user.id);

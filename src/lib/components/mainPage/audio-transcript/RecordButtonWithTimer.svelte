@@ -46,6 +46,7 @@
         const dataIndex = i * step;
         return Math.min(100, data[dataIndex] || 0);
       });
+      startVisualization();
     }
   });
 
@@ -74,8 +75,29 @@
       });
     }
 
+    // Settled and idle: stop burning frames. This loop used to run for the
+    // whole life of the tab — a style recalc every frame, forever — which is
+    // exactly the kind of thing that makes a laptop fan spin on an idle list.
+    // Restarted by fresh waveform data or the recording flag flipping on.
+    if (
+      !recording &&
+      pulseIntensity <= 0.001 &&
+      waveformLevels.every((level) => level < 0.5)
+    ) {
+      animationFrameId = null;
+      return;
+    }
+
     animationFrameId = requestAnimationFrame(updateVisualization);
   }
+
+  function startVisualization() {
+    if (animationFrameId == null && typeof window !== "undefined") {
+      animationFrameId = requestAnimationFrame(updateVisualization);
+    }
+  }
+
+  $: if (recording) startVisualization();
 
   let hasActiveList = false;
   let currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
@@ -92,7 +114,7 @@
 
   onMount(() => {
     buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
-    updateVisualization();
+    startVisualization();
   });
 
   onDestroy(() => {
@@ -598,6 +620,33 @@
       --breathe-lift 0.45s ease-out;
   }
 
+  /* The glow lives on ::after so the shadow is PAINTED ONCE and breathed
+     with opacity (compositable), instead of animating box-shadow on the
+     button — which repainted the glow region every frame for the life of
+     the tab. Same 4.8s breath, same amplitude dial via --breathe-glow. */
+  .pulse-subtle::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 20px 6px
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
+    opacity: calc(0.55 * var(--breathe-glow));
+    animation: button-breathe-glow 4.8s ease-in-out infinite;
+    will-change: opacity;
+    pointer-events: none;
+  }
+
+  @keyframes button-breathe-glow {
+    0%,
+    100% {
+      opacity: calc(0.55 * var(--breathe-glow));
+    }
+    50% {
+      opacity: var(--breathe-glow);
+    }
+  }
+
   /* Already has items: same breath, dialled down — no restart, no snap. */
   .pulse-subtle.pulse-calm {
     --breathe-glow: 0.42;
@@ -616,26 +665,14 @@
     initial-value: 1;
   }
 
+  /* Transform-only on the button itself — compositable. The shadow half of
+     the old keyframes moved to ::after / button-breathe-glow above. */
   @keyframes button-breathe {
     0%,
     100% {
-      box-shadow: 0 0 calc(12px * var(--breathe-glow)) calc(
-            2px * var(--breathe-glow)
-          )
-        rgba(
-          var(--zl-cta-color-rgb, 255, 176, 0),
-          calc(0.35 * var(--breathe-glow))
-        );
       transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 calc(20px * var(--breathe-glow)) calc(
-            6px * var(--breathe-glow)
-          )
-        rgba(
-          var(--zl-cta-color-rgb, 255, 176, 0),
-          calc(0.5 * var(--breathe-glow))
-        );
       transform: scale(calc(1 + 0.02 * var(--breathe-lift)));
     }
   }
@@ -964,9 +1001,15 @@
       animation: none !important;
     }
 
-    /* No breath, so no amplitude to ease between either. */
+    /* No breath, so no amplitude to ease between either — and no glow
+       layer, matching the old behavior where killing the animation
+       dropped the breathe shadow entirely. */
     .pulse-subtle {
       transition: none !important;
+    }
+
+    .pulse-subtle::after {
+      display: none;
     }
   }
 </style>

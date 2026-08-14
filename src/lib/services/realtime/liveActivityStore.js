@@ -50,14 +50,36 @@ export function createLiveActivityStore() {
     voices: [],
   });
 
-  let cleanupInterval = setInterval(() => {
-    update((state) => pruneState(state));
-  }, CLEANUP_INTERVAL_MS);
+  // Prune only while there's something to prune — starts on the first
+  // activity write, stops itself once everything has expired. (A per-list
+  // always-on 1s interval was part of ziplist's idle CPU tax.)
+  let cleanupInterval = null;
+
+  function ensurePrune() {
+    if (cleanupInterval) return;
+
+    cleanupInterval = setInterval(() => {
+      update((state) => {
+        const pruned = pruneState(state);
+        if (
+          pruned.drafts.length === 0 &&
+          pruned.focuses.length === 0 &&
+          pruned.voices.length === 0 &&
+          cleanupInterval
+        ) {
+          clearInterval(cleanupInterval);
+          cleanupInterval = null;
+        }
+        return pruned;
+      });
+    }, CLEANUP_INTERVAL_MS);
+  }
 
   return {
     subscribe,
 
     updateDraft(user, data = {}) {
+      ensurePrune();
       const decoratedUser = decorateUser(user);
       update((state) => ({
         ...state,
@@ -79,6 +101,7 @@ export function createLiveActivityStore() {
     },
 
     setItemFocus(user, data = {}) {
+      ensurePrune();
       const decoratedUser = decorateUser(user);
       const itemId = data.itemId || null;
 
@@ -95,6 +118,7 @@ export function createLiveActivityStore() {
     },
 
     setVoiceActivity(user, data = {}) {
+      ensurePrune();
       const decoratedUser = decorateUser(user);
 
       update((state) => ({

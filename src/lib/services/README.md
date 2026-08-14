@@ -6,7 +6,9 @@ instead of reaching into those details directly.
 
 ## Directory Map
 
-- `audio/` - Microphone recording lifecycle and audio states.
+- `audio/` - Audio recording state machine (`audioStates`). The recording
+  pipeline itself (getUserMedia, MediaRecorder, waveform analyser) lives in
+  `MainContainer.svelte`.
 - `first-visit/` - First-run/onboarding state.
 - `infrastructure/` - Shared Svelte stores, haptics, sound cues, storage
   helpers.
@@ -27,7 +29,8 @@ service directory.
 
 ### Voice To List
 
-1. UI records audio through `audioService`.
+1. `MainContainer.svelte` records audio (getUserMedia + MediaRecorder) and
+   pumps waveform data into the `infrastructure` stores.
 2. `transcriptionService` captures the target list id before transcription
    starts.
 3. `geminiService` sends the audio to Gemini, which returns the transcript and
