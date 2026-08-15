@@ -3,6 +3,7 @@
  * Handles list data encoding/decoding for sharing between users
  */
 import { PRODUCT_LIMITS } from "$lib/constants";
+import { normalizeTags } from "$lib/services/lists/itemTags";
 
 /**
  * Encode a list into a format suitable for sharing
@@ -13,10 +14,13 @@ export function encodeListForSharing(list) {
   // Strip unnecessary metadata and keep only essential data
   const essentialData = {
     name: list.name,
-    items: list.items.map((item) => ({
-      text: item.text,
-      checked: item.checked,
-    })),
+    items: list.items.map((item) => {
+      const entry = { text: item.text, checked: item.checked };
+      // Tags ride along only when present — old receivers ignore the extra
+      // field, old links simply have none, and tagless payloads stay small.
+      if (item.tags?.length) entry.tags = item.tags;
+      return entry;
+    }),
   };
 
   // Compress and encode
@@ -58,6 +62,7 @@ export function decodeSharedList(encodedData) {
         id: crypto.randomUUID(),
         text: item.text.trim().slice(0, PRODUCT_LIMITS.MAX_ITEM_TEXT_LENGTH),
         checked: !!item.checked,
+        tags: normalizeTags(item.tags),
         completedAt: item.checked ? new Date().toISOString() : null,
         order: index,
       })),

@@ -193,23 +193,14 @@ export class ListsService {
     const state = get(listsStore);
     const newListId = createResult.listId || state.activeListId;
 
-    // Add all the items
+    // Add all the items. addItems accepts {text, checked, tags} objects, so
+    // ticked state and tags survive in one call — the old text-then-toggle
+    // pass dropped tags and could misalign with addItems' dedupe.
     if (list.items && list.items.length > 0) {
-      // Format for adding multiple items
-      const itemTexts = list.items.map((item) => item.text);
-      listsStore.addItems(itemTexts, newListId);
-
-      // Now toggle the checked items
-      const updatedState = get(listsStore);
-      const updatedList = updatedState.lists.find((l) => l.id === newListId);
-
-      if (updatedList) {
-        list.items.forEach((sourceItem, index) => {
-          if (sourceItem.checked && updatedList.items[index]) {
-            listsStore.toggleItem(updatedList.items[index].id, newListId);
-          }
-        });
-      }
+      listsStore.addItems(
+        list.items.map(({ text, checked, tags }) => ({ text, checked, tags })),
+        newListId,
+      );
     }
 
     return newListId;
