@@ -2565,8 +2565,8 @@ body.zl-touch-dragging {
    them because it's the thing you actually hand over; and paste — which
    brings things IN — is visibly not one of them. */
 .zl-share-actions {
-  /* Three ways out now (link, clipboard, file). Pills wrap like the rest of
-     the tray — a 1fr grid can't size itself inside the tray's flex row. */
+  /* Four ways out now (link, clipboard, file, QR). Pills wrap like the rest
+     of the tray — a 1fr grid can't size itself inside the tray's flex row. */
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;

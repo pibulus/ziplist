@@ -14,7 +14,7 @@
     listToText,
     splitPastedList,
   } from "$lib/services/lists/listTextFormat.js";
-  import { shareList } from "$lib/services/share";
+  import { shareList, generateShareableUrl } from "$lib/services/share";
   import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
   import { fade } from "svelte/transition";
   import { cubicOut, backOut, quintOut } from "svelte/easing";
@@ -1364,6 +1364,31 @@
     soundService.copySuccess({ force: true });
   }
 
+  function qrThisList() {
+    if (!list?.items?.length) {
+      showListStatus("Add an item before sharing.");
+      soundService.locked();
+      return;
+    }
+    // Under the share-warning length the whole list lives INSIDE the code —
+    // scanning it carries the data itself, no server round-trip. Over it,
+    // fall back to what the share flow would hand out anyway: the short live
+    // link when the list is live, otherwise the same long link (denser code).
+    const rawUrl = generateShareableUrl(list);
+    let qrTarget = rawUrl;
+    if (rawUrl.length > PRODUCT_LIMITS.SHARE_URL_WARNING_LENGTH && isLive) {
+      qrTarget = liveListsService.getShareUrl(list.id) || rawUrl;
+    }
+    window.open(
+      `https://qrbuddy.app/q?d=${encodeURIComponent(qrTarget)}&s=sunset`,
+      "_blank",
+      "noopener",
+    );
+    shareTrayOpen = false;
+    showListStatus("QR ready in the new tab.", true, 2400);
+    soundService.select();
+  }
+
   function pasteItemsIn() {
     const { items } = splitPastedList(pasteText);
     if (!items.length) {
@@ -2108,6 +2133,9 @@
             on:click={downloadAsText}
           >
             Save as file
+          </button>
+          <button type="button" class="zl-share-option" on:click={qrThisList}>
+            QR this list
           </button>
         </div>
 
