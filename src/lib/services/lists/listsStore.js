@@ -161,7 +161,10 @@ function normalizeListRecord(list, index = 0) {
     primaryColor: list?.primaryColor || palette.primaryColor,
     accentColor: list?.accentColor || palette.accentColor,
     glowColor: list?.glowColor || palette.glowColor,
-    items: Array.isArray(list?.items) ? list.items : [],
+    // Every list entering the store — from storage, an import, a live
+    // snapshot — arrives already obeying the order invariant, so lists saved
+    // by older builds heal on first load.
+    items: withCompletedLast(Array.isArray(list?.items) ? list.items : []),
     createdAt: list?.createdAt || timestamp,
     updatedAt: list?.updatedAt || list?.createdAt || timestamp,
   };
@@ -187,6 +190,33 @@ function getUniqueListName(baseName, existingLists = []) {
   }
 
   return `${normalizedBaseName} ${suffix}`;
+}
+
+/**
+ * THE ORDER INVARIANT: ticked items live at the end of the array, and the
+ * array IS the order.
+ *
+ * The list renders by splitting active from completed, but everything else —
+ * text export, share links, saved files, live snapshots — walks `list.items`
+ * raw. Those two disagreed the moment you ticked something and then added
+ * more: the screen showed the done item last while the exported copy had it
+ * stranded mid-list (Pablo: "the sort is kind of weird when it gets new
+ * items", 2026-08-17). Normalising on write means what you see is what you
+ * share, and rendering's split becomes a no-op that agrees.
+ *
+ * filter() preserves relative order, so unticking something leaves it where
+ * it sits among the active items rather than teleporting.
+ */
+function withCompletedLast(items) {
+  const active = [];
+  const completed = [];
+  for (const item of items) {
+    (item.checked ? completed : active).push(item);
+  }
+  return [...active, ...completed].map((item, index) => ({
+    ...item,
+    order: index,
+  }));
 }
 
 function createLimitResult(message, reason = "limit") {
@@ -567,7 +597,7 @@ function createListsStore() {
             });
             return {
               ...list,
-              items: [
+              items: withCompletedLast([
                 ...list.items,
                 {
                   id: crypto.randomUUID(),
@@ -576,7 +606,7 @@ function createListsStore() {
                   tags,
                   addedAt: Date.now(), // entry-date sort key
                 },
-              ],
+              ]),
               updatedAt: new Date().toISOString(),
             };
           }
@@ -671,7 +701,7 @@ function createListsStore() {
 
             return {
               ...list,
-              items: [...list.items, ...newItems],
+              items: withCompletedLast([...list.items, ...newItems]),
               updatedAt: new Date().toISOString(),
             };
           }
@@ -697,18 +727,22 @@ function createListsStore() {
           if (list.id === targetListId) {
             return {
               ...list,
-              items: list.items.map((item) => {
-                if (item.id === itemId) {
-                  const now = new Date().toISOString();
-                  return {
-                    ...item,
-                    checked: !item.checked,
-                    // Add completedAt timestamp when checked, remove it when unchecked
-                    completedAt: !item.checked ? now : undefined,
-                  };
-                }
-                return item;
-              }),
+              // Ticking sinks the item to the bottom in the DATA, not just on
+              // screen — see withCompletedLast.
+              items: withCompletedLast(
+                list.items.map((item) => {
+                  if (item.id === itemId) {
+                    const now = new Date().toISOString();
+                    return {
+                      ...item,
+                      checked: !item.checked,
+                      // Add completedAt timestamp when checked, remove it when unchecked
+                      completedAt: !item.checked ? now : undefined,
+                    };
+                  }
+                  return item;
+                }),
+              ),
               updatedAt: new Date().toISOString(),
             };
           }
@@ -975,12 +1009,10 @@ function createListsStore() {
               (item) => !orderedIdSet.has(item.id),
             );
 
-            const updatedItems = [...orderedItems, ...unseenItems].map(
-              (item, index) => ({
-                ...item,
-                order: index,
-              }),
-            );
+            const updatedItems = withCompletedLast([
+              ...orderedItems,
+              ...unseenItems,
+            ]);
 
             return {
               ...list,

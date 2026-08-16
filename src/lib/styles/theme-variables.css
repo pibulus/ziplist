@@ -208,8 +208,12 @@ html[data-theme="highlighter"] {
   /* Footer resting color — light/high-contrast, use its dark ink */
   --footer-text-color: #3a2f2a;
 
-  /* List item styling */
-  --zl-item-bg: #fbf1e4;
+  /* List item styling.
+     The item sits one real step deeper than the card's #fff9f0 rather than
+     the old #fbf1e4 half-step, which read as camouflage in soft mode where
+     the border is faint (Pablo's call 2026-08-17). Still unmistakably in
+     the cream family — separation you feel, not a stripe you notice. */
+  --zl-item-bg: #f7ebda;
   --zl-item-hover-bg: #fff8e1;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;
@@ -318,8 +322,12 @@ html[data-theme="sticky-note"] {
   /* Footer resting color */
   --footer-text-color: #3a2f2a;
 
-  /* List item styling */
-  --zl-item-bg: #fbf1e4;
+  /* List item styling.
+     The item sits one real step deeper than the card's #fff9f0 rather than
+     the old #fbf1e4 half-step, which read as camouflage in soft mode where
+     the border is faint (Pablo's call 2026-08-17). Still unmistakably in
+     the cream family — separation you feel, not a stripe you notice. */
+  --zl-item-bg: #f7ebda;
   --zl-item-hover-bg: #fffbcc;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;
@@ -422,8 +430,12 @@ html[data-theme="gel-pen"] {
   /* Footer resting color */
   --footer-text-color: #3a2f2a;
 
-  /* List item styling */
-  --zl-item-bg: #fbf1e4;
+  /* List item styling.
+     The item sits one real step deeper than the card's #fff9f0 rather than
+     the old #fbf1e4 half-step, which read as camouflage in soft mode where
+     the border is faint (Pablo's call 2026-08-17). Still unmistakably in
+     the cream family — separation you feel, not a stripe you notice. */
+  --zl-item-bg: #f7ebda;
   --zl-item-hover-bg: #ffe0ef;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;
@@ -526,8 +538,12 @@ html[data-theme="legal-pad"] {
   /* Footer resting color */
   --footer-text-color: #3a2f2a;
 
-  /* List item styling */
-  --zl-item-bg: #fbf1e4;
+  /* List item styling.
+     The item sits one real step deeper than the card's #fff9f0 rather than
+     the old #fbf1e4 half-step, which read as camouflage in soft mode where
+     the border is faint (Pablo's call 2026-08-17). Still unmistakably in
+     the cream family — separation you feel, not a stripe you notice. */
+  --zl-item-bg: #f7ebda;
   --zl-item-hover-bg: #f0ffd1;
   --zl-item-border-color: #1e1714;
   --zl-item-border-hover-color: #1e1714;
