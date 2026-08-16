@@ -22,7 +22,8 @@ The response MUST be valid JSON with ONLY this structure:
 
 {
   "items": ${JSON.stringify(exampleItems)},
-  "complete": ["exact text of existing item to tick off"]
+  "complete": ["exact text of existing item to tick off"],
+  "title": "Groceries"
 }
 
 Rules for "items" (new things to add):
@@ -38,6 +39,11 @@ Rules for "complete" (things to tick off):
 3. Only include items that exist in the current list. Do not invent completions.
 4. Do not stylize or rewrite "complete" entries; they must match the current list text.
 5. If nothing was completed, return "complete": []
+
+Rules for "title" (what this list is about):
+1. One or two plain words naming the theme of these items: Groceries, Packing, Chores, Hardware, Party
+2. Sentence case, no punctuation, no emoji, never the word "List"
+3. If the items are too mixed to name honestly, return "title": ""
 
 Return ONLY raw JSON. No explanation, no markdown, no code blocks.`;
 }

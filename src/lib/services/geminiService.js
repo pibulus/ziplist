@@ -84,6 +84,7 @@ export const geminiService = {
           text: parsedResponse.items.join("\n"),
           items: parsedResponse.items,
           complete: parsedResponse.complete || [],
+          title: parsedResponse.title || "",
           structured: true,
           raw: parsedResponse.raw,
         };

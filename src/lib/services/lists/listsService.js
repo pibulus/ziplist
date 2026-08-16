@@ -1,5 +1,17 @@
-import { listsStore, activeList, getItemDedupeKey } from "./listsStore";
+import {
+  listsStore,
+  activeList,
+  getItemDedupeKey,
+  LIST_COLOR_PRESETS,
+} from "./listsStore";
 import { get } from "svelte/store";
+
+// "Blue List", "Pink List", … — a list still wearing one of these has never
+// been named by anyone, so ZipList may name it. The moment someone types
+// their own name, the app stops touching it.
+const DEFAULT_LIST_NAMES = new Set(
+  LIST_COLOR_PRESETS.map((preset) => preset.defaultName),
+);
 
 /**
  * Lists Service
@@ -44,7 +56,8 @@ export class ListsService {
   processTranscription(transcriptionResult) {
     if (!transcriptionResult) return;
 
-    const { items, commands, complete, targetListId } = transcriptionResult;
+    const { items, commands, complete, suggestedTitle, targetListId } =
+      transcriptionResult;
 
     // Process commands first
     if (commands && commands.length > 0) {
@@ -61,6 +74,7 @@ export class ListsService {
     // Add any new items to the active list
     if (items && items.length > 0) {
       this._addItemsToActiveList(items, targetListId);
+      this._applySuggestedTitle(suggestedTitle, targetListId);
     }
 
     // Nothing came out of the recording at all — say so warmly instead of
@@ -80,6 +94,27 @@ export class ListsService {
         }),
       );
     }
+  }
+
+  /**
+   * Name an unnamed list after what just went into it. Only ever touches a
+   * list still wearing its factory name — someone else's chosen name is
+   * theirs, and a rename they didn't ask for is the app overstepping.
+   * @param {string} suggestedTitle - One or two words from the model
+   * @param {string} [listId] - Optional target list ID
+   * @private
+   */
+  _applySuggestedTitle(suggestedTitle, listId = null) {
+    if (!suggestedTitle) return;
+
+    const state = get(listsStore);
+    const targetListId = listId || state.activeListId;
+    const targetList = state.lists.find((list) => list.id === targetListId);
+
+    if (!targetList || !DEFAULT_LIST_NAMES.has(targetList.name)) return;
+    if (DEFAULT_LIST_NAMES.has(suggestedTitle)) return;
+
+    listsStore.renameList(suggestedTitle, targetListId);
   }
 
   /**

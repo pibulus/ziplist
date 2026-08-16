@@ -67,6 +67,7 @@ export class TranscriptionService {
           : transcriptResult || {};
       const transcriptText = normalizedTranscript.text || "";
       const aiComplete = normalizedTranscript.complete || [];
+      const suggestedTitle = normalizedTranscript.title || "";
       const hasStructuredResult = normalizedTranscript.structured === true;
       const parsedResult = hasStructuredResult
         ? {
@@ -91,6 +92,7 @@ export class TranscriptionService {
       listsService.processTranscription({
         ...parsedResult,
         complete: aiComplete,
+        suggestedTitle,
         existingItems,
         targetListId,
       });

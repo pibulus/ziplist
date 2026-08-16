@@ -1921,11 +1921,18 @@
                       aria-hidden="true"
                     ></span>
                     <!-- A blue dot next to the words "Blue List" is the same
-                         fact twice. Default-named lists show the dot alone and
-                         let the items be the content; the moment you name it
-                         something real, the name appears. -->
+                         fact twice, so a factory-named list doesn't repeat
+                         itself. But showing NOTHING left no hint that the
+                         title is yours to write (Pablo, 2026-08-17) — so an
+                         unnamed list shows a waiting line with a cursor
+                         instead. No words: an instruction here would be the
+                         app telling you what to do. -->
                     {#if !isDefaultName}
                       <span class="zl-list-title">{list.name}</span>
+                    {:else}
+                      <span class="zl-list-title-blank" aria-hidden="true">
+                        <span class="zl-title-caret"></span>
+                      </span>
                     {/if}
                   </span>
                 </button>

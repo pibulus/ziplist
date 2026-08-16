@@ -159,8 +159,31 @@ export function parseModelResponse(responseText) {
     success: items.length > 0 || complete.length > 0,
     items,
     complete,
+    title: normalizeSuggestedTitle(jsonData?.title),
     structuredResponse,
     raw: responseText,
     timestamp: new Date().toISOString(),
   };
+}
+
+/**
+ * A suggested list name is decoration, not data — anything odd gets dropped
+ * rather than cleaned up, because a wrong name on someone's list is worse
+ * than no name. Two words, letters and spaces, and never "... List".
+ */
+export function normalizeSuggestedTitle(value) {
+  if (typeof value !== "string") return "";
+
+  const cleaned = value
+    .replace(/["'`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\s+list$/i, "");
+
+  if (!cleaned) return "";
+  if (cleaned.split(" ").length > 2) return "";
+  if (cleaned.length > 24) return "";
+  if (!/^[\p{L}\p{N} &-]+$/u.test(cleaned)) return "";
+
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
