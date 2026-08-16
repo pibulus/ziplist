@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { theme, listFirstMode, applyTheme, isContributor } from "$lib";
   import { STORAGE_KEYS, THEMES } from "$lib/constants";
-  import { PRICING } from "$lib/config/pricing.js";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import {
@@ -216,12 +215,12 @@
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
+            width="13"
+            height="13"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2.5"
+            stroke-width="3.5"
             stroke-linecap="round"
             stroke-linejoin="round"
           >
@@ -265,7 +264,6 @@
         <div class="zl-setting-row">
           <div class="zl-setting-info">
             <span class="zl-setting-name">Chunky Mode</span>
-            <p class="zl-setting-desc">Thick borders & hard shadows</p>
           </div>
           <label class="zl-toggle">
             <input
@@ -283,7 +281,6 @@
         <div class="zl-setting-row">
           <div class="zl-setting-info">
             <span class="zl-setting-name">Straight to the list</span>
-            <p class="zl-setting-desc">Skip the mascot on open</p>
           </div>
           <label class="zl-toggle">
             <input
@@ -378,9 +375,7 @@
         >
           <span aria-hidden="true">✦</span>
           <span class="zl-contributor-label">
-            {contributorUnlocked
-              ? "Contributor unlocked"
-              : `Become a Contributor · ${PRICING.displayPrice}`}
+            {contributorUnlocked ? "Contributor unlocked" : "Become a Contributor"}
           </span>
         </button>
       </section>
@@ -484,6 +479,10 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 0.125rem;
+    /* Clears the corner X — the tiles used to run straight under it.
+       Sized against the MOBILE card (1rem padding): X bottom sits at
+       0.5rem + 28px from the card edge, so content starts just below. */
+    padding-top: 1.4rem;
   }
 
   @keyframes modal-pop {
@@ -510,28 +509,39 @@
      in a settings context). The mono survives only in the name input,
      where typed text matches the list items' typewriter identity. */
 
+  /* Tiny pink dot of an X, tucked in the corner (Pablo's call 2026-08-17):
+     the backdrop closes the modal too, so the X can be a cute accent instead
+     of a 44px ghost circle squatting on the Legal Pad tile. Squishy on
+     press, same family as the app's other round controls. */
   .zl-settings-close {
     position: absolute;
-    top: 0.9rem;
-    right: 0.9rem;
+    top: 0.5rem;
+    right: 0.5rem;
     z-index: 3;
-    background: transparent;
+    background: #ff6ac2;
     border: none;
     cursor: pointer;
-    color: var(--zl-text-color-secondary, #666);
-    width: 44px;
-    height: 44px;
+    color: #fffdf5;
+    width: 28px;
+    height: 28px;
     padding: 0;
     border-radius: 50%;
-    transition: all 0.2s;
+    box-shadow: 0 3px 8px rgba(255, 106, 194, 0.35);
+    transition:
+      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.18s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
 
   .zl-settings-close:hover {
-    background: rgba(0, 0, 0, 0.05);
-    transform: rotate(90deg);
+    transform: scale(1.12) rotate(90deg);
+    box-shadow: 0 5px 12px rgba(255, 106, 194, 0.5);
+  }
+
+  .zl-settings-close:active {
+    transform: scale(0.88);
   }
 
   .zl-settings-close:focus-visible,
@@ -597,8 +607,12 @@
     margin: 0 0 0.35rem;
   }
 
+  /* ONE vertical rhythm: every row is 0.6rem from its neighbour, whether or
+     not a <section> boundary sits between them. Sections used to add their
+     own 1.1rem on top of the last row's 0.6rem, so the Chunky→Straight gap
+     was almost 3× the Straight→avatar gap (Pablo clocked it 2026-08-17). */
   .zl-settings-section {
-    margin-bottom: 1.1rem;
+    margin-bottom: 0;
   }
 
   .zl-settings-section:last-child {
@@ -991,9 +1005,6 @@
       min-width: 0;
     }
 
-    .zl-settings-section {
-      margin-bottom: 0.85rem;
-    }
   }
 
   /* The avatar row is the one row that needs to wrap; the rest stay inline. */
