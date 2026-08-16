@@ -120,9 +120,10 @@
 </div>
 
 <div class="zl-item-side">
-  <!-- Reorder is a POINTER affordance: on touch, long-press on the row already
-       starts a drag, so a permanent handle there is clutter for a gesture that
-       already exists. Hidden until hover/focus; see the CSS. -->
+  <!-- This handle is the ONLY entry point into the touch-drag reorder
+       system — nothing else binds touchstart. It must stay rendered and
+       hit-testable on touch devices; CSS that hides it disables reordering
+       on every phone (that is exactly what happened until 2026-08-17). -->
   {#if !item.checked && !isEditing && activeItemsCount > 1}
     <button
       type="button"

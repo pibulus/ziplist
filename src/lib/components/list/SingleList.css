@@ -2238,10 +2238,19 @@ body.zl-touch-dragging {
 
 /* Reorder is a POINTER affordance. On touch, long-press on the row already
    starts a drag — a permanent handle advertises a gesture that already works
-   and costs a slot on every single row. */
+   and costs a slot on every single row.
+
+   ^ THAT WAS WRONG ON BOTH COUNTS, fixed 2026-08-17. The row has no
+   touchstart handler; `.grab-indicator` is the ONLY thing that calls
+   handleTouchGrabStart. Hiding it on touch with display:none meant the
+   element could not receive touch events at all — so on every phone the
+   entire long-press reorder system (ghost transport, auto-scroll, tilt)
+   was unreachable code. And a handle that rests at opacity 0 on desktop
+   is a feature nobody discovers. The handle now rests visible-but-quiet
+   everywhere and wakes on hover. */
 @media (hover: hover) and (pointer: fine) {
   .grab-indicator {
-    opacity: 0;
+    opacity: var(--zl-grab-handle-rest-opacity, 0.3);
     transition: opacity 0.15s ease;
   }
 
@@ -2249,12 +2258,6 @@ body.zl-touch-dragging {
   .zl-item:focus-within .grab-indicator,
   .grab-indicator:focus-visible {
     opacity: var(--zl-grab-handle-opacity, 0.55);
-  }
-}
-
-@media (hover: none) {
-  .grab-indicator {
-    display: none;
   }
 }
 
