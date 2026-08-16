@@ -525,7 +525,6 @@
   outline: none;
 }
 
-.zl-live-button,
 .zl-share-button,
 .zl-shuffle-button,
 .zl-sort-button,
@@ -546,7 +545,6 @@
 /* Ghost icon buttons — one quiet action language for the whole card:
    header trio up top, ≡/× twins in the rows. Icons carry the meaning,
    tooltips carry the words. */
-.zl-live-button,
 .zl-share-button,
 .zl-shuffle-button,
 .zl-sort-button {
@@ -563,16 +561,9 @@
   height: 18px;
 }
 
-.zl-live-button:disabled {
-  cursor: progress;
-  opacity: 0.5;
-}
-
-.zl-live-button:hover:not(:disabled),
 .zl-share-button:hover:not(:disabled),
 .zl-shuffle-button:hover:not(:disabled),
 .zl-sort-button:hover:not(:disabled),
-.zl-live-button:focus-visible:not(:disabled),
 .zl-share-button:focus-visible:not(:disabled),
 .zl-shuffle-button:focus-visible:not(:disabled),
 .zl-sort-button:focus-visible:not(:disabled) {
@@ -654,8 +645,7 @@
     gap: 0.25rem;
   }
 
-  .zl-live-button,
-  .zl-share-button {
+    .zl-share-button {
     border-radius: 16px;
   }
 
@@ -1897,8 +1887,7 @@
     grid-column: auto;
   }
 
-  .zl-live-button,
-  .zl-share-button,
+    .zl-share-button,
   .zl-live-indicator {
     gap: 0;
     min-width: 44px;
@@ -2185,6 +2174,21 @@ body.zl-touch-dragging {
 .zl-share-option:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+/* The live door reads as the livelier of the two share options — a filled
+   pill against the outlined "Send a copy", since one of them starts
+   something ongoing and the other just hands over a snapshot. */
+.zl-share-live {
+  background: var(--zl-cta-color, #ffb000);
+  border-color: transparent;
+  color: #1e1714;
+}
+
+.zl-share-live:hover:not(:disabled),
+.zl-share-live:focus-visible {
+  background: var(--zl-cta-color, #ffb000);
+  filter: saturate(1.08) brightness(1.04);
 }
 
 .zl-share-button.is-open {

@@ -1338,6 +1338,13 @@
     await handleShareList();
   }
 
+  // The live door in the share tray. Keeps the tray open while the room is
+  // minted so the four-word phrase can appear in it — that phrase IS the
+  // link, and closing the tray would hide it the moment it arrived.
+  async function shareAsLiveRoom() {
+    await handleMakeLive();
+  }
+
   async function copyAsText() {
     try {
       await navigator.clipboard.writeText(listToText(list));
@@ -2050,42 +2057,10 @@
              toolbar. Making a list is a rare, settings-shaped act, so it
              moved to Options; the header is now just this list's own
              actions. -->
-        {#if liveFeatureAvailable}
-          {#if !isLive}
-            <button
-              type="button"
-              class="zl-live-button"
-              disabled={isMakingLive}
-              on:click={handleMakeLive}
-              data-tip={isMakingLive ? "Starting…" : "Edit it together, live"}
-              aria-busy={isMakingLive}
-              aria-label={isMakingLive
-                ? "Starting live list"
-                : `Edit together live. Anyone with the link can add and tick items on ${
-                    list.name || "this list"
-                  }`}
-            >
-              <svg
-                class="zl-header-icon"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
-                <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
-                <circle cx="12" cy="12" r="2"></circle>
-                <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
-                <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path>
-              </svg>
-            </button>
-          {/if}
-        {/if}
-
+        <!-- Sharing is ONE door now (Pablo's call 2026-08-17). "Go live" used
+             to be its own header button, which asked people to decide between
+             two kinds of sharing before they'd opened either. You press share,
+             then you choose: a copy, or a room. -->
         <button
           type="button"
           class="zl-share-button"
@@ -2124,13 +2099,24 @@
          a popover: .zl-card is overflow:clip and anything floating gets sliced. -->
     {#if shareTrayOpen}
       <div class="zl-share-tray" transition:fade={{ duration: 130 }}>
-        <!-- Two send actions, equal width. "Send to a device" used to sit here
-             as a fourth pill; it called startPhraseSync, which is what going
-             live now does — it was the same room by another name. -->
+        <!-- The two kinds of sharing sit side by side: a copy that freezes as
+             it leaves, or a room that keeps up. Everything below them is
+             export, which is a different job. -->
         <div class="zl-share-actions">
           <button type="button" class="zl-share-option" on:click={shareAsLink}>
             {isLive ? "Copy link" : "Send a copy"}
           </button>
+          {#if liveFeatureAvailable && !isLive}
+            <button
+              type="button"
+              class="zl-share-option zl-share-live"
+              disabled={isMakingLive}
+              aria-busy={isMakingLive}
+              on:click={shareAsLiveRoom}
+            >
+              {isMakingLive ? "Opening the room..." : "Share live"}
+            </button>
+          {/if}
           <button type="button" class="zl-share-option" on:click={copyAsText}>
             Copy as text
           </button>
