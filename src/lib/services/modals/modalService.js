@@ -26,6 +26,7 @@ export class ModalService {
     this.activeModal = null;
     this.isClosing = false;
     this.closeTimer = null;
+    this.switchCloseInFlight = false;
 
     // Safety net: if ANY dialog closes and none remain open, force-unlock.
     // The per-open close listener can be orphaned (e.g. the dialog node is
@@ -38,6 +39,22 @@ export class ModalService {
           if (this.isClosing) return; // closeModal() unlocks on its own timer
           if (!document.querySelector("dialog[open]")) {
             this.unlockScroll({ force: true });
+          } else {
+            // A dialog closed while ANOTHER is open: a modal→modal switch.
+            // Dialog close events dispatch in a queued task, so by the time
+            // the old modal's own `close` listener re-enters closeModal(),
+            // isClosing is false and the "open dialogs" it would capture is
+            // the NEW modal — which then flashed shut (the settings →
+            // contributor bug). This capture listener runs before the
+            // dialog's own listener in the same dispatch, so flag the rest
+            // of it as stale. Cleared with a task, not a microtask —
+            // microtask checkpoints run BETWEEN listener invocations on
+            // browser-dispatched events, which would wipe the flag before
+            // the dialog's own listener ever saw it.
+            this.switchCloseInFlight = true;
+            window.setTimeout(() => {
+              this.switchCloseInFlight = false;
+            }, 0);
           }
         },
         true,
@@ -91,7 +108,7 @@ export class ModalService {
   }
 
   closeModal() {
-    if (!browser || this.isClosing) return;
+    if (!browser || this.isClosing || this.switchCloseInFlight) return;
 
     const openDialogs = Array.from(document.querySelectorAll("dialog[open]"));
     if (!this.modalOpen && openDialogs.length === 0) return;
