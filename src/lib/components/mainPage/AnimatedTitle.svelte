@@ -22,6 +22,25 @@
     dispatch("toggleRecording");
   }
 
+  // The dude hops when a recording actually becomes items. MainContainer is
+  // the only place that knows whether anything landed, so it says so.
+  let celebrating = false;
+  let celebrateTimer = null;
+
+  function handleTranscriptionLanded() {
+    if (celebrateTimer) clearTimeout(celebrateTimer);
+    celebrating = false;
+    // One frame off before re-arming, or a second landing in a row would not
+    // restart the animation.
+    requestAnimationFrame(() => {
+      celebrating = true;
+      celebrateTimer = setTimeout(() => {
+        celebrating = false;
+        celebrateTimer = null;
+      }, 900);
+    });
+  }
+
   onMount(() => {
     // Set up animation sequence timing (for title/subtitle)
     const titleTimer = setTimeout(() => {
@@ -32,9 +51,16 @@
       dispatch("subtitleAnimationComplete");
     }, 2000); // After subtitle slide-in
 
+    window.addEventListener("ziplist-items-landed", handleTranscriptionLanded);
+
     return () => {
       clearTimeout(titleTimer);
       clearTimeout(subtitleTimer);
+      if (celebrateTimer) clearTimeout(celebrateTimer);
+      window.removeEventListener(
+        "ziplist-items-landed",
+        handleTranscriptionLanded,
+      );
     };
   });
 
@@ -56,6 +82,7 @@
         : "ZipList mascot — start recording"}
     active={$isRecording}
     thinking={$isTranscribing}
+    {celebrating}
     on:click={handleDudeClick}
   />
 

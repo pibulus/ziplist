@@ -51,6 +51,9 @@
   /** Working-on-it look — quicker sway, dimmer aura. Distinct from `active`
       on purpose: two states the user can tell apart without reading anything. */
   export let thinking = false;
+  /** A brief delighted hop — set true for a beat when the work paid off
+      (items landed). Self-limiting: the animation runs once and stops. */
+  export let celebrating = false;
 
   // Tap squish — the dude acknowledges every poke with a squash-and-stretch
   // before whatever the click actually does (usually: start recording).
@@ -87,6 +90,7 @@
   class:has-aura={aura && interactive}
   class:is-active={active}
   class:is-thinking={thinking}
+  class:is-celebrating={celebrating}
   aria-label={interactive ? ariaLabel : undefined}
   aria-hidden={interactive ? undefined : "true"}
   on:click={handleClick}
@@ -269,6 +273,55 @@
     animation:
       mascot-tap-squish 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
       mascot-float 6s ease-in-out infinite;
+  }
+
+  /* Landed it — a two-beat hop with a warm bloom. Fires when a recording
+     actually becomes items, so the dude is reacting to YOUR result rather
+     than decorating. Rides over the float like the tap squish does. */
+  .mascot.is-celebrating .mascot-art {
+    animation:
+      mascot-celebrate 0.85s cubic-bezier(0.34, 1.56, 0.64, 1),
+      mascot-float 6s ease-in-out infinite;
+  }
+
+  .mascot.is-celebrating {
+    filter: drop-shadow(
+      0 0 14px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.55)
+    );
+    transition: filter 0.3s ease;
+  }
+
+  @keyframes mascot-celebrate {
+    0% {
+      scale: 1 1;
+      translate: 0 0;
+    }
+    22% {
+      scale: 1.06 0.9;
+      translate: 0 0;
+    }
+    45% {
+      scale: 0.96 1.1;
+      translate: 0 -12%;
+    }
+    68% {
+      scale: 1.03 0.97;
+      translate: 0 0;
+    }
+    84% {
+      scale: 0.99 1.02;
+      translate: 0 -4%;
+    }
+    100% {
+      scale: 1 1;
+      translate: 0 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mascot.is-celebrating .mascot-art {
+      animation: none;
+    }
   }
 
   @keyframes mascot-tap-squish {

@@ -395,6 +395,13 @@
   let retryAudioBlob = null;
   let isRetrying = false;
 
+  // Tell the mascot the work paid off. Only fires when something actually
+  // arrived, so the hop always means "your list grew".
+  function announceItemsLanded() {
+    if (!browser) return;
+    window.dispatchEvent(new CustomEvent("ziplist-items-landed"));
+  }
+
   function landedNothing(result) {
     const added = Array.isArray(result?.items) ? result.items.length : 0;
     const completed = Array.isArray(result?.complete)
@@ -417,6 +424,7 @@
       if (landedNothing(result)) {
         retryAudioBlob = blob;
       } else {
+        announceItemsLanded();
         schedulePostTranscriptionScroll();
       }
     } catch (error) {
@@ -634,6 +642,7 @@
               retryAudioBlob = audioBlob;
             } else {
               retryAudioBlob = null;
+              announceItemsLanded();
               // Auto-scroll to lists after successful transcription to show new items
               schedulePostTranscriptionScroll();
             }
