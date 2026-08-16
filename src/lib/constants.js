@@ -74,7 +74,11 @@ export const DEFAULT_PROMPT_STYLE = PROMPT_STYLES.STANDARD;
 // more room. Live sharing is the app's headline pitch; locking it behind
 // payment made the intro modal promise something a new user couldn't do.
 export const PRODUCT_LIMITS = {
-  RECORDING_SECONDS: 120,
+  // One minute is the shape of a list you can say in one breath-run. Two
+  // minutes let people ramble past what Gemini parses well, and made the
+  // worst-case payload twice as big for no better list (Pablo's call
+  // 2026-08-17).
+  RECORDING_SECONDS: 60,
   FREE_MAX_LISTS: 3,
   CONTRIBUTOR_MAX_LISTS: 12,
   FREE_MAX_LIVE_LISTS: 1,
@@ -111,7 +115,7 @@ export const ANIMATION = {
   // Recording time limits
   RECORDING: {
     LIMIT: PRODUCT_LIMITS.RECORDING_SECONDS, // Maximum recording time in seconds
-    WARNING_THRESHOLD: 15, // Seconds remaining when to start showing warning
+    WARNING_THRESHOLD: 10, // Seconds remaining when to start showing warning
     DANGER_THRESHOLD: 8, // Seconds remaining when to start showing danger state
     ALMOST_DONE_THRESHOLD: 3, // Seconds remaining for final warning flash
     SCROLL_DELAY: 100, // Delay before scrolling during recording

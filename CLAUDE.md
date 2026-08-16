@@ -41,9 +41,10 @@ app. `scripts/deploy-pi.sh` and adapter-node are still there for a Pi deploy
 that isn't currently used. Verify with: `curl -sI https://ziplist.app | grep -i server`.
 
 `BODY_SIZE_LIMIT=16M` is no longer a v1.0 blocker: that was a Pi concern.
-Recording is capped at 120s at 48kbps, so the worst case is ~720KB of audio
-→ ~1MB base64 request, comfortably under Netlify's 6MB function payload
-limit (which is a hard platform limit and cannot be raised).
+Recording is capped at 60s at 48kbps (halved from 120s on 2026-08-17), so
+the worst case is ~360KB of audio → ~500KB base64 request, comfortably under
+Netlify's 6MB function payload limit (which is a hard platform limit and
+cannot be raised).
 
 Remaining for v1.0 is hands-on only: real-device iPhone + two-phone live
 pass, sandbox-card checkout, screenshots → tag v1.0.0. Post-launch charter

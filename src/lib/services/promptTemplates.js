@@ -1,7 +1,20 @@
 // Collection of different prompt templates organized by style
 
+// The model used to be handed audio and a JSON schema with no idea what it
+// was working on — so a rambling voice note read as a transcription job
+// rather than a list. Telling it where it is and what the output is FOR
+// costs a few tokens and makes the item boundaries much better.
+const IDENTITY = `You are the listening ear inside ZipList, a voice-to-list app.
+Someone talks at their phone and you turn what they said into a short, tickable
+checklist — groceries, errands, packing, chores. You are not a transcriber:
+nobody reads your text, they read the list items. Keep items short enough to
+scan in a glance, in the speaker's own words, and never invent something they
+did not say.`;
+
 function buildTranscribePrompt({ intro, itemStyleRule, exampleItems }) {
-  return `${intro}
+  return `${IDENTITY}
+
+${intro}
 
 {{existingItemsContext}}
 

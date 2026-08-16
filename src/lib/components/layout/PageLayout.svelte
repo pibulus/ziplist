@@ -212,10 +212,11 @@
      and shrink the type instead. */
   @media (max-width: 639px) {
     /* 390px cannot hold the full attribution AND three nav words — they ran
-       into each other. Keep the charm (that's the personality) and shed the
-       rest; the nav is the load-bearing half. */
-    .copyright .footer-lead,
-    .copyright .footer-in,
+       into each other. What survives is the SENTENCE, not the place: mobile
+       reads "Made with ❤️", which is complete on its own. It used to shed
+       the lead-in instead and land on "❤️ Melbourne" — a beating heart
+       apparently in a relationship with a city (Pablo, 2026-08-17). */
+    .copyright .footer-place,
     .copyright .footer-copy,
     .copyright .footer-dot {
       display: none;

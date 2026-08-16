@@ -388,6 +388,54 @@
     }
   }
 
+  // ── Second chances ─────────────────────────────────────────────────────
+  // A recording that lands nothing is usually a fine recording with a bad
+  // parse, so the offer is to run the SAME audio again rather than making
+  // someone say it all twice. The blob is held only until the next take.
+  let retryAudioBlob = null;
+  let isRetrying = false;
+
+  function landedNothing(result) {
+    const added = Array.isArray(result?.items) ? result.items.length : 0;
+    const completed = Array.isArray(result?.complete)
+      ? result.complete.length
+      : 0;
+    return added === 0 && completed === 0;
+  }
+
+  async function retryLastTranscription() {
+    if (!retryAudioBlob || isRetrying || $isTranscribing) return;
+
+    isRetrying = true;
+    const blob = retryAudioBlob;
+    retryAudioBlob = null;
+    soundService.select();
+
+    try {
+      const result = await transcriptionService.transcribeAudio(blob);
+      playTranscriptionResultCue(result);
+      if (landedNothing(result)) {
+        retryAudioBlob = blob;
+      } else {
+        schedulePostTranscriptionScroll();
+      }
+    } catch (error) {
+      console.error("Retry transcription failed:", error);
+      retryAudioBlob = blob;
+      soundService.error({ force: true });
+    } finally {
+      isRetrying = false;
+      if (get(audioState).state === AudioStates.PROCESSING) {
+        audioActions.updateState(AudioStates.IDLE);
+      }
+    }
+  }
+
+  function dismissRetry() {
+    retryAudioBlob = null;
+    soundService.close();
+  }
+
   let unwireTypewriter = null;
 
   onDestroy(() => {
@@ -567,8 +615,12 @@
 
           try {
             if (audioBlob.size === 0) {
+              // Silence here read as the app ignoring you. Say what happened.
               audioActions.updateState(AudioStates.IDLE);
               soundService.locked({ force: true });
+              uiActions.setErrorMessage(
+                "That take came through empty — check the mic and give it another go.",
+              );
               return;
             }
 
@@ -576,14 +628,22 @@
               await transcriptionService.transcribeAudio(audioBlob);
             playTranscriptionResultCue(transcriptionResult);
             pwaService.incrementTranscriptionCount();
-            // Auto-scroll to lists after successful transcription to show new items
-            schedulePostTranscriptionScroll();
+
+            if (landedNothing(transcriptionResult)) {
+              // Hold the audio so "Try again" can re-run the same take.
+              retryAudioBlob = audioBlob;
+            } else {
+              retryAudioBlob = null;
+              // Auto-scroll to lists after successful transcription to show new items
+              schedulePostTranscriptionScroll();
+            }
           } catch (transcriptionError) {
             console.error(
               "Transcription failed in onstop:",
               transcriptionError,
             );
             soundService.error({ force: true });
+            retryAudioBlob = audioBlob;
           } finally {
             resetRecordingSession();
             if (get(audioState).state === AudioStates.PROCESSING) {
@@ -806,6 +866,38 @@
     </div>
   {/if}
 
+  <!-- Nothing landed from that take: offer the same audio a second run
+       before asking anyone to say it all again. -->
+  {#if retryAudioBlob && !$isTranscribing}
+    <div
+      class="zl-retry-card mx-auto mb-3 flex w-[min(100%,30rem)] items-center justify-between gap-3"
+      role="status"
+      transition:fade={{ duration: 180 }}
+    >
+      <span class="zl-retry-text">
+        Nothing came out of that one. Another listen?
+      </span>
+      <span class="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          class="zl-retry-button"
+          disabled={isRetrying}
+          on:click={retryLastTranscription}
+        >
+          {isRetrying ? "Listening..." : "Try again"}
+        </button>
+        <button
+          type="button"
+          class="zl-retry-dismiss"
+          on:click={dismissRetry}
+          aria-label="Dismiss"
+        >
+          ✕
+        </button>
+      </span>
+    </div>
+  {/if}
+
   <!-- Swipeable lists container -->
   <div class="mt-0 w-full max-w-full sm:mt-2" id="lists-container">
     <SwipeableLists />
@@ -839,6 +931,62 @@
 {/if}
 
 <style>
+  /* Retry card wears the list-row anatomy (cream surface, quiet border,
+     16px corners) — it sits in the list column, so it belongs to that
+     family rather than the amber alert language. */
+  .zl-retry-card {
+    background: var(--zl-item-bg, #fbf1e4);
+    border: var(--zl-item-border-width, 2px) solid
+      var(--zl-item-border-color, rgba(30, 23, 20, 0.12));
+    border-radius: 16px;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .zl-retry-text {
+    color: var(--zl-text-color-primary, #1e1714);
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .zl-retry-button {
+    background: var(--zl-cta-color, #ffb000);
+    border: 0;
+    border-radius: 999px;
+    color: #1e1714;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 900;
+    min-height: 44px;
+    padding: 0 0.95rem;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .zl-retry-button:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  .zl-retry-button:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  .zl-retry-dismiss {
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    color: var(--zl-text-color-secondary, #3a2f2a);
+    cursor: pointer;
+    font-size: 0.8rem;
+    min-height: 44px;
+    min-width: 32px;
+    opacity: 0.6;
+  }
+
+  .zl-retry-dismiss:hover {
+    opacity: 1;
+  }
+
   /* List-first: the voice button tucks into the bottom-right corner as a
      round glyph. It used to be a 380px pill pinned across the middle,
      which sat on top of the list items you were trying to read. Corner +

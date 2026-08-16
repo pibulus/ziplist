@@ -2085,14 +2085,14 @@ body.zl-touch-dragging {
   }
 }
 
-/* Sort direction is legible at a glance: the glyph flips when the next press
-   will sort newest-first. */
-.zl-sort-button.is-reversed .zl-header-icon {
-  transform: scaleY(-1);
-}
-
-.zl-sort-button .zl-header-icon {
-  transition: transform 0.2s ease;
+/* Sort direction shows as a lit button, not a flipped glyph. The clock icon
+   used to scaleY(-1) when reversed, which just read as a broken upside-down
+   clock (Pablo clocked it 2026-08-17) — same quiet tint the share button
+   wears when its tray is open, and the tooltip carries the direction. */
+.zl-sort-button.is-reversed {
+  opacity: 1;
+  background: rgba(30, 23, 20, 0.08);
+  border-radius: 10px;
 }
 
 /* ── Send an item to another list ───────────────────────────────────────
