@@ -156,6 +156,23 @@
         document.documentElement.classList.add("mode-neo-brutalist");
       }
 
+      // The homepage is prerendered, so a returning visitor gets HTML with no
+      // list in it and the cards appear a beat later when JS reads
+      // localStorage — the hero visibly jumps as they arrive (Pablo:
+      // "it first shows the front page plain and then quickly catches up").
+      // The list itself cannot be drawn before hydration (the data is in
+      // localStorage and only JS can read it), but the SPACE can be held, so
+      // the page settles once instead of twice. First-time visitors have no
+      // stored list and reserve nothing.
+      try {
+        const storedLists = localStorage.getItem("ziplist-lists");
+        if (storedLists && storedLists.includes('"text"')) {
+          document.documentElement.setAttribute("data-booting-lists", "true");
+        }
+      } catch (e) {
+        // A blocked localStorage just means no reservation — harmless.
+      }
+
       // Set initialization flag to prevent duplicate theme application
       window.themeInitialized = true;
 

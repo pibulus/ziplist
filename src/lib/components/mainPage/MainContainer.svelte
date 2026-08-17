@@ -940,6 +940,13 @@
 {/if}
 
 <style>
+  /* Space held for the list that is about to arrive — see the boot script in
+     app.html. Only for visitors who already have a list; a min-height never
+     clips, so the real card simply fills it. */
+  :global(html[data-booting-lists="true"]) #lists-container {
+    min-height: 22rem;
+  }
+
   /* Retry card wears the list-row anatomy (cream surface, quiet border,
      16px corners) — it sits in the list column, so it belongs to that
      family rather than the amber alert language. */
