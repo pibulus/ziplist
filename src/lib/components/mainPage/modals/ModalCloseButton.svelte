@@ -40,7 +40,7 @@
 
 <button
   type="button"
-  class="modal-close-btn absolute {position} z-50 flex {sizeClass} items-center justify-center rounded-full bg-black/5 text-slate-600 hover:bg-black/10 hover:text-slate-900"
+  class="modal-close-btn absolute {position} z-50 flex {sizeClass} items-center justify-center rounded-full"
   aria-label={label}
   on:click|preventDefault={handleClick}
 >
@@ -48,26 +48,31 @@
 </button>
 
 <style>
-  /* Family X: small, tucked into the corner, squishy on press.
-     Fingers get a bigger target via the coarse-pointer bump below. */
+  /* Family X: a small pink dot tucked into the corner, squishy on press
+     (Pablo's call 2026-08-17 — it used to be a grey ghost circle in slate,
+     a colour from nobody's palette). The backdrop closes these too, so the
+     X gets to be a cute accent rather than furniture. Settings and
+     Contributor wear the identical dot, so all five modals close the same
+     way. Fingers get a bigger target via the coarse-pointer bump below. */
   .modal-close-btn {
     /* Same tuck as TalkType's X so the two apps close the same way. */
     top: 0.35rem;
     right: 0.35rem;
+    background: #ff6ac2;
+    color: #fffdf5;
+    border: none;
+    box-shadow: 0 3px 8px rgba(255, 106, 194, 0.35);
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     user-select: none;
-    opacity: 0.6;
     transition:
-      background 0.15s ease,
-      color 0.15s ease,
-      opacity 0.15s ease,
+      box-shadow 0.15s ease,
       transform 0.22s linear(0, 0.5 15%, 1.15 40%, 0.97 65%, 1);
   }
 
   .modal-close-btn:hover {
-    opacity: 1;
-    transform: scale(1.1);
+    box-shadow: 0 5px 12px rgba(255, 106, 194, 0.5);
+    transform: scale(1.1) rotate(90deg);
   }
 
   .modal-close-btn:active {
