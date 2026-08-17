@@ -2176,6 +2176,50 @@ body.zl-touch-dragging {
   cursor: default;
 }
 
+/* Tag filter — chips that decide what leaves. Same cream-tint-with-coloured-
+   ink language as the chips on the rows, so a #shop here reads as the same
+   object as a #shop there. */
+.zl-share-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1 1 100%;
+  padding-bottom: 0.15rem;
+}
+
+.zl-share-tag {
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  border: 2px solid
+    color-mix(in srgb, var(--tag-colour, #6c85e9) 40%, transparent);
+  background: color-mix(in srgb, var(--tag-colour, #6c85e9) 10%, #fffef7);
+  color: color-mix(in srgb, var(--tag-colour, #6c85e9) 72%, #1e1714);
+  cursor: pointer;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease;
+}
+
+.zl-share-tag:active {
+  transform: scale(0.94);
+}
+
+.zl-share-tag.is-on {
+  background: var(--tag-colour, #6c85e9);
+  border-color: var(--tag-colour, #6c85e9);
+  color: #fffef7;
+}
+
+.zl-share-filter-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.6;
+}
+
 /* The live door reads as the livelier of the two share options — a filled
    pill against the outlined "Send a copy", since one of them starts
    something ongoing and the other just hands over a snapshot. */

@@ -15,6 +15,7 @@
     splitPastedList,
   } from "$lib/services/lists/listTextFormat.js";
   import { shareList, generateShareableUrl } from "$lib/services/share";
+  import { tagColour } from "$lib/services/lists/itemTags";
   import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
   import { fade } from "svelte/transition";
   import { cubicOut, backOut, quintOut } from "svelte/easing";
@@ -372,20 +373,20 @@
   }
 
   // Share list function
-  async function handleShareList() {
+  async function handleShareList(listToShare = list) {
     if (isLive) {
       await handleShareLiveList();
       return;
     }
 
-    if (!list || !list.items || list.items.length === 0) {
+    if (!listToShare || !listToShare.items || listToShare.items.length === 0) {
       showListStatus("Add an item before sharing.");
       soundService.locked();
       return;
     }
 
     try {
-      const result = await shareList(list);
+      const result = await shareList(listToShare);
       if (result.success) {
         showListStatus(
           result.urlTooLong
@@ -1320,11 +1321,40 @@
   let pasteText = "";
   let syncPhrase = "";
 
+  // ── Sending part of a list ─────────────────────────────────────────────
+  // Only ever appears on a list that HAS tags — a filter row on a list with
+  // nothing to filter is furniture, and most lists never grow a single tag.
+  // The filter shapes what LEAVES: the copy, the text, the file, the QR.
+  // A live room is the whole list by definition, so the row hides there.
+  let shareTagFilter = null;
+
+  $: shareableList = shareTagFilter
+    ? {
+        ...list,
+        items: list.items.filter((item) =>
+          (item.tags ?? []).includes(shareTagFilter),
+        ),
+      }
+    : list;
+
+  $: shareFilterCount = shareableList.items.length;
+
+  // Switching lists takes its tags with it; a stale filter would silently
+  // send an empty list.
+  $: if (list.id) shareTagFilter = null;
+
+  function toggleShareTag(tag) {
+    shareTagFilter = shareTagFilter === tag ? null : tag;
+    hapticService.selection();
+    soundService.select();
+  }
+
   function toggleShareTray() {
     shareTrayOpen = !shareTrayOpen;
     if (!shareTrayOpen) {
       shareInputMode = null;
       syncPhrase = "";
+      shareTagFilter = null;
     }
     soundService.select();
   }
@@ -1334,8 +1364,9 @@
   }
 
   async function shareAsLink() {
+    const listToShare = shareableList;
     shareTrayOpen = false;
-    await handleShareList();
+    await handleShareList(listToShare);
   }
 
   // The live door in the share tray. Keeps the tray open while the room is
@@ -1347,7 +1378,7 @@
 
   async function copyAsText() {
     try {
-      await navigator.clipboard.writeText(listToText(list));
+      await navigator.clipboard.writeText(listToText(shareableList));
       shareTrayOpen = false;
       showListStatus("Copied as text.", true, 2200);
       soundService.copySuccess({ force: true });
@@ -1357,11 +1388,13 @@
   }
 
   function downloadAsText() {
-    const name =
-      (list.name || "ziplist").replace(/[^\w\- ]+/g, "").trim() || "ziplist";
+    const baseName = shareTagFilter
+      ? `${list.name || "ziplist"} ${shareTagFilter}`
+      : list.name || "ziplist";
+    const name = baseName.replace(/[^\w\- ]+/g, "").trim() || "ziplist";
     const a = document.createElement("a");
     a.href = URL.createObjectURL(
-      new Blob([listToText(list)], { type: "text/plain" }),
+      new Blob([listToText(shareableList)], { type: "text/plain" }),
     );
     a.download = `${name}.txt`;
     a.click();
@@ -1372,7 +1405,7 @@
   }
 
   function qrThisList() {
-    if (!list?.items?.length) {
+    if (!shareableList?.items?.length) {
       showListStatus("Add an item before sharing.");
       soundService.locked();
       return;
@@ -1381,7 +1414,7 @@
     // scanning it carries the data itself, no server round-trip. Over it,
     // fall back to what the share flow would hand out anyway: the short live
     // link when the list is live, otherwise the same long link (denser code).
-    const rawUrl = generateShareableUrl(list);
+    const rawUrl = generateShareableUrl(shareableList);
     let qrTarget = rawUrl;
     if (rawUrl.length > PRODUCT_LIMITS.SHARE_URL_WARNING_LENGTH && isLive) {
       qrTarget = liveListsService.getShareUrl(list.id) || rawUrl;
@@ -2099,6 +2132,32 @@
          a popover: .zl-card is overflow:clip and anything floating gets sliced. -->
     {#if shareTrayOpen}
       <div class="zl-share-tray" transition:fade={{ duration: 130 }}>
+        <!-- Send only the part you mean. Appears solely on a list that has
+             tags, so a plain list never sees it. Not shown for a live room —
+             a room is the whole list by definition. -->
+        {#if !isLive && suggestedTags.length > 0}
+          <div class="zl-share-filter" role="group" aria-label="Send only items tagged">
+            {#each suggestedTags as tag (tag)}
+              <button
+                type="button"
+                class="zl-share-tag"
+                class:is-on={shareTagFilter === tag}
+                style={`--tag-colour: ${tagColour(tag)}`}
+                aria-pressed={shareTagFilter === tag}
+                on:click={() => toggleShareTag(tag)}
+              >
+                #{tag}
+              </button>
+            {/each}
+            {#if shareTagFilter}
+              <span class="zl-share-filter-count">
+                {shareFilterCount}
+                {shareFilterCount === 1 ? "item" : "items"}
+              </span>
+            {/if}
+          </div>
+        {/if}
+
         <!-- The two kinds of sharing sit side by side: a copy that freezes as
              it leaves, or a room that keeps up. Everything below them is
              export, which is a different job. -->
