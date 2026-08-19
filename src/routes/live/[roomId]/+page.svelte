@@ -22,6 +22,24 @@
   let errorCode = null;
   let listId = null;
   let avatar = "";
+  let keepError = "";
+
+  // A guest's placeholder id is minted as `live_<roomId>`; an owner reopening
+  // their own link binds to their real list instead. Only guests get a "keep".
+  $: isGuest = !!listId && listId.startsWith("live_");
+
+  function handleKeepList() {
+    if (!listId) return;
+    const result = listsStore.keepSharedList(listId);
+    if (result.ok) {
+      // The saved list is now the active one back home; leaving the room also
+      // discards the placeholder (onDestroy), which keepSharedList already
+      // replaced with a permanent copy.
+      goto("/");
+    } else {
+      keepError = result.message || "Could not keep that list.";
+    }
+  }
 
   onMount(async () => {
     avatar = getOrCreateAvatar();
@@ -143,10 +161,20 @@
       <BrandMark />
     </div>
     <SingleList {listId} showListManagement={false} />
-    <a class="live-hook" href="/">
-      or start a list of your own
-      <span aria-hidden="true">→</span>
-    </a>
+    <div class="live-actions">
+      {#if isGuest}
+        <button type="button" class="btn-keep" on:click={handleKeepList}>
+          Keep this list
+        </button>
+        {#if keepError}
+          <p class="keep-error" role="alert">{keepError}</p>
+        {/if}
+      {/if}
+      <a class="live-hook" href="/">
+        {isGuest ? "or leave without keeping" : "back to my lists"}
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
   {/if}
 </div>
 
@@ -297,6 +325,46 @@
      card. Warm badge + one plain line about what "live" means here. */
 
 
+
+  .live-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .btn-keep {
+    background: var(--zl-cta-color, #ffb000);
+    color: #111111;
+    border: none;
+    border-radius: 999px;
+    padding: 0.7rem 1.6rem;
+    font-family: "Space Mono", monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.24);
+  }
+
+  .btn-keep:hover {
+    transform: translateY(-2px);
+    filter: saturate(1.08) brightness(1.04);
+    box-shadow: 0 4px 12px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.35);
+  }
+
+  .btn-keep:active {
+    transform: scale(0.96);
+  }
+
+  .keep-error {
+    margin: 0;
+    font-family: "Space Mono", monospace;
+    font-size: 0.8rem;
+    color: var(--zl-text-color-secondary, #666);
+    text-align: center;
+  }
 
   .live-hook {
     align-self: center;

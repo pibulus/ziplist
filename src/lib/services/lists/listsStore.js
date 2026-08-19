@@ -513,6 +513,52 @@ function createListsStore() {
     return result;
   }
 
+  // Save a shared list you're only VISITING as one of your own. The
+  // `live_<roomId>` placeholder is a view of somebody else's list that would
+  // otherwise vanish the moment you leave the room — this copies it into a
+  // permanent list with a real id and drops the placeholder.
+  function keepSharedList(listId) {
+    let result = createLimitResult("That shared list has gone.", "not-found");
+
+    update((state) => {
+      const source = state.lists.find((list) => list.id === listId);
+      if (!source) return state;
+
+      const maxLists = getMaxListCount();
+      // The placeholder counts toward the cap, but it's the thing being
+      // replaced — exclude it from the room we're checking.
+      const permanentCount = state.lists.filter(
+        (list) => list.id !== listId,
+      ).length;
+      if (permanentCount >= maxLists) {
+        result = createLimitResult(getMaxListsMessage(maxLists), "max-lists");
+        return state;
+      }
+
+      const timestamp = new Date().toISOString();
+      const newList = {
+        ...source,
+        id: generateListId(),
+        items: Array.isArray(source.items) ? source.items : [],
+        isLive: false,
+        liveRoomId: null,
+        liveSyncPhrase: null,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      };
+
+      result = createSuccessResult({ listId: newList.id });
+      return {
+        ...state,
+        lists: [...state.lists.filter((list) => list.id !== listId), newList],
+        activeListId: newList.id,
+      };
+    });
+
+    if (result.ok) persistCriticalChange();
+    return result;
+  }
+
   // Delete a list by ID
   function deleteList(listId) {
     update((state) => {
@@ -1037,6 +1083,7 @@ function createListsStore() {
     addList,
     deleteList,
     setActiveList,
+    keepSharedList,
     addItem,
     addItems,
     toggleItem,

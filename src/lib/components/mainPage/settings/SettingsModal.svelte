@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
   import { theme, listFirstMode, applyTheme, isContributor } from "$lib";
   import { STORAGE_KEYS, THEMES } from "$lib/constants";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
@@ -119,8 +120,11 @@
     try {
       const result = await liveListsService.joinByPhrase(joinPhrase);
       if (result.success) {
-        syncStatus = "Got it — the list is here.";
         joinPhrase = "";
+        // Every door in should lead to the same live view — the one place
+        // with the "keep or leave" choice. Joining from Settings used to
+        // drop the list silently into the carousel with no way to keep it.
+        await goto(`/live/${result.roomId}`);
       } else {
         syncStatus =
           result.reason === "invalid"
