@@ -326,6 +326,13 @@
     }
   }
 
+  // Step one list in either direction, wrapping around the circular track.
+  // Shared by the keyboard arrows and the on-screen arrow buttons.
+  function stepList(direction) {
+    if (!wraps) return;
+    setActiveList(mod(targetPos + direction, L));
+  }
+
   // Where each card renders: its congruent position nearest the viewport.
   // (With one list this is just the identity.)
   function slideX(i, xNow) {
@@ -338,6 +345,15 @@
   // Micro-tilt: cards lean into the throw (capped ~1.3°) and stand upright
   // as the physics calm — tilt just reads velocity.
   $: tilt = prefersReducedMotion ? 0 : Math.max(-1.3, Math.min(1.3, v * 0.004));
+  function handleGlobalKeydown(e) {
+    if (!wraps) return;
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable) return;
+    if (e.key === "ArrowLeft") {
+      stepList(-1);
+    } else if (e.key === "ArrowRight") {
+      stepList(1);
+    }
+  }
 
   onDestroy(() => {
     stopFlight();
@@ -345,6 +361,10 @@
   });
 </script>
 
+<svelte:window on:keydown={handleGlobalKeydown} />
+
+<!-- The container intercepts mouse down to cancel momentum, but delegates
+     the drag entirely to touch. A mouse drag implies text selection. -->
 <div
   class="swipe-container"
   role="region"
@@ -354,6 +374,64 @@
   on:touchend={handleTouchEnd}
   on:touchcancel={handleTouchCancel}
 >
+  <!-- List picker: arrows + colour dots, always visible up top so you never
+       have to scroll past a long list to switch. Hidden with a single list —
+       there is nowhere to go. -->
+  {#if wraps}
+    <div class="list-nav" role="navigation" aria-label="List picker">
+      <button
+        type="button"
+        class="nav-arrow"
+        on:click={() => stepList(-1)}
+        aria-label="Previous list"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m15 18-6-6 6-6"></path>
+        </svg>
+      </button>
+      <div class="pagination-dots">
+        {#each lists as list, i}
+          <button
+            type="button"
+            class="dot"
+            class:active={list.id === activeListId}
+            style="--dot-primary: {list.primaryColor}; --dot-accent: {list.accentColor}; --dot-glow: {list.glowColor}"
+            on:click={() => setActiveList(i)}
+            aria-label="Switch to {list.name}"
+            aria-current={list.id === activeListId ? "true" : undefined}
+            aria-controls="list-slide-{list.id}"
+          ></button>
+        {/each}
+      </div>
+      <button
+        type="button"
+        class="nav-arrow"
+        on:click={() => stepList(1)}
+        aria-label="Next list"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 18 6-6-6-6"></path>
+        </svg>
+      </button>
+    </div>
+  {/if}
+
   <div class="lists-wrapper" bind:this={wrapperEl} style="--tilt: {tilt}deg;">
     {#each lists as list, i (list.id)}
       {@const sx = slideX(i, x)}
@@ -373,22 +451,6 @@
           <SingleList listId={list.id} />
         </div>
       </div>
-    {/each}
-  </div>
-
-  <!-- Pagination Indicators -->
-  <div class="pagination-dots" role="navigation" aria-label="List picker">
-    {#each lists as list, i}
-      <button
-        type="button"
-        class="dot"
-        class:active={list.id === activeListId}
-        style="--dot-primary: {list.primaryColor}; --dot-accent: {list.accentColor}; --dot-glow: {list.glowColor}"
-        on:click={() => setActiveList(i)}
-        aria-label="Switch to {list.name}"
-        aria-current={list.id === activeListId ? "true" : undefined}
-        aria-controls="list-slide-{list.id}"
-      ></button>
     {/each}
   </div>
 </div>
@@ -486,8 +548,47 @@
     display: flex;
     justify-content: center;
     gap: 4px;
-    margin-top: 0.25rem;
-    margin-bottom: 0;
+    margin: 0;
+  }
+
+  .list-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .nav-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 0;
+    background: transparent;
+    color: var(--zl-text-color-secondary, #666);
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .nav-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-arrow:hover,
+  .nav-arrow:focus-visible {
+    color: var(--zl-text-color-primary, #444);
+    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+    outline: none;
+    transform: scale(1.08);
+  }
+
+  .nav-arrow:active {
+    transform: scale(0.9);
+    transition-duration: 80ms;
   }
 
   .dot {
