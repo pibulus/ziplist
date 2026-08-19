@@ -598,7 +598,6 @@ function createListsStore() {
             return {
               ...list,
               items: withCompletedLast([
-                ...list.items,
                 {
                   id: crypto.randomUUID(),
                   text: normalizedText,
@@ -606,6 +605,7 @@ function createListsStore() {
                   tags,
                   addedAt: Date.now(), // entry-date sort key
                 },
+                ...list.items,
               ]),
               updatedAt: new Date().toISOString(),
             };
@@ -701,7 +701,7 @@ function createListsStore() {
 
             return {
               ...list,
-              items: withCompletedLast([...list.items, ...newItems]),
+              items: withCompletedLast([...newItems, ...list.items]),
               updatedAt: new Date().toISOString(),
             };
           }
