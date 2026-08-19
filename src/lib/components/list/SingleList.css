@@ -645,7 +645,7 @@
     gap: 0.25rem;
   }
 
-    .zl-share-button {
+  .zl-share-button {
     border-radius: 16px;
   }
 
@@ -1334,6 +1334,7 @@
 
 .zl-draft-item {
   border-style: dashed;
+  border-left-style: solid;
   cursor: default;
 }
 
@@ -1355,6 +1356,7 @@
   border-color: color-mix(in srgb, var(--remote-color) 44%, white);
   border-left-color: var(--remote-color);
   border-style: dashed;
+  border-left-style: solid;
   cursor: default;
   grid-template-columns: 44px minmax(0, 1fr);
   min-height: 60px;
@@ -1666,9 +1668,10 @@
   min-height: 44px;
   justify-content: center;
   align-items: center;
-  align-self: flex-start;
+  position: absolute;
+  top: 2px;
+  right: 2px;
   cursor: grab;
-  position: relative;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
@@ -1728,6 +1731,7 @@
   align-items: center;
   gap: 0.15rem;
   align-self: center;
+  width: 44px;
 }
 
 .zl-item-delete-button {
@@ -1887,7 +1891,7 @@
     grid-column: auto;
   }
 
-    .zl-share-button,
+  .zl-share-button,
   .zl-live-indicator {
     gap: 0;
     min-width: 44px;
@@ -2296,6 +2300,9 @@ body.zl-touch-dragging {
    list whose entire job is ticking things competed with the tick, and forced
    the row taller to hold them. Now: checkbox, text, and a single "more". */
 .zl-item-more-button {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
