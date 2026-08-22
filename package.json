@@ -11,6 +11,7 @@
     "dev": "vite dev --port 3001 --host",
     "dev:party": "wrangler dev --port 1999 --local",
     "party:deploy": "wrangler deploy",
+    "prebuild": "node scripts/check-portable-deps.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "deploy:pi": "bash scripts/deploy-pi.sh",
