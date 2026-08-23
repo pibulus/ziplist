@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { env } from "$env/dynamic/private";
 import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter";
+import { transcribeWithOpenRouter } from "$lib/server/openrouterFallback";
 
 let genAI = null;
 let genAIKey = "";
@@ -14,6 +15,14 @@ const GENERATION_CONFIG = {
   topK: 40,
   candidateCount: 1,
   maxOutputTokens: 8192,
+  // Roll the model, pin the behaviour. gemini-flash-lite-latest is a rolling
+  // alias (so it can never be retired out from under us) AND it is
+  // thinking-capable. It barely thinks today, but a future roll could make it
+  // think by default and silently multiply cost and latency - that is exactly
+  // how Stargram burned through a prepay balance in two weeks (2026-08-23).
+  // Measured 2026-08-24: pinning this changes nothing today (8/8 on the append
+  // benchmark, 1.9s, 63 output tokens) and costs nothing to keep.
+  thinkingConfig: { thinkingLevel: "minimal" },
 };
 
 function getAllowedOrigins() {
@@ -225,7 +234,38 @@ async function readTranscriptionPayload(request) {
   throw transcriptionPayloadError("Unsupported transcription payload", 415);
 }
 
+// The Files API costs an upload AND a delete round trip on top of the generate
+// - measured 2026-08-23, that is ~3.5s of the ~5s a user actually waits, while
+// the model itself answers in ~1.6s. Recordings are capped at a minute (a few
+// hundred KB), so they fit inline with room to spare and cost ONE round trip.
+// The upload path stays for anything genuinely large.
+const INLINE_LIMIT_BYTES = 6 * 1024 * 1024;
+
+async function transcribeInline({ prompt, file, mimeType, source }) {
+  const data = Buffer.from(await file.arrayBuffer()).toString("base64");
+
+  console.log(
+    `[API /gemini] Inline ${file.size || "unknown"} bytes from ${source} as ${mimeType}`,
+  );
+
+  const result = await withRetry(() =>
+    getGeminiClient().models.generateContent({
+      model: env.GEMINI_MODEL ?? "gemini-flash-lite-latest",
+      contents: [
+        { parts: [{ text: prompt }, { inlineData: { mimeType, data } }] },
+      ],
+      config: GENERATION_CONFIG,
+    }),
+  );
+
+  return getTextFromGeminiResult(result);
+}
+
 async function transcribeWithGemini({ prompt, file, mimeType, source }) {
+  if (typeof file.size === "number" && file.size <= INLINE_LIMIT_BYTES) {
+    return transcribeInline({ prompt, file, mimeType, source });
+  }
+
   let uploadedFileName = null;
 
   try {
@@ -301,7 +341,23 @@ export async function POST(event) {
     }
 
     const payload = await readTranscriptionPayload(event.request);
-    const text = await transcribeWithGemini(payload);
+
+    let text;
+    try {
+      text = await transcribeWithGemini(payload);
+    } catch (error) {
+      // A depleted prepay balance is the ONE Gemini failure a second provider
+      // can actually rescue, and it takes every app in the fleet down at once
+      // (2026-08-23), so it is worth one extra round trip. Every other failure
+      // falls straight through to the handler below, unchanged.
+      if (getGeminiErrorKind(error) !== "quota") throw error;
+      const rescued = await transcribeWithOpenRouter(payload);
+      if (!rescued) throw error;
+      console.warn(
+        "[API /gemini] Gemini out of credits - served via OpenRouter",
+      );
+      text = rescued;
+    }
 
     return json({ text });
   } catch (error) {

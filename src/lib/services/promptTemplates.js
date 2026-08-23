@@ -32,6 +32,11 @@ Rules for "items" (new things to add):
 3. ${itemStyleRule}
 4. Convert "I need to" / "I want to" phrases into clean items
 5. Do NOT add items that match something the user said they already did
+6. Keep any qualifier that changes WHICH thing it is: "oat milk" not "milk",
+   "wool socks" not "socks", "ring the landlord" not "ring". Dropping it leaves
+   an item the speaker cannot act on
+7. Something the speaker rules out ("not the regular one", "not the cotton
+   ones") is never its own item - it only tells you which qualifier to keep
 
 Rules for "complete" (things to tick off):
 1. If the speaker says they did, bought, finished, got, or completed something — and it matches an existing list item — include the EXACT text of that existing item in "complete"
