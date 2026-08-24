@@ -54,14 +54,42 @@ export const LIST_COLOR_PRESETS = [
 ];
 
 // Default lists configuration
-const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 3).map((palette) => ({
+const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 3).map((palette, index) => ({
   id: palette.id,
   name: palette.defaultName,
   color: palette.color,
   primaryColor: palette.primaryColor,
   accentColor: palette.accentColor,
   glowColor: palette.glowColor,
-  items: [],
+  items:
+    index === 0
+      ? [
+          {
+            id: "starter-swipe",
+            text: "Swipe left or right to flip lists",
+            checked: false,
+            tags: [],
+            order: 0,
+            addedAt: Date.now() - 3000,
+          },
+          {
+            id: "starter-dice",
+            text: "Tap the dice to let fate pick",
+            checked: false,
+            tags: [],
+            order: 1,
+            addedAt: Date.now() - 2000,
+          },
+          {
+            id: "starter-portal",
+            text: "→ Pink List",
+            checked: false,
+            tags: [],
+            order: 2,
+            addedAt: Date.now() - 1000,
+          },
+        ]
+      : [],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 }));
