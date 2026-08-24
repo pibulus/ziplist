@@ -22,12 +22,21 @@ import { readFileSync } from "node:fs";
 
 const BAD_PREFIXES = ["file:", "link:"];
 
-const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url)));
+const pkg = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url)),
+);
 const offenders = [];
 
-for (const field of ["dependencies", "devDependencies", "optionalDependencies"]) {
+for (const field of [
+  "dependencies",
+  "devDependencies",
+  "optionalDependencies",
+]) {
   for (const [name, spec] of Object.entries(pkg[field] ?? {})) {
-    if (typeof spec === "string" && BAD_PREFIXES.some((p) => spec.startsWith(p))) {
+    if (
+      typeof spec === "string" &&
+      BAD_PREFIXES.some((p) => spec.startsWith(p))
+    ) {
       offenders.push({ field, name, spec });
     }
   }

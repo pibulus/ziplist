@@ -144,7 +144,7 @@
       class:touch-active={isTouchActive}
       data-swipe-ignore="true"
       aria-label={`Reorder ${item.text}`}
-      title="Press and hold to reorder"
+      title="Drag to reorder"
       on:click|stopPropagation={() => onReorderClick(item.id)}
       on:keydown={(event) => onReorderKeyDown(event, item.id)}
       on:touchstart={(event) => onTouchGrabStart(event, item.id)}

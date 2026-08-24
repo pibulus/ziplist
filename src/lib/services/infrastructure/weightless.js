@@ -188,7 +188,7 @@ export class Weightless {
             this.enabled = stored.enabled;
           if (typeof stored.volume === "number") this.volume = stored.volume;
         }
-      } catch (e) {
+      } catch {
         /* SSR / privacy mode / bad JSON — use defaults */
       }
     }
@@ -382,7 +382,9 @@ export class Weightless {
         noteGain.disconnect();
         try {
           lastNode.disconnect();
-        } catch (e) {}
+        } catch {
+          /* older browsers lack disconnect on some nodes */
+        }
       },
       (delay + duration + 0.2) * 1000,
     );
@@ -501,7 +503,7 @@ export class Weightless {
         "softstack:sound",
         JSON.stringify({ enabled: this.enabled, volume: this.volume }),
       );
-    } catch (e) {
+    } catch {
       /* SSR / privacy mode — no persistence */
     }
   }

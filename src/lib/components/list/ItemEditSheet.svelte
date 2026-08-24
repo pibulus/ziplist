@@ -345,7 +345,15 @@
     padding: 0.5rem 0.4rem;
     border: none;
     background: none;
-    /* Warm clay, not an alarm red — deleting a shopping line is not a crisis. */
+    /* Warm clay, not an alarm red — deleting a shopping line is not a crisis.
+       Left as its own hue on purpose (not flattened to warm ink like the row
+       tray's Remove): this is a plain text link standing alone next to one
+       filled "Done" pill, so a quiet colour break is what tells you it's the
+       different one. The tray's Remove sits inside a GRID of equal pill
+       buttons instead, where the same treatment would either look like every
+       other pill (illegible as "different") or scream (if made loud enough
+       to stand out) — ink was the right call there, clay is the right call
+       here. Same "calm, not alarming" philosophy, different context. */
     color: #b4614f;
     cursor: pointer;
     border-radius: 8px;

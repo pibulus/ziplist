@@ -109,19 +109,15 @@
   let listContainerNode = null;
   const itemNodes = new Map();
   const settlingTimers = new Map();
-  const MOBILE_REORDER_LONG_PRESS_MS = 320;
-  const MOBILE_REORDER_CANCEL_DISTANCE_PX = 16;
   const MOBILE_REORDER_AUTO_SCROLL_EDGE_PX = 88;
   let touchDragPreviewItems = null;
   let touchDragItemId = null;
   let touchDragPendingItemId = null;
   let touchDragPendingTouchId = null;
-  let touchDragStartX = 0;
   let touchDragStartY = 0;
   let touchDragCurrentY = 0;
   let touchDragTilt = 0; // deg — smoothed vertical-velocity lean on the ghost
   let touchDragGhostRect = null;
-  let touchDragPointerOffsetY = 0;
   let touchDragTargetIndex = -1;
   let touchDragLongPressTimer = null;
   let touchDragAutoScrollDelta = 0;
@@ -576,7 +572,7 @@
   $: touchGhostStyle =
     touchDraggedItem && touchDragGhostRect
       ? `top: ${touchDragGhostRect.top}px; left: ${touchDragGhostRect.left}px; width: ${touchDragGhostRect.width}px; transform: translate3d(0, ${
-          touchDragCurrentY - touchDragPointerOffsetY - touchDragGhostRect.top
+          touchDragCurrentY - touchDragStartY
         }px, 0); --drag-tilt: ${touchDragTilt}deg;`
       : "";
 
@@ -841,7 +837,6 @@
     touchDragPendingItemId = null;
     touchDragPendingTouchId = null;
     touchDragGhostRect = null;
-    touchDragPointerOffsetY = 0;
     touchDragTargetIndex = -1;
 
     if (typeof document !== "undefined") {
@@ -958,7 +953,7 @@
     clearTouchDragLongPressTimer();
 
     const draggedNode = itemNodes.get(touchDragPendingItemId);
-    if (!draggedNode) {
+    if (!draggedNode || !listContainerNode) {
       resetTouchDragState();
       return;
     }
@@ -971,14 +966,14 @@
       return;
     }
 
-    const rect = draggedNode.getBoundingClientRect();
+    const containerRect = listContainerNode.getBoundingClientRect();
+    const nodeRect = draggedNode.getBoundingClientRect();
     touchDragItemId = touchDragPendingItemId;
-    touchDragPointerOffsetY = touchDragStartY - rect.top;
     touchDragGhostRect = {
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
+      top: nodeRect.top - containerRect.top + listContainerNode.scrollTop,
+      left: nodeRect.left - containerRect.left,
+      width: nodeRect.width,
+      height: nodeRect.height,
     };
     touchDragTargetIndex = activeIndex;
     touchDragPreviewItems = [...activeItems, ...completedItems];
@@ -1000,36 +995,23 @@
       return;
     }
 
-    clearTouchDragLongPressTimer();
     stopTouchDragAutoScroll();
     addTouchDragListeners();
 
     const touch = event.changedTouches[0];
     touchDragPendingItemId = itemId;
     touchDragPendingTouchId = touch.identifier;
-    touchDragStartX = touch.clientX;
     touchDragStartY = touch.clientY;
     touchDragCurrentY = touch.clientY;
-    touchDragLongPressTimer = setTimeout(
-      startTouchDrag,
-      MOBILE_REORDER_LONG_PRESS_MS,
-    );
+
+    startTouchDrag();
   }
 
   function handleTouchGrabMove(event) {
     const touch = getTrackedTouch(event);
     if (!touch) return;
 
-    const diffX = touch.clientX - touchDragStartX;
-    const diffY = touch.clientY - touchDragStartY;
-
     if (!touchDragItemId) {
-      if (
-        Math.abs(diffX) > MOBILE_REORDER_CANCEL_DISTANCE_PX ||
-        Math.abs(diffY) > MOBILE_REORDER_CANCEL_DISTANCE_PX
-      ) {
-        resetTouchDragState();
-      }
       return;
     }
 
@@ -2473,29 +2455,48 @@
           </div>
         </button>
       {/if}
+      {#if touchDraggedItem && touchDragGhostRect}
+        <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">
+          <div
+            class="zl-item zl-touch-ghost-item"
+            style="--zl-item-step: {renderedActiveItems.length > 1
+              ? Math.max(0, renderedActiveItems.findIndex((it) => it.id === touchDraggedItem.id)) /
+                (renderedActiveItems.length - 1)
+              : 0}"
+          >
+            <span class="zl-checkbox-wrapper">
+              <span class="zl-checkbox-custom"></span>
+            </span>
+
+            <div class="edit-wrapper">
+              <span class="zl-item-text-button">
+                <span class="zl-item-text">{touchDraggedItem.text}</span>
+                {#if touchDraggedItem.tags?.length}
+                  <span class="zl-item-tags">
+                    {#each touchDraggedItem.tags as tag (tag)}
+                      <span class="zl-item-tag" style={`--tag-colour: ${tagColour(tag)}`}>#{tag}</span>
+                    {/each}
+                  </span>
+                {/if}
+              </span>
+            </div>
+
+            <div class="zl-item-side">
+              <div class="grab-indicator touch-active">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="zl-item-more-button">
+                <span>⋯</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </section>
-
-{#if touchDraggedItem && touchDragGhostRect}
-  <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">
-    <div class="zl-item zl-touch-ghost-item">
-      <div class="zl-checkbox-wrapper ghost-checkbox">
-        <span class="zl-checkbox-custom"></span>
-      </div>
-
-      <div class="edit-wrapper ghost-edit-wrapper">
-        <span class="zl-item-text">{touchDraggedItem.text}</span>
-      </div>
-
-      <div class="grab-indicator touch-active">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-  </div>
-{/if}
 
 {#if sheetItem}
   <ItemEditSheet

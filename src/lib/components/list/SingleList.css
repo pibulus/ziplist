@@ -957,30 +957,26 @@
      Full saturation AT REST, not on hover. The muted-until-hover version
      shipped the good state to the one platform that can never reach it —
      phones have no hover, so the resting paint is what touch users see
-     forever. Hover now changes weight instead of colour, which it can
-     afford to, being a pointer-only luxury. */
-  border-left: 4px solid var(--zl-item-accent);
-  /* Genuinely CREAMY (#fbf1e4-ish via --zl-item-bg), and deliberately NOT
-     tinted with the list's accent. The container behind these rows wears the
-     list's 10% colour wash, and a card washed with the same hue was the same
-     colour — rows disappeared into the list. A 6% accent whisper was tried
-     here and pulled the cream right back toward the container. Warm cream on
-     the tinted ground reads as its own surface; the border-left spine and the
-     checked-state tint carry the item's colour. */
-  background: var(--zl-item-bg, #fbf1e4);
-
-  /* The gradient rides the SPINE, not the surface. --zl-item-step is the row's
-     0..1 position (set in SingleList.svelte) and the SAME number picks the row's
-     hover note, so the ramp you see and the ramp you hear are one ramp. It is
-     deliberately NOT a background tint: that was tried, and washing the cream
-     with the list accent made rows disappear into the container — the note
-     above says so. The spine already carries the item's colour, so it is the
-     one surface that can climb without costing legibility. */
-  border-left-color: color-mix(
+  /* RiffRap pastel waterfall gradient:
+     Ramps smoothly from a soft, light pastel tint to a richer, deeper pastel tone.
+     Uses color-mix with the list's primary color / accent against warm cream/white,
+     providing beautiful saturated color while preserving excellent contrast with dark text. */
+  background: color-mix(
     in srgb,
-    var(--zl-item-accent) calc(40% + var(--zl-item-step, 0) * 60%),
-    transparent
+    var(--zl-item-accent, #ffcc33) calc(7% + var(--zl-item-step, 0) * 25%),
+    #fffef7
   );
+
+  /* Subtle border matching the accent progression */
+  border: var(--zl-item-border-width, 2px) solid
+    color-mix(
+      in srgb,
+      var(--zl-item-accent, #ffcc33) calc(25% + var(--zl-item-step, 0) * 35%),
+      rgba(30, 23, 20, 0.15)
+    );
+
+  /* Clean solid spine in the list accent color */
+  border-left: 5px solid var(--zl-item-accent, #ffcc33);
 
   position: relative;
   cursor: grab;
@@ -993,25 +989,32 @@
 }
 
 .zl-item:hover {
-  background: var(--zl-item-hover-bg, rgba(255, 255, 255, 0.8));
-  transform: translateY(-3px);
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) calc(14% + var(--zl-item-step, 0) * 28%),
+    #ffffff
+  );
+  transform: translateY(-2px);
   box-shadow: var(
     --zl-item-hover-box-shadow,
     0 8px 20px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.2)
   );
-  /* Colour already arrived at rest; hover just leans in. */
-  border-left-width: 6px;
+  border-left-width: 7px;
   border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
 }
 
 .zl-item.checked {
   opacity: var(--zl-item-checked-opacity, 0.75);
-  background: var(--zl-item-checked-bg, rgba(245, 240, 250, 0.4));
+  background: color-mix(in srgb, var(--zl-item-accent, #ffcc33) 6%, #f7f4fa);
   border-left: 4px solid
-    var(--zl-item-checked-border-color, rgba(201, 120, 255, 0.2));
+    color-mix(in srgb, var(--zl-item-accent, #ffcc33) 40%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) 15%,
+    rgba(30, 23, 20, 0.12)
+  );
   transform: scale(0.98);
-  box-shadow: 0 2px 6px rgba(0, 151, 167, 0.05);
-  border-color: var(--zl-item-checked-border-color, rgba(255, 212, 218, 0.4));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .zl-item.settling:not(.touch-placeholder) {
@@ -1687,18 +1690,19 @@
   opacity: var(--zl-grab-handle-opacity, 0.55);
   transition: all 0.25s ease;
   padding: 0;
-  min-width: 44px;
-  min-height: 44px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  top: 2px;
-  right: 2px;
+  position: static;
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  flex-shrink: 0;
 }
 
 .grab-indicator span {
@@ -1747,14 +1751,16 @@
   justify-content: flex-end;
 }
 
-/* Grab rides the top-right corner, delete/move the bottom-right — a diagonal
-   instead of three controls crowded into one horizontal cluster. */
+/* Side controls: grab handle + more action button sit side-by-side with generous touch targets.
+   Neither is absolute so they never collide or overlap. */
 .zl-item-side {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  justify-content: flex-end;
+  gap: 0.25rem;
   align-self: center;
-  width: 44px;
+  min-width: 40px;
+  flex-shrink: 0;
 }
 
 .zl-item-delete-button {
@@ -1768,19 +1774,17 @@
   font-family: "Space Mono", monospace;
   font-size: 1.15rem;
   font-weight: 700;
-  height: 44px;
+  height: 40px;
+  width: 40px;
   justify-content: center;
   line-height: 1;
   opacity: 0.55;
   padding: 0;
-  /* Family squish (same curve as the modal X): springy grow on hover,
-     satisfying press-down on tap. */
   transition:
     background-color 0.18s ease,
     color 0.18s ease,
     opacity 0.18s ease,
     transform 0.22s linear(0, 0.5 15%, 1.15 40%, 0.97 65%, 1);
-  width: 44px;
 }
 
 .zl-item:hover .zl-item-delete-button,
@@ -1804,26 +1808,23 @@
 }
 
 .zl-touch-ghost {
-  position: fixed;
+  position: absolute;
   z-index: 999;
   pointer-events: none;
-  /* transform (translate3d) comes from the inline style — compositor-only
-     transport, laid out once at grab. */
   will-change: transform;
 }
 
-/* Pick-up: the row visibly LIFTS off the list — grows into its shadow over
-   ~180ms instead of appearing pre-lifted. The rotate rides --drag-tilt so
-   the card leans with fast finger moves (inline var, smoothed in JS); its
-   own 90ms transition keeps the lean fluid without lagging the translate
-   (tilt lives on the inner element, transport on the outer). */
 .zl-touch-ghost-item {
   margin: 0;
   opacity: 0.98;
   transform: rotate(calc(1.1deg + var(--drag-tilt, 0deg))) scale(1.02);
   box-shadow: 0 16px 34px rgba(0, 151, 167, 0.24);
   border-color: rgba(0, 188, 212, 0.7);
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) calc(12% + var(--zl-item-step, 0) * 25%),
+    #ffffff
+  );
   animation: zl-ghost-lift 180ms cubic-bezier(0.16, 0.84, 0.24, 1.06) backwards;
   transition: transform 90ms ease-out;
 }
@@ -2323,14 +2324,14 @@ body.zl-touch-dragging {
    list whose entire job is ticking things competed with the tick, and forced
    the row taller to hold them. Now: checkbox, text, and a single "more". */
 .zl-item-more-button {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
+  position: static;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border: none;
   background: transparent;
   color: var(--zl-text-color-primary, #1e1714);
@@ -2340,6 +2341,7 @@ body.zl-touch-dragging {
   letter-spacing: 0.06em;
   cursor: pointer;
   border-radius: 10px;
+  flex-shrink: 0;
   transition:
     opacity 0.15s ease,
     background 0.15s ease,
@@ -2408,7 +2410,11 @@ body.zl-touch-dragging {
   min-height: 44px;
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  border: 2px solid rgba(30, 23, 20, 0.18);
+  /* 0.18 read as washed-out next to the two SATURATED colour dots sharing
+     this row — the pills looked like they were fading while the dots stayed
+     loud. Warm-sepia at 0.4 gives them the same presence without going to
+     full near-black (the border law: sepia, never true black). */
+  border: 2px solid rgba(30, 23, 20, 0.4);
   background: var(--zl-item-bg, #fffef7);
   color: var(--zl-text-color-primary, #1e1714);
   cursor: pointer;
@@ -2431,21 +2437,26 @@ body.zl-touch-dragging {
    fit the longest one. The dot carries the identity; the accessible name still
    carries the words for anyone who needs them. */
 .zl-item-tray-target {
-  border-color: var(--target-colour, rgba(30, 23, 20, 0.18));
+  border-color: var(--target-colour, rgba(30, 23, 20, 0.4));
   width: 44px;
   min-width: 44px;
   padding: 0;
   justify-self: start;
 }
 
+/* A full circle IS the radio-button shape everywhere else on the web — sat
+   between two text pills it read as "pick one" instead of "do this". A
+   squircle (rounded square, not a disc) keeps the swatch small and wordless
+   but borrows the pill family's own corner language, so it reads as a third
+   action button that happens to be colour-coded, not a selector state. */
 .zl-item-tray-target .zl-target-dot {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   margin: 0 auto;
-  border-radius: 999px;
+  border-radius: 7px;
   background: var(--target-colour, rgba(30, 23, 20, 0.35));
-  box-shadow: inset 0 0 0 1px rgba(30, 23, 20, 0.12);
+  box-shadow: inset 0 0 0 1.5px rgba(30, 23, 20, 0.3);
 }
 
 /* Dots are small; let them share a row instead of each taking a grid column. */
@@ -2457,12 +2468,13 @@ body.zl-touch-dragging {
 }
 
 .zl-item-tray-remove {
-  /* Same clay as the sheet's Delete. One destructive action reached from two
-     places shouldn't wear two different faces — and dimming it with opacity
-     was backwards: the one action you can't undo by tapping again was the
-     hardest to read. */
-  color: #b4614f;
-  border-color: color-mix(in srgb, #b4614f 34%, transparent);
+  /* Used to match the sheet's clay Delete (#b4614f) — but that's a reddish
+     pink, and the fleet-wide law is no red/danger colour anywhere, full
+     stop. It also wasn't earning its alarm: removing an item already drops
+     an undo toast (.zl-undo-toast below), so the safety net exists without
+     needing the button itself to look dangerous. Remove now wears the same
+     warm ink as Edit — the word says what it does, the colour doesn't. */
+  color: var(--zl-text-color-primary, #1e1714);
 }
 
 @media (prefers-reduced-motion: reduce) {
