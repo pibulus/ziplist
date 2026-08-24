@@ -31,8 +31,13 @@
   export let onMoveTo = () => {};
   export let onNavigateToPortal = () => {};
 
-  $: isSection = !item.checked && /^##\s*/.test(item.text);
-  $: sectionTitle = isSection ? item.text.replace(/^##\s*/, "") : "";
+  $: isSection =
+    !item.checked && (/^##\s*/.test(item.text) || item.text.trim() === "---");
+  $: sectionTitle = isSection
+    ? item.text.trim() === "---"
+      ? ""
+      : item.text.replace(/^##\s*/, "").trim()
+    : "";
   $: isPortal = !item.checked && /^(\u2192|->)\s+/.test(item.text);
   $: portalTarget = isPortal ? item.text.replace(/^(\u2192|->)\s+/, "").trim() : "";
 </script>
@@ -142,7 +147,13 @@
         : `Edit item: ${item.text}`}
     >
       {#if isSection}
-        <span class="zl-item-section-text">{sectionTitle || "Section"}</span>
+        {#if sectionTitle}
+          <span class="zl-item-section-text">{sectionTitle}</span>
+        {:else}
+          <div class="zl-item-divider-bar" aria-hidden="true">
+            <span class="zl-item-divider-line"></span>
+          </div>
+        {/if}
       {:else if isPortal}
         <span class="zl-item-text zl-item-portal-text">
           <span class="zl-portal-arrow-inline">→</span> {portalTarget}

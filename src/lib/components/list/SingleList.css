@@ -1052,6 +1052,32 @@
   color: var(--zl-text-color-primary, #1e1714);
 }
 
+/* ── Pure Divider: ## or --- (No Text) ── */
+.zl-item.pure-divider {
+  min-height: 38px;
+  padding: 0.2rem 0.75rem;
+  border-left-width: 6px;
+}
+
+.zl-item-divider-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0;
+}
+
+.zl-item-divider-line {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) 65%,
+    rgba(30, 23, 20, 0.25)
+  );
+}
+
 /* ── List Portal: → Another List ── */
 .zl-item.portal-item {
   border-style: dashed;

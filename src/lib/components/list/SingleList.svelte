@@ -2355,8 +2355,12 @@
                   total: renderedActiveItems.length,
                 })}
               class:checked={item.checked}
-              class:section-divider={!item.checked && /^##\s*/.test(item.text)}
-              class:portal-item={!item.checked && /^(\u2192|->)\s+/.test(item.text)}
+              class:section-divider={!item.checked &&
+                (/^##\s*/.test(item.text) || item.text.trim() === "---")}
+              class:pure-divider={!item.checked &&
+                (item.text.trim() === "##" || item.text.trim() === "---")}
+              class:portal-item={!item.checked &&
+                /^(\u2192|->)\s+/.test(item.text)}
               class:editing={editingItemId === item.id}
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
