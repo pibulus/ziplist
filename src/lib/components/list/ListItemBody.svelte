@@ -13,8 +13,6 @@
   export let isTouchActive = false;
   export let onToggle = () => {};
   export let onStartEdit = () => {};
-  /** Tray "Edit" opens the sheet; tapping the words stays the fast inline path. */
-  export let onOpenSheet = () => {};
   export let onSaveEdit = () => {};
   export let onEditKeyDown = () => {};
   export let onTyping = () => {};
@@ -80,7 +78,7 @@
          is absolutely positioned, so without this a two-line item collapses to
          the 44px floor the instant you click into it. -->
     <span class="zl-item-text-button zl-edit-ghost" aria-hidden="true">
-      <span class="zl-item-text">{item.text}</span>
+      <span class="zl-item-text">{editedItemText || item.text || " "}</span>
       {#if item.tags?.length}
         <span class="zl-item-tags">
           {#each item.tags as tag (tag)}
@@ -97,7 +95,6 @@
       on:blur={onSaveEdit}
       on:keydown={onEditKeyDown}
       on:input={(event) => onTyping(event.currentTarget.value, item.id)}
-      transition:fade={{ duration: 150 }}
       use:autoFocus
     />
   {:else}
@@ -179,7 +176,10 @@
       type="button"
       class="zl-item-tray-action"
       data-swipe-ignore="true"
-      on:click|stopPropagation={() => onOpenSheet(item)}
+      on:click|stopPropagation={() => {
+        onRequestMove(item.id);
+        onStartEdit(item);
+      }}
     >
       Edit
     </button>

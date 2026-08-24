@@ -23,7 +23,18 @@ export function wireTypewriterGlobally() {
 
   let lastTypewriterAt = 0;
 
-  const canType = () => soundService.isEnabled?.() ?? false;
+  const canType = () => {
+    if (!soundService.isEnabled?.()) return false;
+    // Mobile soft keyboards (iOS / Android) play their own native click audio/haptics.
+    // Cherry MX pack is reserved for physical keyboards on desktop/laptop.
+    if (
+      window.matchMedia?.("(pointer: coarse)")?.matches ||
+      navigator.maxTouchPoints > 0
+    ) {
+      return false;
+    }
+    return true;
+  };
   const inEditable = (e) => e.target?.closest?.(EDITABLE_SELECTOR);
 
   function onKeydown(e) {
