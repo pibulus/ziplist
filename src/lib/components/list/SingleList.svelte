@@ -1538,6 +1538,75 @@
     soundService.select();
   }
 
+  function spinOutTagToNewList() {
+    if (!activeTagFilter) return;
+
+    // Capitalize tag name: e.g. "music" -> "Music", "weekend-reno" -> "Weekend Reno"
+    const newListName = activeTagFilter
+      .split(/[-_]/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+    // Extract all items in current list matching this tag
+    const taggedItems = list.items.filter((item) =>
+      item.tags?.includes(activeTagFilter),
+    );
+
+    if (!taggedItems.length) {
+      showListStatus("No items with that tag.", false, 2000);
+      return;
+    }
+
+    try {
+      // Create new list
+      const createResult = listsStore.addList(newListName);
+      if (!createResult.ok) {
+        showListStatus(
+          createResult.message || "Could not create new list. Check list limit.",
+          false,
+          3200,
+        );
+        return;
+      }
+
+      const newListId = createResult.listId;
+
+      // Add items to new list
+      listsStore.addItems(
+        taggedItems.map(({ text, checked, tags }) => ({
+          text,
+          checked,
+          tags,
+        })),
+        newListId,
+      );
+
+      // Move / Remove these items from current list
+      const remainingItems = list.items.filter(
+        (item) => !item.tags?.includes(activeTagFilter),
+      );
+      listsStore.upsertList(
+        {
+          ...list,
+          items: remainingItems,
+          updatedAt: new Date().toISOString(),
+        },
+        list.id,
+      );
+
+      // Switch to new list!
+      listsStore.setActiveList(newListId);
+      activeTagFilter = null;
+
+      soundService.sparkle({ force: true });
+      hapticService.notification("success");
+      showListStatus(`Resampled #${newListName} into its own list!`, true, 3000);
+    } catch (err) {
+      console.error("Error spinning out tag:", err);
+      showListStatus("Could not resample tag into a new list.", false, 2500);
+    }
+  }
+
   async function copyPhraseLink() {
     if (!syncPhrase) return;
     const url = `${window.location.origin}/j/${syncPhrase}`;
@@ -2360,14 +2429,25 @@
           >
             #{activeTagFilter} ({renderedActiveItems.length + renderedCompletedItems.length})
           </span>
-          <button
-            type="button"
-            class="zl-tag-filter-clear"
-            on:click={clearActiveTagFilter}
-            aria-label="Show all items"
-          >
-            Show all ✕
-          </button>
+          <div class="zl-tag-filter-actions">
+            <button
+              type="button"
+              class="zl-tag-spin-btn"
+              on:click={spinOutTagToNewList}
+              title={`Spin #${activeTagFilter} items into a new list`}
+              aria-label={`Resample #${activeTagFilter} into new list`}
+            >
+              ✂️ Resample to new list
+            </button>
+            <button
+              type="button"
+              class="zl-tag-filter-clear"
+              on:click={clearActiveTagFilter}
+              aria-label="Show all items"
+            >
+              Show all ✕
+            </button>
+          </div>
         </div>
       {/if}
 

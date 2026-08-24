@@ -2700,6 +2700,37 @@ body.zl-touch-dragging {
   color: color-mix(in srgb, var(--tag-colour, #6c85e9) 80%, #1e1714);
 }
 
+.zl-tag-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.zl-tag-spin-btn {
+  background: color-mix(in srgb, var(--zl-primary-color, #ffb000) 25%, #fffef7);
+  border: 1.5px solid var(--zl-primary-color, #ffb000);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #1e1714;
+  cursor: pointer;
+  padding: 0.22rem 0.55rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.zl-tag-spin-btn:hover {
+  background: var(--zl-primary-color, #ffb000);
+  transform: translateY(-1px);
+}
+
+.zl-tag-spin-btn:active {
+  transform: scale(0.96);
+}
+
 .zl-tag-filter-clear {
   background: transparent;
   border: none;
