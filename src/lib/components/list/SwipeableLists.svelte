@@ -177,12 +177,18 @@
   const SWIPE_IGNORE_SELECTOR =
     'input, textarea, select, a, label, [data-swipe-ignore="true"]';
 
+  let initialized = false;
+
   // External switches (dot taps, list created/deleted elsewhere): retarget
   // to the nearest congruent copy of that card — never the long way round.
   $: if (L > 0 && activeListId) {
     const index = lists.findIndex((l) => l.id === activeListId);
     if (index !== -1 && !isSwiping && !spinning) {
-      if (mod(targetPos, L) !== index) {
+      if (!initialized) {
+        targetPos = index;
+        x = -index * 100;
+        initialized = true;
+      } else if (mod(targetPos, L) !== index) {
         springTo(index + (wraps ? L * Math.round((targetPos - index) / L) : 0));
       }
     }
