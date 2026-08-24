@@ -55,7 +55,14 @@
       </div>
 
       <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
-        <p class="text-xs text-gray-500">Made by Pablo in Melbourne</p>
+        <p class="text-xs text-gray-500">
+          © 2026 ZipList • Made by <a
+            href="https://madebypablo.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline hover:text-gray-800">Pablo</a
+          > in Melbourne
+        </p>
         <div class="flex items-center gap-1">
           <a
             href="https://github.com/pibulus"

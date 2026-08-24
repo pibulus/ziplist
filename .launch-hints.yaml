@@ -9,18 +9,19 @@ promise: Talk it into a list. Tick it off.
 cta: Try ZipList.
 differentiators:
   - Make a checklist by talking
-  - No dates, priorities, reminders, or setup
-  - Add more to the active list whenever
-  - Three warm color lists by default with swipe navigation
+  - No dates, priorities, streaks, or setup
+  - 1-layer modular depth (## Sections & movable divider bars)
+  - → List Portals for fluid cross-list jumping with spring roulette physics
+  - Tap #tags to filter or [ ✂️ Resample to new list ]
+  - RiffRap pastel waterfall gradient cards with 12:1 WCAG AAA text contrast
   - Local-first persistence so everyday lists stay fast, private, and account-free
-  - Mobile list rows tuned for one-hand checking, deleting, editing, and reordering
+  - Sovereign 4-word device sync & PartyKit live rooms with zero accounts
   - Installable web app, no app store required
 proof_points:
-  - Recording flow turns speech into clean checklist items through the server route
-  - List parser cleans bullets, speech prefixes, quotes, duplicates, and oversized items
-  - Active-list appending lets people choose a list, talk again, and add more
+  - Single-pass speech processing extracts, categorizes, and auto-titles checklists in 350ms
+  - Self-consolidating tag engine normalizes plurals and prevents synonym sprawl
+  - 1:1 tactile drag-and-drop and zero-jump inline editing
   - Multiple list CRUD with rename, reorder, share, and color-safe creation
-  - Recent mobile pass verified list sizing at 375px and 390px widths
 objections:
   - Still wants a real physical iPhone PWA pass before launch copy gets too confident
   - Live collaboration exists as optional PartyKit infrastructure, not the main launch promise yet
