@@ -13,10 +13,10 @@ function createStorage() {
 
   const isServerless = Boolean(
     env.NETLIFY ||
-      process.env.NETLIFY ||
-      env.VERCEL ||
-      process.env.VERCEL ||
-      process.env.AWS_LAMBDA_FUNCTION_NAME,
+    process.env.NETLIFY ||
+    env.VERCEL ||
+    process.env.VERCEL ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME,
   );
 
   const defaultDir = isServerless
