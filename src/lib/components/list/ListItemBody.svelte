@@ -29,6 +29,12 @@
   export let isMoving = false;
   export let onRequestMove = () => {};
   export let onMoveTo = () => {};
+  export let onNavigateToPortal = () => {};
+
+  $: isSection = !item.checked && /^##\s*/.test(item.text);
+  $: sectionTitle = isSection ? item.text.replace(/^##\s*/, "") : "";
+  $: isPortal = !item.checked && /^(\u2192|->)\s+/.test(item.text);
+  $: portalTarget = isPortal ? item.text.replace(/^(\u2192|->)\s+/, "").trim() : "";
 </script>
 
 {#if checkedBloom}
@@ -58,19 +64,35 @@
   </div>
 {/if}
 
-<label class="zl-checkbox-wrapper">
-  <input
-    type="checkbox"
-    id="item-{listId}-{item.id}"
-    checked={item.checked}
-    on:change={(event) => onToggle(item.id, event)}
-    class="zl-checkbox"
-    aria-label={item.checked
-      ? `Mark ${item.text} incomplete`
-      : `Mark ${item.text} complete`}
-  />
-  <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
-</label>
+{#if isSection}
+  <div class="zl-checkbox-wrapper zl-item-section-glyph" aria-hidden="true">
+    <span>§</span>
+  </div>
+{:else if isPortal}
+  <button
+    type="button"
+    class="zl-checkbox-wrapper zl-portal-button"
+    on:click|stopPropagation={() => onNavigateToPortal(portalTarget)}
+    title={`Open ${portalTarget} list`}
+    aria-label={`Jump to ${portalTarget} list`}
+  >
+    <span class="zl-portal-arrow">→</span>
+  </button>
+{:else}
+  <label class="zl-checkbox-wrapper">
+    <input
+      type="checkbox"
+      id="item-{listId}-{item.id}"
+      checked={item.checked}
+      on:change={(event) => onToggle(item.id, event)}
+      class="zl-checkbox"
+      aria-label={item.checked
+        ? `Mark ${item.text} incomplete`
+        : `Mark ${item.text} complete`}
+    />
+    <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
+  </label>
+{/if}
 
 <div class="edit-wrapper">
   {#if isEditing}
@@ -100,20 +122,36 @@
   {:else}
     <button
       type="button"
-      class="zl-item-text-button {item.checked ? 'checked' : ''}"
+      class="zl-item-text-button {item.checked ? 'checked' : ''} {isSection ? 'section-header-button' : ''}"
       on:click|stopPropagation={() => {
-        if (!item.checked) onStartEdit(item);
+        if (isPortal) {
+          onNavigateToPortal(portalTarget);
+        } else if (!item.checked) {
+          onStartEdit(item);
+        }
       }}
-      on:keydown={(event) =>
-        event.key === "Enter" && !item.checked && onStartEdit(item)}
+      on:keydown={(event) => {
+        if (event.key === "Enter") {
+          if (isPortal) onNavigateToPortal(portalTarget);
+          else if (!item.checked) onStartEdit(item);
+        }
+      }}
       disabled={item.checked}
       aria-label={item.checked
         ? `Completed item: ${item.text}`
         : `Edit item: ${item.text}`}
     >
-      <span class="zl-item-text {item.checked ? 'checked' : ''}">
-        {item.text}
-      </span>
+      {#if isSection}
+        <span class="zl-item-section-text">{sectionTitle || "Section"}</span>
+      {:else if isPortal}
+        <span class="zl-item-text zl-item-portal-text">
+          <span class="zl-portal-arrow-inline">→</span> {portalTarget}
+        </span>
+      {:else}
+        <span class="zl-item-text {item.checked ? 'checked' : ''}">
+          {item.text}
+        </span>
+      {/if}
       <!-- Chips sit INSIDE the text button, so the whole row including its tags
            is one tap target for editing. The row only grows when tags exist. -->
       {#if item.tags?.length}

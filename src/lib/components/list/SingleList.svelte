@@ -10,6 +10,7 @@
     LIST_COLOR_PRESETS.map((p) => p.defaultName),
   );
   import { listsService } from "$lib/services/lists/listsService";
+  import { geminiService } from "$lib/services/geminiService";
   import {
     listToText,
     splitPastedList,
@@ -91,6 +92,7 @@
   let editingListName = false;
   let editedListName = "";
   let shareStatus = null; // To track share operation status
+  let isMagicParsing = false; // AI smart paste in progress
   let undoDelete = null;
   let undoDeleteTimer = null;
   let previousListIdentity = null;
@@ -1446,6 +1448,76 @@
     if (added) soundService.copySuccess({ force: true });
   }
 
+  async function magicAiPaste() {
+    if (!pasteText.trim()) {
+      showListStatus("Paste some text first.", false, 2200);
+      return;
+    }
+
+    isMagicParsing = true;
+    showListStatus("Magic parsing with AI...", true, 4000);
+    hapticService.impact("light");
+
+    try {
+      const existing = list.items.map((i) => i.text);
+      const result = await geminiService.parseUnstructuredText(
+        pasteText,
+        existing,
+      );
+
+      if (result?.items && result.items.length > 0) {
+        if (
+          result.title &&
+          (!list.name || DEFAULT_LIST_NAMES.has(list.name))
+        ) {
+          listsService.renameList(list.id, result.title);
+        }
+
+        const addResult = listsService.addItems(result.items, list.id);
+        const added = addResult?.addedCount ?? result.items.length;
+
+        pasteText = "";
+        shareInputMode = null;
+        shareTrayOpen = false;
+
+        showListStatus(
+          `Magic added ${added} ${added === 1 ? "item" : "items"}${
+            result.title ? ` to "${result.title}"` : ""
+          }!`,
+          true,
+          3000,
+        );
+        soundService.add({ force: true });
+        hapticService.notification("success");
+      } else {
+        pasteItemsIn();
+      }
+    } catch (err) {
+      console.warn("Magic paste fallback:", err);
+      showListStatus("Could not reach AI. Added as raw lines.", false, 2500);
+      pasteItemsIn();
+    } finally {
+      isMagicParsing = false;
+    }
+  }
+
+  function handlePortalClick(targetName) {
+    if (!targetName) return;
+    const allLists = get(listsStore).lists;
+    let target = allLists.find(
+      (l) => l.name.toLowerCase() === targetName.toLowerCase(),
+    );
+    if (!target) {
+      const created = listsService.addList(targetName);
+      if (created?.id) target = { id: created.id };
+    }
+    if (target?.id) {
+      listsStore.setActiveList(target.id);
+      hapticService.impact("medium");
+      soundService.select();
+    }
+  }
+
   async function copyPhraseLink() {
     if (!syncPhrase) return;
     const url = `${window.location.origin}/j/${syncPhrase}`;
@@ -2191,18 +2263,29 @@
           <div class="zl-share-paste">
             <textarea
               bind:value={pasteText}
-              rows="2"
-              placeholder="- milk&#10;- bread"
-              aria-label="Paste a list, one item per line"
+              rows="3"
+              placeholder="Paste anything: a recipe, email, WhatsApp message, or checklist..."
+              aria-label="Paste a list, recipe, or text"
+              disabled={isMagicParsing}
             ></textarea>
-            <button
-              type="button"
-              class="zl-share-option"
-              disabled={!pasteText.trim()}
-              on:click={pasteItemsIn}
-            >
-              Add
-            </button>
+            <div class="zl-paste-actions">
+              <button
+                type="button"
+                class="zl-share-option zl-share-magic"
+                disabled={!pasteText.trim() || isMagicParsing}
+                on:click={magicAiPaste}
+              >
+                {isMagicParsing ? "🪄 Parsing..." : "🪄 Magic AI Import"}
+              </button>
+              <button
+                type="button"
+                class="zl-share-option"
+                disabled={!pasteText.trim() || isMagicParsing}
+                on:click={pasteItemsIn}
+              >
+                Add Lines
+              </button>
+            </div>
           </div>
         {/if}
       </div>
@@ -2272,6 +2355,8 @@
                   total: renderedActiveItems.length,
                 })}
               class:checked={item.checked}
+              class:section-divider={!item.checked && /^##\s*/.test(item.text)}
+              class:portal-item={!item.checked && /^(\u2192|->)\s+/.test(item.text)}
               class:editing={editingItemId === item.id}
               class:dragging={draggedItemId === item.id}
               class:drag-over={dragOverItemId === item.id}
@@ -2319,6 +2404,7 @@
                 isMoving={movingItemId === item.id}
                 onRequestMove={requestMove}
                 onMoveTo={moveItemToList}
+                onNavigateToPortal={handlePortalClick}
               />
             </li>
           {/each}
@@ -2424,6 +2510,7 @@
                 isMoving={movingItemId === item.id}
                 onRequestMove={requestMove}
                 onMoveTo={moveItemToList}
+                onNavigateToPortal={handlePortalClick}
               />
             </li>
           {/each}

@@ -110,4 +110,63 @@ export const geminiService = {
       );
     }
   },
+
+  async parseUnstructuredText(rawText, existingItems = []) {
+    try {
+      if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
+        return { items: [], title: "", complete: [], structured: false };
+      }
+
+      const existingItemsContext =
+        existingItems.length > 0
+          ? `The current list has these unchecked items:\n${existingItems.map((t) => `- ${t}`).join("\n")}\n`
+          : "The current list is empty.";
+
+      const prompt = `You are an expert list extraction AI. Analyze the following unstructured text (which could be a recipe, an email, a chat message, meeting notes, or a brain dump).
+Extract all distinct, actionable checklist items. Clean them up to be concise, punchy list items.
+If appropriate, append a relevant short hashtag (e.g. #produce, #dairy, #hardware, #urgent, #work) to each item.
+If the text describes a coherent theme or recipe, provide a short, catchy title (max 4 words) in the "title" field.
+
+Return a valid JSON object ONLY, with this schema:
+{
+  "title": "Short title for the list, or empty string",
+  "items": ["Item 1 #tag", "Item 2 #tag"],
+  "complete": []
+}
+
+Current list context:
+${existingItemsContext}
+
+Text to parse:
+"""
+${rawText}
+"""`;
+
+      const response = await geminiApiService.generateTextContent(prompt);
+      const responseText = response.text();
+      const parsedResponse = parseModelResponse(responseText);
+
+      if (parsedResponse.success) {
+        return {
+          text: parsedResponse.items.join("\n"),
+          items: parsedResponse.items,
+          complete: parsedResponse.complete || [],
+          title: parsedResponse.title || "",
+          structured: true,
+          raw: parsedResponse.raw,
+        };
+      }
+
+      return {
+        text: responseText,
+        items: parsedResponse.items || [],
+        complete: [],
+        title: "",
+        structured: false,
+      };
+    } catch (error) {
+      console.error("❌ Error parsing unstructured text with Gemini:", error);
+      throw new Error(error.message || "Failed to parse text with Gemini");
+    }
+  },
 };

@@ -117,10 +117,51 @@ async function generateContent(promptData) {
   }
 }
 
+async function generateTextContent(prompt) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
+  try {
+    if (typeof prompt !== "string" || !prompt.trim()) {
+      throw new Error("Missing prompt");
+    }
+
+    const response = await fetch("/api/gemini", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to process with Gemini");
+    }
+
+    const data = await response.json();
+    return {
+      text: () => data.text,
+    };
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error(
+        "AI request timed out. Check your connection and try again.",
+      );
+    }
+    console.error("❌ Error generating text content:", error);
+    throw new Error(error.message || "Failed to process text with Gemini");
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export const geminiApiService = {
   preloadModel,
   blobToGenerativePart,
   generateContent,
+  generateTextContent,
 
   /** @returns {{ initialized: boolean, initializing: boolean }} */
   getModelStatus() {

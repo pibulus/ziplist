@@ -169,8 +169,13 @@ async function readJsonPayload(request) {
     throw transcriptionPayloadError("Invalid transcription prompt");
   }
 
-  if (typeof audioData !== "string" || !audioData.trim()) {
-    throw transcriptionPayloadError("Invalid transcription audio");
+  if (!audioData || typeof audioData !== "string" || !audioData.trim()) {
+    return {
+      prompt,
+      file: null,
+      mimeType: null,
+      source: "json-text",
+    };
   }
 
   const normalizedMimeType = normalizeMimeType(mimeType);
@@ -262,6 +267,17 @@ async function transcribeInline({ prompt, file, mimeType, source }) {
 }
 
 async function transcribeWithGemini({ prompt, file, mimeType, source }) {
+  if (!file) {
+    const result = await withRetry(() =>
+      getGeminiClient().models.generateContent({
+        model: env.GEMINI_MODEL ?? "gemini-flash-lite-latest",
+        contents: [{ parts: [{ text: prompt }] }],
+        config: GENERATION_CONFIG,
+      }),
+    );
+    return getTextFromGeminiResult(result);
+  }
+
   if (typeof file.size === "number" && file.size <= INLINE_LIMIT_BYTES) {
     return transcribeInline({ prompt, file, mimeType, source });
   }

@@ -1017,6 +1017,85 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
+/* ── Section Divider: ## Category Header ── */
+.zl-item.section-divider {
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) calc(18% + var(--zl-item-step, 0) * 15%),
+    #fffef7
+  );
+  border-left-width: 8px;
+  border-radius: 14px;
+  min-height: 48px;
+  padding: 0.4rem 0.75rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.zl-item-section-glyph {
+  font-family: "Space Mono", monospace;
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: var(--zl-item-accent, #ffcc33);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.zl-item-section-text {
+  font-family: "Space Mono", monospace;
+  font-weight: 900;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--zl-text-color-primary, #1e1714);
+}
+
+/* ── List Portal: → Another List ── */
+.zl-item.portal-item {
+  border-style: dashed;
+  border-left-style: solid;
+  border-left-width: 6px;
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) calc(12% + var(--zl-item-step, 0) * 20%),
+    #fffef7
+  );
+}
+
+.zl-portal-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zl-portal-arrow {
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--zl-primary-color, #ffb000);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-item-portal-text {
+  font-weight: 800;
+  color: var(--zl-text-color-primary, #1e1714);
+}
+
+.zl-portal-arrow-inline {
+  color: var(--zl-primary-color, #ffb000);
+  font-weight: 900;
+  margin-right: 0.2rem;
+}
+
+.zl-item:hover .zl-portal-arrow {
+  transform: translateX(4px);
+}
+
 .zl-item.settling:not(.touch-placeholder) {
   animation: item-settle 0.28s cubic-bezier(0.19, 1, 0.22, 1);
 }
@@ -2303,22 +2382,43 @@ body.zl-touch-dragging {
 .zl-share-paste {
   flex: 1 1 100%;
   display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 .zl-share-paste textarea {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   font-family: "Space Mono", monospace;
-  font-size: 0.78rem;
-  padding: 0.45rem 0.6rem;
+  font-size: 0.82rem;
+  padding: 0.55rem 0.7rem;
   border-radius: 10px;
   border: 2px solid rgba(30, 23, 20, 0.16);
   background: rgba(30, 23, 20, 0.04);
   color: #1e1714;
   resize: vertical;
-  max-height: 8rem;
+  min-height: 4.5rem;
+  max-height: 12rem;
+}
+
+.zl-paste-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.zl-share-magic {
+  background: color-mix(in srgb, var(--zl-primary-color, #ffb000) 25%, #fffef7);
+  border-color: var(--zl-primary-color, #ffb000);
+  font-weight: 800;
+  color: #1e1714;
+}
+
+.zl-share-magic:hover:not(:disabled) {
+  background: var(--zl-primary-color, #ffb000);
+  color: #1e1714;
 }
 
 @media (prefers-reduced-motion: reduce) {
