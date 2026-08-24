@@ -93,6 +93,7 @@
   let editedListName = "";
   let shareStatus = null; // To track share operation status
   let isMagicParsing = false; // AI smart paste in progress
+  let activeTagFilter = null; // Filter items in list by tag
   let undoDelete = null;
   let undoDeleteTimer = null;
   let previousListIdentity = null;
@@ -553,8 +554,11 @@
 
   // Sort items - active items first, completed items last
   $: sortedItems = touchDragPreviewItems || [...activeItems, ...completedItems];
-  $: renderedActiveItems = sortedItems.filter((item) => !item.checked);
-  $: renderedCompletedItems = sortedItems.filter((item) => item.checked);
+  $: filteredSortedItems = activeTagFilter
+    ? sortedItems.filter((item) => item.tags?.includes(activeTagFilter))
+    : sortedItems;
+  $: renderedActiveItems = filteredSortedItems.filter((item) => !item.checked);
+  $: renderedCompletedItems = filteredSortedItems.filter((item) => item.checked);
   $: remoteDrafts = isLive
     ? liveActivity.drafts.filter((draft) => !draft.itemId)
     : [];
@@ -1518,6 +1522,22 @@
     }
   }
 
+  function toggleActiveTagFilter(tag) {
+    if (activeTagFilter === tag) {
+      activeTagFilter = null;
+      soundService.select();
+    } else {
+      activeTagFilter = tag;
+      soundService.select();
+      hapticService.selection();
+    }
+  }
+
+  function clearActiveTagFilter() {
+    activeTagFilter = null;
+    soundService.select();
+  }
+
   async function copyPhraseLink() {
     if (!syncPhrase) return;
     const url = `${window.location.origin}/j/${syncPhrase}`;
@@ -2332,6 +2352,25 @@
 
     <!-- List Items -->
     <div class="zl-list-container" bind:this={listContainerNode}>
+      {#if activeTagFilter}
+        <div class="zl-tag-filter-banner" transition:fade={{ duration: 150 }}>
+          <span
+            class="zl-tag-filter-badge"
+            style={`--tag-colour: ${tagColour(activeTagFilter)}`}
+          >
+            #{activeTagFilter} ({renderedActiveItems.length + renderedCompletedItems.length})
+          </span>
+          <button
+            type="button"
+            class="zl-tag-filter-clear"
+            on:click={clearActiveTagFilter}
+            aria-label="Show all items"
+          >
+            Show all ✕
+          </button>
+        </div>
+      {/if}
+
       {#if list.items.length > 0 || draftItemActive || remoteDrafts.length > 0 || remoteVoices.length > 0}
         <ul
           class="zl-list"
@@ -2409,6 +2448,8 @@
                 onRequestMove={requestMove}
                 onMoveTo={moveItemToList}
                 onNavigateToPortal={handlePortalClick}
+                onFilterTag={toggleActiveTagFilter}
+                {activeTagFilter}
               />
             </li>
           {/each}
@@ -2515,6 +2556,8 @@
                 onRequestMove={requestMove}
                 onMoveTo={moveItemToList}
                 onNavigateToPortal={handlePortalClick}
+                onFilterTag={toggleActiveTagFilter}
+                {activeTagFilter}
               />
             </li>
           {/each}

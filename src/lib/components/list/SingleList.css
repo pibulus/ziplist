@@ -2658,11 +2658,64 @@ body.zl-touch-dragging {
       transparent
     );
   white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.zl-item-tag:hover {
+  background: var(--tag-colour, var(--zl-item-accent));
+  color: #fffef7;
+  transform: scale(1.05);
+}
+
+.zl-item-tag.is-active {
+  background: var(--tag-colour, var(--zl-item-accent));
+  color: #fffef7;
+  box-shadow: 0 0 0 2px #1e1714;
 }
 
 /* A finished item's tags step back with it rather than staying loud. */
 .zl-item.checked .zl-item-tag {
   opacity: 0.55;
+}
+
+/* Tag filter banner at top of list container */
+.zl-tag-filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid rgba(30, 23, 20, 0.12);
+  border-radius: 12px;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.6rem;
+  backdrop-filter: blur(8px);
+}
+
+.zl-tag-filter-badge {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--tag-colour, #6c85e9) 80%, #1e1714);
+}
+
+.zl-tag-filter-clear {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(30, 23, 20, 0.65);
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.zl-tag-filter-clear:hover {
+  background: rgba(30, 23, 20, 0.08);
+  color: #1e1714;
 }
 
 /* ── Someone else is in this line ───────────────────────────────────────

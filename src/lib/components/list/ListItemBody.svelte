@@ -30,6 +30,8 @@
   export let onRequestMove = () => {};
   export let onMoveTo = () => {};
   export let onNavigateToPortal = () => {};
+  export let onFilterTag = () => {};
+  export let activeTagFilter = null;
 
   $: isSection =
     !item.checked && (/^##\s*/.test(item.text) || item.text.trim() === "---");
@@ -168,9 +170,20 @@
       {#if item.tags?.length}
         <span class="zl-item-tags">
           {#each item.tags as tag (tag)}
-            <span class="zl-item-tag" style={`--tag-colour: ${tagColour(tag)}`}
-              >#{tag}</span
+            <span
+              role="button"
+              tabindex="0"
+              class="zl-item-tag"
+              class:is-active={activeTagFilter === tag}
+              style={`--tag-colour: ${tagColour(tag)}`}
+              on:click|stopPropagation={() => onFilterTag(tag)}
+              on:keydown|stopPropagation={(e) =>
+                (e.key === "Enter" || e.key === " ") && onFilterTag(tag)}
+              title={`Filter by #${tag}`}
+              aria-label={`Filter list by #${tag}`}
             >
+              #{tag}
+            </span>
           {/each}
         </span>
       {/if}
