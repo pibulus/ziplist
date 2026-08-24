@@ -1464,9 +1464,11 @@
 
     try {
       const existing = list.items.map((i) => i.text);
+      const existingTags = listsStore.getAllTags();
       const result = await geminiService.parseUnstructuredText(
         pasteText,
         existing,
+        existingTags,
       );
 
       if (result?.items && result.items.length > 0) {

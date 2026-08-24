@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import {
   extractTags,
   normalizeTags,
+  cohereTag,
   MAX_TAGS_PER_ITEM,
 } from "../src/lib/services/lists/itemTags.js";
 
-const t = (s) => extractTags(s);
+const t = (s, vocab) => extractTags(s, vocab);
 
 // The ordinary cases.
 assert.deepEqual(t("milk #urgent"), { text: "milk", tags: ["urgent"] });
@@ -17,6 +18,31 @@ assert.deepEqual(t("get #milk from #shop"), {
 });
 assert.deepEqual(t("plain milk"), { text: "plain milk", tags: [] });
 assert.deepEqual(t(""), { text: "", tags: [] });
+
+// Vocabulary coherence & stemming.
+const vocab = ["guitar", "groceries", "shop"];
+assert.equal(
+  cohereTag("guitars", vocab),
+  "guitar",
+  "snaps plural to existing singular",
+);
+assert.equal(
+  cohereTag("grocery", vocab),
+  "groceries",
+  "snaps singular to existing plural",
+);
+assert.equal(
+  cohereTag("shopping", vocab),
+  "shop",
+  "snaps -ing to existing base",
+);
+assert.equal(cohereTag("drums", vocab), "drums", "preserves new distinct tag");
+
+assert.deepEqual(
+  t("strings #guitars #shopping", vocab),
+  { text: "strings", tags: ["guitar", "shop"] },
+  "extractTags uses vocabulary to cohere tags",
+);
 
 // Things that LOOK like tags and aren't.
 assert.deepEqual(

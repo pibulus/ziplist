@@ -16,7 +16,7 @@ export const geminiService = {
   getAvailableStyles: promptManager.getAvailableStyles,
   subscribeToStyleChanges: promptManager.subscribe,
 
-  async transcribeAudio(audioBlob, existingItems = []) {
+  async transcribeAudio(audioBlob, existingItems = [], existingTags = []) {
     try {
       if (import.meta.env.DEV) {
         console.log("🎤 Transcribing audio with Gemini");
@@ -46,9 +46,15 @@ export const geminiService = {
           ? `The current list has these unchecked items:\n${existingItems.map((t) => `- ${t}`).join("\n")}\n`
           : "The current list is empty.";
 
+      const existingTagsContext =
+        existingTags && existingTags.length > 0
+          ? `Existing tag vocabulary across user's lists: [${existingTags.map((t) => `#${t}`).join(", ")}]. Prefer reusing these tags for consistency.\n`
+          : "";
+
       // Get the appropriate prompt based on current style
       const prompt = promptManager.getPrompt("transcribeAudio", {
         existingItemsContext,
+        existingTagsContext,
       });
 
       // Convert audio to format Gemini can use
@@ -111,7 +117,7 @@ export const geminiService = {
     }
   },
 
-  async parseUnstructuredText(rawText, existingItems = []) {
+  async parseUnstructuredText(rawText, existingItems = [], existingTags = []) {
     try {
       if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
         return { items: [], title: "", complete: [], structured: false };
@@ -122,10 +128,20 @@ export const geminiService = {
           ? `The current list has these unchecked items:\n${existingItems.map((t) => `- ${t}`).join("\n")}\n`
           : "The current list is empty.";
 
+      const existingTagsContext =
+        existingTags && existingTags.length > 0
+          ? `Existing tag vocabulary across user's lists: [${existingTags.map((t) => `#${t}`).join(", ")}].
+TAG COHERENCE RULES:
+- Strongly PREFER REUSING these existing tags if an item fits (e.g. reuse #groceries instead of #supermarket or #grocery; reuse #music instead of #songs or #tunes).
+- Only create a new tag if none of the existing tags apply.`
+          : "";
+
       const prompt = `You are an expert list extraction AI. Analyze the following unstructured text (which could be a recipe, an email, a chat message, meeting notes, or a brain dump).
 Extract all distinct, actionable checklist items. Clean them up to be concise, punchy list items.
 If appropriate, append a relevant short hashtag (e.g. #produce, #dairy, #hardware, #urgent, #work) to each item.
 If the text describes a coherent theme or recipe, provide a short, catchy title (max 4 words) in the "title" field.
+
+${existingTagsContext}
 
 Return a valid JSON object ONLY, with this schema:
 {

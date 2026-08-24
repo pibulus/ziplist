@@ -18,17 +18,76 @@ export const MAX_TAG_LENGTH = 20;
 const TAG_PATTERN = /(^|\s)#([\p{L}\p{N}][\p{L}\p{N}_-]*)/gu;
 
 /**
+ * Snap a tag to an existing canonical tag in vocabulary to avoid synonym / plural drift.
+ * E.g. "guitars" snaps to "guitar" if "guitar" exists; "groceries" snaps to "grocery" if "grocery" exists.
+ */
+export function cohereTag(tag, existingVocabulary = []) {
+  if (!tag || typeof tag !== "string") return "";
+  const raw = tag.toLowerCase().trim().replace(/^#/, "");
+  if (!raw) return "";
+
+  if (!Array.isArray(existingVocabulary) || existingVocabulary.length === 0) {
+    return raw;
+  }
+
+  const vocab = existingVocabulary.map((v) =>
+    String(v).toLowerCase().replace(/^#/, "").trim(),
+  );
+
+  // 1. Direct exact match
+  if (vocab.includes(raw)) return raw;
+
+  // 2. Singular / Plural (-s, -es, -ies)
+  if (raw.endsWith("ies")) {
+    const singular = raw.slice(0, -3) + "y";
+    if (vocab.includes(singular)) return singular;
+  }
+  if (raw.endsWith("y")) {
+    const plural = raw.slice(0, -1) + "ies";
+    if (vocab.includes(plural)) return plural;
+  }
+  if (raw.endsWith("es") && raw.length > 3) {
+    const base = raw.slice(0, -2);
+    if (vocab.includes(base)) return base;
+  }
+  if (raw.endsWith("s") && raw.length > 2) {
+    const singular = raw.slice(0, -1);
+    if (vocab.includes(singular)) return singular;
+  }
+  if (!raw.endsWith("s")) {
+    const plural = raw + "s";
+    if (vocab.includes(plural)) return plural;
+  }
+
+  // 3. -ing verb forms (e.g. shopping -> shop, camping -> camp)
+  if (raw.endsWith("ing") && raw.length > 4) {
+    const base = raw.slice(0, -3);
+    if (vocab.includes(base)) return base;
+    // double-consonant check e.g. shopping -> shop
+    if (base.length > 2 && base[base.length - 1] === base[base.length - 2]) {
+      const single = base.slice(0, -1);
+      if (vocab.includes(single)) return single;
+    }
+  }
+
+  return raw;
+}
+
+/**
  * Split "milk #urgent #shop" into its text and its tags.
+ * @param {string} raw
+ * @param {string[]} [existingVocabulary]
  * @returns {{text: string, tags: string[]}}
  */
-export function extractTags(raw) {
+export function extractTags(raw, existingVocabulary = []) {
   const input = String(raw ?? "");
   if (!input.includes("#")) return { text: input.trim(), tags: [] };
 
   const tags = [];
   const stripped = input.replace(TAG_PATTERN, (match, lead, word) => {
     if (tags.length >= MAX_TAGS_PER_ITEM) return match;
-    const tag = word.toLowerCase().slice(0, MAX_TAG_LENGTH);
+    const rawTag = word.toLowerCase().slice(0, MAX_TAG_LENGTH);
+    const tag = cohereTag(rawTag, existingVocabulary);
     if (!tags.includes(tag)) tags.push(tag);
     return lead;
   });
@@ -42,16 +101,21 @@ export function extractTags(raw) {
   return { text, tags };
 }
 
-/** Normalise a tag list coming from anywhere (wire, storage, paste). */
-export function normalizeTags(value) {
+/**
+ * Normalise a tag list coming from anywhere (wire, storage, paste).
+ * @param {any[]} value
+ * @param {string[]} [existingVocabulary]
+ */
+export function normalizeTags(value, existingVocabulary = []) {
   if (!Array.isArray(value)) return [];
   const out = [];
   for (const entry of value) {
-    const tag = String(entry ?? "")
+    const raw = String(entry ?? "")
       .toLowerCase()
       .replace(/^#/, "")
       .replace(/[^\p{L}\p{N}_-]/gu, "")
       .slice(0, MAX_TAG_LENGTH);
+    const tag = cohereTag(raw, existingVocabulary);
     if (tag && !out.includes(tag)) out.push(tag);
     if (out.length >= MAX_TAGS_PER_ITEM) break;
   }

@@ -609,11 +609,24 @@ function createListsStore() {
     persistCriticalChange();
   }
 
+  // Get all unique tags across all lists
+  function getAllTags() {
+    const state = get({ subscribe });
+    return [
+      ...new Set(
+        (state.lists ?? []).flatMap((list) =>
+          (list.items ?? []).flatMap((item) => item.tags ?? []),
+        ),
+      ),
+    ];
+  }
+
   // Add an item to a specific list (or active list by default)
   function addItem(text, listId = null) {
     // Tags come off the RAW text: normalizeItemText strips trailing punctuation
     // and would happily mangle a hashtag on the way past.
-    const { text: bodyText, tags } = extractTags(text);
+    const vocab = getAllTags();
+    const { text: bodyText, tags } = extractTags(text, vocab);
     const normalizedText = normalizeItemText(bodyText);
     if (!normalizedText) {
       return createLimitResult("Add a few words first.", "empty");
@@ -689,15 +702,16 @@ function createListsStore() {
             // (pasted text, which can carry ticked items). Hardcoding
             // checked:false meant a copy-then-paste round trip silently lost
             // everything the user had already ticked off.
+            const vocab = getAllTags();
             const dedupedEntries = items
               .map((entry) => {
                 const raw = typeof entry === "string" ? entry : entry?.text;
-                const { text: bodyText, tags } = extractTags(raw);
+                const { text: bodyText, tags } = extractTags(raw, vocab);
                 return {
                   text: normalizeItemText(bodyText),
                   checked:
                     typeof entry === "string" ? false : Boolean(entry?.checked),
-                  tags: tags.length ? tags : normalizeTags(entry?.tags),
+                  tags: tags.length ? tags : normalizeTags(entry?.tags, vocab),
                 };
               })
               .filter((entry) => entry.text.length > 0)
@@ -802,7 +816,8 @@ function createListsStore() {
 
   // Edit an item's text
   function editItem(itemId, newText, listId = null) {
-    const { text: bodyText, tags } = extractTags(newText);
+    const vocab = getAllTags();
+    const { text: bodyText, tags } = extractTags(newText, vocab);
     const normalizedText = normalizeItemText(bodyText);
     if (!normalizedText) return;
 
@@ -1094,6 +1109,7 @@ function createListsStore() {
     renameList,
     upsertList,
     reorderItems,
+    getAllTags,
     persistToStorage,
   };
 }

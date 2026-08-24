@@ -57,9 +57,11 @@ export class TranscriptionService {
       // only produces text, leaving listParser's regex to guess at item
       // boundaries and losing completion detection entirely. A 117MB download
       // for a visibly worse list wasn't worth its weight.
+      const existingTags = listsStore.getAllTags();
       const transcriptResult = await geminiService.transcribeAudio(
         audioBlob,
         existingItems,
+        existingTags,
       );
       const normalizedTranscript =
         typeof transcriptResult === "string"
