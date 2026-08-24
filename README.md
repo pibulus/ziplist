@@ -16,17 +16,17 @@ more whenever. Drag things around. Tick them off. That is the whole point.
 
 - **Talk into the active list** - choose a list, tap the mic, add items
 - **Add more whenever** - record again and the new items append to that list
-- **Three local lists by default** - swipe between color-coded list cards
-- **Fast local storage** - your everyday lists stay on your device
-- **Drag, drop, check off** - desktop drag plus touch-native reorder on mobile
-- **Say what is done** - phrases like "I bought the milk" can tick matching
-  unchecked items when there is list context to work from
-- **Optional live lists** - PartyKit rooms let a couple, band, family, or
-  housemate group share one changing list
-- **Installable web app** - save it to your home screen, no app store needed
-- **Installed-device setup** - the mobile PWA can ready mic permission, storage,
-  and offline voice in one guided step
-- **No task-manager pressure** - no dates, priorities, streaks, or dashboard
+- **RiffRap pastel waterfall** - rich color ramps with 12:1 WCAG AAA text contrast
+- **1-layer modular hierarchy**:
+  - `## Category` headers & `##` / `---` movable divider bars
+  - `→ Target List` portals that flip the carousel straight to linked lists
+- **Smart tags & resampling** - tap `#tag` to filter in-place, or `[ ✂️ Resample to new list ]` to spin out a fresh list
+- **Magic AI import** - paste messy recipes, WhatsApp dumps, or notes to extract clean checklists
+- **Fast local storage** - your everyday lists stay 100% on your device (IndexedDB/localStorage)
+- **Drag, drop, check off** - desktop drag plus 1:1 touch-native reorder on mobile
+- **Say what is done** - phrases like "I bought the milk" tick matching items via Gemini
+- **Optional live lists** - 4-word sovereign sync & PartyKit rooms with zero logins
+- **No task-manager pressure** - no dates, priorities, streaks, or dashboard anxiety
 
 ## Use It Anywhere
 

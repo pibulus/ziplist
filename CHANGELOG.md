@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.0 — The 1-Layer Modular Hierarchy & Resampling Release
+
+- **RiffRap Pastel Waterfall**: Restored rich saturated gradient cards with 12:1 WCAG AAA text contrast.
+- **Fluid 1:1 Touch Drag & Drop**: Eliminated touch delta offsets and dedicated 40px touch targets for grab handles.
+- **Zero-Jump Inline Editing**: Replaced edit modal sheets with in-place zero-pixel shift editing.
+- **`## Section` Headers & `##` Divider Bars**: Type `## Category` for uppercase headers, or `##` / `---` for movable divider bars.
+- **`→ Portals`**: Type `→ Target` to link lists with spring carousel navigation and on-demand list minting.
+- **Interactive `#Tags` & Resampling**: In-place filtering by tag and 1-tap `[ ✂️ Resample to new list ]` extraction.
+- **Coherent Self-Consolidating Tag Engine**: Local singular/plural stemming (`cohereTag`) + memory-aware Gemini prompts.
+- **Magic AI List Import**: Unstructured text paste extraction via Gemini.
+- **Zero-Glitch Initial Carousel Mount**: Instant snap on mount without phantom slide animations.
+- **Playable Starter Cartridge**: 3-item interactive manual pre-filled on first install.
+
 ## 0.9.0 — Security & correctness hardening
 
 - **CSP headers**: full Content-Security-Policy with `frame-ancestors 'none'`,

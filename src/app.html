@@ -33,6 +33,12 @@
     />
 
     <!-- App configuration -->
+    <title>ZipList — Talk it into a list. Tick it off.</title>
+    <meta
+      name="description"
+      content="A warm, tactile voice checklist for groceries, errands, packing, and chores. No dates, no streaks, no pressure."
+    />
+    <link rel="canonical" href="https://ziplist.app" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -41,6 +47,27 @@
     <meta name="author" content="Pablo" />
     <meta name="application-name" content="ZipList" />
     <meta name="color-scheme" content="light" />
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ziplist.app" />
+    <meta property="og:title" content="ZipList — Talk it into a list. Tick it off." />
+    <meta
+      property="og:description"
+      content="A warm, tactile voice checklist for groceries, errands, packing, and chores. Talk it into a list. Tick it off."
+    />
+    <meta property="og:image" content="%sveltekit.assets%/icons/icon-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ZipList — Talk it into a list. Tick it off." />
+    <meta
+      name="twitter:description"
+      content="A warm, tactile voice checklist for groceries, errands, packing, and chores. Talk it into a list. Tick it off."
+    />
+    <meta name="twitter:image" content="%sveltekit.assets%/icons/icon-512x512.png" />
 
     <!-- Manifest -->
     <link rel="manifest" href="%sveltekit.assets%/manifest.json" />
@@ -233,6 +260,7 @@
     ></script>
   </head>
   <body data-sveltekit-preload-data="hover">
+    <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">ZipList — Talk it into a list. Tick it off.</h1>
     <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>
