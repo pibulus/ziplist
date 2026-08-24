@@ -290,6 +290,19 @@ const ZIPLIST_CUES = {
       [{ frequency: 830, duration: 0.02, gain: 0.01, voice: "sparkle" }],
     ],
   },
+  // Row hover. Deliberately the quietest cue in the app — it fires on every
+  // pointer pass over a list, so it has to read as texture, not as an event.
+  // The frequency here is only a fallback: playAt() overrides it with the
+  // row's position on the scale, which is the whole point of the gesture.
+  hover: {
+    cooldownMs: 55,
+    detuneCents: 5,
+    gainJitter: 0.15,
+    variants: [
+      [{ frequency: 880, duration: 0.026, gain: 0.007, voice: "sparkle" }],
+      [{ frequency: 930, duration: 0.024, gain: 0.006, voice: "bloom" }],
+    ],
+  },
   open: {
     variants: [[{ frequency: 520, duration: 0.05, gain: 0.022, voice: "tap" }]],
   },

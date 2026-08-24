@@ -969,6 +969,19 @@
      checked-state tint carry the item's colour. */
   background: var(--zl-item-bg, #fbf1e4);
 
+  /* The gradient rides the SPINE, not the surface. --zl-item-step is the row's
+     0..1 position (set in SingleList.svelte) and the SAME number picks the row's
+     hover note, so the ramp you see and the ramp you hear are one ramp. It is
+     deliberately NOT a background tint: that was tried, and washing the cream
+     with the list accent made rows disappear into the container — the note
+     above says so. The spine already carries the item's colour, so it is the
+     one surface that can climb without costing legibility. */
+  border-left-color: color-mix(
+    in srgb,
+    var(--zl-item-accent) calc(40% + var(--zl-item-step, 0) * 60%),
+    transparent
+  );
+
   position: relative;
   cursor: grab;
   touch-action: manipulation;
@@ -1325,6 +1338,16 @@
   outline: none;
   border: 0;
   box-shadow: none;
+}
+
+/* The edit input is absolutely positioned, so while editing the row has no
+   content to stand on and a two-line item snaps down to the 44px floor the
+   moment you click into it. This invisible clone of the text holds the row at
+   its display height. Lifted from RiffRap's SnippetItem, which hit the same
+   jump and solved it the same way. */
+.zl-edit-ghost {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .zl-edit-input::placeholder {
@@ -2403,8 +2426,34 @@ body.zl-touch-dragging {
   transform: scale(0.94);
 }
 
+/* A list called "Blue List" IS its colour. The name spent a whole pill saying
+   what the swatch says instantly, and forced the tray grid to 8rem columns to
+   fit the longest one. The dot carries the identity; the accessible name still
+   carries the words for anyone who needs them. */
 .zl-item-tray-target {
   border-color: var(--target-colour, rgba(30, 23, 20, 0.18));
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+  justify-self: start;
+}
+
+.zl-item-tray-target .zl-target-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--target-colour, rgba(30, 23, 20, 0.35));
+  box-shadow: inset 0 0 0 1px rgba(30, 23, 20, 0.12);
+}
+
+/* Dots are small; let them share a row instead of each taking a grid column. */
+.zl-item-tray-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 .zl-item-tray-remove {

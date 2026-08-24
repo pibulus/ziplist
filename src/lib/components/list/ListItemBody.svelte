@@ -76,6 +76,19 @@
 
 <div class="edit-wrapper">
   {#if isEditing}
+    <!-- Holds the row at the height of the text being replaced. The input below
+         is absolutely positioned, so without this a two-line item collapses to
+         the 44px floor the instant you click into it. -->
+    <span class="zl-item-text-button zl-edit-ghost" aria-hidden="true">
+      <span class="zl-item-text">{item.text}</span>
+      {#if item.tags?.length}
+        <span class="zl-item-tags">
+          {#each item.tags as tag (tag)}
+            <span class="zl-item-tag">#{tag}</span>
+          {/each}
+        </span>
+      {/if}
+    </span>
     <input
       id="edit-item-{listId}-{item.id}"
       class="zl-edit-input"
@@ -170,20 +183,24 @@
     >
       Edit
     </button>
-    {#each moveTargets as target (target.id)}
-      <button
-        type="button"
-        class="zl-item-tray-action zl-item-tray-target"
-        data-swipe-ignore="true"
-        style={target.primary ? `--target-colour: ${target.primary}` : ""}
-        on:click|stopPropagation={() => onMoveTo(item.id, target.id)}
-      >
-        <!-- The list is already called "Blue List" — "Send to Blue List" spent
-             two words repeating the noun and wrapped the pill onto two lines.
-             The arrow carries the verb. -->
-        → {target.name}
-      </button>
-    {/each}
+    <!-- Each list is its colour, so the swatch IS the label. The name lives on
+         in the accessible name and the tooltip — the words are still there for
+         anyone who needs them, they just stopped taking up a pill each. -->
+    <span class="zl-item-tray-dots">
+      {#each moveTargets as target (target.id)}
+        <button
+          type="button"
+          class="zl-item-tray-action zl-item-tray-target"
+          data-swipe-ignore="true"
+          style={target.primary ? `--target-colour: ${target.primary}` : ""}
+          title={`Send to ${target.name}`}
+          aria-label={`Send ${item.text} to ${target.name}`}
+          on:click|stopPropagation={() => onMoveTo(item.id, target.id)}
+        >
+          <span class="zl-target-dot" aria-hidden="true"></span>
+        </button>
+      {/each}
+    </span>
     <button
       type="button"
       class="zl-item-tray-action zl-item-tray-remove"

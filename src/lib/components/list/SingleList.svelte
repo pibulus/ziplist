@@ -2282,8 +2282,20 @@
           in:fade={{ duration: 200 }}
         >
           {#each renderedActiveItems as item, index (item.id)}
+            <!-- --zl-item-step is the row's position as 0..1. The tint and the
+                 hover pitch both read it, so the colour ramp and the note ramp
+                 are the same ramp — hover the third row, hear the third note.
+                 Contract lives in weightless' noteAt(); nothing is shared but
+                 the number, so they cannot drift apart. -->
             <li
               class="zl-item"
+              style="--zl-item-step: {renderedActiveItems.length > 1
+                ? index / (renderedActiveItems.length - 1)
+                : 0}"
+              on:mouseenter={() =>
+                soundService.playAt("hover", index, {
+                  total: renderedActiveItems.length,
+                })}
               class:checked={item.checked}
               class:editing={editingItemId === item.id}
               class:dragging={draggedItemId === item.id}
