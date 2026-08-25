@@ -304,7 +304,7 @@
         <div class="zl-setting-row zl-avatar-row">
           <div class="zl-setting-info">
             <span class="zl-setting-name">Name in shared rooms</span>
-            <p class="zl-setting-desc">Your face when a list goes live — tap it to re-roll</p>
+            <p class="zl-setting-desc">Tap avatar to re-roll</p>
           </div>
           <div class="zl-avatar-field-inline">
             {#if avatarName}
@@ -485,6 +485,9 @@
        Sized against the MOBILE card (1rem padding): X bottom sits at
        0.5rem + 28px from the card edge, so content starts just below. */
     padding-top: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   @keyframes modal-pop {
@@ -614,11 +617,14 @@
      own 1.1rem on top of the last row's 0.6rem, so the Chunky→Straight gap
      was almost 3× the Straight→avatar gap (Pablo clocked it 2026-08-17). */
   .zl-settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
     margin-bottom: 0;
   }
 
   .zl-settings-section:last-child {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0;
   }
 
   /* Contributor sits apart from the everyday settings — a quiet divider
@@ -635,7 +641,7 @@
     border: var(--zl-item-border-width, 2px) solid
       var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
     border-radius: 16px;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0;
     overflow: hidden;
     transition: all 0.2s;
   }
@@ -668,7 +674,7 @@
     border: var(--zl-item-border-width, 2px) solid
       var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
     border-radius: 16px;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0;
     transition: all 0.2s;
   }
 

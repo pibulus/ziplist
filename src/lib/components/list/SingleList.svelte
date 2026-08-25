@@ -2218,28 +2218,6 @@
             </svg>
           </button>
         {/if}
-        <button
-          type="button"
-          class="zl-add-item-button"
-          on:click={startDraftItem}
-          data-tip="Add item"
-          aria-label={`Add item to ${list.name || "this list"}`}
-        >
-          <svg
-            class="zl-header-icon"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
 
         <button
           type="button"
@@ -2663,6 +2641,17 @@
             </li>
           {/each}
         </ul>
+        {#if !draftItemActive}
+          <button
+            type="button"
+            class="zl-tactile-add-button"
+            on:click={startDraftItem}
+            aria-label={`Add item to ${list.name || "this list"}`}
+          >
+            <span class="zl-tactile-add-plus" aria-hidden="true">+</span>
+            <span class="zl-tactile-add-text">Add item</span>
+          </button>
+        {/if}
       {:else}
         <!-- Empty state - Minimalist and friendly -->
         <button
