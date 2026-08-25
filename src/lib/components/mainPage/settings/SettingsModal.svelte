@@ -255,7 +255,7 @@
               aria-pressed={selectedVibe === vibe.id}
             >
               <span class="zl-vibe-art" aria-hidden="true">
-                <ThemeMascot theme={vibe.id} size="30px" />
+                <ThemeMascot theme={vibe.id} size="26px" />
               </span>
               <span>{vibe.name}</span>
               {#if selectedVibe === vibe.id}
@@ -264,44 +264,44 @@
             </button>
           {/each}
         </div>
-
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Chunky Mode</span>
-          </div>
-          <label class="zl-toggle">
-            <input
-              type="checkbox"
-              checked={chunkyModeValue}
-              on:change={toggleChunkyMode}
-              aria-label="Chunky Mode"
-            />
-            <span class="zl-toggle-slider"></span>
-          </label>
-        </div>
       </section>
 
-      <section class="zl-settings-section" aria-label="List display">
-        <div class="zl-setting-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Straight to the list</span>
+      <!-- App Toggles: Chunky Mode & Straight to the list grouped in one container -->
+      <section class="zl-settings-section" aria-label="Preferences">
+        <div class="zl-setting-group">
+          <div class="zl-setting-subrow">
+            <div class="zl-setting-info">
+              <span class="zl-setting-name">Chunky Mode</span>
+            </div>
+            <label class="zl-toggle">
+              <input
+                type="checkbox"
+                checked={chunkyModeValue}
+                on:change={toggleChunkyMode}
+                aria-label="Chunky Mode"
+              />
+              <span class="zl-toggle-slider"></span>
+            </label>
           </div>
-          <label class="zl-toggle">
-            <input
-              type="checkbox"
-              checked={listFirstModeValue}
-              on:change={toggleListFirstMode}
-              aria-label="Open straight to the list"
-            />
-            <span class="zl-toggle-slider"></span>
-          </label>
+
+          <div class="zl-setting-subrow">
+            <div class="zl-setting-info">
+              <span class="zl-setting-name">Straight to the list</span>
+            </div>
+            <label class="zl-toggle">
+              <input
+                type="checkbox"
+                checked={listFirstModeValue}
+                on:change={toggleListFirstMode}
+                aria-label="Open straight to the list"
+              />
+              <span class="zl-toggle-slider"></span>
+            </label>
+          </div>
         </div>
 
-        <!-- Face wears the glyph seat on the left (TalkType's setting-row
-             anatomy); title + hint in the middle, input on the right. One
-             row tall — this card used to stack title, hint, and controls
-             into the biggest block in the modal for the least-used option. -->
-        <div class="zl-setting-row">
+        <!-- Face wears the glyph seat on the left; title + hint in middle, input on right -->
+        <div class="zl-setting-row zl-avatar-row">
           {#if avatarName}
             <button
               type="button"
@@ -630,20 +630,42 @@
     padding-top: 0.85rem;
   }
 
-  /* The vibe grid hands off to its sibling Chunky Mode row */
-  .zl-vibe-grid + .zl-setting-row {
-    margin-top: 0.6rem;
+  .zl-setting-group {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.5);
+    border: var(--zl-item-border-width, 2px) solid
+      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 16px;
+    margin-bottom: 0.6rem;
+    overflow: hidden;
+    transition: all 0.2s;
   }
 
-  /* The eyebrow IS the header line now: label left, floating X right.
-     min-height keeps the tiles clear of the X's 44px tap circle. */
+  .zl-setting-group:hover {
+    border-color: var(--zl-primary-color);
+    background: #fffef7;
+  }
+
+  .zl-setting-subrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    transition: all 0.15s ease;
+  }
+
+  .zl-setting-subrow + .zl-setting-subrow {
+    border-top: 1.5px dashed var(--zl-item-border-color, rgba(30, 23, 20, 0.12));
+  }
 
   .zl-setting-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem 0.85rem;
+    padding: 0.65rem 0.85rem;
     background: rgba(255, 255, 255, 0.5);
     border: var(--zl-item-border-width, 2px) solid
       var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
@@ -765,12 +787,13 @@
   }
 
   .zl-avatar-input {
-    width: 8.5rem;
-    min-width: 6rem;
-    min-height: 44px;
-    padding: 0.3rem 0.6rem;
+    width: 7.5rem;
+    min-width: 5.5rem;
+    height: 38px;
+    min-height: 38px;
+    padding: 0.25rem 0.55rem;
     border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 12px;
+    border-radius: 10px;
     background: rgba(255, 255, 255, 0.8);
     font-family: "Space Mono", monospace;
     font-size: var(--font-size-xs, 0.8rem);
@@ -849,6 +872,7 @@
      these rules add the hard-shadow half of the look so flipping the toggle
      visibly chonks the very modal you're standing in. */
   :global(html.mode-neo-brutalist) .zl-setting-row,
+  :global(html.mode-neo-brutalist) .zl-setting-group,
   :global(html.mode-neo-brutalist) .zl-vibe-option {
     border-radius: 10px;
     box-shadow: 3px 3px 0 0 var(--zl-chunky-ink, #1e1714);
@@ -894,21 +918,21 @@
 
   .zl-vibe-option {
     position: relative;
-    padding: 0.55rem 0.2rem;
-    min-height: 44px;
+    padding: 0.38rem 0.15rem;
+    min-height: 40px;
     background: #fffef7;
     border: var(--zl-item-border-width, 2px) solid
       var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
+    border-radius: 14px;
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 800;
     letter-spacing: -0.01em;
     /* fits "Highlighter" in a 4-up tile on a 390px phone */
-    font-size: clamp(0.6rem, 2.5vw, 0.76rem);
+    font-size: clamp(0.6rem, 2.5vw, 0.74rem);
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.18rem;
     align-items: center;
     justify-content: center;
   }
