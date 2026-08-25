@@ -525,6 +525,7 @@
   outline: none;
 }
 
+.zl-add-item-button,
 .zl-share-button,
 .zl-shuffle-button,
 .zl-sort-button,
@@ -545,6 +546,7 @@
 /* Ghost icon buttons — one quiet action language for the whole card:
    header trio up top, ≡/× twins in the rows. Icons carry the meaning,
    tooltips carry the words. */
+.zl-add-item-button,
 .zl-share-button,
 .zl-shuffle-button,
 .zl-sort-button {
@@ -561,9 +563,11 @@
   height: 18px;
 }
 
+.zl-add-item-button:hover:not(:disabled),
 .zl-share-button:hover:not(:disabled),
 .zl-shuffle-button:hover:not(:disabled),
 .zl-sort-button:hover:not(:disabled),
+.zl-add-item-button:focus-visible:not(:disabled),
 .zl-share-button:focus-visible:not(:disabled),
 .zl-shuffle-button:focus-visible:not(:disabled),
 .zl-sort-button:focus-visible:not(:disabled) {
@@ -901,7 +905,8 @@
 }
 
 .zl-completed-line {
-  border-top: 2px dashed rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.28);
+  border-top: 2px solid currentColor;
+  opacity: 0.22;
   flex: 1;
   min-width: 18px;
 }
@@ -1326,16 +1331,10 @@
   padding: 2rem 1.25rem;
   width: 100%;
   box-sizing: border-box;
-  background: var(--zl-empty-state-bg);
-  border: var(--zl-empty-state-border);
+  background: transparent;
+  border: none;
   border-radius: 24px;
   margin: 0.5rem 0;
-  /* The empty card used to leave ~51% of a phone screen blank below it.
-     Growing the empty state (rather than vertically centring the card, the
-     obvious-looking fix) is deliberate: the card is top-anchored and grows
-     downward, so centring it would re-anchor and visibly jump the moment
-     the first item lands — at the single most important moment in the
-     flow. Here the top edge never moves. */
   min-height: min(300px, 34svh);
   height: auto;
   transition: var(--zl-transition-fast);
@@ -1349,12 +1348,7 @@
 }
 
 .zl-empty-state.clickable:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 245, 250, 0.6),
-    rgba(255, 235, 245, 0.6)
-  );
-  border-color: rgba(201, 120, 255, 0.5);
+  background: transparent;
 }
 
 .zl-empty-content {
@@ -2203,6 +2197,21 @@ body.zl-touch-dragging {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
   transition-delay: 0.45s;
+}
+
+/* Right-anchored buttons keep their tooltips from clipping on the right edge of .zl-card */
+.zl-list-actions > button:last-child[data-tip]::after,
+.zl-live-presence[data-tip]::after {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(-3px);
+}
+
+.zl-list-actions > button:last-child[data-tip]:hover::after,
+.zl-list-actions > button:last-child[data-tip]:focus-visible::after,
+.zl-live-presence[data-tip]:hover::after,
+.zl-live-presence[data-tip]:focus-visible::after {
+  transform: translateX(0) translateY(0);
 }
 
 @media (pointer: coarse) {

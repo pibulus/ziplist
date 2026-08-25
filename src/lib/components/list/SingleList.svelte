@@ -101,6 +101,8 @@
   let liveFeatureAvailable = false;
   let isMakingLive = false;
   let presence = []; // Who's online
+  let localAvatar = "";
+  $: remotePresence = presence.filter((u) => u.avatar && u.avatar !== localAvatar);
   let typingUsers = []; // Who's typing
   let liveActivity = { drafts: [], focuses: [], voices: [] };
   let recentlyEditedItems = new Set(); // Track items just edited by others
@@ -191,6 +193,7 @@
   let activityUnsubscribe = null;
 
   onMount(() => {
+    localAvatar = getOrCreateAvatar();
     // Initialize the lists store
     listsStore.initialize();
     listsService.getAllLists();
@@ -2114,21 +2117,20 @@
               </h2>
             {/if}
             {#if isLive}
-              <!-- The presence pill IS the heart button. A separate ♥ next to
-                   it added a fourth control to a header already called busy —
-                   and tapping the people to wave at them is the more obvious
-                   gesture anyway. -->
+              <!-- The presence pill displays remote guests when in the room, or a clean live beacon -->
               <button
                 type="button"
                 class="zl-live-presence"
                 on:click={tapHeart}
-                title="Live — {presence.length} here. Tap to send a heart"
-                aria-label="Live list. {presence.length} collaborators online. Send a heart"
+                title={remotePresence.length > 0
+                  ? `Live — ${remotePresence.length} guest online. Tap for heart`
+                  : "Live list active. Tap for heart"}
+                aria-label="Live list status"
               >
                 <span class="zl-live-presence-pulse" aria-hidden="true"></span>
-                {#if presence.length > 0}
+                {#if remotePresence.length > 0}
                   <div class="zl-presence-dots" aria-hidden="true">
-                    {#each presence.slice(0, 3) as user (user.id)}
+                    {#each remotePresence.slice(0, 3) as user (user.id)}
                       <img
                         class="zl-presence-dot"
                         title={user.avatar}
@@ -2138,11 +2140,13 @@
                       />
                     {/each}
                   </div>
-                {/if}
-                {#if presence.length > 3}
-                  <span class="zl-live-presence-count" aria-hidden="true"
-                    >+{presence.length - 3}</span
-                  >
+                  {#if remotePresence.length > 3}
+                    <span class="zl-live-presence-count" aria-hidden="true"
+                      >+{remotePresence.length - 3}</span
+                    >
+                  {/if}
+                {:else}
+                  <span class="zl-live-presence-label" aria-hidden="true">Live</span>
                 {/if}
                 <span class="zl-presence-heart" aria-hidden="true">♥</span>
                 {#each hearts as heart (heart.id)}
@@ -2214,14 +2218,29 @@
             </svg>
           </button>
         {/if}
-        <!-- The "+" that used to live here made the header read as a
-             toolbar. Making a list is a rare, settings-shaped act, so it
-             moved to Options; the header is now just this list's own
-             actions. -->
-        <!-- Sharing is ONE door now (Pablo's call 2026-08-17). "Go live" used
-             to be its own header button, which asked people to decide between
-             two kinds of sharing before they'd opened either. You press share,
-             then you choose: a copy, or a room. -->
+        <button
+          type="button"
+          class="zl-add-item-button"
+          on:click={startDraftItem}
+          data-tip="Add item"
+          aria-label={`Add item to ${list.name || "this list"}`}
+        >
+          <svg
+            class="zl-header-icon"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+
         <button
           type="button"
           class="zl-share-button"

@@ -152,14 +152,12 @@
         </p>
       </div>
 
-      <div class="zl-price-card">
-        <span>{PRICING.displayPrice}</span>
-        <small>/year · no subscription</small>
-      </div>
-
-      <ul class="zl-benefit-grid">
+      <ul class="zl-benefit-list">
         {#each CONTRIBUTOR_BENEFITS as benefit}
-          <li>{benefit}</li>
+          <li>
+            <span class="zl-benefit-check" aria-hidden="true">✓</span>
+            <span>{benefit}</span>
+          </li>
         {/each}
       </ul>
 
@@ -176,7 +174,7 @@
         >
           {isStartingCheckout
             ? "Opening checkout..."
-            : `Contribute for a year - ${PRICING.displayPrice}`}
+            : `Unlock Contributor Pass · ${PRICING.displayPrice}`}
         </button>
       {/if}
 
@@ -357,55 +355,42 @@
 
   /* Price and benefits wear the settings modal's row anatomy: soft white
      over cream, 2px quiet border, 16px corners. */
-  .zl-price-card {
-    align-items: baseline;
-    background: rgba(255, 255, 255, 0.5);
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
+  .zl-benefit-list {
     display: flex;
-    gap: 0.45rem;
-    padding: 0.85rem 1rem;
-  }
-
-  .zl-price-card span {
-    color: var(--zl-text-color-primary, #1e1714);
-    font-size: 1.55rem;
-    font-weight: 900;
-  }
-
-  .zl-price-card small {
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    font-size: 0.85rem;
-    font-weight: 800;
-    opacity: 0.8;
-  }
-
-  .zl-benefit-grid {
-    display: grid;
-    gap: 0.6rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-direction: column;
+    gap: 0.65rem;
     list-style: none;
-    margin: 0;
+    margin: 0.25rem 0 0.5rem;
     padding: 0;
+    text-align: left;
   }
 
-  .zl-benefit-grid li {
-    background: rgba(255, 255, 255, 0.5);
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
+  .zl-benefit-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
     color: var(--zl-text-color-primary, #1e1714);
-    font-size: 0.78rem;
+    font-size: 0.88rem;
     font-weight: 800;
-    line-height: 1.25;
-    min-height: 48px;
-    padding: 0.75rem;
-    text-align: center;
+    line-height: 1.35;
   }
 
-  .zl-contributor-primary,
-  .zl-contributor-later {
+  .zl-benefit-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffb000;
+    color: #1e1714;
+    border: 2px solid #1e1714;
+    font-size: 0.72rem;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  .zl-contributor-primary {
     border-radius: 999px;
     cursor: pointer;
     font-family: inherit;
@@ -415,6 +400,28 @@
     min-height: 52px;
     transition: var(--zl-transition-fast, all 0.2s ease);
     width: 100%;
+  }
+
+  .zl-contributor-later {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: var(--zl-text-color-secondary, #6b5f54);
+    font-size: 0.82rem;
+    font-weight: 800;
+    min-height: 36px;
+    padding: 0.4rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+  }
+
+  .zl-contributor-later:hover,
+  .zl-contributor-later:focus-visible {
+    color: var(--zl-text-color-primary, #1e1714);
+    background: transparent;
+    outline: none;
   }
 
   /* Programmatic focus target for a11y — no UA ring on a container */
@@ -588,10 +595,6 @@
       border-radius: 24px;
       padding: 1rem;
       width: min(94vw, 28rem);
-    }
-
-    .zl-benefit-grid {
-      grid-template-columns: 1fr;
     }
 
     .zl-contributor-heading {

@@ -300,30 +300,30 @@
           </div>
         </div>
 
-        <!-- Face wears the glyph seat on the left; title + hint in middle, input on right -->
+        <!-- Face wears the glyph seat on the right; title + hint on left, input + face on right -->
         <div class="zl-setting-row zl-avatar-row">
-          {#if avatarName}
-            <button
-              type="button"
-              class="zl-avatar-face-btn"
-              class:rerolling={avatarRerolling}
-              on:click={rerollAvatarFace}
-              title="Tap for a new face"
-              aria-label="Re-roll avatar face"
-            >
-              <img
-                class="zl-avatar-face"
-                src={getAvatarImage(avatarName)}
-                alt=""
-                aria-hidden="true"
-              />
-            </button>
-          {/if}
           <div class="zl-setting-info">
             <span class="zl-setting-name">Name in shared rooms</span>
             <p class="zl-setting-desc">Your face when a list goes live — tap it to re-roll</p>
           </div>
-          <div class="zl-avatar-field">
+          <div class="zl-avatar-field-inline">
+            {#if avatarName}
+              <button
+                type="button"
+                class="zl-avatar-face-btn"
+                class:rerolling={avatarRerolling}
+                on:click={rerollAvatarFace}
+                title="Tap for a new face"
+                aria-label="Re-roll avatar face"
+              >
+                <img
+                  class="zl-avatar-face"
+                  src={getAvatarImage(avatarName)}
+                  alt=""
+                  aria-hidden="true"
+                />
+              </button>
+            {/if}
             <input
               type="text"
               class="zl-avatar-input"
@@ -338,11 +338,11 @@
 
       <!-- Receiving is the one inbound action with no list to hang off — you
            haven't got the list yet. Sending lives on the list itself. -->
-      <section class="zl-settings-section" aria-label="Receive a list">
+      <section class="zl-settings-section" aria-label="Link a device">
         <div class="zl-setting-row zl-sync-row">
           <div class="zl-setting-info">
-            <span class="zl-setting-name">Receive a list</span>
-            <p class="zl-setting-desc">Type the four words from your other device</p>
+            <span class="zl-setting-name">Link a device</span>
+            <p class="zl-setting-desc">Sync with 4-word passphrase from another device</p>
           </div>
           <div class="zl-sync-receive">
             <input
@@ -369,7 +369,7 @@
 
       <section
         class="zl-settings-section zl-settings-footer"
-        aria-label="Contributor"
+        aria-label="Support ZipList"
       >
         <button
           type="button"
@@ -378,9 +378,7 @@
           on:click={openContributorModal}
         >
           <span aria-hidden="true">✦</span>
-          <span class="zl-contributor-label">
-            {contributorUnlocked ? "Contributor unlocked" : "Become a Contributor"}
-          </span>
+          <span>{contributorUnlocked ? "Supporter active ★" : "Support ZipList"}</span>
         </button>
       </section>
     </div>
@@ -707,7 +705,7 @@
     margin: 0.2rem 0 0 0;
   }
 
-  .zl-avatar-field {
+  .zl-avatar-field-inline {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1022,7 +1020,7 @@
       margin-bottom: 0.5rem;
     }
 
-    .zl-avatar-field {
+    .zl-avatar-field-inline {
       width: 100%;
       margin-top: 0.4rem;
     }
@@ -1036,7 +1034,7 @@
   }
 
   /* The avatar row is the one row that needs to wrap; the rest stay inline. */
-  .zl-settings-section .zl-setting-row:has(.zl-avatar-field) {
+  .zl-settings-section .zl-setting-row:has(.zl-avatar-field-inline) {
     flex-wrap: wrap;
   }
 </style>

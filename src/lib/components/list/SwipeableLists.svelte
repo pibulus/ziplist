@@ -561,16 +561,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: 0.25rem;
+    margin-bottom: 0.4rem;
   }
 
   .nav-arrow {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: 0;
     background: transparent;
@@ -598,8 +598,8 @@
   }
 
   .dot {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: transparent;
     border: 0;
@@ -625,12 +625,13 @@
   }
 
   .dot.active::before {
-    transform: scale(1.5);
+    transform: scale(1.4);
     background-color: var(--dot-primary);
     opacity: 1;
+    border: 2px solid #1e1714;
     box-shadow:
-      0 2px 8px var(--dot-glow),
-      0 0 12px var(--dot-glow);
+      2px 2px 0 #1e1714,
+      0 0 10px var(--dot-glow);
   }
 
   .dot:hover:not(.active)::before {
