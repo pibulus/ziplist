@@ -22,7 +22,7 @@
   } from "$lib/services/infrastructure/stores.js";
   import { AudioStates } from "$lib/services/audio/audioStates.js";
   import { PageLayout } from "$lib/components/layout";
-  import { listFirstMode } from "$lib";
+  import { listFirstMode, setContributorStatus } from "$lib";
   import { listsStore } from "$lib/services/lists/listsStore";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
@@ -801,10 +801,31 @@
       unwireTypewriter = wireTypewriterGlobally();
       pwaService.setupEventListeners();
       void pwaService.checkIfRunningAsPwa();
-      // PwaDeviceSetup + PwaInstallPrompt popups retired (2026-07-22): mic
-      // permission is asked on first record, the model downloads on demand,
-      // and installs go through the family PwaInstallCard in +layout.svelte.
-      // Their loaders/render blocks were removed 2026-08-07 — git has them.
+
+      // 1-Tap Magic Link Auto-Unlock (?unlock=code or ?code=code)
+      const urlParams = new URLSearchParams(window.location.search);
+      const unlockCode = urlParams.get("unlock") || urlParams.get("code");
+      if (unlockCode && unlockCode.trim()) {
+        void (async () => {
+          try {
+            const res = await fetch("/api/contributor/redeem", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ code: unlockCode.trim() }),
+            });
+            const payload = await res.json().catch(() => ({}));
+            if (res.ok && payload.valid) {
+              setContributorStatus(true, payload.token || null);
+              soundService.success?.({ force: true });
+              hapticService.success?.();
+              const cleanUrl = window.location.pathname + window.location.hash;
+              window.history.replaceState({}, document.title, cleanUrl);
+            }
+          } catch (e) {
+            console.error("[MagicUnlock] Auto-redeem failed:", e);
+          }
+        })();
+      }
     }
 
     // Auto-open the intro on first visit. The historic root-scrollbar jump

@@ -11,6 +11,7 @@ import {
   markCheckoutPaidById,
 } from "$lib/server/payments/paymentStore.js";
 import { createLicenseForCheckout } from "$lib/server/contributor/licenseStore.js";
+import { sendContributorPassportEmail } from "$lib/server/email/contributorEmail.js";
 
 function getNotificationUrl(event) {
   return (
@@ -82,7 +83,22 @@ export async function POST(event) {
     // Square to retry forever while the customer silently has no license.
     // Log loudly instead so a paid-but-no-license checkout can be recovered.
     try {
-      await createLicenseForCheckout(paidCheckout);
+      const { code } = await createLicenseForCheckout(paidCheckout);
+      if (payment.buyer_email_address && code) {
+        const appUrl = env.PUBLIC_APP_URL?.trim() || "https://ziplist.app";
+        try {
+          await sendContributorPassportEmail({
+            to: payment.buyer_email_address,
+            code,
+            appUrl,
+          });
+        } catch (emailErr) {
+          console.error(
+            "[SquareWebhook] Failed to send contributor passport email:",
+            emailErr,
+          );
+        }
+      }
     } catch (error) {
       console.error(
         "[SquareWebhook] Paid checkout but license creation failed:",

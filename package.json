@@ -1,7 +1,7 @@
 {
   "name": "ziplist",
   "private": true,
-  "version": "0.9.0",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
     "node": ">=20.18.1",
@@ -14,7 +14,6 @@
     "prebuild": "node scripts/check-portable-deps.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy:pi": "bash scripts/deploy-pi.sh",
     "smoke:live": "node scripts/smoke-live-sharing.mjs",
     "check": "node scripts/check-sync-phrase.mjs && node scripts/check-list-text.mjs && node scripts/check-avatar-palette.mjs && node scripts/check-item-text.mjs && node scripts/check-item-tags.mjs",
     "prepare": "svelte-kit sync || echo ''",

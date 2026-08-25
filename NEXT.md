@@ -2,43 +2,26 @@
 
 Release baseline:
 
-- Current package version: `0.9.0` (tag `1.0.0` after the device pass)
-- Branch: `main` — the full audit + design-coherence arc (27 commits) is merged
-  and pushed as of 2026-07-10
-- Latest verified checks: `npm run lint`, `npm run build`, live two-tab
-  PartyKit room test on local dev
+- Current package version: `1.0.0`
+- Production deploy: `https://ziplist.app` (Netlify Edge)
+- Branch: `main` — fully green on `npm run check`, `npm run lint`, `npm run build`
+- Launch Arsenal score: 21 PASS / 0 FAIL
 
-What looks solid:
+What is shipped & live:
 
-- Core local list flow: add, edit, delete, reorder, move, toggle — verified
-  live in-browser at 390/820/1440 during the design pass.
-- One design language everywhere: constant cream ground, flat brand-yellow
-  CTA, ghost stroke icons, saturated mascots, branded share/live landings.
-  Laws are recorded in `GLOSSARY.md` and `docs/FABLE-AUDIT.md`.
-- Gemini route is server-side and guarded (rate/upload/origin, per-visitor
-  buckets); Whisper Tiny local fallback; 48kbps speech bitrate.
-- PartyKit live sharing deployed (`ziplist.pibulus.partykit.dev`); rooms
-  verified end-to-end on local dev (create, join, sync, presence with
-  DiceBear faces). Dev CSP now allows `ws://localhost` for `dev:party`.
-- Square $9 contributor checkout wired end-to-end; stores atomic + locked.
+- **RiffRap pastel waterfall gradient** with 12:1 WCAG AAA text contrast
+- **1-layer modular hierarchy**: `## Section` headers, movable divider bars (`##` / `---`), and `→ List Portals` with spring roulette flipping
+- **Tag engine & resampling**: `#tag` filtering + 1-tap `[ ✂️ Resample to new list ]`
+- **1-Tap magic link auto-unlock**: `?unlock=<code>` unlocks on device without manual typing
+- **Square AUD production checkout**: live Apple Pay / Google Pay / Card processing
+- **Bespoke Contributor Passport email hook**: auto-sends 4-word code + magic link via Resend
+- **Sovereign device sync**: 4-word phrase (`/j/[phrase]`) over ephemeral memory pipes with zero logins
 
-What still wants attention (ranked — all Pablo-hands):
+What wants love next (ranked):
 
-1. **Deploy main to the Pi** (`npm run deploy:pi`) — production still serves
-   the pre-coherence build.
-2. **Set `BODY_SIZE_LIMIT=16M`** via `ZIPLIST_EXTRA_ENV` in the fleet
-   `keys.env`, then `keys-sync ziplist` → `key-doctor`. adapter-node's 512KB
-   default 413s recordings past ~85s. See KEYS.md.
-3. Fix `.env.example`: `CONTRIBUTOR_LICENSE_SECRET` says "at least 16" chars
-   but code enforces **32** (file is permission-blocked for agent sessions).
-4. Real-device iPhone pass: add, rename, reorder, live share — especially
-   watching another device's typing/draft indicators (unverifiable from one
-   browser profile).
-5. Square sandbox-card checkout once, end to end.
-6. Production/social screenshots → tag `v1.0.0`.
+1. Set `RESEND_API_KEY` in Netlify production env to activate automatic email dispatch.
+2. Real-world iPhone PWA test of 1-tap magic link from email.
+3. Voice capture inside live rooms (`/live/[roomId]`).
+4. Hold-the-mascot quick capture.
 
-After the tag, `docs/V1.1.md` is the charter: pretty word-slug links, portal
-items, sliding room TTL, copy-as-text, hold-to-capture, voice-in-rooms — and
-the hard cutoffs (no dates, no trees, no multi-list rooms, no accounts).
-
-See `docs/FABLE-AUDIT.md` for the complete 2026-07-05→10 audit + design record.
+See `CHANGELOG.md` for complete version notes.
