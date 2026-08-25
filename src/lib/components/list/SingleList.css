@@ -1693,37 +1693,29 @@
 }
 
 .zl-item.dragging {
-  opacity: 1;
-  background-color: var(--zl-item-dragging-bg, rgba(255, 255, 255, 1));
-  transform: scale(1.03);
-  box-shadow: var(
-    --zl-item-dragging-shadow,
-    0 15px 30px rgba(0, 151, 167, 0.4)
-  );
-  z-index: 10;
-  border: var(--zl-item-dragging-border, 3px solid rgba(0, 188, 212, 0.85));
-  --float-y-min: 0;
-  --float-y-max: -3px;
-  --float-rotate-min: -0.5deg;
-  --float-rotate-max: 0.5deg;
-  animation: float 2s infinite ease-in-out;
+  opacity: 0.45;
+  background-color: var(--zl-item-dragging-bg, rgba(255, 255, 255, 0.8));
+  border: var(--zl-item-dragging-border, 2px dashed rgba(0, 188, 212, 0.7));
+  box-shadow: none;
   cursor: grabbing;
-  will-change: transform, opacity, border;
 }
 
 .zl-item.drag-over {
   position: relative;
-  margin-top: 20px;
-  background-color: var(--zl-item-dragover-bg, rgba(252, 242, 255, 0.9));
-  border: var(--zl-item-dragover-border, 2px solid rgba(0, 188, 212, 0.8));
-  box-shadow: var(--zl-item-dragover-shadow, 0 8px 20px rgba(0, 151, 167, 0.3));
-  transform: translateY(2px);
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background-color: var(--zl-item-dragover-bg, rgba(252, 242, 255, 0.95));
+  border: var(--zl-item-dragover-border, 2px solid rgba(0, 188, 212, 0.85));
+  box-shadow: var(
+    --zl-item-dragover-shadow,
+    0 6px 16px rgba(0, 151, 167, 0.25)
+  );
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .zl-item.drag-over-after {
-  margin-top: 0;
-  margin-bottom: 20px;
+  /* Position indicated cleanly by drop-indicator line without layout shifts */
 }
 
 .zl-item.touch-placeholder {
@@ -1748,14 +1740,14 @@
 
 .drop-indicator {
   position: absolute;
-  top: -12px;
+  top: -9px;
   left: 0;
   right: 0;
   height: 4px;
   background: linear-gradient(
     90deg,
     transparent,
-    var(--zl-drop-indicator-color, rgba(0, 188, 212, 0.7)),
+    var(--zl-drop-indicator-color, rgba(0, 188, 212, 0.85)),
     transparent
   );
   border-radius: 2px;
@@ -1766,16 +1758,16 @@
 
 .drop-indicator.after {
   top: auto;
-  bottom: -12px;
+  bottom: -9px;
 }
 
 .drop-arrow {
   position: absolute;
-  top: -6px;
+  top: -5px;
   left: 50%;
   width: 14px;
   height: 14px;
-  background-color: var(--zl-drop-arrow-bg, rgba(0, 188, 212, 0.9));
+  background-color: var(--zl-drop-arrow-bg, rgba(0, 188, 212, 0.95));
   border-radius: 50%;
   transform: translateX(-50%);
   box-shadow: var(--zl-drop-arrow-shadow, 0 0 8px rgba(0, 151, 167, 0.4));
@@ -1783,7 +1775,7 @@
 
 .drop-indicator.after .drop-arrow {
   top: auto;
-  bottom: -6px;
+  bottom: -5px;
 }
 
 .drop-arrow::after {

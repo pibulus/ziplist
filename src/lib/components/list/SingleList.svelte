@@ -1085,6 +1085,34 @@
   }
 
   // Drag and drop functions
+  function getDragOverPosition(event, targetItemId) {
+    if (!draggedItemId || draggedItemId === targetItemId) return null;
+
+    const sourceIndex = activeItems.findIndex(
+      (item) => item.id === draggedItemId,
+    );
+    const targetIndex = activeItems.findIndex(
+      (item) => item.id === targetItemId,
+    );
+
+    if (sourceIndex === -1 || targetIndex === -1) return null;
+
+    // Direct predecessor: hovering over the item immediately above means move BEFORE that item
+    if (targetIndex === sourceIndex - 1) {
+      return "before";
+    }
+    // Direct successor: hovering over the item immediately below means move AFTER that item
+    if (targetIndex === sourceIndex + 1) {
+      return "after";
+    }
+
+    // For items 2+ positions away, split by vertical midpoint
+    const targetBounds = event.currentTarget.getBoundingClientRect();
+    return event.clientY > targetBounds.top + targetBounds.height / 2
+      ? "after"
+      : "before";
+  }
+
   function handleDragStart(event, itemId) {
     // Prevent dragging if item is being edited
     if (editingItemId === itemId) {
@@ -1115,36 +1143,32 @@
   function handleDragOver(event, itemId) {
     // Prevent default to allow drop
     event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "move";
+    }
 
-    if (!draggedItemId) {
-      dragOverItemId = null;
-      dragOverPosition = "before";
+    if (!draggedItemId || draggedItemId === itemId) {
+      if (dragOverItemId) {
+        dragOverItemId = null;
+        dragOverPosition = "before";
+      }
       return;
     }
 
-    // Don't allow drag over on checked items or the dragged item itself
-    if (draggedItemId === itemId) {
-      dragOverItemId = null;
-      dragOverPosition = "before";
-      return;
-    }
-
-    // Get the target item to check if it's checked
+    // Don't allow drag over on checked items
     const targetItem = list.items.find((item) => item.id === itemId);
     if (targetItem?.checked) {
-      dragOverItemId = null;
-      dragOverPosition = "before";
+      if (dragOverItemId) {
+        dragOverItemId = null;
+        dragOverPosition = "before";
+      }
       return;
     }
 
-    const targetBounds = event.currentTarget.getBoundingClientRect();
-    const nextPosition =
-      event.clientY > targetBounds.top + targetBounds.height / 2
-        ? "after"
-        : "before";
+    const nextPosition = getDragOverPosition(event, itemId);
+    if (!nextPosition) return;
 
-    // Only update if we're moving to a new item
+    // Only update if position or target changed
     if (dragOverItemId === itemId && dragOverPosition === nextPosition) return;
 
     // Update dragover state
@@ -1159,15 +1183,9 @@
     // Prevent default action
     event.preventDefault();
 
-    dragOverItemId = null;
-
-    if (!draggedItemId) {
-      dragOverPosition = "before";
-      return;
-    }
-
-    // If dropped on itself, do nothing
-    if (draggedItemId === targetItemId) {
+    if (!draggedItemId || draggedItemId === targetItemId) {
+      draggedItemId = null;
+      dragOverItemId = null;
       dragOverPosition = "before";
       return;
     }
@@ -1175,12 +1193,11 @@
     // Check if target is a completed item (don't allow dropping on completed items)
     const targetItem = list.items.find((item) => item.id === targetItemId);
     if (targetItem?.checked) {
+      draggedItemId = null;
+      dragOverItemId = null;
       dragOverPosition = "before";
       return;
     }
-
-    // Haptic feedback - stronger for successful drop
-    hapticService.impact("heavy");
 
     // Reorder only active items, then keep completed items anchored at the bottom.
     const reorderedActiveItems = [...activeItems];
@@ -1192,10 +1209,11 @@
     );
 
     if (sourceIndex !== -1 && targetIndex !== -1) {
-      const targetBounds = event.currentTarget.getBoundingClientRect();
-      const insertAfter =
-        dragOverPosition === "after" ||
-        event.clientY > targetBounds.top + targetBounds.height / 2;
+      const position =
+        dragOverItemId === targetItemId
+          ? dragOverPosition
+          : getDragOverPosition(event, targetItemId) || "before";
+      const insertAfter = position === "after";
       let destinationIndex = targetIndex + (insertAfter ? 1 : 0);
       const [movedItem] = reorderedActiveItems.splice(sourceIndex, 1);
 
@@ -1205,15 +1223,23 @@
 
       reorderedActiveItems.splice(destinationIndex, 0, movedItem);
 
-      // Update the list with the new order
-      listsService.reorderItems(
-        [...reorderedActiveItems, ...completedItems],
-        list.id,
-      );
-      markItemSettling(draggedItemId);
-      soundService.drop();
+      const didMove = sourceIndex !== destinationIndex;
+
+      if (didMove) {
+        listsService.reorderItems(
+          [...reorderedActiveItems, ...completedItems],
+          list.id,
+        );
+        hapticService.impact("heavy");
+        soundService.drop();
+        markItemSettling(draggedItemId);
+      } else {
+        hapticService.selection();
+      }
     }
 
+    draggedItemId = null;
+    dragOverItemId = null;
     dragOverPosition = "before";
   }
 
@@ -2564,7 +2590,27 @@
               {suggestedTags}
             />
           {:else}
-            <li class="zl-add-row" role="listitem">
+            <li
+              class="zl-add-row"
+              role="listitem"
+              on:dragover={(e) => {
+                if (!draggedItemId || activeItems.length === 0) return;
+                const lastActive = activeItems[activeItems.length - 1];
+                if (draggedItemId === lastActive.id) return;
+                e.preventDefault();
+                if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                if (dragOverItemId !== lastActive.id || dragOverPosition !== "after") {
+                  dragOverItemId = lastActive.id;
+                  dragOverPosition = "after";
+                  hapticService.impact("light");
+                }
+              }}
+              on:drop={(e) => {
+                if (!draggedItemId || activeItems.length === 0) return;
+                const lastActive = activeItems[activeItems.length - 1];
+                handleDrop(e, lastActive.id);
+              }}
+            >
               <button
                 type="button"
                 class="zl-add-item-button"
