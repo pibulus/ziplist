@@ -852,7 +852,11 @@
 
 <PageLayout listFirst={$listFirstMode === "true"}>
   {#if $listFirstMode !== "true"}
-    <ContentContainer on:toggleRecording={handleToggleRecording} />
+    <ContentContainer
+      on:toggleRecording={handleToggleRecording}
+      on:holdstart={handleHoldStart}
+      on:holdend={handleHoldEnd}
+    />
   {/if}
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->

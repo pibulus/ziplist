@@ -66,8 +66,49 @@
   // Legacy <img> path only when an explicit baseSrc is passed AND no slot.
   $: useLegacyImg = !!baseSrc;
 
+  let holdTimer = null;
+  let isHolding = false;
+
+  function handlePointerDown(event) {
+    if (!interactive) return;
+    isHolding = false;
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => {
+      isHolding = true;
+      dispatch("holdstart", event);
+    }, 250);
+  }
+
+  function handlePointerUp(event) {
+    if (!interactive) return;
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+    if (isHolding) {
+      isHolding = false;
+      dispatch("holdend", event);
+    }
+  }
+
+  function handlePointerCancel(event) {
+    if (!interactive) return;
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+    if (isHolding) {
+      isHolding = false;
+      dispatch("holdend", event);
+    }
+  }
+
   function handleClick(event) {
     if (!interactive) return;
+    if (isHolding) {
+      isHolding = false;
+      return;
+    }
     // Restartable squish: drop the class for a frame so rapid taps re-fire.
     tapped = false;
     requestAnimationFrame(() => {
@@ -94,6 +135,9 @@
   aria-label={interactive ? ariaLabel : undefined}
   aria-hidden={interactive ? undefined : "true"}
   on:click={handleClick}
+  on:pointerdown={handlePointerDown}
+  on:pointerup={handlePointerUp}
+  on:pointercancel={handlePointerCancel}
 >
   <div class="mascot-art" class:is-floating={float} class:tapped>
     {#if $$slots.default}

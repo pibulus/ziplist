@@ -22,4 +22,6 @@
   on:titleAnimationComplete={handleTitleAnimationComplete}
   on:subtitleAnimationComplete={handleSubtitleAnimationComplete}
   on:toggleRecording
+  on:holdstart
+  on:holdend
 />

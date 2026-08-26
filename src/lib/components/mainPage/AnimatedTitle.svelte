@@ -84,6 +84,8 @@
     thinking={$isTranscribing}
     {celebrating}
     on:click={handleDudeClick}
+    on:holdstart={() => dispatch("holdstart")}
+    on:holdend={() => dispatch("holdend")}
   />
 
   <h1

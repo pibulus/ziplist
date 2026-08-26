@@ -11,6 +11,14 @@
   import { getOrCreateAvatar } from "$lib/services/realtime/avatarService";
   import SingleList from "$lib/components/list/SingleList.svelte";
   import BrandMark from "$lib/components/ui/BrandMark.svelte";
+  import RecordButtonWithTimer from "$lib/components/mainPage/audio-transcript/RecordButtonWithTimer.svelte";
+  import { audioRecorderService } from "$lib/services/audio/audioRecorderService";
+  import {
+    isRecording,
+    isTranscribing,
+    recordingDuration,
+    transcriptionProgress,
+  } from "$lib/services/infrastructure/stores";
   import { fade, fly } from "svelte/transition";
 
   // Get room ID from URL
@@ -160,6 +168,18 @@
     <div class="live-brand-row">
       <BrandMark />
     </div>
+    <div class="live-recorder-row">
+      <RecordButtonWithTimer
+        recording={$isRecording}
+        transcribing={$isTranscribing}
+        disabled={false}
+        recordingDuration={$recordingDuration}
+        progress={$transcriptionProgress}
+        on:click={() => audioRecorderService.toggleRecording()}
+        on:holdstart={() => audioRecorderService.handleHoldStart()}
+        on:holdend={() => audioRecorderService.handleHoldEnd()}
+      />
+    </div>
     <SingleList {listId} showListManagement={false} />
     <div class="live-actions">
       {#if isGuest}
@@ -303,8 +323,16 @@
   .live-brand-row {
     width: 100%;
     max-width: min(540px, calc(100vw - 2rem));
-    margin: 0.5rem auto 1rem;
+    margin: 0.5rem auto 0.75rem;
     padding-inline: 0.35rem;
+  }
+
+  .live-recorder-row {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    width: 100%;
+    max-width: min(540px, calc(100vw - 2rem));
   }
 
   /* Desktop: not a stretched phone — give the centered column real top
