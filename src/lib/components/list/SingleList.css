@@ -2434,6 +2434,30 @@ body.zl-touch-dragging {
   background: color-mix(in srgb, #ef4444 15%, #fffef7);
 }
 
+.zl-share-option.zl-share-delete-list {
+  border-color: rgba(220, 38, 38, 0.45);
+  color: #b91c1c;
+  background: color-mix(in srgb, #ef4444 12%, #fffef7);
+  font-weight: 700;
+}
+
+.zl-share-option.zl-share-delete-list:hover:not(:disabled) {
+  background: color-mix(in srgb, #ef4444 22%, #fffef7);
+}
+
+.zl-empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.zl-empty-add-button {
+  margin-top: -1.2rem;
+  margin-bottom: 1.2rem;
+  z-index: 2;
+}
+
 /* Tag filter — chips that decide what leaves. Same cream-tint-with-coloured-
    ink language as the chips on the rows, so a #shop here reads as the same
    object as a #shop there. */

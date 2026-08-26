@@ -1979,8 +1979,59 @@
     shareTrayOpen = false;
   }
 
+  function deleteEntireList() {
+    const nonLiveLists = $listsStore.lists.filter(
+      (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
+    );
+    if (nonLiveLists.length <= 1) {
+      showListStatus("Can't delete your only list.", false, 2400);
+      soundService.locked({ force: true });
+      return;
+    }
+
+    const listSnapshot = {
+      ...list,
+      items: [...list.items],
+    };
+
+    hapticService.impact("medium");
+    soundService.delete();
+
+    if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+
+    undoDelete = {
+      type: "list",
+      listSnapshot,
+      listName: list.name || "List",
+    };
+
+    listsStore.deleteList(list.id);
+
+    undoDeleteTimer = setTimeout(() => {
+      undoDelete = null;
+      undoDeleteTimer = null;
+    }, 6500);
+
+    shareTrayOpen = false;
+  }
+
   function restoreDeletedItem() {
-    if (!undoDelete || undoDelete.listId !== list.id) return;
+    if (!undoDelete) return;
+
+    if (undoDelete.type === "list" && undoDelete.listSnapshot) {
+      listsStore.upsertList(undoDelete.listSnapshot, undoDelete.listSnapshot.id);
+      listsStore.setActiveList(undoDelete.listSnapshot.id);
+      hapticService.selection();
+      soundService.add({ force: true });
+      undoDelete = null;
+      if (undoDeleteTimer) {
+        clearTimeout(undoDeleteTimer);
+        undoDeleteTimer = null;
+      }
+      return;
+    }
+
+    if (undoDelete.listId !== list.id) return;
 
     if (undoDelete.originalListItems) {
       listsStore.upsertList(
@@ -2447,6 +2498,15 @@
               Clear entire list
             </button>
           {/if}
+          {#if showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1}
+            <button
+              type="button"
+              class="zl-share-option zl-share-delete-list"
+              on:click={deleteEntireList}
+            >
+              Delete this list
+            </button>
+          {/if}
         </div>
 
         {#if syncPhrase}
@@ -2517,7 +2577,7 @@
       </div>
     {/if}
 
-    {#if undoDelete && undoDelete.listId === list.id}
+    {#if undoDelete && (undoDelete.type === "list" || undoDelete.listId === list.id)}
       <div
         class="zl-undo-toast"
         role="status"
@@ -2525,11 +2585,13 @@
         transition:fade={{ duration: 180 }}
       >
         <span class="zl-undo-text">
-          {undoDelete.type === "all"
-            ? "Cleared entire list"
-            : undoDelete.type === "done"
-              ? `Cleared ${undoDelete.count} completed ${undoDelete.count === 1 ? "item" : "items"}`
-              : `Deleted ${undoDelete.item.text}`}
+          {undoDelete.type === "list"
+            ? `Deleted list "${undoDelete.listName}"`
+            : undoDelete.type === "all"
+              ? "Cleared entire list"
+              : undoDelete.type === "done"
+                ? `Cleared ${undoDelete.count} completed ${undoDelete.count === 1 ? "item" : "items"}`
+                : `Deleted ${undoDelete.item.text}`}
         </span>
         <button
           type="button"
@@ -2806,22 +2868,34 @@
           </button>
         {/if}
       {:else}
-        <!-- Empty state - Minimalist and friendly -->
-        <button
-          type="button"
-          class="zl-empty-state clickable"
-          on:click={handleEmptyStateClick}
-          aria-label={`Your list awaits. Add the first thing or talk it in. Add the first item to ${
-            list.name || "this list"
-          }`}
-          in:fade={{ duration: 200 }}
-        >
-          <div class="zl-empty-content">
-            <h3 class="zl-empty-title">Your list awaits</h3>
-            <p class="zl-empty-description">Add the first thing</p>
-            <p class="zl-empty-hint">or talk it in</p>
-          </div>
-        </button>
+        <!-- Empty state - Minimalist and friendly with tactile add button -->
+        <div class="zl-empty-container" in:fade={{ duration: 200 }}>
+          <button
+            type="button"
+            class="zl-empty-state clickable"
+            on:click={handleEmptyStateClick}
+            aria-label={`Your list awaits. Add the first thing or talk it in. Add the first item to ${
+              list.name || "this list"
+            }`}
+          >
+            <div class="zl-empty-content">
+              <h3 class="zl-empty-title">Your list awaits</h3>
+              <p class="zl-empty-description">Add the first thing</p>
+              <p class="zl-empty-hint">or talk it in</p>
+            </div>
+          </button>
+          {#if !draftItemActive}
+            <button
+              type="button"
+              class="zl-tactile-add-button zl-empty-add-button"
+              on:click={startDraftItem}
+              aria-label={`Add item to ${list.name || "this list"}`}
+            >
+              <span class="zl-tactile-add-plus" aria-hidden="true">+</span>
+              <span class="zl-tactile-add-text">Add item</span>
+            </button>
+          {/if}
+        </div>
       {/if}
       {#if touchDraggedItem && touchDragGhostRect}
         <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">
