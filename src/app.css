@@ -21,6 +21,12 @@
     rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.88),
     rgba(var(--zl-accent-color-rgb, 255, 106, 194), 0.84)
   );
+
+  /* Modal motion — one source of truth */
+  --zl-modal-open-ms: 280ms;
+  --zl-modal-close-ms: 180ms;
+  --zl-modal-open-ease: cubic-bezier(0.16, 0.84, 0.24, 1.06);
+  --zl-modal-close-ease: cubic-bezier(0.4, 0, 0.24, 1);
 }
 
 /* Remove outlines only when not using keyboard navigation */
@@ -35,27 +41,21 @@
 
 /* Keep normal page scrolling on touch devices. */
 html,
+html[data-theme] {
+  scroll-behavior: smooth;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
+  background-color: #fff6e6;
+}
+
 body {
   overscroll-behavior-x: none;
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
   scrollbar-width: thin;
   scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
-}
-
-/* Ensure pages don't jump when content changes */
-html {
-  overflow-y: scroll; /* Prevent layout shift when content height changes */
-  scrollbar-width: thin;
-  scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
-}
-
-/* The brand cream, at the root — otherwise DaisyUI's dark theme base bleeds
-   around the page edges and in overscroll on every route. Must outrank
-   DaisyUI's html[data-theme] background. */
-html,
-html[data-theme] {
-  background-color: #fff6e6;
 }
 
 /* Prevent horizontal overflow */
@@ -215,33 +215,30 @@ body::-webkit-scrollbar-corner {
   }
 }
 
-/* Prevent service-managed modals from creating scroll issues. */
-html.modal-active {
+/* ===================================================================
+   MODAL SCROLL LOCK & CONTAINER STYLES
+   =================================================================== */
+/* Scrollbar space is reserved permanently via scrollbar-gutter: stable
+   on html, so hiding overflow here prevents all layout and register shifts. */
+html:has(dialog[open]),
+body.zl-modal-open {
   overflow: hidden !important;
-  padding-right: 0 !important; /* Prevent layout shift */
-  margin-right: 0 !important;
-  width: 100vw !important;
 }
 
-body.modal-active {
+body:has(dialog[open]) {
   overflow: hidden !important;
-  padding-right: 0 !important;
-  margin-right: 0 !important;
-  width: 100% !important;
-  position: relative !important;
 }
 
-/* Modal fixes to prevent scrollbar issues. The explicit width/height/margin
-   override the UA's default dialog sizing — without them the dialog is inset
-   from the viewport and the "centered" box sits visibly off-centre. */
-.modal {
+/* Modal container styles across all dialogs */
+.modal,
+dialog.zl-settings-dialog,
+dialog.zl-contributor-dialog {
   padding: 0 !important;
   overflow: hidden !important;
   position: fixed !important;
   inset: 0 !important;
-  /* 100% (not 100vw/100dvh): with a classic scrollbar reserved, 100vw
-     includes the scrollbar and the "centered" card sits ~7px off-centre.
-     Percentages resolve against the viewport minus scrollbar. */
+  z-index: 9999 !important;
+  /* 100% (not 100vw/100dvh): resolves against viewport inside gutter */
   width: 100% !important;
   max-width: none !important;
   height: 100% !important;
@@ -249,22 +246,29 @@ body.modal-active {
   margin: 0 !important;
   border: 0 !important;
   background: transparent !important;
+  color: inherit;
+  overscroll-behavior: contain;
 }
 
-/* Gutter so the card never touches the viewport edge on small screens. */
-dialog.modal[open] {
+dialog.modal[open],
+dialog.zl-settings-dialog[open],
+dialog.zl-contributor-dialog[open] {
+  display: grid !important;
+  place-items: center !important;
   padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
 }
 
-dialog.modal::backdrop {
+dialog.modal::backdrop,
+dialog.zl-settings-dialog::backdrop,
+dialog.zl-contributor-dialog::backdrop {
   background: transparent;
 }
 
-/* Warm-dark blurred backdrop (skeleton: ~45% warm-dark + 2px blur, tap-to-close).
-   Targets the in-DOM .modal-backdrop button each modal renders; the native
-   ::backdrop above is left transparent so this one paints. */
+/* Warm-dark blurred backdrop (skeleton: ~46% warm-dark + 2px blur, tap-to-close) */
 .modal > .modal-backdrop,
-.modal .modal-backdrop {
+.modal .modal-backdrop,
+.zl-modal-backdrop,
+.zl-contributor-backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -273,26 +277,20 @@ dialog.modal::backdrop {
   background-color: rgba(43, 38, 32, 0.46);
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
-  animation: zl-modal-backdrop-in 180ms ease-out both;
+  animation: zl-modal-backdrop-in var(--zl-modal-close-ms, 180ms) ease-out both;
 }
 
 /* Custom modal styling — ONE modal frame family-wide: 30rem max-width,
-   card-radius token (follows chunky mode), fluid padding. All DaisyUI
-   modals are modal-middle (centered card on every form factor). */
+   card-radius token (follows chunky mode), fluid padding. */
 .modal-box {
   max-height: 85vh !important;
   overflow-y: auto !important;
-  /* The dialog is a centering grid; a vertical margin here would offset the
-     box from true centre. Padding on the dialog provides the viewport gutter. */
   margin: 0 !important;
   width: min(92vw, 30rem) !important;
   max-width: 30rem !important;
   padding: clamp(1.25rem, 4vw, 2rem) !important;
   border-radius: var(--zl-card-border-radius, 28px) !important;
   transform-origin: center;
-  /* Must stack above the fixed .modal-backdrop (z-index: 0) below — with
-     z-index auto the later-DOM backdrop paints on top and eats every click
-     inside the box. */
   position: relative;
   z-index: 1;
 }
@@ -300,7 +298,7 @@ dialog.modal::backdrop {
 /* Every modal wraps its close button in a bare `<form method="dialog">`. Make
    that wrapper sticky so the button rides along at the top of the panel
    instead of scrolling out of reach. Zero-height so it never displaces the
-   content beneath it. (Family DNA — matches talktype/riffrap/daysay.) */
+   content beneath it. */
 .modal-box > form:has(> .modal-close-btn) {
   position: sticky;
   top: 0;
@@ -309,9 +307,7 @@ dialog.modal::backdrop {
   overflow: visible;
 }
 
-/* Keep the pinned close button legible when content scrolls beneath it —
-   a soft corner radial ONLY behind the button, never a full-width wash
-   (the old full-width strip bleached icons/mascots at the modal top). */
+/* Keep the pinned close button legible when content scrolls beneath it */
 .modal-box > form:has(> .modal-close-btn)::before {
   content: "";
   position: absolute;
@@ -330,37 +326,39 @@ dialog.modal::backdrop {
   border-radius: 0 var(--zl-card-border-radius, 28px) 0 0;
 }
 
-/* OPEN animation — playful pop-in (skeleton). Scoped to open, NON-closing
-   dialogs so the entrance can't restart for a frame during teardown. */
-dialog.modal[open]:not(.zl-modal-closing) > .modal-box {
-  animation: zl-modal-pop-in 280ms cubic-bezier(0.16, 0.84, 0.24, 1.06) both;
+/* ===================================================================
+   MODAL OPEN / CLOSE ANIMATIONS — All Modals & Settings
+   =================================================================== */
+/* OPEN animation — playful pop-in with tactile settle */
+dialog.modal[open]:not(.zl-modal-closing) > .modal-box,
+dialog.zl-settings-dialog[open]:not(.zl-modal-closing) > .zl-settings-card,
+dialog.zl-contributor-dialog[open]:not(.zl-modal-closing)
+  > .zl-contributor-card {
+  animation: zl-modal-pop-in var(--zl-modal-open-ms, 280ms)
+    var(--zl-modal-open-ease, cubic-bezier(0.16, 0.84, 0.24, 1.06)) both;
 }
 
-/* CLOSE animation (skeleton's #1 win) — driven by modalService adding
-   .zl-modal-closing before the native dialog.close(). */
-dialog.modal.zl-modal-closing {
+/* CLOSE animation — responsive pop-out */
+dialog.modal.zl-modal-closing,
+dialog.zl-settings-dialog.zl-modal-closing,
+dialog.zl-contributor-dialog.zl-modal-closing {
   pointer-events: none;
 }
 
-dialog.modal.zl-modal-closing > .modal-box {
-  animation: zl-modal-pop-out 180ms cubic-bezier(0.4, 0, 0.24, 1) both;
+dialog.modal.zl-modal-closing > .modal-box,
+dialog.zl-settings-dialog.zl-modal-closing > .zl-settings-card,
+dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-card {
+  animation: zl-modal-pop-out var(--zl-modal-close-ms, 180ms)
+    var(--zl-modal-close-ease, cubic-bezier(0.4, 0, 0.24, 1)) both;
 }
 
 dialog.modal.zl-modal-closing > .modal-backdrop,
-dialog.modal.zl-modal-closing .modal-backdrop {
-  animation: zl-modal-backdrop-out 180ms ease-out both;
-}
-
-/* Ensure scrollbars don't cause layout shifts */
-/* Add padding to account for the scrollbar width to avoid layout shifts */
-@media screen and (min-width: 768px) {
-  :root {
-    --scrollbar-compensation: 0px;
-  }
-
-  html.modal-active {
-    padding-right: var(--scrollbar-compensation) !important;
-  }
+dialog.modal.zl-modal-closing .modal-backdrop,
+dialog.zl-settings-dialog.zl-modal-closing > .zl-modal-backdrop,
+dialog.zl-settings-dialog.zl-modal-closing .zl-modal-backdrop,
+dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-backdrop,
+dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
+  animation: zl-modal-backdrop-out var(--zl-modal-close-ms, 180ms) ease-out both;
 }
 
 /* Custom classes for Lukens-style UI */
@@ -380,12 +378,7 @@ dialog.modal.zl-modal-closing .modal-backdrop {
   }
 }
 
-/* ===================================================================
-   MODAL OPEN / CLOSE — skeleton pop-in + pop-out + backdrop fade
-   =================================================================== */
-/* Rises and settles with one small overshoot. No rotation — a wobble is
-   charming once, but these fire several times a session from the footer nav,
-   and the tilt reads as noise at that frequency. Matches talktype. */
+/* Rises and settles with one small overshoot. No rotation — tactile and clean. */
 @keyframes zl-modal-pop-in {
   0% {
     opacity: 0;
@@ -430,14 +423,25 @@ dialog.modal.zl-modal-closing .modal-backdrop {
   }
 }
 
-/* Honor reduced-motion: modal enters/leaves instantly (skeleton requirement). */
+/* Honor reduced-motion: modal enters/leaves instantly */
 @media (prefers-reduced-motion: reduce) {
   dialog.modal[open]:not(.zl-modal-closing) > .modal-box,
+  dialog.zl-settings-dialog[open]:not(.zl-modal-closing) > .zl-settings-card,
+  dialog.zl-contributor-dialog[open]:not(.zl-modal-closing)
+    > .zl-contributor-card,
   dialog.modal.zl-modal-closing > .modal-box,
+  dialog.zl-settings-dialog.zl-modal-closing > .zl-settings-card,
+  dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-card,
   .modal > .modal-backdrop,
   .modal .modal-backdrop,
+  .zl-modal-backdrop,
+  .zl-contributor-backdrop,
   dialog.modal.zl-modal-closing > .modal-backdrop,
-  dialog.modal.zl-modal-closing .modal-backdrop {
+  dialog.modal.zl-modal-closing .modal-backdrop,
+  dialog.zl-settings-dialog.zl-modal-closing > .zl-modal-backdrop,
+  dialog.zl-settings-dialog.zl-modal-closing .zl-modal-backdrop,
+  dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-backdrop,
+  dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }

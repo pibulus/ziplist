@@ -28,29 +28,18 @@ export class ModalService {
     this.closeTimer = null;
     this.switchCloseInFlight = false;
 
-    // Safety net: if ANY dialog closes and none remain open, force-unlock.
+    // Safety net: if ANY dialog closes and none remain open, restore page.
     // The per-open close listener can be orphaned (e.g. the dialog node is
-    // replaced under us); without this the body stays position:fixed and the
-    // page is frozen forever. `close` doesn't bubble, so listen in capture.
+    // replaced under us). `close` doesn't bubble, so listen in capture.
     if (browser) {
       document.addEventListener(
         "close",
         () => {
-          if (this.isClosing) return; // closeModal() unlocks on its own timer
+          if (this.isClosing) return; // closeModal() restores on its own timer
           if (!document.querySelector("dialog[open]")) {
-            this.unlockScroll({ force: true });
+            this.restorePage();
           } else {
             // A dialog closed while ANOTHER is open: a modal→modal switch.
-            // Dialog close events dispatch in a queued task, so by the time
-            // the old modal's own `close` listener re-enters closeModal(),
-            // isClosing is false and the "open dialogs" it would capture is
-            // the NEW modal — which then flashed shut (the settings →
-            // contributor bug). This capture listener runs before the
-            // dialog's own listener in the same dispatch, so flag the rest
-            // of it as stale. Cleared with a task, not a microtask —
-            // microtask checkpoints run BETWEEN listener invocations on
-            // browser-dispatched events, which would wipe the flag before
-            // the dialog's own listener ever saw it.
             this.switchCloseInFlight = true;
             window.setTimeout(() => {
               this.switchCloseInFlight = false;
@@ -79,25 +68,15 @@ export class ModalService {
     // Clear any leftover closing state so the pop-in can run cleanly.
     modal.classList.remove("zl-modal-closing");
 
-    // Lock body scroll — but only take a fresh snapshot when we're the
-    // first lock. On modal→modal switches the body is already fixed, so
-    // window.scrollY would read 0 and clobber the user's real position.
-    if (!this.modalOpen) {
-      this.scrollPosition = window.scrollY;
-      const width = document.body.clientWidth;
-      document.documentElement.classList.add("modal-active");
-      document.body.classList.add("modal-active");
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${this.scrollPosition}px`;
-      document.body.style.width = `${width}px`;
-      document.body.style.overflow = "hidden";
-    }
-
+    this.scrollPosition = window.scrollY;
     this.modalOpen = true;
     this.activeModal = modal;
 
-    // Unlocking is handled by the document-level capture listener in the
-    // constructor — it survives node replacement and modal switches.
+    // Scrollbar space is reserved permanently via `scrollbar-gutter: stable`
+    // in app.css, so hiding overflow here no longer reflows the page or shifts
+    // vertical register. No body position:fixed or scrollY resets needed.
+    document.documentElement.style.overflow = "hidden";
+    document.body?.classList.add("zl-modal-open");
 
     // Show the modal
     if (typeof modal.showModal === "function" && !modal.open) {
@@ -116,8 +95,7 @@ export class ModalService {
     this.isClosing = true;
 
     // Add the closing class so the pop-out animation runs, then
-    // close (and unlock scroll) after it finishes. This is the skeleton's
-    // #1 win — modals animate OUT instead of vanishing.
+    // close (and unlock scroll) after it finishes.
     openDialogs.forEach((dialog) => dialog.classList.add("zl-modal-closing"));
 
     const reduceMotion = window.matchMedia?.(
@@ -134,16 +112,15 @@ export class ModalService {
         }
         // Deliberately KEEP .zl-modal-closing here. DaisyUI's .modal fades
         // out via a ~200ms opacity transition after close(); stripping the
-        // class now snaps .modal-box back to full opacity mid-fade — a
-        // visible "ghost flash" of the modal. openModal() (and cleanup())
-        // already clear the class before the next showModal().
+        // class now snaps .modal-box back to full opacity mid-fade.
+        // openModal() (and cleanup()) already clear the class before the next showModal().
       });
 
       // A modal→modal switch may have opened a new dialog while this close
       // was animating — if so, the lock still belongs to it. Only release
       // when nothing is left open.
       if (!document.querySelector("dialog[open]")) {
-        this.unlockScroll({ force: true });
+        this.restorePage();
       }
       this.isClosing = false;
     }, closeDelay);
@@ -165,28 +142,20 @@ export class ModalService {
       }
     });
 
-    this.unlockScroll({ force: true });
+    this.restorePage();
   }
 
-  unlockScroll({ force = false } = {}) {
-    // `force` also covers desync repair: body locked but modalOpen already
-    // false (orphaned state). Without force, only unlock a lock we own.
-    if (!browser || (!this.modalOpen && !force)) return;
+  restorePage() {
+    if (!browser) return;
 
-    // Restore body styles
-    document.documentElement.classList.remove("modal-active");
-    document.body.classList.remove("modal-active");
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.width = "";
-    document.body.style.overflow = "";
-    document.body.style.height = "";
-
-    // Restore scroll position
-    window.scrollTo(0, this.scrollPosition || 0);
-
+    document.documentElement.style.overflow = "";
+    document.body?.classList.remove("zl-modal-open");
     this.modalOpen = false;
     this.activeModal = null;
+  }
+
+  unlockScroll() {
+    this.restorePage();
   }
 
   isModalOpen() {

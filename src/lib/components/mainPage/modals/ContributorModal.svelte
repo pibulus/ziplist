@@ -266,7 +266,7 @@
      typed text matches the list's typewriter identity). */
   .zl-contributor-card {
     position: relative;
-    z-index: 1001;
+    z-index: 1;
     width: min(92vw, 30rem);
     max-height: min(88dvh, 42rem);
     overflow-y: auto;
@@ -277,7 +277,6 @@
     background: var(--zl-card-bg-gradient-color-start, #fff9f0);
     box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(30, 23, 20, 0.12));
     padding: 1.5rem;
-    animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
   .zl-contributor-close {
@@ -560,34 +559,6 @@
     font-weight: 700;
     margin: 0;
     opacity: 0.75;
-  }
-
-  .zl-contributor-backdrop {
-    background: rgba(0, 0, 0, 0.38);
-    backdrop-filter: blur(4px);
-    border: none;
-    inset: 0;
-    position: fixed;
-    z-index: 1000;
-  }
-
-  @keyframes modal-pop {
-    from {
-      opacity: 0;
-      transform: translateY(14px) scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .zl-contributor-card {
-      animation: none;
-      opacity: 1;
-      transform: none;
-    }
   }
 
   @media (max-width: 420px) {

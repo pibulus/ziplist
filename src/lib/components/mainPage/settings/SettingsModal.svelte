@@ -459,7 +459,7 @@
 
   .zl-settings-card {
     position: relative;
-    z-index: 1001;
+    z-index: 1;
     /* Chunky's hard 12px shadow hangs right+down; these margins make the
        flex-center split that extra mass so the card+shadow unit sits
        optically centered instead of leaning right. 0 in soft modes. */
@@ -473,7 +473,6 @@
     box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(0, 0, 0, 0.1));
     padding: 1.5rem;
     overflow: hidden;
-    animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
   .zl-settings-content {
@@ -488,25 +487,6 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-  }
-
-  @keyframes modal-pop {
-    from {
-      opacity: 0;
-      transform: scale(0.9) translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .zl-settings-card {
-      animation: none;
-      opacity: 1;
-      transform: none;
-    }
   }
 
   /* The modal chrome speaks the sans-black voice (TalkType's recipe —
@@ -985,14 +965,6 @@
     font-size: 0.7rem;
     font-weight: bold;
     border: 2px solid #fffdf5;
-  }
-
-  .zl-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
   }
 
   @media (max-width: 480px) {
