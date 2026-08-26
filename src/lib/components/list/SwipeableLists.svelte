@@ -332,6 +332,25 @@
     }
   }
 
+  function handleAddNewList() {
+    const result = listsStore.addList();
+    if (result.ok) {
+      soundService.add({ force: true });
+      hapticService.impact("medium");
+      const targetIndex = lists.length;
+      targetPos = targetIndex;
+      x = -targetIndex * 100;
+      listsStore.setActiveList(result.listId);
+      bounceToTop();
+    } else {
+      soundService.locked({ force: true });
+      hapticService.impact("light");
+      if (result.reason === "max-lists") {
+        window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
+      }
+    }
+  }
+
   // Step one list in either direction, wrapping around the circular track.
   // Shared by the keyboard arrows and the on-screen arrow buttons.
   function stepList(direction) {
@@ -380,11 +399,10 @@
   on:touchend={handleTouchEnd}
   on:touchcancel={handleTouchCancel}
 >
-  <!-- List picker: arrows + colour dots, always visible up top so you never
-       have to scroll past a long list to switch. Hidden with a single list —
-       there is nowhere to go. -->
-  {#if wraps}
-    <div class="list-nav" role="navigation" aria-label="List picker">
+  <!-- List picker: arrows + colour dots + add list button, always visible up top so you never
+       have to scroll past a long list to switch. -->
+  <div class="list-nav" role="navigation" aria-label="List picker">
+    {#if wraps}
       <button
         type="button"
         class="nav-arrow"
@@ -403,20 +421,31 @@
           <path d="m15 18-6-6 6-6"></path>
         </svg>
       </button>
-      <div class="pagination-dots">
-        {#each lists as list, i}
-          <button
-            type="button"
-            class="dot"
-            class:active={list.id === activeListId}
-            style="--dot-primary: {list.primaryColor}; --dot-accent: {list.accentColor}; --dot-glow: {list.glowColor}"
-            on:click={() => setActiveList(i)}
-            aria-label="Switch to {list.name}"
-            aria-current={list.id === activeListId ? "true" : undefined}
-            aria-controls="list-slide-{list.id}"
-          ></button>
-        {/each}
-      </div>
+    {/if}
+    <div class="pagination-dots">
+      {#each lists as list, i}
+        <button
+          type="button"
+          class="dot"
+          class:active={list.id === activeListId}
+          style="--dot-primary: {list.primaryColor}; --dot-accent: {list.accentColor}; --dot-glow: {list.glowColor}"
+          on:click={() => setActiveList(i)}
+          aria-label="Switch to {list.name}"
+          aria-current={list.id === activeListId ? "true" : undefined}
+          aria-controls="list-slide-{list.id}"
+        ></button>
+      {/each}
+      <button
+        type="button"
+        class="nav-add-list"
+        on:click={handleAddNewList}
+        title="Add a new list"
+        aria-label="Add a new list"
+      >
+        +
+      </button>
+    </div>
+    {#if wraps}
       <button
         type="button"
         class="nav-arrow"
@@ -435,8 +464,8 @@
           <path d="m9 18 6-6-6-6"></path>
         </svg>
       </button>
-    </div>
-  {/if}
+    {/if}
+  </div>
 
   <div class="lists-wrapper" bind:this={wrapperEl} style="--tilt: {tilt}deg;">
     {#each lists as list, i (list.id)}
@@ -637,5 +666,39 @@
   .dot:hover:not(.active)::before {
     opacity: 0.7;
     transform: scale(1.2);
+  }
+
+  .nav-add-list {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.75);
+    border: 2px solid rgba(30, 23, 20, 0.25);
+    color: #1e1714;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Space Mono", monospace;
+    font-size: 1.1rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-left: 0.35rem;
+    align-self: center;
+    box-shadow: 1px 1px 0 rgba(30, 23, 20, 0.15);
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .nav-add-list:hover,
+  .nav-add-list:focus-visible {
+    background: #fffdf5;
+    border-color: #1e1714;
+    transform: scale(1.15) rotate(90deg);
+    box-shadow: 2px 2px 0 #1e1714;
+    outline: none;
+  }
+
+  .nav-add-list:active {
+    transform: scale(0.88);
   }
 </style>

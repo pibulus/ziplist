@@ -2220,45 +2220,58 @@
             {/if}
             {#if isLive}
               <!-- The presence pill displays remote guests when in the room, or a clean live beacon -->
-              <button
-                type="button"
-                class="zl-live-presence"
-                on:click={tapHeart}
-                title={remotePresence.length > 0
-                  ? `Live — ${remotePresence.length} guest online. Tap for heart`
-                  : "Live list active. Tap for heart"}
-                aria-label="Live list status"
-              >
-                <span class="zl-live-presence-pulse" aria-hidden="true"></span>
-                {#if remotePresence.length > 0}
-                  <div class="zl-presence-dots" aria-hidden="true">
-                    {#each remotePresence.slice(0, 3) as user (user.id)}
-                      <img
-                        class="zl-presence-dot"
-                        title={user.avatar}
-                        alt=""
-                        src={getAvatarImage(user.avatar)}
-                        style="background-color: {getAvatarColor(user.avatar)}"
-                      />
-                    {/each}
-                  </div>
-                  {#if remotePresence.length > 3}
-                    <span class="zl-live-presence-count" aria-hidden="true"
-                      >+{remotePresence.length - 3}</span
-                    >
+              <div class="zl-live-header-pill">
+                <button
+                  type="button"
+                  class="zl-live-presence"
+                  on:click={tapHeart}
+                  title={remotePresence.length > 0
+                    ? `Live — ${remotePresence.length} guest online. Tap for heart`
+                    : "Live list active. Tap for heart"}
+                  aria-label="Live list status"
+                >
+                  <span class="zl-live-presence-pulse" aria-hidden="true"></span>
+                  {#if remotePresence.length > 0}
+                    <div class="zl-presence-dots" aria-hidden="true">
+                      {#each remotePresence.slice(0, 3) as user (user.id)}
+                        <img
+                          class="zl-presence-dot"
+                          title={user.avatar}
+                          alt=""
+                          src={getAvatarImage(user.avatar)}
+                          style="background-color: {getAvatarColor(user.avatar)}"
+                        />
+                      {/each}
+                    </div>
+                    {#if remotePresence.length > 3}
+                      <span class="zl-live-presence-count" aria-hidden="true"
+                        >+{remotePresence.length - 3}</span
+                      >
+                    {/if}
+                  {:else}
+                    <span class="zl-live-presence-label" aria-hidden="true">Live</span>
                   {/if}
-                {:else}
-                  <span class="zl-live-presence-label" aria-hidden="true">Live</span>
-                {/if}
-                <span class="zl-presence-heart" aria-hidden="true">♥</span>
-                {#each hearts as heart (heart.id)}
-                  <span
-                    class="zl-heart-bloom"
-                    style={`--bloom-colour: ${heart.colour}; --bloom-drift: ${heart.drift}px`}
-                    aria-hidden="true">♥</span
+                  <span class="zl-presence-heart" aria-hidden="true">♥</span>
+                  {#each hearts as heart (heart.id)}
+                    <span
+                      class="zl-heart-bloom"
+                      style={`--bloom-colour: ${heart.colour}; --bloom-drift: ${heart.drift}px`}
+                      aria-hidden="true">♥</span
+                    >
+                  {/each}
+                </button>
+                {#if showListManagement}
+                  <button
+                    type="button"
+                    class="zl-live-stop-btn"
+                    on:click|stopPropagation={handleStopLive}
+                    title="Stop live sharing"
+                    aria-label="Stop live sharing for this list"
                   >
-                {/each}
-              </button>
+                    ✕
+                  </button>
+                {/if}
+              </div>
             {/if}
           </div>
         {/if}
