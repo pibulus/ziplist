@@ -14,12 +14,34 @@
   /** Tags this list already uses — offered while you type, not after. */
   export let suggestedTags = [];
 
-  // Only offer what isn't already in the box.
+  // Only offer what isn't already in the box, and if user is actively typing a #hashtag, filter by prefix!
   $: typedTags = extractTags(draftItemText).tags;
-  $: offers = suggestedTags.filter((tag) => !typedTags.includes(tag)).slice(0, 5);
+  $: hashMatch = draftItemText.match(/(?:^|\s)#([\p{L}\p{N}_-]*)$/u);
+  $: partialQuery = hashMatch ? hashMatch[1].toLowerCase() : null;
+
+  $: offers = (() => {
+    const unselected = suggestedTags.filter((tag) => !typedTags.includes(tag));
+    if (partialQuery !== null && partialQuery.length > 0) {
+      const matched = unselected.filter((tag) =>
+        tag.toLowerCase().startsWith(partialQuery),
+      );
+      return matched.slice(0, 6);
+    }
+    return unselected.slice(0, 5);
+  })();
 
   function appendTag(tag) {
-    draftItemText = `${draftItemText.trim()} #${tag}`.trim();
+    if (partialQuery !== null) {
+      draftItemText = draftItemText.replace(
+        /(?:^|\s)#([\p{L}\p{N}_-]*)$/u,
+        (match) => {
+          const lead = match.startsWith(" ") ? " " : "";
+          return `${lead}#${tag} `;
+        },
+      );
+    } else {
+      draftItemText = `${draftItemText.trim()} #${tag} `.trimStart();
+    }
     inputNode?.focus();
   }
 </script>

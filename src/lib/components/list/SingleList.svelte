@@ -1638,6 +1638,99 @@
     }
   }
 
+  function renameActiveTag() {
+    if (!activeTagFilter) return;
+    const oldTag = activeTagFilter;
+    const input = prompt(`Rename #${oldTag} to:`, oldTag);
+    if (!input || !input.trim()) return;
+
+    const newTag = input
+      .trim()
+      .toLowerCase()
+      .replace(/^#/, "")
+      .replace(/[^\p{L}\p{N}_-]/gu, "");
+    if (!newTag || newTag === oldTag) return;
+
+    // Replace oldTag with newTag across all items in list
+    const updatedItems = list.items.map((item) => {
+      if (!item.tags?.includes(oldTag)) return item;
+      const newTags = item.tags.map((t) => (t === oldTag ? newTag : t));
+      const newText = item.text.replace(
+        new RegExp(`(^|\\s)#${oldTag}(?=\\s|$)`, "gi"),
+        `$1#${newTag}`,
+      );
+      return {
+        ...item,
+        tags: Array.from(new Set(newTags)),
+        text: newText,
+      };
+    });
+
+    listsStore.upsertList(
+      {
+        ...list,
+        items: updatedItems,
+        updatedAt: new Date().toISOString(),
+      },
+      list.id,
+    );
+
+    activeTagFilter = newTag;
+    soundService.sparkle({ force: true });
+    hapticService.notification("success");
+    showListStatus(`Renamed #${oldTag} to #${newTag}`, true, 2400);
+  }
+
+  function untagAllActiveTag() {
+    if (!activeTagFilter) return;
+    const targetTag = activeTagFilter;
+
+    // Snapshot for undo
+    const listSnapshot = {
+      ...list,
+      items: [...list.items],
+    };
+
+    const updatedItems = list.items.map((item) => {
+      if (!item.tags?.includes(targetTag)) return item;
+      return {
+        ...item,
+        tags: item.tags.filter((t) => t !== targetTag),
+        text: item.text
+          .replace(new RegExp(`(^|\\s)#${targetTag}(?=\\s|$)`, "gi"), "$1")
+          .replace(/\s+/g, " ")
+          .trim(),
+      };
+    });
+
+    listsStore.upsertList(
+      {
+        ...list,
+        items: updatedItems,
+        updatedAt: new Date().toISOString(),
+      },
+      list.id,
+    );
+
+    activeTagFilter = null;
+    soundService.delete();
+    hapticService.impact("medium");
+
+    if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+
+    undoDelete = {
+      type: "untag",
+      listSnapshot,
+      listId: list.id,
+      tag: targetTag,
+    };
+
+    undoDeleteTimer = setTimeout(() => {
+      undoDelete = null;
+      undoDeleteTimer = null;
+    }, 6000);
+  }
+
   async function copyPhraseLink() {
     if (!syncPhrase) return;
     const url = `${window.location.origin}/j/${syncPhrase}`;
@@ -1860,8 +1953,34 @@
 
   $: myAvatarColour = getAvatarColor(getOrCreateAvatar());
 
+  // List-specific tags with counts (ranked by frequency)
+  $: listTagCounts = (() => {
+    const counts = new Map();
+    for (const item of list?.items ?? []) {
+      for (const tag of item.tags ?? []) {
+        counts.set(tag, (counts.get(tag) || 0) + 1);
+      }
+    }
+    return counts;
+  })();
+
+  $: listTags = Array.from(listTagCounts.keys()).sort(
+    (a, b) => (listTagCounts.get(b) || 0) - (listTagCounts.get(a) || 0),
+  );
+
+  // Global tags across all lists in workspace
+  $: globalVocabulary = Array.from(
+    new Set(
+      ($listsStore.lists ?? []).flatMap((l) =>
+        (l.items ?? []).flatMap((item) => item.tags ?? []),
+      ),
+    ),
+  );
+
+  // Suggested tags: list tags first (ranked by frequency), followed by other global tags
   $: suggestedTags = [
-    ...new Set((list?.items ?? []).flatMap((entry) => entry.tags ?? [])),
+    ...listTags,
+    ...globalVocabulary.filter((tag) => !listTags.includes(tag)),
   ];
 
   function cancelItemEdit() {
@@ -2021,6 +2140,18 @@
     if (undoDelete.type === "list" && undoDelete.listSnapshot) {
       listsStore.upsertList(undoDelete.listSnapshot, undoDelete.listSnapshot.id);
       listsStore.setActiveList(undoDelete.listSnapshot.id);
+      hapticService.selection();
+      soundService.add({ force: true });
+      undoDelete = null;
+      if (undoDeleteTimer) {
+        clearTimeout(undoDeleteTimer);
+        undoDeleteTimer = null;
+      }
+      return;
+    }
+
+    if (undoDelete.type === "untag" && undoDelete.listSnapshot) {
+      listsStore.upsertList(undoDelete.listSnapshot, undoDelete.listSnapshot.id);
       hapticService.selection();
       soundService.add({ force: true });
       undoDelete = null;
@@ -2577,7 +2708,7 @@
       </div>
     {/if}
 
-    {#if undoDelete && (undoDelete.type === "list" || undoDelete.listId === list.id)}
+    {#if undoDelete && (undoDelete.type === "list" || undoDelete.type === "untag" || undoDelete.listId === list.id)}
       <div
         class="zl-undo-toast"
         role="status"
@@ -2587,11 +2718,13 @@
         <span class="zl-undo-text">
           {undoDelete.type === "list"
             ? `Deleted list "${undoDelete.listName}"`
-            : undoDelete.type === "all"
-              ? "Cleared entire list"
-              : undoDelete.type === "done"
-                ? `Cleared ${undoDelete.count} completed ${undoDelete.count === 1 ? "item" : "items"}`
-                : `Deleted ${undoDelete.item.text}`}
+            : undoDelete.type === "untag"
+              ? `Removed #${undoDelete.tag} from items`
+              : undoDelete.type === "all"
+                ? "Cleared entire list"
+                : undoDelete.type === "done"
+                  ? `Cleared ${undoDelete.count} completed ${undoDelete.count === 1 ? "item" : "items"}`
+                  : `Deleted ${undoDelete.item.text}`}
         </span>
         <button
           type="button"
@@ -2608,6 +2741,38 @@
       <span class="zl-visually-hidden" role="status" aria-live="polite">
         Collaborator activity in this live list.
       </span>
+    {/if}
+
+    <!-- Interactive Tag Rack Shelf: 1-tap filtering across list tags -->
+    {#if listTags.length > 0}
+      <div class="zl-tag-rack" role="toolbar" aria-label="Filter by tag">
+        <button
+          type="button"
+          class="zl-tag-rack-pill zl-tag-rack-all"
+          class:is-active={activeTagFilter === null}
+          on:click={() => {
+            if (activeTagFilter !== null) clearActiveTagFilter();
+          }}
+          aria-pressed={activeTagFilter === null}
+        >
+          All <span class="zl-tag-rack-count">{activeItems.length}</span>
+        </button>
+        {#each listTags as tag (tag)}
+          {@const count = listTagCounts.get(tag) || 0}
+          <button
+            type="button"
+            class="zl-tag-rack-pill"
+            class:is-active={activeTagFilter === tag}
+            style={`--tag-colour: ${tagColour(tag)}`}
+            on:click={() => toggleActiveTagFilter(tag)}
+            aria-pressed={activeTagFilter === tag}
+            title={`Filter by #${tag} (${count})`}
+          >
+            <span class="zl-tag-rack-hash">#</span>{tag}
+            <span class="zl-tag-rack-count">{count}</span>
+          </button>
+        {/each}
+      </div>
     {/if}
 
     <!-- List Items -->
@@ -2628,7 +2793,25 @@
               title={`Spin #${activeTagFilter} items into a new list`}
               aria-label={`Resample #${activeTagFilter} into new list`}
             >
-              ✂️ Resample to new list
+              ✂️ Resample
+            </button>
+            <button
+              type="button"
+              class="zl-tag-action-btn"
+              on:click={renameActiveTag}
+              title={`Rename #${activeTagFilter} across this list`}
+              aria-label={`Rename #${activeTagFilter}`}
+            >
+              ✎ Rename
+            </button>
+            <button
+              type="button"
+              class="zl-tag-action-btn zl-tag-action-untag"
+              on:click={untagAllActiveTag}
+              title={`Remove #${activeTagFilter} from all items`}
+              aria-label={`Remove #${activeTagFilter}`}
+            >
+              Untag all
             </button>
             <button
               type="button"

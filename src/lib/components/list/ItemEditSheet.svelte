@@ -32,9 +32,18 @@
   $: parsed = extractTags(draft);
   $: tags = parsed.tags;
   $: canAddMore = tags.length < MAX_TAGS_PER_ITEM;
-  $: suggestions = suggestedTags
-    .filter((tag) => !tags.includes(tag))
-    .slice(0, 6);
+  $: hashMatch = draft.match(/(?:^|\s)#([\p{L}\p{N}_-]*)$/u);
+  $: partialQuery = hashMatch ? hashMatch[1].toLowerCase() : null;
+
+  $: suggestions = (() => {
+    const unselected = suggestedTags.filter((tag) => !tags.includes(tag));
+    if (partialQuery !== null && partialQuery.length > 0) {
+      return unselected
+        .filter((tag) => tag.toLowerCase().startsWith(partialQuery))
+        .slice(0, 8);
+    }
+    return unselected.slice(0, 6);
+  })();
   $: canSave = parsed.text.trim().length > 0;
 
   /** The item's text with its tags put back as hashtags, ready to edit. */
@@ -58,7 +67,14 @@
 
   function addTag(tag) {
     if (!canAddMore) return;
-    draft = `${draft.trim()} #${tag}`.trim();
+    if (partialQuery !== null) {
+      draft = draft.replace(/(?:^|\s)#([\p{L}\p{N}_-]*)$/u, (match) => {
+        const lead = match.startsWith(" ") ? " " : "";
+        return `${lead}#${tag} `;
+      });
+    } else {
+      draft = `${draft.trim()} #${tag} `.trimStart();
+    }
     textarea?.focus();
   }
 
