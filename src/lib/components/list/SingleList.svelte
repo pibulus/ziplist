@@ -1914,28 +1914,104 @@
     }
   }
 
-  function restoreDeletedItem() {
-    if (!undoDelete || undoDelete.listId !== list.id) return;
+  function clearDoneItems() {
+    const doneItems = list.items.filter((item) => item.checked);
+    if (!doneItems.length) return;
 
-    // Filter out both the deleted item AND any duplicate that was added while undo was pending
-    const currentItems = list.items.filter(
-      (item) => item.id !== undoDelete.item.id,
-    );
-    const insertIndex = Math.min(undoDelete.originalIndex, currentItems.length);
-    const restoredItems = [
-      ...currentItems.slice(0, insertIndex),
-      undoDelete.item,
-      ...currentItems.slice(insertIndex),
-    ];
+    hapticService.impact("medium");
+    soundService.delete();
+
+    if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+
+    undoDelete = {
+      items: [...doneItems],
+      listId: list.id,
+      type: "done",
+      count: doneItems.length,
+      originalListItems: [...list.items],
+    };
 
     listsStore.upsertList(
       {
         ...list,
-        items: restoredItems,
+        items: list.items.filter((item) => !item.checked),
         updatedAt: new Date().toISOString(),
       },
       list.id,
     );
+
+    undoDeleteTimer = setTimeout(() => {
+      undoDelete = null;
+      undoDeleteTimer = null;
+    }, 5500);
+  }
+
+  function clearEntireList() {
+    if (!list.items.length) return;
+
+    hapticService.impact("medium");
+    soundService.delete();
+
+    if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+
+    undoDelete = {
+      items: [...list.items],
+      listId: list.id,
+      type: "all",
+      count: list.items.length,
+      originalListItems: [...list.items],
+    };
+
+    listsStore.upsertList(
+      {
+        ...list,
+        items: [],
+        updatedAt: new Date().toISOString(),
+      },
+      list.id,
+    );
+
+    undoDeleteTimer = setTimeout(() => {
+      undoDelete = null;
+      undoDeleteTimer = null;
+    }, 5500);
+
+    shareTrayOpen = false;
+  }
+
+  function restoreDeletedItem() {
+    if (!undoDelete || undoDelete.listId !== list.id) return;
+
+    if (undoDelete.originalListItems) {
+      listsStore.upsertList(
+        {
+          ...list,
+          items: undoDelete.originalListItems,
+          updatedAt: new Date().toISOString(),
+        },
+        list.id,
+      );
+    } else if (undoDelete.item) {
+      // Filter out both the deleted item AND any duplicate that was added while undo was pending
+      const currentItems = list.items.filter(
+        (item) => item.id !== undoDelete.item.id,
+      );
+      const insertIndex = Math.min(undoDelete.originalIndex, currentItems.length);
+      const restoredItems = [
+        ...currentItems.slice(0, insertIndex),
+        undoDelete.item,
+        ...currentItems.slice(insertIndex),
+      ];
+
+      listsStore.upsertList(
+        {
+          ...list,
+          items: restoredItems,
+          updatedAt: new Date().toISOString(),
+        },
+        list.id,
+      );
+    }
 
     hapticService.selection();
     soundService.add({ force: true });
@@ -2349,6 +2425,15 @@
           <button type="button" class="zl-share-option" on:click={qrThisList}>
             QR this list
           </button>
+          {#if list.items.length > 0}
+            <button
+              type="button"
+              class="zl-share-option zl-share-clear"
+              on:click={clearEntireList}
+            >
+              Clear entire list
+            </button>
+          {/if}
         </div>
 
         {#if syncPhrase}
@@ -2426,7 +2511,13 @@
         aria-live="polite"
         transition:fade={{ duration: 180 }}
       >
-        <span class="zl-undo-text">Deleted {undoDelete.item.text}</span>
+        <span class="zl-undo-text">
+          {undoDelete.type === "all"
+            ? "Cleared entire list"
+            : undoDelete.type === "done"
+              ? `Cleared ${undoDelete.count} completed ${undoDelete.count === 1 ? "item" : "items"}`
+              : `Deleted ${undoDelete.item.text}`}
+        </span>
         <button
           type="button"
           class="zl-undo-button"
@@ -2624,7 +2715,10 @@
           {/if}
 
           {#if completedItems.length > 0}
-            <CompletedDivider count={completedItems.length} />
+            <CompletedDivider
+              count={completedItems.length}
+              on:clear={clearDoneItems}
+            />
           {/if}
 
           {#each renderedCompletedItems as item, index (item.id)}

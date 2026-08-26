@@ -920,6 +920,37 @@
   padding: 0 0.35rem;
 }
 
+.zl-clear-done-btn {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.24);
+  border-radius: 999px;
+  color: var(--zl-text-color-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: "Space Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.65rem;
+  text-transform: uppercase;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+  user-select: none;
+}
+
+.zl-clear-done-btn:hover {
+  background: #fffdf5;
+  color: #1e1714;
+  transform: scale(1.04);
+}
+
+.zl-clear-done-btn:active {
+  transform: scale(0.95);
+}
+
 .zl-item {
   border-radius: var(--zl-item-border-radius, 20px);
   background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
@@ -2351,6 +2382,16 @@ body.zl-touch-dragging {
 .zl-share-option:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.zl-share-option.zl-share-clear {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #991b1b;
+  background: color-mix(in srgb, #ef4444 8%, #fffef7);
+}
+
+.zl-share-option.zl-share-clear:hover:not(:disabled) {
+  background: color-mix(in srgb, #ef4444 15%, #fffef7);
 }
 
 /* Tag filter — chips that decide what leaves. Same cream-tint-with-coloured-
