@@ -12,6 +12,9 @@
   import SingleList from "$lib/components/list/SingleList.svelte";
   import BrandMark from "$lib/components/ui/BrandMark.svelte";
   import RecordButtonWithTimer from "$lib/components/mainPage/audio-transcript/RecordButtonWithTimer.svelte";
+  import { QrShareModal } from "$lib/components/mainPage/modals";
+  import { modalService } from "$lib/services/modals/modalService";
+  import { soundService } from "$lib/services/infrastructure";
   import { audioRecorderService } from "$lib/services/audio/audioRecorderService";
   import {
     isRecording,
@@ -31,6 +34,14 @@
   let listId = null;
   let avatar = "";
   let keepError = "";
+  let showQr = false;
+  let qrModalProps = {
+    shareUrl: "",
+    title: "Join Live List",
+    subtitle: "Scan with any phone camera to join in real time",
+    syncPhrase: "",
+    isLive: true,
+  };
 
   // A guest's placeholder id is minted as `live_<roomId>`; an owner reopening
   // their own link binds to their real list instead. Only guests get a "keep".
@@ -49,8 +60,31 @@
     }
   }
 
+  function handleOpenQr(event) {
+    const detail = event?.detail || {};
+    qrModalProps = {
+      shareUrl: detail.shareUrl || (typeof window !== "undefined" ? window.location.href : ""),
+      title: detail.title || "Join Live List",
+      subtitle: detail.subtitle || "Scan with any phone camera to join in real time",
+      syncPhrase: detail.syncPhrase || "",
+      isLive: true,
+    };
+    showQr = true;
+    setTimeout(() => {
+      soundService.open();
+      modalService.openModal("qr_modal");
+    }, 10);
+  }
+
+  function handleCloseQr() {
+    soundService.close();
+    modalService.closeModal();
+    showQr = false;
+  }
+
   onMount(async () => {
     avatar = getOrCreateAvatar();
+    window.addEventListener("ziplist-open-qr", handleOpenQr);
 
     try {
       // If a local list ALREADY owns this room, bind to it. Minting
@@ -84,6 +118,9 @@
   });
 
   onDestroy(() => {
+    if (typeof window !== "undefined") {
+      window.removeEventListener("ziplist-open-qr", handleOpenQr);
+    }
     if (listId) {
       // Leaving a room you were visiting shouldn't leave a list behind.
       disconnectFromLive(listId, { discardGuestList: true });
@@ -197,6 +234,14 @@
     </div>
   {/if}
 </div>
+
+{#if showQr}
+  <QrShareModal
+    closeModal={handleCloseQr}
+    on:close={handleCloseQr}
+    {...qrModalProps}
+  />
+{/if}
 
 <style>
   .live-join-container {

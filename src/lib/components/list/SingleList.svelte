@@ -1436,28 +1436,30 @@
   }
 
   function qrThisList() {
-    if (!shareableList?.items?.length) {
+    if (!shareableList?.items?.length && !isLive) {
       showListStatus("Add an item before sharing.");
       soundService.locked();
       return;
     }
-    // Under the share-warning length the whole list lives INSIDE the code —
-    // scanning it carries the data itself, no server round-trip. Over it,
-    // fall back to what the share flow would hand out anyway: the short live
-    // link when the list is live, otherwise the same long link (denser code).
-    const rawUrl = generateShareableUrl(shareableList);
-    let qrTarget = rawUrl;
-    if (rawUrl.length > PRODUCT_LIMITS.SHARE_URL_WARNING_LENGTH && isLive) {
-      qrTarget = liveListsService.getShareUrl(list.id) || rawUrl;
-    }
-    window.open(
-      `https://qrbuddy.app/q?d=${encodeURIComponent(qrTarget)}&s=sunset`,
-      "_blank",
-      "noopener",
+
+    const rawUrl = isLive
+      ? (liveListsService.getShareUrl(list.id) || generateShareableUrl(shareableList))
+      : generateShareableUrl(shareableList);
+
+    window.dispatchEvent(
+      new CustomEvent("ziplist-open-qr", {
+        detail: {
+          shareUrl: rawUrl,
+          title: isLive ? "Join Live List" : `Scan "${list.name || "List"}"`,
+          subtitle: isLive
+            ? "Scan with any phone camera to edit together in real time"
+            : "Scan with your phone to open and save this list",
+          syncPhrase: isLive ? (syncPhrase || "") : "",
+          isLive: Boolean(isLive),
+        },
+      }),
     );
     shareTrayOpen = false;
-    showListStatus("QR ready in the new tab.", true, 2400);
-    soundService.select();
   }
 
   function pasteItemsIn() {
@@ -2443,6 +2445,15 @@
                   {/each}
                 </button>
                 {#if showListManagement}
+                  <button
+                    type="button"
+                    class="zl-live-qr-btn"
+                    on:click|stopPropagation={qrThisList}
+                    title="Show QR code to join this room"
+                    aria-label="Show QR code to join this room"
+                  >
+                    📱
+                  </button>
                   <button
                     type="button"
                     class="zl-live-stop-btn"

@@ -54,6 +54,17 @@
   let ContributorModal;
   let loadingContributorModal = false;
 
+  // Lazy load QR share modal
+  let QrShareModal;
+  let loadingQrModal = false;
+  let qrModalProps = {
+    shareUrl: "",
+    title: "Scan QR Code",
+    subtitle: "Scan with any phone camera to join",
+    syncPhrase: "",
+    isLive: false,
+  };
+
   let speechModelPreloaded = false;
   let mediaRecorder = null;
   let activeStream = null;
@@ -207,6 +218,47 @@
   }
 
   function closeContributorModal() {
+    soundService.close();
+    modalService.closeModal();
+  }
+
+  async function openQrModal(event) {
+    const detail = event?.detail || {};
+    qrModalProps = {
+      shareUrl: detail.shareUrl || "",
+      title: detail.title || "Scan QR Code",
+      subtitle: detail.subtitle || "Scan with any phone camera to join",
+      syncPhrase: detail.syncPhrase || "",
+      isLive: Boolean(detail.isLive),
+    };
+
+    if (modalService.isModalOpen()) {
+      modalService.closeModal();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    if (loadingQrModal) return;
+
+    if (!QrShareModal) {
+      loadingQrModal = true;
+      try {
+        const module = await import("./modals/QrShareModal.svelte");
+        QrShareModal = module.default;
+      } catch (err) {
+        console.error("Error loading QrShareModal:", err);
+        loadingQrModal = false;
+        return;
+      } finally {
+        loadingQrModal = false;
+      }
+    }
+
+    await tick();
+    soundService.open();
+    modalService.openModal("qr_modal");
+  }
+
+  function closeQrModal() {
     soundService.close();
     modalService.closeModal();
   }
@@ -496,6 +548,7 @@
         "ziplist-open-contributor",
         openContributorModal,
       );
+      window.removeEventListener("ziplist-open-qr", openQrModal);
     }
   });
 
@@ -796,6 +849,7 @@
       window.addEventListener("ziplist-setting-changed", handleSettingChanged);
       window.addEventListener("ziplist-storage-error", handleStorageError);
       window.addEventListener("ziplist-open-contributor", openContributorModal);
+      window.addEventListener("ziplist-open-qr", openQrModal);
       // Every text field clicks like a real keyboard (Cherry MX pack,
       // lazy-fetched on first keystroke, honors the sound toggle).
       unwireTypewriter = wireTypewriterGlobally();
@@ -1056,6 +1110,15 @@
     this={ContributorModal}
     closeModal={closeContributorModal}
     on:close={closeContributorModal}
+  />
+{/if}
+
+{#if QrShareModal}
+  <svelte:component
+    this={QrShareModal}
+    closeModal={closeQrModal}
+    on:close={closeQrModal}
+    {...qrModalProps}
   />
 {/if}
 

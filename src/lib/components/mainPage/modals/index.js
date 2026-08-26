@@ -3,3 +3,4 @@ export { default as ContributorModal } from "./ContributorModal.svelte";
 export { default as ExtensionModal } from "./ExtensionModal.svelte";
 export { default as IntroModal } from "./IntroModal.svelte";
 export { default as ModalCloseButton } from "./ModalCloseButton.svelte";
+export { default as QrShareModal } from "./QrShareModal.svelte";
