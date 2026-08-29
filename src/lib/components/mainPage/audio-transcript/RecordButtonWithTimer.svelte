@@ -204,7 +204,7 @@
   $: recordButtonAriaLabel = recording
     ? `${buttonLabel}. Stop recording. ${formatTime(recordingDuration)} recorded`
     : hasActiveList
-      ? `${buttonLabel}. Add to your list`
+      ? `${buttonLabel}. Add to list`
       : `${buttonLabel}. Create a new list`;
 
   $: baseButtonClasses = compact

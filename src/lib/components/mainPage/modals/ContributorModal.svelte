@@ -81,12 +81,12 @@
 
       if (!response.ok || !payload.valid) {
         errorMessage =
-          payload.error || "Check the contributor code and try once more.";
+          payload.error || "Check the unlock code and try once more.";
         return;
       }
 
       setContributorStatus(true, payload.token || null);
-      successMessage = "Contributor is unlocked on this device.";
+      successMessage = "Unlocked on this device ★";
       code = "";
 
       window.dispatchEvent(
@@ -124,7 +124,7 @@
         type="button"
         class="zl-contributor-close"
         on:click={handleClose}
-        aria-label="Close contributor modal"
+        aria-label="Close modal"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -145,8 +145,8 @@
 
     <div class="zl-contributor-content">
       <div class="zl-contributor-heading">
-        <p class="zl-contributor-eyebrow">Contributor</p>
-        <h3 id="contributor_modal_title">More room. Same quiet list.</h3>
+        <p class="zl-contributor-eyebrow">Extra Lists</p>
+        <h3 id="contributor_modal_title">More lists, more chops.</h3>
         <p id="contributor_modal_description">
           {CONTRIBUTOR_COPY.summary}
         </p>
@@ -163,7 +163,7 @@
 
       {#if $isContributor}
         <div class="zl-contributor-note success" role="status">
-          Contributor is unlocked here.
+          Unlocked on this device ★
         </div>
       {:else}
         <button
@@ -174,7 +174,7 @@
         >
           {isStartingCheckout
             ? "Opening checkout..."
-            : `Unlock Contributor Pass · ${PRICING.displayPrice}`}
+            : `Dig in · ${PRICING.displayPrice}`}
         </button>
       {/if}
 
@@ -190,12 +190,12 @@
 
       <details bind:open={codePanelOpen} class="zl-code-panel">
         <summary>
-          <span>Have a contributor code?</span>
+          <span>Got an unlock code?</span>
           <strong>{codePanelOpen ? "Close" : "Open"}</strong>
         </summary>
 
         <div class="zl-code-form">
-          <label for="contributor-code" class="sr-only">Contributor code</label>
+          <label for="contributor-code" class="sr-only">Unlock code</label>
           <input
             id="contributor-code"
             bind:value={code}
@@ -214,7 +214,7 @@
           >
             {isSubmitting ? "Checking code..." : "Unlock with code"}
           </button>
-          <p>Codes are for gifts and your other devices.</p>
+          <p>Codes work for gifts and extra devices.</p>
         </div>
       </details>
 

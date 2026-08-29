@@ -435,7 +435,7 @@
       showListStatus(
         $isContributor
           ? `ZipList runs ${maxLiveLists} live lists at once. End one to start another.`
-          : `Free ZipList runs one live list at a time. End that one, or run more at once with Contributor.`,
+          : `Free ZipList runs one live list at a time. End that one or unlock more room.`,
         false,
         4200,
       );
@@ -1787,7 +1787,7 @@
     soundService.select();
     hapticService.impact("light");
     showListStatus(
-      sortNewestFirst ? "Newest first." : "Back in the order you added them.",
+      sortNewestFirst ? "Newest first." : "Back in added order.",
       true,
       2200,
     );
@@ -2105,7 +2105,7 @@
       (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
     );
     if (nonLiveLists.length <= 1) {
-      showListStatus("Can't delete your only list.", false, 2400);
+      showListStatus("Can't delete the only list.", false, 2400);
       soundService.locked({ force: true });
       return;
     }

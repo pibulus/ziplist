@@ -53,43 +53,41 @@ export const LIST_COLOR_PRESETS = [
   },
 ];
 
-// Default lists configuration
-const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 3).map((palette, index) => ({
+// Default lists configuration: starts with 1 clean list and a + button.
+// Free users can make 2 more lists without friction (3 total), unlocking 12 on upgrade.
+const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette, index) => ({
   id: palette.id,
   name: palette.defaultName,
   color: palette.color,
   primaryColor: palette.primaryColor,
   accentColor: palette.accentColor,
   glowColor: palette.glowColor,
-  items:
-    index === 0
-      ? [
-          {
-            id: "starter-swipe",
-            text: "Swipe left or right to flip lists",
-            checked: false,
-            tags: [],
-            order: 0,
-            addedAt: Date.now() - 3000,
-          },
-          {
-            id: "starter-dice",
-            text: "Tap the dice to let fate pick",
-            checked: false,
-            tags: [],
-            order: 1,
-            addedAt: Date.now() - 2000,
-          },
-          {
-            id: "starter-portal",
-            text: "→ Pink List",
-            checked: false,
-            tags: [],
-            order: 2,
-            addedAt: Date.now() - 1000,
-          },
-        ]
-      : [],
+  items: [
+    {
+      id: "starter-swipe",
+      text: "Tap + up top to add a list",
+      checked: false,
+      tags: [],
+      order: 0,
+      addedAt: Date.now() - 3000,
+    },
+    {
+      id: "starter-dice",
+      text: "Tap the dice to let fate pick",
+      checked: false,
+      tags: [],
+      order: 1,
+      addedAt: Date.now() - 2000,
+    },
+    {
+      id: "starter-portal",
+      text: "→ Pink List",
+      checked: false,
+      tags: [],
+      order: 2,
+      addedAt: Date.now() - 1000,
+    },
+  ],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 }));
@@ -153,15 +151,10 @@ function getListPaletteForIndex(index = 0) {
 
 function getListPaletteForRecord(list, index = 0) {
   if (list?.id) {
-    const defaultList = DEFAULT_LISTS.find(
-      (defaultRecord) => defaultRecord.id === list.id,
+    const matchingPreset = LIST_COLOR_PRESETS.find(
+      (palette) => palette.id === list.id,
     );
-    if (defaultList) {
-      const defaultPalette = LIST_COLOR_PRESETS.find(
-        (palette) => palette.color === defaultList.color,
-      );
-      if (defaultPalette) return defaultPalette;
-    }
+    if (matchingPreset) return matchingPreset;
   }
 
   if (list?.color) {
@@ -258,7 +251,7 @@ function createSuccessResult(extra = {}) {
 function getLongListNudge(previousCount, nextCount) {
   return previousCount < PRODUCT_LIMITS.LONG_LIST_NUDGE_AT &&
     nextCount >= PRODUCT_LIMITS.LONG_LIST_NUDGE_AT
-    ? `This list has ${nextCount} items now. You can keep adding here, but a fresh list may be easier soon.`
+    ? `List has ${nextCount} items. Keep adding, or split into a fresh list.`
     : "";
 }
 
@@ -273,7 +266,7 @@ function getMaxListsMessage(maxLists) {
     return `ZipList keeps ${maxLists} lists max. Rename one or clear space first.`;
   }
 
-  return `Free ZipList keeps ${maxLists} lists. Contributor opens more room.`;
+  return `Free tier keeps ${maxLists} lists. Unlock to expand to 12.`;
 }
 
 // Initialize the lists store
@@ -326,15 +319,11 @@ function createListsStore() {
 
       // Initialize with stored data or defaults
       if (storedLists && storedLists.length > 0) {
-        // Migration logic: If we have old lists but not the 3 fixed ones
-        // We map the first old list to "Blue List" and create the others
-        let finalLists = [...DEFAULT_LISTS];
+        // Migration logic: If we have old lists with no ids, migrate to Blue List
+        const isOldSchema = !storedLists.some((l) => typeof l?.id === "string");
 
-        // Check if we need to migrate from single list
-        const isOldSchema = !storedLists.some((l) => l.id === "list-blue");
-
+        let finalLists;
         if (isOldSchema) {
-          // Take items from the first stored list and put them in Blue List
           finalLists = DEFAULT_LISTS.map((defaultList, index) =>
             normalizeListRecord(defaultList, index),
           );
@@ -349,19 +338,10 @@ function createListsStore() {
             );
           }
         } else {
-          // Already migrated, preserve stored lists and ensure defaults exist
-          const defaultIds = new Set(DEFAULT_LISTS.map((list) => list.id));
-          const baseLists = DEFAULT_LISTS.map((defaultList, index) => {
-            const found = storedLists.find((l) => l.id === defaultList.id);
-            return normalizeListRecord(found || defaultList, index);
-          });
-          const extraLists = storedLists
-            .filter((list) => !defaultIds.has(list.id))
-            .map((list, index) =>
-              normalizeListRecord(list, baseLists.length + index),
-            );
-
-          finalLists = [...baseLists, ...extraLists];
+          // Preserve user stored lists cleanly
+          finalLists = storedLists.map((list, index) =>
+            normalizeListRecord(list, index),
+          );
         }
 
         const resolvedActiveListId = finalLists.some(

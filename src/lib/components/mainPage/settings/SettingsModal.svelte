@@ -378,7 +378,7 @@
           on:click={openContributorModal}
         >
           <span aria-hidden="true">✦</span>
-          <span>{contributorUnlocked ? "Supporter active ★" : "Support ZipList"}</span>
+          <span>{contributorUnlocked ? "Unlocked ★ (12 lists)" : "Get more lists (12 max)"}</span>
         </button>
       </section>
     </div>

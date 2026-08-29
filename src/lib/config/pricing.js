@@ -5,30 +5,27 @@
  */
 export const PRICING = {
   currentPrice: 24,
-  currency: "AUD", // Square charge currency; displayed price is just displayPrice (≈ same in USD)
-  productName: "ZipList Contributor Pass",
+  currency: "AUD", // Square charge currency; displayed price is 24 / year (no dollar sign)
+  productName: "ZipList Extra Lists",
   termDays: 365,
 
   get displayPrice() {
-    return `$${this.currentPrice.toFixed(0)}`;
+    return `${this.currentPrice.toFixed(0)} / year`;
   },
 };
 
-// Contributor buys ROOM, not features (2026-07-21). Every feature works
-// free — "Live shared lists" and "Longer lists" used to sit here but
-// neither was ever actually gated (list length is a soft nudge for
-// everyone), and live sharing is now free too. Claiming a benefit the
-// free tier already has reads as a bait once someone notices.
+// Contributor buys ROOM, not features. Every feature works free;
+// this unlocks 12 lists, multiple simultaneous live rooms, and multi-device sync.
 export const CONTRIBUTOR_BENEFITS = [
   "12 lists instead of 3",
-  "Several lists live at once",
-  "Unlock on your devices",
+  "Run several live rooms at once",
+  "Unlock across every device",
+  "One-off for the year (no subscription trap)",
 ];
 
 export const CONTRIBUTOR_COPY = {
-  get summary() {
-    return `${PRICING.displayPrice} a year, no subscription — every feature is free, this just buys more room and keeps ZipList going.`;
-  },
+  summary:
+    "24 a year. No subscriptions, no sneaky renewals. Expands to 12 lists, runs multiple live rooms at once, and syncs across every device.",
   checkoutError:
-    "Checkout needs server setup first. Contributor codes still work.",
+    "Checkout needs server setup first. Unlock codes still work.",
 };
