@@ -882,6 +882,12 @@
      negative margin means nothing shifts. */
   padding: 14px 0 0;
   margin: -14px 0 0;
+  /* The record button is `position: fixed` at bottom 4.25rem, right 1rem —
+     directly over the ⋯ column of whatever row is under it. Mid-scroll that
+     is transient and fine, but with no trailing space the LAST rows park
+     there permanently and their tray button can never be reached. This is
+     enough runway to scroll any row out from under it. */
+  padding-bottom: 5.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -2991,56 +2997,33 @@ body.zl-touch-dragging {
 }
 
 /* Tag filter banner at top of list container */
-.zl-tag-filter-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1.5px solid rgba(30, 23, 20, 0.12);
-  border-radius: 12px;
-  padding: 0.4rem 0.75rem;
-  margin-bottom: 0.6rem;
-  backdrop-filter: blur(8px);
-}
-
-.zl-tag-filter-badge {
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: color-mix(in srgb, var(--tag-colour, #6c85e9) 80%, #1e1714);
-}
-
+/* The bordered card, its blur, and the "#tag (5)" badge inside it are gone.
+   The card existed to hold a label and a count that the rack forty pixels
+   above already shows, lit, with the same number in it. What's left is the
+   actions alone, hung under the rack as a plain strip — same information,
+   one container and ~70px of vertical less. */
 .zl-tag-filter-actions {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
+  margin-bottom: 0.6rem;
 }
 
-.zl-tag-spin-btn {
+/* Resample wears .zl-tag-action-btn too, so these three read as one set of
+   controls instead of three unrelated ones. That rule is defined below this
+   point, so the shared class would otherwise win on source order and strip
+   the amber — hence the doubled selector. Only the FILL is special here;
+   size, radius and motion come from the shared rule. */
+.zl-tag-action-btn.zl-tag-spin-btn {
   background: color-mix(in srgb, var(--zl-primary-color, #ffb000) 25%, #fffef7);
-  border: 1.5px solid var(--zl-primary-color, #ffb000);
-  font-family: inherit;
-  font-size: 0.75rem;
+  border-color: var(--zl-primary-color, #ffb000);
   font-weight: 800;
-  color: #1e1714;
-  cursor: pointer;
-  padding: 0.22rem 0.55rem;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  transition: all 0.15s ease;
 }
 
-.zl-tag-spin-btn:hover {
+.zl-tag-action-btn.zl-tag-spin-btn:hover {
   background: var(--zl-primary-color, #ffb000);
-  transform: translateY(-1px);
-}
-
-.zl-tag-spin-btn:active {
-  transform: scale(0.96);
+  border-color: var(--zl-primary-color, #ffb000);
 }
 
 .zl-tag-action-btn {
@@ -3080,24 +3063,6 @@ body.zl-touch-dragging {
 .zl-tag-action-untag:hover {
   border-color: #dc2626;
   background: color-mix(in srgb, #ef4444 18%, #fffef7);
-}
-
-.zl-tag-filter-clear {
-  background: transparent;
-  border: none;
-  font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: rgba(30, 23, 20, 0.65);
-  cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  border-radius: 6px;
-  transition: all 0.15s ease;
-}
-
-.zl-tag-filter-clear:hover {
-  background: rgba(30, 23, 20, 0.08);
-  color: #1e1714;
 }
 
 /* ── Someone else is in this line ───────────────────────────────────────
@@ -3295,16 +3260,53 @@ body.zl-touch-dragging {
 }
 
 /* ── Share tray ────────────────────────────────────────────────────────
-   Was four pills of different word-lengths flex-wrapping into a rag. The two
-   things that SEND now share a row at equal width; the phrase sits under
-   them because it's the thing you actually hand over; and paste — which
-   brings things IN — is visibly not one of them. */
+   Seven buttons in one `flex-wrap` pile meant the BROWSER decided the
+   grouping, by label width — which is how "Clear entire list" ended up
+   sharing a row with "QR this list". Now it's a column of three groups
+   (send / export / danger) and each group wraps within itself, so meaning
+   holds at every width instead of only at the one it was eyeballed on. */
 .zl-share-actions {
-  /* Four ways out now (link, clipboard, file, QR). Pills wrap like the rest
-     of the tray — a 1fr grid can't size itself inside the tray's flex row. */
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.zl-share-group {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* Export is the rarest of the three and was shouting at the same volume as
+   sharing. Same shape, less ink — present without competing. */
+.zl-share-group-export .zl-share-option {
+  font-size: 0.72rem;
+  border-color: color-mix(
+    in srgb,
+    var(--zl-text-color-primary, #1e1714) 14%,
+    transparent
+  );
+  background: color-mix(in srgb, var(--zl-item-bg, #fffef7) 55%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--zl-text-color-primary, #1e1714) 72%,
+    transparent
+  );
+}
+
+.zl-share-group-export .zl-share-option:hover:not(:disabled),
+.zl-share-group-export .zl-share-option:focus-visible {
+  color: var(--zl-text-color-primary, #1e1714);
+}
+
+/* The only hard divide in the tray. Everything above hands the list to
+   someone; everything below unmakes it. A hairline is cheaper than a
+   confirm dialog and does most of the same work. */
+.zl-share-group-danger {
+  margin-top: 0.15rem;
+  padding-top: 0.6rem;
+  border-top: 1.5px solid
+    color-mix(in srgb, var(--zl-text-color-primary, #1e1714) 10%, transparent);
 }
 
 /* The words are the link, so they're a button, not a caption. */
@@ -3342,27 +3344,37 @@ body.zl-touch-dragging {
   color: color-mix(in srgb, var(--zl-primary-color, #a970ea) 72%, #1e1714);
 }
 
-/* Quieter than the send buttons on purpose — different kind of action. */
+/* Quieter than the send buttons — different kind of action — but it IS a
+   button. Borderless grey text under a stack of pills read as a heading for
+   an input that wasn't there. It wears the same dashes as the draft row and
+   the sync phrase now: in this app, dashed means "something goes in here". */
 .zl-share-import {
   font-family: inherit;
   font-size: 0.76rem;
   font-weight: 700;
   min-height: 44px;
-  padding: 0 0.7rem;
-  border: none;
+  padding: 0 0.9rem;
+  border: 2px dashed
+    color-mix(in srgb, var(--zl-text-color-primary, #1e1714) 22%, transparent);
   background: none;
   color: color-mix(
     in srgb,
-    var(--zl-text-color-primary, #1e1714) 62%,
+    var(--zl-text-color-primary, #1e1714) 72%,
     transparent
   );
   cursor: pointer;
-  border-radius: 999px;
+  border-radius: 14px;
   align-self: center;
+  transition: all 0.16s ease;
 }
 
 .zl-share-import:hover {
   color: var(--zl-text-color-primary, #1e1714);
+  border-color: color-mix(
+    in srgb,
+    var(--zl-text-color-primary, #1e1714) 45%,
+    transparent
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {

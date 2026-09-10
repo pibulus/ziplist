@@ -33,6 +33,13 @@
   export let onFilterTag = () => {};
   export let activeTagFilter = null;
 
+  /* Filtered to #ziplist, every visible row wears a #ziplist chip — the chip
+     restates the filter that selected the row. Drop the implied one and keep
+     the rest, so the chips still tell you what ELSE an item is. Derived once
+     and shared with the edit ghost, or the ghost stops matching the row's
+     height and two-line items jump on click. */
+  $: visibleTags = (item.tags || []).filter((tag) => tag !== activeTagFilter);
+
   $: isSection =
     !item.checked && (/^##\s*/.test(item.text) || item.text.trim() === "---");
   $: sectionTitle = isSection
@@ -108,9 +115,9 @@
          the 44px floor the instant you click into it. -->
     <span class="zl-item-text-button zl-edit-ghost" aria-hidden="true">
       <span class="zl-item-text">{editedItemText || item.text || " "}</span>
-      {#if item.tags?.length}
+      {#if visibleTags.length}
         <span class="zl-item-tags">
-          {#each item.tags as tag (tag)}
+          {#each visibleTags as tag (tag)}
             <span class="zl-item-tag">#{tag}</span>
           {/each}
         </span>
@@ -167,9 +174,9 @@
       {/if}
       <!-- Chips sit INSIDE the text button, so the whole row including its tags
            is one tap target for editing. The row only grows when tags exist. -->
-      {#if item.tags?.length}
+      {#if visibleTags.length}
         <span class="zl-item-tags">
-          {#each item.tags as tag (tag)}
+          {#each visibleTags as tag (tag)}
             <span
               role="button"
               tabindex="0"

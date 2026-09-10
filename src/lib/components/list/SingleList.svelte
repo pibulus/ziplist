@@ -2707,63 +2707,92 @@
           </div>
         {/if}
 
-        <!-- The two kinds of sharing sit side by side: a copy that freezes as
-             it leaves, or a room that keeps up. Everything below them is
-             export, which is a different job. -->
+        <!-- Three jobs, three rows, in the order they get reached for.
+             These seven buttons used to sit in one `flex-wrap` pile, which
+             meant the browser decided what shared a row with what — and it
+             chose to put "Clear entire list" next to "QR this list" and
+             orphan "Delete this list" underneath. The grouping READ as
+             deliberate and was purely a function of label width. Rows are
+             explicit now, so meaning survives every viewport:
+
+               send    — hand the list to a person
+               export  — hand the list to a machine
+               danger  — unmake the list
+
+             Export sits at lighter weight because it is the rarest of the
+             three and was previously shouting at the same volume as sharing. -->
         <div class="zl-share-actions">
-          <button type="button" class="zl-share-option" on:click={shareAsLink}>
-            {isLive ? "Copy link" : "Send a copy"}
-          </button>
-          {#if liveFeatureAvailable && !isLive}
-            <button
-              type="button"
-              class="zl-share-option zl-share-live"
-              disabled={isMakingLive}
-              aria-busy={isMakingLive}
-              on:click={shareAsLiveRoom}
-            >
-              {isMakingLive ? "Opening the room..." : "Share live"}
+          <div class="zl-share-group" role="group" aria-label="Send this list">
+            <button type="button" class="zl-share-option" on:click={shareAsLink}>
+              {isLive ? "Copy link" : "Send a copy"}
             </button>
-          {/if}
-          {#if isLive}
-            <button
-              type="button"
-              class="zl-share-option zl-share-stop"
-              on:click={handleStopLive}
-            >
-              Stop live sharing
-            </button>
-          {/if}
-          <button type="button" class="zl-share-option" on:click={copyAsText}>
-            Copy as text
-          </button>
-          <button
-            type="button"
-            class="zl-share-option"
-            on:click={downloadAsText}
+            {#if liveFeatureAvailable && !isLive}
+              <button
+                type="button"
+                class="zl-share-option zl-share-live"
+                disabled={isMakingLive}
+                aria-busy={isMakingLive}
+                on:click={shareAsLiveRoom}
+              >
+                {isMakingLive ? "Opening the room..." : "Share live"}
+              </button>
+            {/if}
+            {#if isLive}
+              <button
+                type="button"
+                class="zl-share-option zl-share-stop"
+                on:click={handleStopLive}
+              >
+                Stop live sharing
+              </button>
+            {/if}
+          </div>
+
+          <div
+            class="zl-share-group zl-share-group-export"
+            role="group"
+            aria-label="Export this list"
           >
-            Save as file
-          </button>
-          <button type="button" class="zl-share-option" on:click={qrThisList}>
-            QR this list
-          </button>
-          {#if list.items.length > 0}
+            <button type="button" class="zl-share-option" on:click={copyAsText}>
+              Copy as text
+            </button>
             <button
               type="button"
-              class="zl-share-option zl-share-clear"
-              on:click={clearEntireList}
+              class="zl-share-option"
+              on:click={downloadAsText}
             >
-              Clear entire list
+              Save as file
             </button>
-          {/if}
-          {#if showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1}
-            <button
-              type="button"
-              class="zl-share-option zl-share-delete-list"
-              on:click={deleteEntireList}
+            <button type="button" class="zl-share-option" on:click={qrThisList}>
+              QR this list
+            </button>
+          </div>
+
+          {#if list.items.length > 0 || (showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1)}
+            <div
+              class="zl-share-group zl-share-group-danger"
+              role="group"
+              aria-label="Undo this list"
             >
-              Delete this list
-            </button>
+              {#if list.items.length > 0}
+                <button
+                  type="button"
+                  class="zl-share-option zl-share-clear"
+                  on:click={clearEntireList}
+                >
+                  Clear entire list
+                </button>
+              {/if}
+              {#if showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1}
+                <button
+                  type="button"
+                  class="zl-share-option zl-share-delete-list"
+                  on:click={deleteEntireList}
+                >
+                  Delete this list
+                </button>
+              {/if}
+            </div>
           {/if}
         </div>
 
@@ -2912,51 +2941,51 @@
       on:touchend={handlePullEnd}
       on:touchcancel={resetPullState}
     >
+      <!-- What the active tag can DO, hung under the rack that already says
+           WHICH tag it is. This used to be a full bordered card that opened
+           by restating "#ziplist (5)" — a label and a count already on screen
+           forty pixels above, in a highlighted pill. It also carried its own
+           "Show all ✕", which was the THIRD control for clearing a filter:
+           the "All" pill does it, and tapping the lit tag toggles it off
+           (toggleActiveTagFilter). Both survive; this one doesn't.
+
+           What's left is only what nothing else can do. Resample and Rename
+           read as one pair because they are one: both make something new out
+           of the tag. Untag all destroys and says so. -->
       {#if activeTagFilter}
-        <div class="zl-tag-filter-banner" transition:fade={{ duration: 150 }}>
-          <span
-            class="zl-tag-filter-badge"
-            style={`--tag-colour: ${tagColour(activeTagFilter)}`}
+        <div
+          class="zl-tag-filter-actions"
+          role="group"
+          aria-label={`Actions for #${activeTagFilter}`}
+          transition:fade={{ duration: 150 }}
+        >
+          <button
+            type="button"
+            class="zl-tag-action-btn zl-tag-spin-btn"
+            on:click={spinOutTagToNewList}
+            title={`Spin #${activeTagFilter} items into a new list`}
+            aria-label={`Resample #${activeTagFilter} into new list`}
           >
-            #{activeTagFilter} ({renderedActiveItems.length + renderedCompletedItems.length})
-          </span>
-          <div class="zl-tag-filter-actions">
-            <button
-              type="button"
-              class="zl-tag-spin-btn"
-              on:click={spinOutTagToNewList}
-              title={`Spin #${activeTagFilter} items into a new list`}
-              aria-label={`Resample #${activeTagFilter} into new list`}
-            >
-              ✂️ Resample
-            </button>
-            <button
-              type="button"
-              class="zl-tag-action-btn"
-              on:click={renameActiveTag}
-              title={`Rename #${activeTagFilter} across this list`}
-              aria-label={`Rename #${activeTagFilter}`}
-            >
-              ✎ Rename
-            </button>
-            <button
-              type="button"
-              class="zl-tag-action-btn zl-tag-action-untag"
-              on:click={untagAllActiveTag}
-              title={`Remove #${activeTagFilter} from all items`}
-              aria-label={`Remove #${activeTagFilter}`}
-            >
-              Untag all
-            </button>
-            <button
-              type="button"
-              class="zl-tag-filter-clear"
-              on:click={clearActiveTagFilter}
-              aria-label="Show all items"
-            >
-              Show all ✕
-            </button>
-          </div>
+            ✂️ Resample
+          </button>
+          <button
+            type="button"
+            class="zl-tag-action-btn"
+            on:click={renameActiveTag}
+            title={`Rename #${activeTagFilter} across this list`}
+            aria-label={`Rename #${activeTagFilter}`}
+          >
+            ✎ Rename
+          </button>
+          <button
+            type="button"
+            class="zl-tag-action-btn zl-tag-action-untag"
+            on:click={untagAllActiveTag}
+            title={`Remove #${activeTagFilter} from all items`}
+            aria-label={`Remove #${activeTagFilter}`}
+          >
+            Untag all
+          </button>
         </div>
       {/if}
 
