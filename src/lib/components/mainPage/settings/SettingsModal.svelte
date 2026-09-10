@@ -658,6 +658,26 @@
     transition: all 0.2s;
   }
 
+  /* "Name in shared rooms" and "Link a device" both pair a two-line label
+     with a text input, and side by side on one row they were bidding against
+     each other for the same width — the label wrapped to three lines so the
+     input could keep 55%, and neither ended up readable. These two stack
+     instead: label gets the full width, control gets the full width under
+     it. Every other row here is a short name plus a toggle and still reads
+     fine across, so this is scoped to the two that don't fit. */
+  .zl-avatar-row,
+  .zl-sync-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+  }
+
+  .zl-avatar-row .zl-avatar-field-inline,
+  .zl-sync-row .zl-sync-receive {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
   .zl-setting-row:hover {
     border-color: var(--zl-primary-color);
     background: #fffef7;

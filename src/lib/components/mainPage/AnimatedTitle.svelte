@@ -126,7 +126,7 @@
 
 <!-- Updated subheadline with improved typography and reduced bottom margin -->
 <p
-  class="mx-auto mt-3 mb-6 text-sm font-medium text-center cursor-default select-none slide-in-subtitle max-w-prose leading-relaxed tracking-normal text-gray-600 sm:mt-6 sm:mb-7 sm:text-lg sm:font-normal sm:text-gray-700/85 md:text-xl lg:text-2xl"
+  class="mx-auto mt-3 mb-6 text-sm font-medium text-center cursor-default select-none slide-in-subtitle max-w-prose leading-relaxed tracking-normal text-[#1e1714]/85 sm:mt-6 sm:mb-7 sm:text-lg sm:font-normal sm:text-[#1e1714]/90 md:text-xl lg:text-2xl"
 >
   {#each subtitle.split("\n") as line, i}
     {#if i > 0}<br />{/if}{line}

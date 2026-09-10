@@ -1988,10 +1988,23 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  /* Grab handle sits OUTBOARD of the tray button, hard against the row's
+     right edge (Pablo's call). Done with `order` rather than by swapping the
+     markup: the handle is the only touchstart binding in the reorder system,
+     and moving that element in the DOM is how reordering silently died on
+     phones once already. Visual order changes, tab order doesn't. */
   gap: 0.25rem;
   align-self: center;
   min-width: 40px;
   flex-shrink: 0;
+}
+
+.zl-item-side .grab-indicator {
+  order: 2;
+}
+
+.zl-item-side .zl-item-more-button {
+  order: 1;
 }
 
 .zl-item-delete-button {

@@ -477,7 +477,7 @@
         class:parked={Math.abs(sx) >= 100}
         inert={list.id !== activeListId}
         aria-hidden={list.id !== activeListId}
-        style="--list-primary: {list.primaryColor}; --list-accent: {list.accentColor}; --list-glow: {list.glowColor}; --sx: {sx}%; --away: {Math.min(
+        style="--list-primary: {list.primaryColor}; --list-accent: {list.accentColor}; --sx: {sx}%; --away: {Math.min(
           1,
           Math.abs(sx) / 100,
         )}"
@@ -660,7 +660,17 @@
     border: 2px solid #1e1714;
     box-shadow:
       2px 2px 0 #1e1714,
-      0 0 10px var(--dot-glow);
+      /* The glow used to be a frozen rgba baked into each list preset, so it
+         said the same thing under every vibe — an amber theme with a mint
+         list glowed mint at nothing. Mixing the list's own colour toward the
+         active theme primary keeps each list identifiable while letting the
+         whole deck shift when the vibe does. */
+      0 0 10px
+        color-mix(
+          in oklab,
+          var(--dot-primary) 65%,
+          var(--zl-primary-color, var(--dot-primary))
+        );
   }
 
   .dot:hover:not(.active)::before {
