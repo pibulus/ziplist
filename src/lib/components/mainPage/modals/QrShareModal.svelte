@@ -150,7 +150,7 @@
 
         <button
           type="button"
-          class="w-full py-2 px-3 rounded-xl border border-[#1e1714]/20 bg-white/80 font-bold text-xs text-[#1e1714]/80 hover:text-[#1e1714] hover:border-[#1e1714]/50 hover:bg-pink-50/80 transition-all duration-150 flex items-center justify-center gap-1.5"
+          class="w-full py-2 px-3 rounded-xl border border-[#1e1714]/20 bg-[#fffef7]/80 font-bold text-xs text-[#1e1714]/80 hover:text-[#1e1714] hover:border-[#1e1714]/50 hover:bg-pink-50/80 transition-all duration-150 flex items-center justify-center gap-1.5"
           on:click={openInQrBuddy}
           title="Open in QRBuddy to customize gradients and download high-res stickers"
         >

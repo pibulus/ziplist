@@ -1457,7 +1457,7 @@
           title: isLive ? "Join Live List" : `Scan "${list.name || "List"}"`,
           subtitle: isLive
             ? "Scan with any phone camera to edit together in real time"
-            : "Scan with your phone to open and save this list",
+            : "Scan with any phone camera to open and save this list",
           syncPhrase: isLive ? (syncPhrase || "") : "",
           isLive: Boolean(isLive),
         },

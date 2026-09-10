@@ -1325,7 +1325,11 @@
 
   word-wrap: break-word;
   overflow-wrap: break-word;
-  hyphens: auto;
+  /* NO `hyphens: auto`. On a ~22ch monospace card it chopped the app's own
+     name into "Zi-plist", "de-vice", "but-ton" — auto-hyphenation guesses at
+     syllables and guesses badly on product names, and every list here is
+     full of them. overflow-wrap above already handles the genuinely
+     unbreakable string; ragged right is the better failure. */
 
   transition: var(--zl-transition-fast);
 }
@@ -2914,7 +2918,10 @@ body.zl-touch-dragging {
 .zl-tag-rack-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  /* No flex gap: it would land between the "#" and the tag, so the rack read
+     "# ziplist" while the same tag on an item read "#ziplist". The count is
+     the only thing that wants separating, so it asks for it itself. */
+  gap: 0;
   padding: 0.24rem 0.6rem;
   border-radius: 999px;
   font-family: inherit;
@@ -2964,6 +2971,7 @@ body.zl-touch-dragging {
 }
 
 .zl-tag-rack-count {
+  margin-left: 0.25rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
