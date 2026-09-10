@@ -26,6 +26,5 @@ export const CONTRIBUTOR_BENEFITS = [
 export const CONTRIBUTOR_COPY = {
   summary:
     "24 a year. No subscriptions, no sneaky renewals. Expands to 12 lists, runs multiple live rooms at once, and syncs across every device.",
-  checkoutError:
-    "Checkout needs server setup first. Unlock codes still work.",
+  checkoutError: "Checkout needs server setup first. Unlock codes still work.",
 };

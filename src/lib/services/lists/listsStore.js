@@ -55,7 +55,7 @@ export const LIST_COLOR_PRESETS = [
 
 // Default lists configuration: starts with 1 clean list and a + button.
 // Free users can make 2 more lists without friction (3 total), unlocking 12 on upgrade.
-const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette, index) => ({
+const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette) => ({
   id: palette.id,
   name: palette.defaultName,
   color: palette.color,
