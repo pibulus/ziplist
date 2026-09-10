@@ -101,9 +101,9 @@
              abrupt. Mobile drops the lead-in and the "in" instead, landing on
              "❤️ Melbourne": short, complete, still warm. -->
         <span class="footer-meta text-sm font-medium">
-          <span class="footer-lead">Made with</span>
+          <span class="footer-lead">Made<span class="footer-with">&nbsp;with</span></span>
           <FooterCharm charms={['❤️']} rare={['🍒', '⚡']} />
-          <span class="footer-place"><span class="footer-in">in&nbsp;</span>Melbourne</span>
+          <span class="footer-place"><span class="footer-in">&nbsp;in</span>&nbsp;Melbourne</span>
         </span>
       </div>
       <div class="flex shrink-0 items-center">
@@ -208,22 +208,33 @@
   }
 
   /* On a phone the copyright used to vanish entirely, leaving a couple of nav
-     words adrift in an empty band. Keep the row anchored; shed the place name
-     and shrink the type instead. */
+     words adrift in an empty band. Keep the row anchored; shrink the type and
+     shed as little as possible. */
   @media (max-width: 639px) {
-    /* 390px cannot hold the full attribution AND three nav words — they ran
-       into each other. What survives is the SENTENCE, not the place: mobile
-       reads "Made with ❤️", which is complete on its own. It used to shed
-       the lead-in instead and land on "❤️ Melbourne" — a beating heart
-       apparently in a relationship with a city (Pablo, 2026-08-17). */
-    .copyright .footer-place,
+    /* 390px cannot hold the full attribution AND three nav words, so exactly
+       one thing gets cut. Two cuts have already been tried and rejected:
+         "❤️ Melbourne"   — dropped the lead-in; read as a beating heart in a
+                            relationship with a city (Pablo, 2026-08-17)
+         "Made with ❤️"   — dropped the place; a stub that goes nowhere, and
+                            loses the only word in the line worth keeping
+                            (Pablo, 2026-09-09)
+       So cut neither. Shed the single word "with" and let the charm carry
+       that sense the way it does on every other product on earth, landing on
+       "Made ❤️ in Melbourne" — complete, and it still names the city.
+       The © and the dot stay gone; they are the parts nobody reads. */
+    .copyright .footer-with,
     .copyright .footer-copy,
     .copyright .footer-dot {
       display: none;
     }
 
     .copyright {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
+      /* min-w-0 + shrink + nowrap can push text straight out of the band
+         rather than yielding. Let it ellipsis as an absolute last resort
+         (a wide rare charm, a 320px phone) instead of spilling. */
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .copyright .footer-dot {
