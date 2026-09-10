@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Pull-down-to-add**: tug the top of a list and a ghost of the draft row
+  grows out from behind the top edge; release past the detent and the real
+  draft row opens focused. Only arms when the page has nothing left to
+  scroll, and its direction lock is the exact mirror of the carousel's, so
+  no diagonal is ever both a swipe and a pull — asserted at every degree in
+  `scripts/check-pull-to-add.mjs`.
+
 ## 1.0.0 — The 1-Layer Modular Hierarchy & Resampling Release
 
 - **RiffRap Pastel Waterfall**: Restored rich saturated gradient cards with 12:1 WCAG AAA text contrast.

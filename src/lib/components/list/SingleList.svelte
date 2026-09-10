@@ -73,6 +73,10 @@
   import { ANIMATION, PRODUCT_LIMITS } from "$lib/constants";
   import { isContributor } from "$lib";
   import { autoFocus } from "./autoFocus.js";
+  import {
+    PULL_THRESHOLD,
+    resolvePull,
+  } from "$lib/services/lists/pullToAdd.js";
   import CompletedDivider from "./CompletedDivider.svelte";
   import DraftItemRow from "./DraftItemRow.svelte";
   import LiveActivityRow from "./LiveActivityRow.svelte";
@@ -2207,6 +2211,118 @@
     }
   }
 
+  // ── Pull-down-to-add ────────────────────────────────────────────────────
+  // Tug the top of the list, get a draft row.
+  //
+  // Deliberately never calls preventDefault. The swipe container above sets
+  // `touch-action: pan-y`, which hands vertical panning to the browser — a
+  // preventDefault here would be ignored, and forcing it back with
+  // `touch-action: none` would kill scrolling from the top of a long list.
+  // So instead of fighting the scroller, the gesture only arms when there is
+  // nothing left to scroll (`scrollY <= 0` and the card's top edge in view).
+  // At that point a downward drag IS pure overscroll and nobody is competing
+  // for it — iOS's rubber band and this row travel together, which reads as
+  // one pull rather than two.
+  //
+  // Direction lock mirrors the carousel's: same 8px slop, same 1.1 bias, so
+  // a diagonal resolves to exactly one of swipe / scroll / pull, never both.
+  // Tuning + direction lock live in pullToAdd.js so they can be checked
+  // without a browser — see scripts/check-pull-to-add.mjs.
+  const PULL_IGNORE_SELECTOR =
+    'input, textarea, select, a, button, [data-swipe-ignore="true"]';
+
+  let pullDistance = 0;
+  let pullTracking = false;
+  let pullLocked = false;
+  let pullArmed = false;
+  let pullStartX = 0;
+  let pullStartY = 0;
+
+  $: pullProgress = Math.min(1, pullDistance / PULL_THRESHOLD);
+
+  function resetPullState() {
+    pullTracking = false;
+    pullLocked = false;
+    pullArmed = false;
+    pullDistance = 0;
+  }
+
+  function canStartPull() {
+    if (typeof window === "undefined") return false;
+    if (draftItemActive || editingItemId || editingListName) return false;
+    if (touchDragItemId || touchDragPendingItemId) return false;
+    if (window.scrollY > 0) return false;
+    // Deep in a long list a downward drag means "scroll", every time. The
+    // gesture belongs to the top of the card or to nothing.
+    const top = listContainerNode?.getBoundingClientRect().top;
+    return typeof top === "number" && top >= 0;
+  }
+
+  function handlePullStart(event) {
+    if (event.touches.length !== 1 || !canStartPull()) {
+      resetPullState();
+      return;
+    }
+
+    if (event.target?.closest?.(PULL_IGNORE_SELECTOR)) {
+      resetPullState();
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    pullStartX = touch.screenX;
+    pullStartY = touch.screenY;
+    pullTracking = true;
+    pullLocked = false;
+    pullArmed = false;
+  }
+
+  function handlePullMove(event) {
+    if (!pullTracking) return;
+
+    if (event.touches.length !== 1 || touchDragItemId) {
+      resetPullState();
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const diffX = touch.screenX - pullStartX;
+    const diffY = touch.screenY - pullStartY;
+
+    const { outcome, distance, armed } = resolvePull(diffX, diffY, pullLocked);
+
+    if (outcome === "waiting") return;
+    if (outcome === "release") {
+      resetPullState();
+      return;
+    }
+
+    if (window.scrollY > 0) {
+      // The page found something to scroll after all — hand it back mid-drag
+      // rather than growing a row over a moving page.
+      resetPullState();
+      return;
+    }
+
+    pullLocked = true;
+    pullDistance = distance;
+
+    if (armed !== pullArmed) {
+      pullArmed = armed;
+      // A detent in both directions: crossing back out has to feel like a
+      // decision too, or the threshold is invisible.
+      hapticService.selection();
+      soundService.ratchet?.();
+    }
+  }
+
+  function handlePullEnd() {
+    if (!pullTracking) return;
+    const commits = pullArmed;
+    resetPullState();
+    if (commits) startDraftItem();
+  }
+
   async function startDraftItem() {
     hapticService.selection();
     soundService.select();
@@ -2787,7 +2903,15 @@
     {/if}
 
     <!-- List Items -->
-    <div class="zl-list-container" bind:this={listContainerNode}>
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div
+      class="zl-list-container"
+      bind:this={listContainerNode}
+      on:touchstart={handlePullStart}
+      on:touchmove={handlePullMove}
+      on:touchend={handlePullEnd}
+      on:touchcancel={resetPullState}
+    >
       {#if activeTagFilter}
         <div class="zl-tag-filter-banner" transition:fade={{ duration: 150 }}>
           <span
@@ -2835,6 +2959,25 @@
           </div>
         </div>
       {/if}
+
+      <!-- The affordance IS the gesture: a ghost of the draft row grows out
+           of the top of the list under the finger, dashed exactly like the
+           real one, so the control explains itself without a word of
+           instruction. Height comes straight off --zl-pull, so there is no
+           animation to keep in sync with the touch handler — one number
+           drives both, and they cannot drift apart. -->
+      <div
+        class="zl-pull-hint"
+        class:armed={pullArmed}
+        class:settling={!pullTracking}
+        style="--zl-pull: {pullDistance}px; --zl-pull-t: {pullProgress}"
+        aria-hidden="true"
+      >
+        <div class="zl-pull-hint-row">
+          <span class="zl-pull-mark">+</span>
+          <span class="zl-pull-label">New item</span>
+        </div>
+      </div>
 
       {#if list.items.length > 0 || draftItemActive || remoteDrafts.length > 0 || remoteVoices.length > 0}
         <ul

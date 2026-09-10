@@ -3349,3 +3349,93 @@ body.zl-touch-dragging {
     transition: none;
   }
 }
+
+/* ── Pull-down-to-add ──────────────────────────────────────────────────────
+   A ghost of the draft row, pulled out from behind the top of the list by
+   the finger. Everything here is driven by two custom properties the touch
+   handler sets: --zl-pull (px of damped travel) and --zl-pull-t (0..1 toward
+   the commit threshold). No keyframes and no transition while the finger is
+   down — the gesture IS the animation, so the row cannot lag the thumb.
+
+   Two elements, not one, and that split is load-bearing: Tailwind's preflight
+   makes everything border-box, and a border-box height is floored by its own
+   borders. A single bordered element at `height: 0` is therefore 4px tall,
+   not 0 — a permanent gap above every list, on every card, forever. So the
+   outer element carries the height and clips, and owns no border at all;
+   the inner one carries the dashes and slides up behind the clip. At rest
+   the whole thing occupies exactly nothing. */
+.zl-pull-hint {
+  flex: none;
+  height: var(--zl-pull, 0px);
+  overflow: hidden;
+  /* Bottom-anchored so the row emerges downward from the top edge, the way
+     a drawer does, instead of unfurling from its own middle. */
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
+  opacity: var(--zl-pull-t, 0);
+}
+
+.zl-pull-hint-row {
+  flex: 1;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  /* Dashed exactly like .zl-draft-item — this is a ghost of that row, and
+     looking like a different component would be a lie about what happens. */
+  border: var(--zl-item-border-width, 2px) dashed
+    var(--zl-item-border-color, rgba(30, 23, 20, 0.25));
+  border-radius: var(--zl-item-border-radius, 20px);
+  background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
+
+  color: var(--zl-text-color-secondary, rgba(30, 23, 20, 0.6));
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+.zl-pull-mark {
+  font-size: 1.2rem;
+  line-height: 1;
+  /* Swings a sixth of a turn across the pull and lands square exactly at the
+     threshold — the commit is legible in peripheral vision, mid-gesture,
+     without reading a word. */
+  transform: rotate(calc((1 - var(--zl-pull-t, 0)) * -60deg));
+}
+
+.zl-pull-label {
+  font-size: 0.9rem;
+}
+
+/* Armed: dashes go solid and the row takes the list's own colour. */
+.zl-pull-hint.armed {
+  opacity: 1;
+}
+
+.zl-pull-hint.armed .zl-pull-hint-row {
+  border-style: solid;
+  border-color: var(--list-primary, var(--zl-item-accent, currentColor));
+  color: var(--zl-text-color-primary, #1e1714);
+}
+
+/* The only animated state: finger up, drawer springs shut. Applied whenever
+   tracking is off, which covers the commit path too — the ghost closes as
+   the real draft row opens underneath it. */
+.zl-pull-hint.settling {
+  transition:
+    height 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zl-pull-hint.settling {
+    transition: none;
+  }
+
+  .zl-pull-mark {
+    transform: none;
+  }
+}
