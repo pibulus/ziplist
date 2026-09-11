@@ -1,0 +1,88 @@
+<script>
+  import { MainContainer } from '$lib/components/mainPage';
+
+  const canonicalUrl = 'https://ziplist.app/es/mandado';
+  const title = 'Lista del Mandado y Súper por Voz — Sin Registrar Cuentas | ZipList';
+  const description =
+    'Crea tu lista del mandado dictando por voz. Agrega jitomate, aguacate y tortillas sin escribir. Salas QR compartidas en vivo para ir al súper en pareja sin registrarse.';
+</script>
+
+<svelte:head>
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalUrl} />
+  <link rel="alternate" hreflang="es" href={canonicalUrl} />
+  <link rel="alternate" hreflang="en" href="https://ziplist.app/for/groceries" />
+
+  <!-- OpenGraph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ZipList" />
+  <meta property="og:url" content={canonicalUrl} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content="https://ziplist.app/og-card.png" />
+  <meta property="og:locale" content="es_LA" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content={canonicalUrl} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content="https://ziplist.app/og-card.png" />
+
+  <!-- Structured Data -->
+  {@html `<script type="application/ld+json">
+  ${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebApplication',
+        name: 'ZipList Lista del Mandado por Voz',
+        url: canonicalUrl,
+        image: 'https://ziplist.app/og-card.png',
+        description: description,
+        applicationCategory: 'ShoppingApplication',
+        operatingSystem: 'Web',
+        inLanguage: 'es',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+          description: 'Lista del mandado por voz gratuita con salas QR en vivo'
+        }
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: '¿Cómo funciona la lista del mandado por voz en ZipList?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Dices todos tus ingredientes de corrido (ej. "jitomates, cebolla, cilantro, aguacate, tortillas, leche"). ZipList los organiza automáticamente en filas limpias con etiquetas de despensa.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: '¿Podemos usar la misma lista mi pareja y yo en el súper?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: '¡Sí! Presionas "Compartir QR" y tu pareja escanea el código con su cámara. Ambos teléfonos se sincronizan al instante en vivo sin tener que crear cuentas ni contraseñas.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: '¿Tengo que descargar una app de la App Store?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'No necesitas descargar nada ni crear cuenta. Funciona directamente en Safari o Chrome y puedes guardarlo como app en tu pantalla de inicio en 1 toque.'
+            }
+          }
+        ]
+      }
+    ]
+  })}
+  </script>`}
+</svelte:head>
+
+<MainContainer />
