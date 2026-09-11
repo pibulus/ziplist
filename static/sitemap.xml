@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Main app page -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- English Homepage -->
   <url>
     <loc>https://ziplist.app/</loc>
-    <lastmod>2026-05-19</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ziplist.app/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://ziplist.app/es" />
+  </url>
+
+  <!-- Spanish Homepage -->
+  <url>
+    <loc>https://ziplist.app/es</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ziplist.app/es" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://ziplist.app/" />
   </url>
 </urlset>
