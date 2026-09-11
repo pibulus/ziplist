@@ -900,6 +900,14 @@
     touchDragTargetIndex = nextTargetIndex;
     touchDragPreviewItems = buildTouchPreviewItems(nextTargetIndex);
     hapticService.dragMove();
+    // The audio half of a detent that was already being felt. playAt() swaps
+    // the ratchet's fixed frequency for the note at this slot, so dragging up
+    // the list runs up the scale and dragging down runs down it — the row's
+    // position is the pitch, the same contract `hover` already uses. You can
+    // hear where the item has landed without looking at it.
+    soundService.playAt("ratchet", nextTargetIndex, {
+      total: movableItems.length,
+    });
   }
 
   function runTouchDragAutoScroll() {
@@ -1181,6 +1189,13 @@
 
     // Haptic feedback
     hapticService.impact("light");
+
+    // Same pitched detent as the touch path, keyed off the row being hovered
+    // so both input methods land on the same note for the same slot.
+    const overIndex = activeItems.findIndex((item) => item.id === itemId);
+    if (overIndex !== -1) {
+      soundService.playAt("ratchet", overIndex, { total: activeItems.length });
+    }
   }
 
   function handleDrop(event, targetItemId) {

@@ -62,6 +62,13 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette) => ({
   primaryColor: palette.primaryColor,
   accentColor: palette.accentColor,
   glowColor: palette.glowColor,
+  // The starter list IS the manual, and it teaches by being used: every line
+  // is a real item you perform and then tick off. Two of these are here
+  // because the gestures they name are otherwise invisible — a flick between
+  // lists and a pull on the top of one leave no mark on the screen until you
+  // already know to try them. Written in the same imperative register as the
+  // original three on purpose; this is the one place in the app that is
+  // allowed to give instructions, because it is a tutorial you can delete.
   items: [
     {
       id: "starter-swipe",
@@ -69,6 +76,22 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette) => ({
       checked: false,
       tags: [],
       order: 0,
+      addedAt: Date.now() - 5000,
+    },
+    {
+      id: "starter-flick",
+      text: "Flick sideways to switch lists",
+      checked: false,
+      tags: [],
+      order: 1,
+      addedAt: Date.now() - 4000,
+    },
+    {
+      id: "starter-pull",
+      text: "Pull this list down to add an item",
+      checked: false,
+      tags: [],
+      order: 2,
       addedAt: Date.now() - 3000,
     },
     {
@@ -76,7 +99,7 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette) => ({
       text: "Tap the dice to let fate pick",
       checked: false,
       tags: [],
-      order: 1,
+      order: 3,
       addedAt: Date.now() - 2000,
     },
     {
@@ -84,7 +107,7 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette) => ({
       text: "→ Pink List",
       checked: false,
       tags: [],
-      order: 2,
+      order: 4,
       addedAt: Date.now() - 1000,
     },
   ],

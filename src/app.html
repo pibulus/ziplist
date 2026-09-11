@@ -48,38 +48,11 @@
     <meta name="application-name" content="ZipList" />
     <meta name="color-scheme" content="light" />
 
-    <!-- Open Graph / Social Sharing -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://ziplist.app" />
-    <meta
-      property="og:title"
-      content="ZipList — Talk it into a list. Tick it off."
-    />
-    <meta
-      property="og:description"
-      content="A warm, tactile voice checklist for groceries, errands, packing, and chores. Talk it into a list. Tick it off."
-    />
-    <meta
-      property="og:image"
-      content="%sveltekit.assets%/icons/icon-512x512.png"
-    />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-
-    <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary" />
-    <meta
-      name="twitter:title"
-      content="ZipList — Talk it into a list. Tick it off."
-    />
-    <meta
-      name="twitter:description"
-      content="A warm, tactile voice checklist for groceries, errands, packing, and chores. Talk it into a list. Tick it off."
-    />
-    <meta
-      name="twitter:image"
-      content="%sveltekit.assets%/icons/icon-512x512.png"
-    />
+    <!-- No Open Graph tags here on purpose: they conflicted with the ones
+         each page already emits and Messenger rendered no card at all. Every
+         shareable route sets its own. See CHANGELOG 2026-09-11.
+         Verify: exactly one canonical-url OG meta per page, and the declared
+         image dimensions must match og-card.png (1200x630). -->
 
     <!-- Manifest -->
     <link rel="manifest" href="%sveltekit.assets%/manifest.json" />

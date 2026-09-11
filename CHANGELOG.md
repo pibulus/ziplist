@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Open Graph cards fixed (2026-09-11)**: `app.html` carried a legacy OG +
+  Twitter block pointing at `icons/icon-512x512.png` while PageLayout and the
+  live-room route each emit their own pointing at the real 1200x630
+  `og-card.png`. Both shipped, so the served HTML declared `og:url` twice
+  (with and without trailing slash), `twitter:card` twice (`summary` AND
+  `summary_large_image`), and `og:image:width`/`height` twice — 512x512
+  landing in the document *before* the only real `og:image`. Messenger
+  rendered no card rather than guess. The legacy block is gone; every
+  shareable route already emitted a complete one of its own.
+
 - **Pull-down-to-add**: tug the top of a list and a ghost of the draft row
   grows out from behind the top edge; release past the detent and the real
   draft row opens focused. Only arms when the page has nothing left to

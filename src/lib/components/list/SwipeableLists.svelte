@@ -678,12 +678,20 @@
     transform: scale(1.2);
   }
 
+  /* This "+" and the "+ Add item" at the foot of the list were the same
+     glyph at two different scopes, and only the other one was labelled — so
+     it read as the same button twice. It can't carry a text label at 30px in
+     a nav row, so it borrows meaning from what it sits next to instead: the
+     colour dots ARE the lists, and this is now visibly the next empty slot in
+     that row — dashed, unfilled, waiting. Dashed already means "something
+     goes in here" everywhere else in this app (draft row, sync phrase, paste
+     button, the pull-to-add ghost), so it costs nothing to learn. */
   .nav-add-list {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.75);
-    border: 2px solid rgba(30, 23, 20, 0.25);
+    background: transparent;
+    border: 2px dashed rgba(30, 23, 20, 0.35);
     color: #1e1714;
     cursor: pointer;
     display: inline-flex;

@@ -1,6 +1,7 @@
 <script>
   import { tagColour } from "$lib/services/lists/itemTags";
-  import { fade } from "svelte/transition";
+  import { slide } from "svelte/transition";
+  import { cubicOut } from "svelte/easing";
   import { autoFocus } from "./autoFocus.js";
 
   export let listId;
@@ -240,7 +241,14 @@
 <!-- Inline, not a popover. .zl-card is overflow:clip, so anything floating out
      of the row gets sliced — the same trap the header tooltips were in. -->
 {#if isMoving}
-  <div class="zl-item-tray" transition:fade={{ duration: 120 }}>
+  <!-- Was `fade` alone, which is why this read as "no animation": the tray
+       took its full height instantly and only the ink faded in, so the row
+       jumped and nothing appeared to open. `slide` animates the height, so
+       the tray actually unfolds out of the row it belongs to. -->
+  <div
+    class="zl-item-tray"
+    transition:slide={{ duration: 220, easing: cubicOut }}
+  >
     <button
       type="button"
       class="zl-item-tray-action zl-item-tray-edit"

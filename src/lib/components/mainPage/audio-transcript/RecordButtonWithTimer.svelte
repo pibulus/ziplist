@@ -171,6 +171,9 @@
   $: timeRemaining = getTimeRemaining();
   $: isWarning = timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
   $: isDanger = timeRemaining <= ANIMATION.RECORDING.DANGER_THRESHOLD;
+  $: isAlmostDone =
+    timeRemaining <= ANIMATION.RECORDING.ALMOST_DONE_THRESHOLD;
+  $: secondsLeft = Math.max(0, Math.ceil(timeRemaining));
 
   function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
@@ -337,6 +340,27 @@
             ></div>
           {/each}
         </div>
+      {/if}
+
+      <!-- The limit already had warning and danger states, but they differ by
+           0.17 alpha on a gradient tail — correct instinct (no stressful red,
+           per the house palette) executed so quietly that nothing reads as a
+           warning at all. And the seconds themselves only ever reached an
+           sr-only span, so a sighted recording simply stopped dead.
+
+           A number is the smallest thing that actually answers "how long have
+           I got". It stays away until the last ten seconds: a stopwatch
+           running for the whole minute is a nag, and most recordings never
+           come near the limit. Bare numeral, no label, no imperative — it
+           states a fact and gets out of the way. -->
+      {#if recording && isWarning}
+        <span
+          class="recording-countdown"
+          class:is-almost-done={isAlmostDone}
+          aria-hidden="true"
+        >
+          {secondsLeft}
+        </span>
       {/if}
 
       {#if compact}
@@ -784,6 +808,61 @@
   .audio-reactive .cta__label {
     position: relative;
     z-index: 5; /* Increased z-index for text to appear above effects */
+  }
+
+  /* Appears at 10s, sits on the button's shoulder so it never fights the
+     wave bars or the label. Urgency comes from size and motion, never hue —
+     the house palette has no red in it. */
+  .recording-countdown {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    z-index: 3;
+    min-width: 1.6rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 999px;
+    border: 2px solid #1e1714;
+    background: #fffef7;
+    color: #1e1714;
+    font-family: "Space Mono", monospace;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.4;
+    text-align: center;
+    box-shadow: 1.5px 1.5px 0 #1e1714;
+    pointer-events: none;
+    animation: countdown-tick 1s steps(1) infinite;
+  }
+
+  /* Last three seconds: the same numeral, just insistent. */
+  .recording-countdown.is-almost-done {
+    animation: countdown-urgent 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes countdown-tick {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    8% {
+      transform: scale(1.14);
+    }
+  }
+
+  @keyframes countdown-urgent {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.18);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .recording-countdown,
+    .recording-countdown.is-almost-done {
+      animation: none;
+    }
   }
 
   /* Time-limit states signal through the theme's own accent + pulse
