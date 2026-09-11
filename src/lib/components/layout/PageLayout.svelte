@@ -33,6 +33,8 @@
   <meta name="robots" content={robots} />
   {#if canonical}
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href="https://ziplist.app" />
+    <link rel="alternate" hreflang="es" href="https://ziplist.app/es" />
   {/if}
 
   <meta property="og:type" content={ogType} />
