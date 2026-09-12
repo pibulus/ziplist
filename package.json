@@ -11,7 +11,7 @@
     "dev": "vite dev --port 3001 --host",
     "dev:party": "wrangler dev --port 1999 --local",
     "party:deploy": "wrangler deploy",
-    "prebuild": "node scripts/check-portable-deps.mjs",
+    "prebuild": "node scripts/check-portable-deps.mjs && node scripts/stamp-version.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "smoke:live": "node scripts/smoke-live-sharing.mjs",

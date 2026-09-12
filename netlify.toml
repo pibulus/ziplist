@@ -28,3 +28,11 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
     Permissions-Policy = "microphone=(self), camera=(), geolocation=(), payment=()"
+
+# The deploy stamp must never be cached, or `fleet-check --deployed` reads a
+# ghost and cheerfully reports a stale site as current — which is the exact
+# failure this file was added to detect.
+[[headers]]
+  for = "/version.json"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
