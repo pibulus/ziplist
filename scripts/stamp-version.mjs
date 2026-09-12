@@ -20,6 +20,7 @@
 
 import { execSync } from "node:child_process";
 import { writeFileSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 
 function commit() {
   // Netlify/Vercel set this; on a shallow CI clone it is more reliable than git.
@@ -45,7 +46,11 @@ const stamp = {
   built: new Date().toISOString(),
 };
 
-mkdirSync("static", { recursive: true });
-writeFileSync("static/version.json", `${JSON.stringify(stamp, null, 2)}\n`);
+// Most apps serve static/ at the root. Sites that publish the repo root
+// itself (slideomatic) set STAMP_OUT=version.json instead.
+const out = process.env.STAMP_OUT || "static/version.json";
+const dir = dirname(out);
+if (dir && dir !== ".") mkdirSync(dir, { recursive: true });
+writeFileSync(out, `${JSON.stringify(stamp, null, 2)}\n`);
 
-console.log(`🔖 version.json → ${stamp.commit} (${stamp.built})`);
+console.log(`🔖 ${out} → ${stamp.commit} (${stamp.built})`);
