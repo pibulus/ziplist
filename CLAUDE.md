@@ -87,12 +87,17 @@ every shipped feature parked its affordance in the nearest open tray and
 the share tray reached seven buttons — not one bad call, a dozen good ones
 with nowhere else to go.
 
-- The share tray is **sharing only**, three buttons max.
-- The list `⋯` is **destructive actions only**.
-- A new control **replaces** one, or argues for itself. It does not just
-  join the row.
+- The share tray is for sharing; the list `⋯` is for unmaking. When
+  something lands in one of them that is neither, that is the smell.
+- Prefer replacing a control over adding one. Three-ish in a tray is
+  where it still reads as a choice rather than a menu.
 - Adding a button because there is nowhere else to put it is the signal
-  to stop and ask, not to add the button.
+  to stop and think about where it actually belongs.
+
+These are heuristics, not statute. They exist to stop drift, not to win
+arguments — if the sensible, functional thing breaks one of them, do the
+sensible thing and say why. A rule quoted back at a real problem instead
+of solving it is worse than no rule.
 
 ## Code Style Guidelines
 

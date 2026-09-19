@@ -51,15 +51,19 @@ What is shipped & live:
 
 Visual-pass decisions (2026-09-19), so they stop resurfacing:
 
-- **Footer height is mostly physics, not padding.** On a notched iPhone the
-  bar is ~90px: 44px of that is the tap-target floor on the nav buttons
-  (`FooterComponent.svelte:7` forces `!h-[44px]`), and ~34px is
-  `env(safe-area-inset-bottom)` home-indicator clearance that must stay (see
-  the warning comment in PageLayout.svelte — a flat value here once put the
-  footer under the home indicator). Only the top padding and row gap were
-  ever discretionary and both are now trimmed, mobile-only. Going shorter
-  means dropping below 44px tap targets, which is an accessibility call, not
-  a styling one.
+- **Footer trimmed on phones: ~90px → ~78px.** Nav buttons go 44px → 38px
+  under 640px wide, plus the top padding and row gap. 44 is Apple's
+  recommendation for _primary_ targets and WCAG 2.2 AA asks 24; these are
+  tertiary links in permanently-visible chrome, so 38 is a fair call rather
+  than a compromise. `env(safe-area-inset-bottom)` (~34px of home-indicator
+  clearance) is the rest and genuinely has to stay — a flat value there once
+  put the footer under the home indicator, see the comment in
+  PageLayout.svelte.
+- **Remaining footer lever, if it still reads tall:** stop it being `fixed`
+  on phones. A permanently-docked bar spends ~78px of a small screen on
+  three things nobody taps often. Scrolling it with the page gives that back
+  to the list. Not done — it changes the feel of the app, so it wants a
+  deliberate yes.
 - **Footer stays frozen at sm and up.** The bar is shared with TalkType and
   two siblings (Pablo's call, 2026-08-12). The trim is inside
   `@media (max-width: 640px)` only.
