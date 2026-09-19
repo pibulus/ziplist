@@ -11,10 +11,7 @@
   );
   import { listsService } from "$lib/services/lists/listsService";
   import { geminiService } from "$lib/services/geminiService";
-  import {
-    listToText,
-    splitPastedList,
-  } from "$lib/services/lists/listTextFormat.js";
+  import { splitPastedList } from "$lib/services/lists/listTextFormat.js";
   import { shareList, generateShareableUrl } from "$lib/services/share";
   import { tagColour } from "$lib/services/lists/itemTags";
   import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
@@ -1350,11 +1347,27 @@
       primary: candidate.primaryColor || candidate.color || "",
     }));
 
-  // ── Share / export tray ────────────────────────────────────────────────
+  // ── Share tray ─────────────────────────────────────────────────────────
+  // Sharing, and nothing else. A link icon should never be where someone
+  // finds "Delete this list" — that pair lives in the ⋯ tray now.
   let shareTrayOpen = false;
   let shareInputMode = null;
   let pasteText = "";
   let syncPhrase = "";
+
+  // ── Manage tray (the ⋯) ────────────────────────────────────────────────
+  // These two sat under a hairline at the foot of the share tray. Grouping
+  // them there was tidy and still wrong: they are not ways of sending a
+  // list, they are ways of ending one.
+  let manageTrayOpen = false;
+
+  $: nonLiveListCount = $listsStore.lists.filter(
+    (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
+  ).length;
+  $: canDeleteList = showListManagement && nonLiveListCount > 1;
+  $: canManageList = list.items.length > 0 || canDeleteList;
+  // Clearing the last item can empty the drawer while it is open.
+  $: if (!canManageList && manageTrayOpen) manageTrayOpen = false;
 
   // ── Sending part of a list ─────────────────────────────────────────────
   // Only ever appears on a list that HAS tags — a filter row on a list with
@@ -1386,11 +1399,18 @@
 
   function toggleShareTray() {
     shareTrayOpen = !shareTrayOpen;
+    if (shareTrayOpen) manageTrayOpen = false;
     if (!shareTrayOpen) {
       shareInputMode = null;
       syncPhrase = "";
       shareTagFilter = null;
     }
+    soundService.select();
+  }
+
+  function toggleManageTray() {
+    manageTrayOpen = !manageTrayOpen;
+    if (manageTrayOpen) shareTrayOpen = false;
     soundService.select();
   }
 
@@ -1424,34 +1444,6 @@
     showListStatus("Live sharing ended.", true, 2400);
     hapticService.impact("medium");
     soundService.close({ force: true });
-  }
-
-  async function copyAsText() {
-    try {
-      await navigator.clipboard.writeText(listToText(shareableList));
-      shareTrayOpen = false;
-      showListStatus("Copied as text.", true, 2200);
-      soundService.copySuccess({ force: true });
-    } catch {
-      showListStatus("Copy did not take this time.", false, 2400);
-    }
-  }
-
-  function downloadAsText() {
-    const baseName = shareTagFilter
-      ? `${list.name || "ziplist"} ${shareTagFilter}`
-      : list.name || "ziplist";
-    const name = baseName.replace(/[^\w\- ]+/g, "").trim() || "ziplist";
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(
-      new Blob([listToText(shareableList)], { type: "text/plain" }),
-    );
-    a.download = `${name}.txt`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    shareTrayOpen = false;
-    showListStatus("Saved as a text file.", true, 2200);
-    soundService.copySuccess({ force: true });
   }
 
   function qrThisList() {
@@ -2116,7 +2108,7 @@
       undoDeleteTimer = null;
     }, 5500);
 
-    shareTrayOpen = false;
+    manageTrayOpen = false;
   }
 
   function deleteEntireList() {
@@ -2152,7 +2144,7 @@
       undoDeleteTimer = null;
     }, 6500);
 
-    shareTrayOpen = false;
+    manageTrayOpen = false;
   }
 
   function restoreDeletedItem() {
@@ -2688,6 +2680,33 @@
             ></path>
           </svg>
         </button>
+
+        <!-- Only appears when there is something to unmake. A ⋯ that opens
+             an empty drawer is worse than no ⋯. -->
+        {#if canManageList}
+          <button
+            type="button"
+            class="zl-manage-button"
+            class:is-open={manageTrayOpen}
+            on:click={toggleManageTray}
+            aria-expanded={manageTrayOpen}
+            data-tip="Clear or delete"
+            aria-label={`More actions for ${list.name || "this list"}`}
+          >
+            <svg
+              class="zl-header-icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+            >
+              <circle cx="5" cy="12" r="1.9"></circle>
+              <circle cx="12" cy="12" r="1.9"></circle>
+              <circle cx="19" cy="12" r="1.9"></circle>
+            </svg>
+          </button>
+        {/if}
       </div>
     </div>
 
@@ -2722,93 +2741,39 @@
           </div>
         {/if}
 
-        <!-- Three jobs, three rows, in the order they get reached for.
-             These seven buttons used to sit in one `flex-wrap` pile, which
-             meant the browser decided what shared a row with what — and it
-             chose to put "Clear entire list" next to "QR this list" and
-             orphan "Delete this list" underneath. The grouping READ as
-             deliberate and was purely a function of label width. Rows are
-             explicit now, so meaning survives every viewport:
-
-               send    — hand the list to a person
-               export  — hand the list to a machine
-               danger  — unmake the list
-
-             Export sits at lighter weight because it is the rarest of the
-             three and was previously shouting at the same volume as sharing. -->
-        <div class="zl-share-actions">
-          <div class="zl-share-group" role="group" aria-label="Send this list">
-            <button type="button" class="zl-share-option" on:click={shareAsLink}>
-              {isLive ? "Copy link" : "Send a copy"}
-            </button>
-            {#if liveFeatureAvailable && !isLive}
-              <button
-                type="button"
-                class="zl-share-option zl-share-live"
-                disabled={isMakingLive}
-                aria-busy={isMakingLive}
-                on:click={shareAsLiveRoom}
-              >
-                {isMakingLive ? "Opening the room..." : "Share live"}
-              </button>
-            {/if}
-            {#if isLive}
-              <button
-                type="button"
-                class="zl-share-option zl-share-stop"
-                on:click={handleStopLive}
-              >
-                Stop live sharing
-              </button>
-            {/if}
-          </div>
-
-          <div
-            class="zl-share-group zl-share-group-export"
-            role="group"
-            aria-label="Export this list"
-          >
-            <button type="button" class="zl-share-option" on:click={copyAsText}>
-              Copy as text
-            </button>
+        <!-- One job now: hand this list to someone. "Copy as text" and
+             "Save as file" used to sit below this row, but `shareAsLink`
+             delegates to navigator.share and the sheet it opens already
+             offers Copy and Save to Files — they were the OS wearing our
+             chrome. QR stays: scanning is the one handoff a share sheet
+             cannot do, because it needs the other phone in the room. -->
+        <div class="zl-share-actions" role="group" aria-label="Send this list">
+          <button type="button" class="zl-share-option" on:click={shareAsLink}>
+            {isLive ? "Copy link" : "Send a copy"}
+          </button>
+          {#if liveFeatureAvailable && !isLive}
             <button
               type="button"
-              class="zl-share-option"
-              on:click={downloadAsText}
+              class="zl-share-option zl-share-live"
+              disabled={isMakingLive}
+              aria-busy={isMakingLive}
+              on:click={shareAsLiveRoom}
             >
-              Save as file
+              {isMakingLive ? "Opening the room..." : "Share live"}
             </button>
-            <button type="button" class="zl-share-option" on:click={qrThisList}>
-              QR this list
-            </button>
-          </div>
-
-          {#if list.items.length > 0 || (showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1)}
-            <div
-              class="zl-share-group zl-share-group-danger"
-              role="group"
-              aria-label="Undo this list"
-            >
-              {#if list.items.length > 0}
-                <button
-                  type="button"
-                  class="zl-share-option zl-share-clear"
-                  on:click={clearEntireList}
-                >
-                  Clear entire list
-                </button>
-              {/if}
-              {#if showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1}
-                <button
-                  type="button"
-                  class="zl-share-option zl-share-delete-list"
-                  on:click={deleteEntireList}
-                >
-                  Delete this list
-                </button>
-              {/if}
-            </div>
           {/if}
+          {#if isLive}
+            <button
+              type="button"
+              class="zl-share-option zl-share-stop"
+              on:click={handleStopLive}
+            >
+              Stop live sharing
+            </button>
+          {/if}
+          <button type="button" class="zl-share-option" on:click={qrThisList}>
+            QR this list
+          </button>
         </div>
 
         {#if syncPhrase}
@@ -2861,6 +2826,37 @@
               </button>
             </div>
           </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Ending a list is not a way of sending it, so it gets its own drawer
+         rather than a hairline at the foot of someone else's. Inline for the
+         same reason the share tray is: .zl-card is overflow:clip. -->
+    {#if manageTrayOpen && canManageList}
+      <div
+        class="zl-manage-tray"
+        role="group"
+        aria-label="Manage this list"
+        transition:fade={{ duration: 130 }}
+      >
+        {#if list.items.length > 0}
+          <button
+            type="button"
+            class="zl-share-option zl-share-clear"
+            on:click={clearEntireList}
+          >
+            Clear entire list
+          </button>
+        {/if}
+        {#if canDeleteList}
+          <button
+            type="button"
+            class="zl-share-option zl-share-delete-list"
+            on:click={deleteEntireList}
+          >
+            Delete this list
+          </button>
         {/if}
       </div>
     {/if}

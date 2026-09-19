@@ -2583,6 +2583,44 @@ body.zl-touch-dragging {
   background: rgba(30, 23, 20, 0.08);
 }
 
+/* The ⋯ joins the header's ghost icon trio — same 44px target, same
+   quiet-until-touched treatment, so it reads as one family. */
+.zl-manage-button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--zl-text-color-secondary);
+  opacity: 0.72;
+  box-shadow: none;
+  cursor: pointer;
+  transition: var(--zl-transition-fast);
+}
+
+.zl-manage-button:hover:not(:disabled),
+.zl-manage-button:focus-visible:not(:disabled) {
+  background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
+  color: var(--zl-text-color-primary);
+  opacity: 1;
+  outline: none;
+}
+
+/* Same tray chrome as sharing — different contents, one visual grammar. */
+.zl-manage-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.15rem 0.25rem;
+}
+
+.zl-manage-button.is-open,
 .zl-share-button.is-open {
   opacity: 1;
   background: rgba(30, 23, 20, 0.08);
@@ -3267,46 +3305,8 @@ body.zl-touch-dragging {
    holds at every width instead of only at the one it was eyeballed on. */
 .zl-share-actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.zl-share-group {
-  display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-/* Export is the rarest of the three and was shouting at the same volume as
-   sharing. Same shape, less ink — present without competing. */
-.zl-share-group-export .zl-share-option {
-  font-size: 0.72rem;
-  border-color: color-mix(
-    in srgb,
-    var(--zl-text-color-primary, #1e1714) 14%,
-    transparent
-  );
-  background: color-mix(in srgb, var(--zl-item-bg, #fffef7) 55%, transparent);
-  color: color-mix(
-    in srgb,
-    var(--zl-text-color-primary, #1e1714) 72%,
-    transparent
-  );
-}
-
-.zl-share-group-export .zl-share-option:hover:not(:disabled),
-.zl-share-group-export .zl-share-option:focus-visible {
-  color: var(--zl-text-color-primary, #1e1714);
-}
-
-/* The only hard divide in the tray. Everything above hands the list to
-   someone; everything below unmakes it. A hairline is cheaper than a
-   confirm dialog and does most of the same work. */
-.zl-share-group-danger {
-  margin-top: 0.15rem;
-  padding-top: 0.6rem;
-  border-top: 1.5px solid
-    color-mix(in srgb, var(--zl-text-color-primary, #1e1714) 10%, transparent);
 }
 
 /* The words are the link, so they're a button, not a caption. */
