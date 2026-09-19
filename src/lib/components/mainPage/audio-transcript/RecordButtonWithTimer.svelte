@@ -1,8 +1,8 @@
 <script>
   import {
     ANIMATION,
-    ZIPLIST_START_PHRASES,
-    ZIPLIST_ADD_PHRASES,
+    ZIPLIST_CTA_START,
+    ZIPLIST_CTA_ADD,
     getRandomFromArray,
   } from "$lib/constants";
   import { activeListItems } from "$lib/services/lists/listsStore";
@@ -100,8 +100,8 @@
   $: if (recording) startVisualization();
 
   let hasActiveList = false;
-  let currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
-  let currentAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
+  const currentStartPhrase = ZIPLIST_CTA_START;
+  const currentAddPhrase = ZIPLIST_CTA_ADD;
 
   const unsubscribe = activeListItems.subscribe((items) => {
     const wasActiveList = hasActiveList;
@@ -133,23 +133,6 @@
     }
   }
 
-  function updateRandomPhrases() {
-    if (ZIPLIST_START_PHRASES.length > 1) {
-      let newStartPhrase;
-      do {
-        newStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
-      } while (newStartPhrase === currentStartPhrase);
-      currentStartPhrase = newStartPhrase;
-    }
-
-    if (ZIPLIST_ADD_PHRASES.length > 1) {
-      let newAddPhrase;
-      do {
-        newAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
-      } while (newAddPhrase === currentAddPhrase);
-      currentAddPhrase = newAddPhrase;
-    }
-  }
   export function animateButtonPress() {
     if (recordButtonElement) {
       clearPressAnimationTimeout();
@@ -313,10 +296,6 @@
           return;
         }
         dispatch("click");
-        // Only update phrases for next time after a click
-        if (!recording) {
-          updateRandomPhrases();
-        }
       }}
       on:pointerdown={handlePointerDown}
       on:pointerup={handlePointerRelease}
@@ -402,10 +381,30 @@
             <span class="button-content relative z-10">
               <span class="relative flex w-full items-center justify-center">
                 <span
-                  class="cta__label relative z-10 rounded-lg px-1 py-0.5"
+                  class="cta__label relative z-10 inline-flex items-center justify-center gap-2 rounded-lg px-1 py-0.5"
                   class:text-shadow-recording={recording}
                   style="font-size: clamp(1.05rem, 0.4vw + 1rem, 1.2rem); letter-spacing: .02em; text-align: center; width: 100%;"
                 >
+                  {#if !recording}
+                    <!-- Says "this is a microphone" before anyone reads a
+                         word. Hidden while recording, where the waveform and
+                         timer already say what is happening. -->
+                    <svg
+                      class="cta__glyph"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="9" y="2" width="6" height="11" rx="3"></rect>
+                      <path d="M5 10v1a7 7 0 0 0 14 0v-1"></path>
+                      <line x1="12" y1="19" x2="12" y2="22"></line>
+                    </svg>
+                  {/if}
                   {buttonLabel}
                 </span>
                 <span class="sr-only">
@@ -441,6 +440,16 @@
   .compact-glyph {
     width: 26px;
     height: 26px;
+  }
+
+  /* Sized against the label rather than in px, so it tracks the CTA's
+     clamp() as the button scales. flex-shrink:0 keeps it a mic and not an
+     oval when the text is long. */
+  .cta__glyph {
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
+    opacity: 0.9;
   }
 
   /* Base button styling */

@@ -1408,6 +1408,20 @@
   width: 0;
 }
 
+/* The checkbox halo follows the LIST's colour, not the vibe's.
+   `--zl-checkbox-shadow` is declared in theme-variables.css off
+   `--zl-primary-color-rgb`, which is identical across all lists — so a yellow
+   list wore a pink glow. The spines and gradients already made this call (see
+   the `--zl-item-accent` note in SingleList.svelte); this one shadow never got
+   the memo. color-mix because the accent is a hex off the list record, not a
+   triplet. */
+.zl-card {
+  --zl-checkbox-shadow: 0 3px 7px
+    color-mix(in srgb, var(--zl-item-accent, #ffcc33) 22%, transparent);
+  --zl-checkbox-hover-shadow: 0 3px 8px
+    color-mix(in srgb, var(--zl-item-accent, #ffcc33) 34%, transparent);
+}
+
 .zl-checkbox-custom {
   position: relative;
   display: inline-block;
