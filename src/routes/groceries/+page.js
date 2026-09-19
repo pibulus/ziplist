@@ -1,5 +1,5 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export function load() {
-  throw redirect(307, '/for/groceries');
+  throw redirect(307, "/for/groceries");
 }
