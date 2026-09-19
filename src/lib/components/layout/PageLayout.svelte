@@ -17,6 +17,12 @@
   export let ogImageAlt =
     "ZipList's speech-bubble mascot above the ZipList.app wordmark and a yellow strip reading: the talkable shareable list thing — with a pink no-signup badge.";
   export let ogType = "website";
+  /* Locale and the hreflang pair are per-ROUTE, not per-site: /for/groceries
+     pairs with /es/mandado, not with the Spanish homepage. Defaults keep the
+     old behaviour for any page that does not care. */
+  export let ogLocale = "en_US";
+  export let hreflangEn = "https://ziplist.app";
+  export let hreflangEs = "https://ziplist.app/es";
   export let footerYear = new Date().getFullYear();
   export let appName = "ZipList";
   export let listFirst = false;
@@ -33,13 +39,13 @@
   <meta name="robots" content={robots} />
   {#if canonical}
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" hreflang="en" href="https://ziplist.app" />
-    <link rel="alternate" hreflang="es" href="https://ziplist.app/es" />
+    <link rel="alternate" hreflang="en" href={hreflangEn} />
+    <link rel="alternate" hreflang="es" href={hreflangEs} />
   {/if}
 
   <meta property="og:type" content={ogType} />
   <meta property="og:site_name" content="ZipList" />
-  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale" content={ogLocale} />
   {#if resolvedOgUrl}
     <meta property="og:url" content={resolvedOgUrl} />
   {/if}

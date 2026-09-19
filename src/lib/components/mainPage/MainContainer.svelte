@@ -901,9 +901,15 @@
     soundService.stopRecording({ force: true });
     mediaRecorder.stop();
   }
+
+  /* Per-route SEO, forwarded to PageLayout. Routes used to hand-roll their own
+     <svelte:head> while PageLayout emitted its ENGLISH HOMEPAGE defaults over
+     the top, so every landing page shipped two of every og/twitter tag and
+     three canonicals. One emitter now; the route supplies the values. */
+  export let seo = {};
 </script>
 
-<PageLayout listFirst={$listFirstMode === "true"}>
+<PageLayout {...seo} listFirst={$listFirstMode === "true"}>
   {#if $listFirstMode !== "true"}
     <ContentContainer
       on:toggleRecording={handleToggleRecording}

@@ -23,7 +23,19 @@ Release baseline:
   the file as JS, so each died at `Parsing error: Unexpected token {` and an
   unparseable file is an unlinted file. The tag is assembled in the module
   block now.
-- ⚠️ **Duplicate JSON-LD on every page — needs a call, not a fix.**
+- ✅ **Resolved 2026-09-19. Duplicate page metadata, not just JSON-LD.**
+  The Messenger/OG bug in CHANGELOG.md was never actually fixed — every
+  indexed page was still shipping two of every `og:`/`twitter:` tag and
+  THREE canonicals. Sources: `app.html` hardcoded `canonical=ziplist.app`
+  (so every /es and /for page told Google it was really the homepage),
+  `PageLayout` emitted its English-homepage defaults because
+  `MainContainer` passed it nothing, and each route hand-rolled a third
+  correct set. PageLayout is the single emitter now; routes feed it
+  `seo={{…}}` through MainContainer, and it learned `ogLocale`/`hreflangEn`
+  /`hreflangEs` since those are per-route. Verified: 0 duplicate tags, one
+  route-correct canonical per page, bidirectional hreflang, Spanish pages
+  carrying Spanish og:titles. Old note follows for history:
+- ⚠️ ~~**Duplicate JSON-LD on every page — needs a call, not a fix.**~~
   `src/app.html:197` injects a global `WebApplication` block into every
   route, and each route's `<svelte:head>` emits its own. So every page ships
   two `WebApplication` schemas with the same `name` and _different_ bodies
