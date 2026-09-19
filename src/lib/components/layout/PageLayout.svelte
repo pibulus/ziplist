@@ -65,7 +65,7 @@
 <a class="skip-link" href="#main-content">Skip to lists</a>
 
 <div
-  class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10"
+  class="bg-gradient-mesh main center page-shell hero grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10"
   class:list-first-shell={listFirst}
 >
   {#if listFirst}
@@ -85,13 +85,13 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs sm:pb-4 sm:pt-6 px-4 sm:px-6 md:px-8"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t px-4 pb-2 pt-3 text-center text-xs sm:px-6 sm:pb-4 sm:pt-6 md:px-8"
   >
     <div
       class="footer-row mx-auto flex w-full flex-row items-center justify-between gap-2 sm:gap-3"
     >
       <div
-        class="copyright flex items-center justify-center min-w-0 shrink whitespace-nowrap"
+        class="copyright flex min-w-0 shrink items-center justify-center whitespace-nowrap"
       >
         <span class="footer-copy mr-1 text-sm font-medium tracking-normal">
           © {footerYear}
@@ -103,9 +103,13 @@
              abrupt. Mobile drops the lead-in and the "in" instead, landing on
              "❤️ Melbourne": short, complete, still warm. -->
         <span class="footer-meta text-sm font-medium">
-          <span class="footer-lead">Made<span class="footer-with">&nbsp;with</span></span>
-          <FooterCharm charms={['❤️']} rare={['🍒', '⚡']} />
-          <span class="footer-place"><span class="footer-in">&nbsp;in</span>&nbsp;Melbourne</span>
+          <span class="footer-lead"
+            >Made<span class="footer-with">&nbsp;with</span></span
+          >
+          <FooterCharm charms={["❤️"]} rare={["🍒", "⚡"]} />
+          <span class="footer-place"
+            ><span class="footer-in">&nbsp;in</span>&nbsp;Melbourne</span
+          >
         </span>
       </div>
       <div class="flex shrink-0 items-center">

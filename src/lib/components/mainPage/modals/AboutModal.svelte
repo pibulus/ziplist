@@ -6,13 +6,13 @@
 
 <dialog
   id="about_modal"
-  class="modal modal-middle overflow-hidden fixed z-50"
+  class="modal modal-middle fixed z-50 overflow-hidden"
   style="overflow-y: hidden!important;"
   aria-labelledby="about_modal_title"
   aria-modal="true"
 >
   <div
-    class="modal-box bg-gradient-to-br from-[#fffaef] to-[#fff6e6] shadow-xl border border-pink-200 rounded-2xl overflow-y-auto max-h-[80vh]"
+    class="modal-box max-h-[80vh] overflow-y-auto rounded-2xl border border-pink-200 bg-gradient-to-br from-[#fffaef] to-[#fff6e6] shadow-xl"
   >
     <form method="dialog">
       <ModalCloseButton
@@ -25,20 +25,20 @@
     <div class="space-y-4">
       <!-- pr-14 keeps the title clear of the absolute close X (40px button
            + right-2.5 offset on touch screens). -->
-      <div class="flex items-center gap-3 mb-1 pr-14">
+      <div class="mb-1 flex items-center gap-3 pr-14">
         <div class="about-mascot-slot shrink-0">
           <Mascot interactive={false} aura={false} />
         </div>
         <h3
           id="about_modal_title"
-          class="font-black text-xl text-gray-800 tracking-tight"
+          class="text-xl font-black tracking-tight text-gray-800"
         >
           The shareable voice list thing
         </h3>
       </div>
 
       <div
-        class="bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 rounded-lg border border-pink-200/60 shadow-sm"
+        class="rounded-lg border border-pink-200/60 bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 shadow-sm"
       >
         <p class="text-sm leading-relaxed text-gray-700">
           Say the thing, and it's on the list. That's the whole trick.
@@ -54,7 +54,7 @@
         <p>Four words carry a list to another phone. No login, no fuss.</p>
       </div>
 
-      <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
         <p class="text-xs text-gray-500">
           © 2026 ZipList • Made by <a
             href="https://madebypablo.app"
@@ -68,7 +68,7 @@
             href="https://github.com/pibulus"
             target="_blank"
             rel="noopener noreferrer"
-            class="about-link text-xs text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            class="about-link text-xs font-medium text-gray-600 transition-colors hover:text-gray-900"
             aria-label="Source code on GitHub"
           >
             🐙 Peek at the guts
@@ -77,7 +77,7 @@
             href="https://ko-fi.com/madebypablo"
             target="_blank"
             rel="noopener noreferrer"
-            class="about-link text-xs text-teal-700 hover:text-teal-900 font-medium transition-colors"
+            class="about-link text-xs font-medium text-teal-700 transition-colors hover:text-teal-900"
           >
             ☕ Buy me a coffee
           </a>

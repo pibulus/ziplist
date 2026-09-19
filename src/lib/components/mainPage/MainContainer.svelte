@@ -901,7 +901,6 @@
     soundService.stopRecording({ force: true });
     mediaRecorder.stop();
   }
-
 </script>
 
 <PageLayout listFirst={$listFirstMode === "true"}>
@@ -915,7 +914,7 @@
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->
   <div
-    class="mt-1 mb-4 flex justify-center sm:my-3"
+    class="mb-4 mt-1 flex justify-center sm:my-3"
     class:list-first-record-button={$listFirstMode === "true"}
   >
     <RecordButtonWithTimer
@@ -1018,6 +1017,23 @@
   />
 {/if}
 
+{#if ContributorModal}
+  <svelte:component
+    this={ContributorModal}
+    closeModal={closeContributorModal}
+    on:close={closeContributorModal}
+  />
+{/if}
+
+{#if QrShareModal}
+  <svelte:component
+    this={QrShareModal}
+    closeModal={closeQrModal}
+    on:close={closeQrModal}
+    {...qrModalProps}
+  />
+{/if}
+
 <style>
   /* Space held for the list that is about to arrive — see the boot script in
      app.html. Only for visitors who already have a list; a min-height never
@@ -1104,21 +1120,3 @@
     margin-top: 0.5rem;
   }
 </style>
-
-{#if ContributorModal}
-  <svelte:component
-    this={ContributorModal}
-    closeModal={closeContributorModal}
-    on:close={closeContributorModal}
-  />
-{/if}
-
-{#if QrShareModal}
-  <svelte:component
-    this={QrShareModal}
-    closeModal={closeQrModal}
-    on:close={closeQrModal}
-    {...qrModalProps}
-  />
-{/if}
-

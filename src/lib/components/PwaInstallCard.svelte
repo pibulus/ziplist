@@ -223,8 +223,7 @@
     z-index: 900; /* under modals (9999), over page content */
     width: min(20rem, calc(100vw - 2rem));
     padding: 1rem 1rem 0.9rem;
-    border: 1px solid
-      rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.28);
+    border: 1px solid rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.28);
     border-radius: 18px;
     background: var(--ds-bg, #fffaef);
     color: var(--ds-ink, #2a2233);
@@ -349,8 +348,7 @@
       var(--ds-primary-color, #ec4899),
       var(--ds-accent-color, #f59e0b)
     );
-    box-shadow: 0 3px 10px
-      rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.3);
+    box-shadow: 0 3px 10px rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.3);
     cursor: pointer;
     transition:
       transform 0.15s ease,
@@ -358,8 +356,7 @@
   }
   .pwa-cta:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 14px
-      rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.4);
+    box-shadow: 0 5px 14px rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.4);
   }
   .pwa-cta:active {
     transform: translateY(0) scale(0.98);

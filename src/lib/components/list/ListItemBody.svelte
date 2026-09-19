@@ -49,7 +49,9 @@
       : item.text.replace(/^##\s*/, "").trim()
     : "";
   $: isPortal = !item.checked && /^(\u2192|->)\s+/.test(item.text);
-  $: portalTarget = isPortal ? item.text.replace(/^(\u2192|->)\s+/, "").trim() : "";
+  $: portalTarget = isPortal
+    ? item.text.replace(/^(\u2192|->)\s+/, "").trim()
+    : "";
 </script>
 
 {#if checkedBloom}
@@ -137,7 +139,9 @@
   {:else}
     <button
       type="button"
-      class="zl-item-text-button {item.checked ? 'checked' : ''} {isSection ? 'section-header-button' : ''}"
+      class="zl-item-text-button {item.checked ? 'checked' : ''} {isSection
+        ? 'section-header-button'
+        : ''}"
       on:click|stopPropagation={() => {
         if (isPortal) {
           onNavigateToPortal(portalTarget);
@@ -166,7 +170,8 @@
         {/if}
       {:else if isPortal}
         <span class="zl-item-text zl-item-portal-text">
-          <span class="zl-portal-arrow-inline">→</span> {portalTarget}
+          <span class="zl-portal-arrow-inline">→</span>
+          {portalTarget}
         </span>
       {:else}
         <span class="zl-item-text {item.checked ? 'checked' : ''}">

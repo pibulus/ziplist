@@ -1,6 +1,6 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  import AnimatedTitle from './AnimatedTitle.svelte';
+  import { createEventDispatcher } from "svelte";
+  import AnimatedTitle from "./AnimatedTitle.svelte";
 
   // Event dispatcher to communicate with parent
   const dispatch = createEventDispatcher();
@@ -9,16 +9,16 @@
 
   // Function to handle title animation complete
   function handleTitleAnimationComplete() {
-    dispatch('titleAnimationComplete');
+    dispatch("titleAnimationComplete");
   }
 
   // Function to handle subtitle animation complete
   function handleSubtitleAnimationComplete() {
-    dispatch('subtitleAnimationComplete');
+    dispatch("subtitleAnimationComplete");
   }
 </script>
 
-<AnimatedTitle 
+<AnimatedTitle
   on:titleAnimationComplete={handleTitleAnimationComplete}
   on:subtitleAnimationComplete={handleSubtitleAnimationComplete}
   on:toggleRecording

@@ -171,8 +171,7 @@
   $: timeRemaining = getTimeRemaining();
   $: isWarning = timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
   $: isDanger = timeRemaining <= ANIMATION.RECORDING.DANGER_THRESHOLD;
-  $: isAlmostDone =
-    timeRemaining <= ANIMATION.RECORDING.ALMOST_DONE_THRESHOLD;
+  $: isAlmostDone = timeRemaining <= ANIMATION.RECORDING.ALMOST_DONE_THRESHOLD;
   $: secondsLeft = Math.max(0, Math.ceil(timeRemaining));
 
   function formatTime(seconds) {
@@ -278,7 +277,7 @@
     <div
       class="progress-container overflow-hidden rounded-full shadow-md shadow-black/10 {compact
         ? 'h-[64px] w-[64px]'
-        : 'h-[64px] w-[75%] max-w-[420px] sm:h-[64px] sm:w-[85%] mx-auto'}"
+        : 'mx-auto h-[64px] w-[75%] max-w-[420px] sm:h-[64px] sm:w-[85%]'}"
       role="progressbar"
       aria-label="List-making progress"
       aria-valuenow={progress}
@@ -287,11 +286,11 @@
       aria-valuetext={`Making list ${Math.round(progress)} percent complete`}
     >
       <div
-        class="flex items-center justify-center h-full transition-all duration-300 progress-bar"
+        class="progress-bar flex h-full items-center justify-center transition-all duration-300"
         style="width: {progress}%;"
       >
         {#if !compact}
-          <span class="text-white font-bold z-10 relative">Ziplisting...</span>
+          <span class="relative z-10 font-bold text-white">Ziplisting...</span>
         {/if}
       </div>
     </div>
@@ -394,16 +393,16 @@
         </span>
       {:else}
         <span
-          class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
+          class="cta-text relative inline-flex w-full items-center justify-center whitespace-nowrap transition-all duration-300 ease-out"
           style="letter-spacing: 0.02em;"
         >
           <span
-            class="transform transition-all duration-300 ease-out scale-100 opacity-100"
+            class="scale-100 transform opacity-100 transition-all duration-300 ease-out"
           >
             <span class="button-content relative z-10">
-              <span class="flex items-center justify-center relative w-full">
+              <span class="relative flex w-full items-center justify-center">
                 <span
-                  class="cta__label relative z-10 px-1 py-0.5 rounded-lg"
+                  class="cta__label relative z-10 rounded-lg px-1 py-0.5"
                   class:text-shadow-recording={recording}
                   style="font-size: clamp(1.05rem, 0.4vw + 1rem, 1.2rem); letter-spacing: .02em; text-align: center; width: 100%;"
                 >
@@ -653,8 +652,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: 0 0 20px 6px
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
+    box-shadow: 0 0 20px 6px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     opacity: calc(0.55 * var(--breathe-glow));
     animation: button-breathe-glow 4.8s ease-in-out infinite;
     will-change: opacity;
@@ -752,16 +750,13 @@
 
   @keyframes pulse-glow {
     0% {
-      box-shadow: inset 0 0 5px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
+      box-shadow: inset 0 0 5px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     }
     50% {
-      box-shadow: inset 0 0 15px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.8);
+      box-shadow: inset 0 0 15px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.8);
     }
     100% {
-      box-shadow: inset 0 0 5px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
+      box-shadow: inset 0 0 5px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     }
   }
 
@@ -776,8 +771,7 @@
       linear-gradient(
         to right,
         rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9),
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9)
-          var(--progress, 0%),
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9) var(--progress, 0%),
         rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.38)
           calc(var(--progress, 0%) + 0.5%),
         rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.24) 100%
@@ -871,8 +865,7 @@
     background-image: linear-gradient(
       to right,
       rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7)
-        var(--progress, 0%),
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7) var(--progress, 0%),
       rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.45) 100%
     );
     box-shadow:
@@ -885,8 +878,7 @@
     background-image: linear-gradient(
       to right,
       rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7)
-        var(--progress, 0%),
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7) var(--progress, 0%),
       rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.62) 100%
     );
     box-shadow:

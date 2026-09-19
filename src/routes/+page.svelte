@@ -1,43 +1,43 @@
 <script>
-  import { MainContainer } from '$lib/components/mainPage';
+  import { MainContainer } from "$lib/components/mainPage";
 
-  const canonicalUrl = 'https://ziplist.app';
-  const title = 'ZipList — Talk it into a list. Tick it off.';
+  const canonicalUrl = "https://ziplist.app";
+  const title = "ZipList — Talk it into a list. Tick it off.";
   const description =
-    'A warm, tactile voice checklist for groceries, errands, packing, and chores. No dates, no streaks, no pressure.';
+    "A warm, tactile voice checklist for groceries, errands, packing, and chores. No dates, no streaks, no pressure.";
 
   // Assembled here rather than inline in <svelte:head>: a literal
   // `<script>` in markup makes svelte-eslint-parser treat the rest of
   // the file as JS, which silently dropped this route from linting.
   const structuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: 'ZipList',
-    alternateName: 'ZipList.app',
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "ZipList",
+    alternateName: "ZipList.app",
     url: canonicalUrl,
-    image: 'https://ziplist.app/og-card.png',
+    image: "https://ziplist.app/og-card.png",
     description: description,
-    applicationCategory: 'UtilitiesApplication',
-    applicationSubCategory: 'Voice checklist and todo lists',
-    operatingSystem: 'Web',
-    inLanguage: 'en',
+    applicationCategory: "UtilitiesApplication",
+    applicationSubCategory: "Voice checklist and todo lists",
+    operatingSystem: "Web",
+    inLanguage: "en",
     isAccessibleForFree: true,
     offers: [
       {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'USD',
-        description: 'Free voice checklist creation and live QR rooms'
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        description: "Free voice checklist creation and live QR rooms",
       },
       {
-        '@type': 'Offer',
-        price: '19',
-        priceCurrency: 'USD',
-        description: 'Lifetime Supporter Pass with unlimited lists'
-      }
+        "@type": "Offer",
+        price: "19",
+        priceCurrency: "USD",
+        description: "Lifetime Supporter Pass with unlimited lists",
+      },
     ],
     keywords:
-      'voice checklist, grocery list, talk to list, hands-free list, live shared todo, tactile checklist, no account todo'
+      "voice checklist, grocery list, talk to list, hands-free list, live shared todo, tactile checklist, no account todo",
   };
   const jsonLdScript =
     `<script type="application/ld+json">${JSON.stringify(structuredData)}` +

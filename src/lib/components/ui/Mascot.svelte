@@ -199,9 +199,23 @@
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <rect x="334" y="520" width="44" height="44" rx="6" stroke-width="18" />
+          <rect
+            x="334"
+            y="520"
+            width="44"
+            height="44"
+            rx="6"
+            stroke-width="18"
+          />
           <path d="M430 542H690" stroke-width="21" />
-          <rect x="334" y="598" width="44" height="44" rx="6" stroke-width="18" />
+          <rect
+            x="334"
+            y="598"
+            width="44"
+            height="44"
+            rx="6"
+            stroke-width="18"
+          />
           <path d="M430 620H690" stroke-width="21" />
         </g>
 

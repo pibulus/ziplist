@@ -11,14 +11,18 @@
 
   $: status = $page.status;
   $: isNotFound = status === 404;
-  $: heading = isNotFound ? "This page went wandering" : "Something got tangled";
+  $: heading = isNotFound
+    ? "This page went wandering"
+    : "Something got tangled";
   $: blurb = isNotFound
     ? "We looked, but there's nothing here. The link may have a typo, or it moved. No worries — your lists are right where you left them."
     : "A little hiccup on our end. Give it another go, or head home and pick up where you left off.";
 </script>
 
 <svelte:head>
-  <title>{isNotFound ? "Page went wandering" : "A little hiccup"} | ZipList</title>
+  <title
+    >{isNotFound ? "Page went wandering" : "A little hiccup"} | ZipList</title
+  >
   <meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 

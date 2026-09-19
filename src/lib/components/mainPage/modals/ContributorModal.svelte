@@ -13,9 +13,13 @@
 
   onMount(() => {
     const dialog = document.getElementById("contributor_modal");
-    function onDialogClose() { closeModal(); }
+    function onDialogClose() {
+      closeModal();
+    }
     if (dialog) dialog.addEventListener("close", onDialogClose);
-    return () => { if (dialog) dialog.removeEventListener("close", onDialogClose); };
+    return () => {
+      if (dialog) dialog.removeEventListener("close", onDialogClose);
+    };
   });
 
   let code = "";

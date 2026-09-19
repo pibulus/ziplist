@@ -1,63 +1,64 @@
 <script>
-  import { MainContainer } from '$lib/components/mainPage';
+  import { MainContainer } from "$lib/components/mainPage";
 
-  const canonicalUrl = 'https://ziplist.app/for/couples';
-  const title = 'Shared Grocery & Chores List App for Couples — Instant QR Sync | ZipList';
+  const canonicalUrl = "https://ziplist.app/for/couples";
+  const title =
+    "Shared Grocery & Chores List App for Couples — Instant QR Sync | ZipList";
   const description =
-    'Real-time shared checklist for couples. Plan dinner, split supermarket aisles, and pack for trips together with instant QR pairing and zero accounts or signups.';
+    "Real-time shared checklist for couples. Plan dinner, split supermarket aisles, and pack for trips together with instant QR pairing and zero accounts or signups.";
 
   // Assembled here rather than inline in <svelte:head>: a literal
   // `<script>` in markup makes svelte-eslint-parser treat the rest of
   // the file as JS, which silently dropped this route from linting.
   const structuredData = {
-    '@context': 'https://schema.org',
-    '@graph': [
+    "@context": "https://schema.org",
+    "@graph": [
       {
-        '@type': 'WebApplication',
-        name: 'ZipList Shared Lists for Couples',
+        "@type": "WebApplication",
+        name: "ZipList Shared Lists for Couples",
         url: canonicalUrl,
-        image: 'https://ziplist.app/og-card.png',
+        image: "https://ziplist.app/og-card.png",
         description: description,
-        applicationCategory: 'LifestyleApplication',
-        operatingSystem: 'Web',
-        inLanguage: 'en',
+        applicationCategory: "LifestyleApplication",
+        operatingSystem: "Web",
+        inLanguage: "en",
         offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD',
-          description: 'Free shared real-time lists with instant QR pairing'
-        }
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+          description: "Free shared real-time lists with instant QR pairing",
+        },
       },
       {
-        '@type': 'FAQPage',
+        "@type": "FAQPage",
         mainEntity: [
           {
-            '@type': 'Question',
-            name: 'How do couples share a list in ZipList without accounts?',
+            "@type": "Question",
+            name: "How do couples share a list in ZipList without accounts?",
             acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Tap "Share QR" to generate a live room. Your partner scans it with their phone camera and you are instantly connected in real-time. No emails, no passwords, no logins.'
-            }
+              "@type": "Answer",
+              text: 'Tap "Share QR" to generate a live room. Your partner scans it with their phone camera and you are instantly connected in real-time. No emails, no passwords, no logins.',
+            },
           },
           {
-            '@type': 'Question',
-            name: 'Can we tick off items simultaneously at opposite ends of the supermarket?',
+            "@type": "Question",
+            name: "Can we tick off items simultaneously at opposite ends of the supermarket?",
             acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Yes! Updates sync across both phones in sub-10 milliseconds via WebSockets. When your partner grabs oat milk in aisle 1, it checks off on your phone in aisle 8 immediately.'
-            }
+              "@type": "Answer",
+              text: "Yes! Updates sync across both phones in sub-10 milliseconds via WebSockets. When your partner grabs oat milk in aisle 1, it checks off on your phone in aisle 8 immediately.",
+            },
           },
           {
-            '@type': 'Question',
-            name: 'Can we use voice dictation together?',
+            "@type": "Question",
+            name: "Can we use voice dictation together?",
             acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Either person can tap the microphone button and dictate grocery items, packing gear, or weekend chores. ZipList parses spoken phrases into discrete checklist items automatically.'
-            }
-          }
-        ]
-      }
-    ]
+              "@type": "Answer",
+              text: "Either person can tap the microphone button and dictate grocery items, packing gear, or weekend chores. ZipList parses spoken phrases into discrete checklist items automatically.",
+            },
+          },
+        ],
+      },
+    ],
   };
   const jsonLdScript =
     `<script type="application/ld+json">${JSON.stringify(structuredData)}` +

@@ -98,7 +98,7 @@
           <!-- Using same dimensions as theme preview for consistency -->
           <div class="preview-ghost-wrapper relative h-12 w-12">
             <div
-              class="preview-icon-layers relative h-full w-full flex items-center justify-center"
+              class="preview-icon-layers relative flex h-full w-full items-center justify-center"
             >
               <span
                 class="style-glyph border {styleGlyphClasses[style] ||
@@ -118,11 +118,11 @@
 
         <!-- Tooltip on hover -->
         <div
-          class="tooltip opacity-0 invisible absolute -top-9 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap pointer-events-none transition-opacity duration-150"
+          class="tooltip pointer-events-none invisible absolute -top-9 left-1/2 -translate-x-1/2 transform whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity duration-150"
         >
           {styleTooltips[style]}
           <div
-            class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"
+            class="tooltip-arrow absolute left-1/2 top-full -translate-x-1/2 transform border-4 border-transparent border-t-gray-800"
           ></div>
         </div>
 

@@ -3,35 +3,35 @@
    * A reusable modal close button component that provides consistent styling and behavior
    * across all modals in the application.
    */
-  export let position = 'right-2.5 top-2.5';
-  export let size = 'md';
-  export let label = 'Close';
+  export let position = "right-2.5 top-2.5";
+  export let size = "md";
+  export let label = "Close";
   export let closeModal;
   export let modalId = null;
 
   // Size classes mapping
   const sizeClasses = {
-    sm: 'h-7 w-7 text-xs',
-    md: 'h-8 w-8 text-sm',
-    lg: 'h-10 w-10 text-base'
+    sm: "h-7 w-7 text-xs",
+    md: "h-8 w-8 text-sm",
+    lg: "h-10 w-10 text-base",
   };
-  
+
   // Get size classes based on the size prop
   const sizeClass = sizeClasses[size] || sizeClasses.md;
-  
+
   // Handle click. Prefer the provided closeModal (which routes through
   // modalService and plays the close-out animation). Only fall back to a
   // direct dialog.close() when no closeModal handler was supplied, so the
   // skeleton pop-out animation is never skipped.
   function handleClick() {
-    if (typeof closeModal === 'function') {
+    if (typeof closeModal === "function") {
       closeModal();
       return;
     }
 
     if (modalId) {
       const modal = document.getElementById(modalId);
-      if (modal && typeof modal.close === 'function') {
+      if (modal && typeof modal.close === "function") {
         modal.close();
       }
     }
@@ -44,7 +44,10 @@
   aria-label={label}
   on:click|preventDefault={handleClick}
 >
-  <span class="relative leading-none flex items-center justify-center h-full w-full">✕</span>
+  <span
+    class="relative flex h-full w-full items-center justify-center leading-none"
+    >✕</span
+  >
 </button>
 
 <style>
