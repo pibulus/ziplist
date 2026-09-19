@@ -49,6 +49,26 @@ What is shipped & live:
 - **Sovereign device sync**: 4-word phrase (`/j/[phrase]`) over ephemeral memory pipes with zero logins
 - **Pull-down-to-add**: tug the top of a list, a ghost draft row grows under the finger, release past the detent to start typing
 
+Visual-pass decisions (2026-09-19), so they stop resurfacing:
+
+- **Footer height is mostly physics, not padding.** On a notched iPhone the
+  bar is ~90px: 44px of that is the tap-target floor on the nav buttons
+  (`FooterComponent.svelte:7` forces `!h-[44px]`), and ~34px is
+  `env(safe-area-inset-bottom)` home-indicator clearance that must stay (see
+  the warning comment in PageLayout.svelte — a flat value here once put the
+  footer under the home indicator). Only the top padding and row gap were
+  ever discretionary and both are now trimmed, mobile-only. Going shorter
+  means dropping below 44px tap targets, which is an accessibility call, not
+  a styling one.
+- **Footer stays frozen at sm and up.** The bar is shared with TalkType and
+  two siblings (Pablo's call, 2026-08-12). The trim is inside
+  `@media (max-width: 640px)` only.
+- **Checkbox glow follows the list, not the vibe.** Was
+  `--zl-primary-color-rgb`, identical on every list, so a yellow list wore a
+  pink halo. Now derived from `--zl-item-accent`.
+- **Item tag chips only appear while a filter is on**, and the filtered-by
+  tag is dropped from each row since every visible row carries it.
+
 What wants love next (ranked):
 
 1. Set `RESEND_API_KEY` in Netlify production env to activate automatic email dispatch.

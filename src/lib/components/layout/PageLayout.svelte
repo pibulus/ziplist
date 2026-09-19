@@ -330,12 +330,20 @@
          max(1rem, env(safe-area-inset-bottom)) on phones — the one place
          the inset actually exists — so on a notched iPhone the footer row
          sat under the home indicator. */
-      padding-top: 0.75rem;
-      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+      /* Mobile-only trim (2026-09-19). The frozen desktop values above are
+         untouched — four apps still wear the same bar at sm and up.
+         Most of this bar's height on a phone is not padding and cannot be
+         reclaimed: 44px is the tap-target floor on the nav buttons, and
+         env(safe-area-inset-bottom) is ~34px of home-indicator clearance on
+         a notched iPhone. Between them they account for nearly all of it.
+         What was actually discretionary was the top padding and the row
+         gap, so that is what came off. */
+      padding-top: 0.5rem;
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
     }
 
     footer .footer-row {
-      gap: 0.5rem;
+      gap: 0.375rem;
     }
   }
 
