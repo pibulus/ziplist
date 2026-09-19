@@ -10,11 +10,28 @@ Release baseline:
   `@rollup/rollup-darwin-x64` while `rollup-darwin-arm64` sits right there in
   `node_modules`. The error blames the npm optional-deps bug; it is not that.
   `/opt/homebrew/bin/node` builds it fine. Netlify is unaffected.
-- ⚠️ `prettier --check .` silently **skips every `.svelte` file** — there is no
-  prettier config, so `prettier-plugin-svelte` never loads and prettier has no
-  parser for the extension. 90-odd components have never been format-checked.
-  eslint does cover them. Turning this on means reformatting all of them at
-  once, so it is a decision, not a chore.
+- ✅ **Resolved 2026-09-19.** `prettier --check .` used to skip every
+  `.svelte` file (no prettier config → `prettier-plugin-svelte` never
+  loaded). There is a `.prettierrc` now and all 44 components are checked.
+  The reason this stalled so long was a second fault hiding behind the
+  first: adding the config alone throws `getVisitorKeys is not a function`
+  on every component, because `prettier-plugin-tailwindcss` 0.6.14 cannot
+  wrap the svelte plugin on prettier 3.9. Bumped to 0.8.1.
+- ✅ **Resolved 2026-09-19.** Six routes — including the homepage — were
+  silently exempt from eslint. A literal `<script type="application/ld+json">`
+  inside `{@html`…`}` in markup makes svelte-eslint-parser read the rest of
+  the file as JS, so each died at `Parsing error: Unexpected token {` and an
+  unparseable file is an unlinted file. The tag is assembled in the module
+  block now.
+- ⚠️ **Duplicate JSON-LD on every page — needs a call, not a fix.**
+  `src/app.html:197` injects a global `WebApplication` block into every
+  route, and each route's `<svelte:head>` emits its own. So every page ships
+  two `WebApplication` schemas with the same `name` and _different_ bodies
+  (14 keys each). Both are valid JSON, which is why nothing caught it. This
+  is the same shape as the duplicate `og:image` bug in CHANGELOG.md, and
+  Google picks a winner arbitrarily. Deciding which one is canonical — the
+  global or the per-route — is an SEO call, so it is parked here and was
+  raised in conversation rather than quietly patched.
 - Launch Arsenal score: 21 PASS / 0 FAIL
 
 What is shipped & live:
