@@ -39,8 +39,12 @@
   <meta name="robots" content={robots} />
   {#if canonical}
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" hreflang="en" href={hreflangEn} />
-    <link rel="alternate" hreflang="es" href={hreflangEs} />
+    {#if hreflangEn && hreflangEs}
+      <!-- Only claim a translation pair when one exists. A page with no
+           Spanish twin pointing at /es tells Google the wrong thing. -->
+      <link rel="alternate" hreflang="en" href={hreflangEn} />
+      <link rel="alternate" hreflang="es" href={hreflangEs} />
+    {/if}
   {/if}
 
   <meta property="og:type" content={ogType} />

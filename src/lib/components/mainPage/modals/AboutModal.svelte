@@ -52,6 +52,16 @@
         <p>Lists live on the device, not on somebody's server.</p>
         <p>Share one live and two people can tick the same boxes.</p>
         <p>Four words carry a list to another phone. No login, no fuss.</p>
+        <!-- The long version lives at /about. Linked from inside the modal
+             rather than given its own footer button — the footer already has
+             an About affordance and this is the same idea, further down. -->
+        <p class="pt-1">
+          <a
+            href="/about"
+            class="font-semibold underline decoration-pink-300 underline-offset-2 hover:text-gray-800"
+            >How it works, at more length</a
+          >
+        </p>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-3 pt-2">

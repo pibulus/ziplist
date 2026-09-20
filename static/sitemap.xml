@@ -60,4 +60,11 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://ziplist.app/es/parejas" />
     <xhtml:link rel="alternate" hreflang="en" href="https://ziplist.app/for/couples" />
   </url>
+  <!-- How it works / about -->
+  <url>
+    <loc>https://ziplist.app/about</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

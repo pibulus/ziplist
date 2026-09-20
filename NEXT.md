@@ -85,6 +85,31 @@ Visual-pass decisions (2026-09-19), so they stop resurfacing:
 - **Item tag chips only appear while a filter is on**, and the filtered-by
   tag is dropped from each row since every visible row carries it.
 
+SEO/head findings (2026-09-20):
+
+- ✅ **/about shipped** — a real content page (how it works, what it refuses
+  to do, six FAQs) at `https://ziplist.app/about`, prerendered, in the
+  sitemap, linked from inside the About modal rather than given its own
+  footer button. Its FAQ copy and its FAQPage schema are generated from one
+  array, so they cannot drift.
+- ✅ **app.html was shadowing every route's title and description.** Both
+  were hardcoded there, and app.html is emitted before `%sveltekit.head%`,
+  so they won. Every page in the site — including the Spanish ones — showed
+  the English homepage title in the tab and in search. Removed; PageLayout
+  owns head metadata now.
+- ✅ **Removed a visually-hidden top-level heading from app.html** that put
+  the English homepage headline on every route, duplicating the real hero
+  heading and contradicting the visible Spanish copy on /es/*.
+- ⚠️ _*The /for/* and /es/_ landing pages carry FAQPage schema for Q&As that
+  appear nowhere on the page.** They render the app, not content. Google's
+  FAQPage guidelines require the answers to be visible on the page carrying
+  the markup, so this is at best ignored and at worst a manual action. /about
+  now shows the pattern that satisfies it. Fixing the landing pages means
+  deciding whether those routes grow visible content below the app — a
+  product call, so it is parked here and was raised in conversation.
+- Minor: app pages carry two h1s (the hero, plus IntroModal's). A dialog
+  heading should probably be an h2. Cosmetic, not urgent.
+
 What wants love next (ranked):
 
 1. Set `RESEND_API_KEY` in Netlify production env to activate automatic email dispatch.
