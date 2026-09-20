@@ -119,6 +119,22 @@ SEO/head findings (2026-09-20):
 - Minor: app pages carry two h1s (the hero, plus IntroModal's). A dialog
   heading should probably be an h2. Cosmetic, not urgent.
 
+Verticals, rewritten 2026-09-20:
+
+- Five English use-case pages under `/for/`: groceries, couples, packing,
+  moving, gigs. Each one is a scenario with concrete detail, not a keyword
+  string. They interlink off `src/lib/content/uses.js` — adding a sixth is one
+  array entry plus one route file, so this is cheap to extend.
+- The previous copy was AI SEO filler ("hands-free voice grocery shopping",
+  "sub-10ms via WebSockets", "zero signups"). Gone. The claim about latency is
+  gone with it, which is just as well.
+- `/es/mandado` and `/es/parejas` still carry the old generated Spanish copy.
+  Spanish was never the point, so they are left working rather than polished,
+  and their hreflang pairs with groceries/couples are intact so nothing is
+  half-declared. Worth deciding whether they earn their keep at all.
+- `/es` is still byte-identical to `/` — it renders the English app under
+  Spanish meta. Same decision as above.
+
 What wants love next (ranked):
 
 1. Set `RESEND_API_KEY` in Netlify production env to activate automatic email dispatch.

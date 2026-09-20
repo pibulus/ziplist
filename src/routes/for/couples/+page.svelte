@@ -1,33 +1,33 @@
 <script>
-  /* A vertical: it talks ABOUT the app and sends people to it. It does NOT
-     render the app. All six SEO routes used to mount MainContainer, so every
-     one of them shipped byte-identical visible text — six URLs, one page, and
-     nothing for a crawler to tell apart.
-
-     The FAQ below is the same copy that was already in this route's schema.
-     It was written and then never rendered; one array now feeds both the page
-     and the markup, which is also what Google's FAQPage rules require. */
+  /* A use-case page: it describes one thing people do with ZipList and sends
+     them to the app. It does not render the app. */
   import VerticalPage from "$lib/components/layout/VerticalPage.svelte";
 
   const canonicalUrl = "https://ziplist.app/for/couples";
   const title =
-    "Shared Grocery & Chores List App for Couples — Instant QR Sync | ZipList";
+    "Shared List for Two People \u2014 One List, Two Phones | ZipList";
   const description =
-    "Real-time shared checklist for couples. Plan dinner, split supermarket aisles, and pack for trips together with instant QR pairing and zero accounts or signups.";
-  const heading = "Shared Grocery & Chores List App for Couples";
+    "A list both of you can see and tick off, live, on two phones. No shared account and no app to talk anyone into installing. Scan a code and you are on the same list.";
 
+  /* One array, two destinations: these questions are rendered on the page AND
+     fed to the FAQPage markup. Google wants the answers visible, and a single
+     source is the only way the two cannot drift apart. */
   const faqs = [
     {
-      q: "How do couples share a list in ZipList without accounts?",
-      a: 'Tap "QR this list" to generate a live room. Your partner scans it with their phone camera and you are instantly connected in real-time. No emails, no passwords, no logins.',
+      q: "Do we need accounts?",
+      a: "No. Neither of you. There is no sign-up anywhere in this, which is also why there is no shared login to argue about.",
     },
     {
-      q: "Can we tick off items simultaneously at opposite ends of the supermarket?",
-      a: "Yes! Updates sync across both phones in sub-10 milliseconds via WebSockets. When your partner grabs oat milk in aisle 1, it checks off on your phone in aisle 8 immediately.",
+      q: "Can we both tick things off at the same time?",
+      a: "Yes, that is what a live list is for. Both phones hold the same list and each tick shows up on the other.",
     },
     {
-      q: "Can we use voice dictation together?",
-      a: "Either person can tap the microphone button and dictate grocery items, packing gear, or weekend chores. ZipList parses spoken phrases into discrete checklist items automatically.",
+      q: "What if they do not want another app?",
+      a: "They do not need one. It opens in whatever browser is already on their phone.",
+    },
+    {
+      q: "Does it stay shared forever?",
+      a: "Only while you want it to. Live sharing can be stopped from the list header, and the list goes back to being yours alone.",
     },
   ];
 
@@ -35,20 +35,15 @@
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "WebApplication",
-        name: "ZipList Shared Lists for Couples",
-        url: "https://ziplist.app/for/couples",
-        image: "https://ziplist.app/og-card.png",
-        description:
-          "Real-time shared checklist for couples. Plan dinner, split supermarket aisles, and pack for trips together with instant QR pairing and zero accounts or signups.",
-        applicationCategory: "LifestyleApplication",
-        operatingSystem: "Web",
+        "@type": "WebPage",
+        name: title,
+        url: canonicalUrl,
+        description,
         inLanguage: "en",
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: "USD",
-          description: "Free shared real-time lists with instant QR pairing",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "ZipList",
+          url: "https://ziplist.app",
         },
       },
       {
@@ -80,12 +75,47 @@
 <VerticalPage
   {title}
   {description}
-  {heading}
   {faqs}
   canonical={canonicalUrl}
-  faqHeading={"Questions people ask"}
-  ctaLabel={"Talk a list"}
-  ogLocale={"en_US"}
+  heading={"One list, two phones"}
+  lede={"The list your person can actually see. No account between you, and nothing to talk them into installing first."}
+  currentUse={"couples"}
   hreflangEn={canonicalUrl}
-  hreflangEs={"https://ziplist.app/es/parejas"}
-/>
+  hreflangEs="https://ziplist.app/es/parejas"
+>
+  <section class="zl-prose-section">
+    <h2>Scanning a code is the whole setup</h2>
+    <p>
+      Open the list, tap “QR this list”, they point a camera at it. No invite
+      email, no “create an account to continue”, no standing there holding a
+      phone while someone else finishes signing up.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Both of you, at the same time</h2>
+    <p>
+      They tick the milk while you are still in the car park and it goes
+      through. Add something from the tram and it is on their screen before you
+      get home. Same list, both ends, nothing to refresh.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Or just send a copy</h2>
+    <p>
+      Not everything needs to be live. A copy is a link holding the list exactly
+      as it is now — good for handing someone the shopping and then forgetting
+      about it.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Four words instead of a link</h2>
+    <p>
+      Every live list also has a four-word phrase. It can be said down the
+      phone, and the list opens on the other device. Nobody has to go looking
+      for the message you sent.
+    </p>
+  </section>
+</VerticalPage>

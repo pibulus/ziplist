@@ -1,33 +1,33 @@
 <script>
-  /* A vertical: it talks ABOUT the app and sends people to it. It does NOT
-     render the app. All six SEO routes used to mount MainContainer, so every
-     one of them shipped byte-identical visible text — six URLs, one page, and
-     nothing for a crawler to tell apart.
-
-     The FAQ below is the same copy that was already in this route's schema.
-     It was written and then never rendered; one array now feeds both the page
-     and the markup, which is also what Google's FAQPage rules require. */
+  /* A use-case page: it describes one thing people do with ZipList and sends
+     them to the app. It does not render the app. */
   import VerticalPage from "$lib/components/layout/VerticalPage.svelte";
 
   const canonicalUrl = "https://ziplist.app/for/groceries";
   const title =
-    "Hands-Free Voice Grocery List App — Supermarket Shopping | ZipList";
+    "Voice Grocery List App \u2014 Talk Your Shopping List | ZipList";
   const description =
-    "Build and tick off grocery shopping lists by voice. Speak ingredients hands-free while walking aisles. Live QR rooms let your partner tick off aisle 4 in real-time with zero signups.";
-  const heading = "Hands-Free Voice Grocery List App";
+    "Say the shopping list on the way out the door and it is waiting at the supermarket. Share it live so whoever is in aisle four ticks things off too. No account.";
 
+  /* One array, two destinations: these questions are rendered on the page AND
+     fed to the FAQPage markup. Google wants the answers visible, and a single
+     source is the only way the two cannot drift apart. */
   const faqs = [
     {
-      q: "How does hands-free voice grocery shopping work in ZipList?",
-      a: 'You speak all your pantry items in one breath (e.g. "oat milk, sourdough, avocados, olive oil, coffee beans"). ZipList automatically structures them into distinct checklist rows with pantry tags.',
+      q: "Does it work in the supermarket, where the signal is terrible?",
+      a: "The list does. It lives on the phone, so it opens and ticks off with no connection at all. Turning speech into new items is the one part that needs signal, since that happens off the phone.",
     },
     {
-      q: "Can my partner and I shop the supermarket together on different phones?",
-      a: 'Yes! Tap "QR this list" and let your partner scan the code. Both phones sync instantly in sub-10ms via WebSockets with zero account creation or logins.',
+      q: "Can two of us shop the same list at once?",
+      a: "Yes. Open the list, tap “QR this list”, and the other phone scans it. From then on both phones show the same list and every tick appears on the other one.",
     },
     {
-      q: "Do I need to install an app from the App Store?",
-      a: "No app download or account required. It runs instantly in Safari or Chrome, and can be installed as an offline-capable PWA to your home screen in 1 tap.",
+      q: "Do I have to install something?",
+      a: "No. It runs in the browser, and it can be added to a home screen afterwards if you want it sitting with your other apps.",
+    },
+    {
+      q: "Where does the list go when I am done?",
+      a: "Nowhere, unless you clear it. Lists stay on the device rather than on a server, which is also why there is nothing to log into.",
     },
   ];
 
@@ -35,20 +35,15 @@
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "WebApplication",
-        name: "ZipList Voice Grocery & Shopping Lists",
-        url: "https://ziplist.app/for/groceries",
-        image: "https://ziplist.app/og-card.png",
-        description:
-          "Build and tick off grocery shopping lists by voice. Speak ingredients hands-free while walking aisles. Live QR rooms let your partner tick off aisle 4 in real-time with zero signups.",
-        applicationCategory: "ShoppingApplication",
-        operatingSystem: "Web",
+        "@type": "WebPage",
+        name: title,
+        url: canonicalUrl,
+        description,
         inLanguage: "en",
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: "USD",
-          description: "Free voice grocery lists with live QR sharing",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "ZipList",
+          url: "https://ziplist.app",
         },
       },
       {
@@ -80,12 +75,38 @@
 <VerticalPage
   {title}
   {description}
-  {heading}
   {faqs}
   canonical={canonicalUrl}
-  faqHeading={"Questions people ask"}
-  ctaLabel={"Talk a list"}
-  ogLocale={"en_US"}
+  heading={"The shopping list you talk into"}
+  lede={"Hands full, trolley moving, and the list is already written. You said it on the way out the door."}
+  currentUse={"groceries"}
   hreflangEn={canonicalUrl}
-  hreflangEs={"https://ziplist.app/es/mandado"}
-/>
+  hreflangEs="https://ziplist.app/es/mandado"
+>
+  <section class="zl-prose-section">
+    <h2>One breath, a whole shop</h2>
+    <p>
+      Oat milk, sourdough, the good coffee, something for dinner Thursday, bin
+      bags. It goes in as one sentence and comes out as separate lines, already
+      split, in the order it fell out of your head.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Two trolleys, one list</h2>
+    <p>
+      Send it live and the other phone sees every tick. Whoever reaches the
+      tinned tomatoes first takes them off, and nobody comes home with three
+      jars of capers. No account between you — the link is the whole handshake.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>The aisle is a bad place to type</h2>
+    <p>
+      That is rather the point. The list is already on the phone, so it opens
+      with no signal and no waiting, and adding one more thing takes a sentence
+      instead of a keyboard and both thumbs.
+    </p>
+  </section>
+</VerticalPage>

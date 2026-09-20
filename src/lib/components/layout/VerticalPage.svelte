@@ -5,6 +5,7 @@
      people there. */
   import PageLayout from "./PageLayout.svelte";
   import Mascot from "$lib/components/ui/Mascot.svelte";
+  import { USES, useHref } from "$lib/content/uses.js";
 
   export let title;
   export let description;
@@ -20,6 +21,11 @@
   export let ogLocale = "en_US";
   export let hreflangEn = null;
   export let hreflangEs = null;
+  /** Slug of the current use page, so it is left out of the row below. */
+  export let currentUse = null;
+  export let moreHeading = "Other things people talk into it";
+
+  $: otherUses = USES.filter((u) => u.slug !== currentUse);
 </script>
 
 <PageLayout
@@ -59,6 +65,21 @@
     <p class="zl-prose-cta-row">
       <a class="zl-prose-cta" href={ctaHref}>{ctaLabel}</a>
     </p>
+
+    {#if currentUse !== null}
+      <!-- The pages point at each other. Cheap for search engines to follow,
+           and it is genuinely the useful thing to show someone who landed on
+           one of these: there are other ones. -->
+      <nav class="zl-prose-more" aria-label={moreHeading}>
+        <h2>{moreHeading}</h2>
+        <ul>
+          {#each otherUses as use (use.slug)}
+            <li><a href={useHref(use.slug)}>{use.nav}</a></li>
+          {/each}
+          <li><a href="/about">How it works</a></li>
+        </ul>
+      </nav>
+    {/if}
   </article>
 </PageLayout>
 
@@ -167,6 +188,58 @@
 
   .zl-prose-cta:active {
     transform: scale(0.96);
+  }
+
+  .zl-prose-more {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1.5px solid
+      color-mix(in srgb, var(--zl-text-color-primary, #1e1714) 12%, transparent);
+    text-align: center;
+  }
+
+  .zl-prose-more h2 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    opacity: 0.62;
+    margin-bottom: 0.85rem;
+  }
+
+  .zl-prose-more ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .zl-prose-more a {
+    display: inline-block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.38rem 0.8rem;
+    border-radius: 999px;
+    color: color-mix(
+      in srgb,
+      var(--zl-text-color-primary, #1e1714) 76%,
+      transparent
+    );
+    border: 2px solid
+      color-mix(in srgb, var(--zl-text-color-primary, #1e1714) 14%, transparent);
+    transition: all 0.16s ease;
+  }
+
+  .zl-prose-more a:hover {
+    color: var(--zl-text-color-primary, #1e1714);
+    border-color: color-mix(
+      in srgb,
+      var(--zl-text-color-primary, #1e1714) 38%,
+      transparent
+    );
   }
 
   @media (prefers-reduced-motion: reduce) {

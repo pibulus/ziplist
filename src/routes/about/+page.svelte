@@ -82,6 +82,8 @@
   heading="How ZipList works"
   lede="Say the thing, and it's on the list. That's the whole trick."
   faqHeading="Questions people actually ask"
+  currentUse="about"
+  moreHeading="What people talk into it"
 >
   <section class="zl-prose-section" aria-label="The three steps">
     <ol>
