@@ -99,14 +99,23 @@ SEO/head findings (2026-09-20):
   owns head metadata now.
 - ✅ **Removed a visually-hidden top-level heading from app.html** that put
   the English homepage headline on every route, duplicating the real hero
-  heading and contradicting the visible Spanish copy on /es/*.
-- ⚠️ _*The /for/* and /es/_ landing pages carry FAQPage schema for Q&As that
-  appear nowhere on the page.** They render the app, not content. Google's
-  FAQPage guidelines require the answers to be visible on the page carrying
-  the markup, so this is at best ignored and at worst a manual action. /about
-  now shows the pattern that satisfies it. Fixing the landing pages means
-  deciding whether those routes grow visible content below the app — a
-  product call, so it is parked here and was raised in conversation.
+- ✅ **Resolved 2026-09-20. The verticals are pages now, not app clones.**
+  All six SEO routes mounted `MainContainer`, so they shipped byte-identical
+  visible text — six URLs, one page, nothing for a crawler to tell apart, and
+  Spanish routes with no Spanish words on them. `/for/groceries`,
+  `/for/couples`, `/es/mandado` and `/es/parejas` are real pages now: heading,
+  lede and three Q&As each, all of it copy that already existed in their
+  schema and had simply never been rendered. They link to the app rather than
+  being it. `VerticalPage.svelte` is the shared chassis; `/about` uses it too.
+- ⚠️ **`/es` is still a byte-identical copy of `/`.** It is the Spanish entry
+  point but renders the English app, so it competes with the homepage and
+  cannot rank for Spanish queries. Three ways out: make it a vertical (needs
+  Spanish copy written — no FAQ exists for it, and that is Pablo's voice, not
+  mine to invent), leave it as the app and drop it from the sitemap, or let
+  `/es/mandado` and `/es/parejas` carry Spanish SEO alone. Wants a decision.
+- ⚠️ **"sub-10ms via WebSockets"** is now visible copy on `/for/groceries`. It
+  was harmless while invisible; as a public claim it is hard to stand behind
+  for a network round trip. Worth a rewrite in Pablo's words.
 - Minor: app pages carry two h1s (the hero, plus IntroModal's). A dialog
   heading should probably be an h2. Cosmetic, not urgent.
 
