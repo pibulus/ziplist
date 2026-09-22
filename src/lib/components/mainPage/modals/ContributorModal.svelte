@@ -5,7 +5,6 @@
   import {
     CONTRIBUTOR_BENEFITS,
     CONTRIBUTOR_COPY,
-    PRICING,
   } from "$lib/config/pricing.js";
   export let closeModal = () => {};
 
@@ -151,12 +150,9 @@
       <div class="zl-contributor-heading">
         <p class="zl-contributor-eyebrow">Extra Lists</p>
         <h3 id="contributor_modal_title">More lists, more chops.</h3>
-        <p id="contributor_modal_description">
-          {CONTRIBUTOR_COPY.summary}
-        </p>
       </div>
 
-      <ul class="zl-benefit-list">
+      <ul id="contributor_modal_description" class="zl-benefit-list">
         {#each CONTRIBUTOR_BENEFITS as benefit}
           <li>
             <span class="zl-benefit-check" aria-hidden="true">✓</span>
@@ -176,10 +172,11 @@
           on:click={handleCheckout}
           disabled={isStartingCheckout}
         >
-          {isStartingCheckout
-            ? "Opening checkout..."
-            : `Dig in · ${PRICING.displayPrice}`}
+          {isStartingCheckout ? "Opening checkout..." : "Dig in"}
         </button>
+        <p class="zl-contributor-price">
+          {CONTRIBUTOR_COPY.priceLine}
+        </p>
       {/if}
 
       {#if errorMessage}
@@ -212,7 +209,7 @@
           />
           <button
             type="button"
-            class="zl-contributor-primary"
+            class="zl-contributor-primary zl-contributor-secondary"
             on:click={handleUnlock}
             disabled={isSubmitting || !code.trim()}
           >
@@ -433,16 +430,19 @@
     outline: none;
   }
 
+  /* Pink, not the brand yellow: this is the Pass language (the footer pill,
+     the unlocked badge), and the yellow belongs to the record button. The
+     benefit ticks stay yellow so the card still carries both. */
   .zl-contributor-primary {
-    background: var(--zl-cta-color, #ffb000);
+    background: var(--zl-pass-color, #ff6ac2);
     border: 0;
-    box-shadow: 0 3px 8px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.25);
+    box-shadow: 0 3px 8px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.3);
     color: #1e1714;
   }
 
   .zl-contributor-primary:hover:not(:disabled),
   .zl-contributor-primary:focus-visible:not(:disabled) {
-    box-shadow: 0 5px 14px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.32);
+    box-shadow: 0 5px 14px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.4);
     filter: saturate(1.08) brightness(1.04);
     outline: none;
     transform: translateY(-1px);
@@ -467,19 +467,33 @@
     opacity: 0.62;
   }
 
-  .zl-contributor-later {
-    background: rgba(255, 255, 255, 0.5);
+  /* One pink CTA per card. Redeeming a code is the other road to the same
+     place, not a second offer, so it takes the cream-and-ink weight. */
+  .zl-contributor-secondary {
+    background: rgba(255, 255, 255, 0.6);
     border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    color: var(--zl-text-color-secondary, #3a2f2a);
+      var(--zl-item-border-color, rgba(30, 23, 20, 0.18));
+    box-shadow: none;
+    color: var(--zl-text-color-primary, #1e1714);
+    min-height: 46px;
   }
 
-  .zl-contributor-later:hover,
-  .zl-contributor-later:focus-visible {
+  .zl-contributor-secondary:hover:not(:disabled),
+  .zl-contributor-secondary:focus-visible:not(:disabled) {
     background: #fffef7;
-    border-color: var(--zl-primary-color, #ffb000);
-    outline: none;
-    transform: translateY(-1px);
+    border-color: var(--zl-pass-color, #ff6ac2);
+    box-shadow: none;
+    filter: none;
+  }
+
+  .zl-contributor-price {
+    color: var(--zl-text-color-secondary, #3a2f2a);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    margin: -0.35rem 0 0;
+    opacity: 0.8;
+    text-align: center;
   }
 
   .zl-contributor-note {
@@ -503,11 +517,21 @@
     color: #126052;
   }
 
+  /* A line, not a panel. Closed, this is a secondary path most people never
+     take — as a bordered box with a 44px row it read as a second offer
+     competing with the button above it, and cost more vertical space than
+     the benefits did. It grows its box only once opened. */
   .zl-code-panel {
+    background: transparent;
+    border: 0;
+    border-radius: 16px;
+    padding: 0;
+  }
+
+  .zl-code-panel[open] {
     background: rgba(255, 255, 255, 0.5);
     border: var(--zl-item-border-width, 2px) solid
       var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
     padding: 0.85rem;
   }
 
@@ -515,11 +539,17 @@
     align-items: center;
     cursor: pointer;
     display: flex;
-    font-size: 0.85rem;
-    font-weight: 900;
-    justify-content: space-between;
+    font-size: 0.78rem;
+    font-weight: 800;
+    gap: 0.4rem;
+    justify-content: center;
     list-style: none;
-    min-height: 44px;
+    min-height: 32px;
+    opacity: 0.75;
+  }
+
+  .zl-code-panel summary:hover {
+    opacity: 1;
   }
 
   .zl-code-panel summary::-webkit-details-marker {
@@ -529,7 +559,8 @@
   .zl-code-panel summary strong {
     color: var(--zl-text-color-secondary, #3a2f2a);
     font-size: 0.78rem;
-    opacity: 0.8;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .zl-code-form {
