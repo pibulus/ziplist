@@ -77,23 +77,10 @@ export class ListsService {
       this._applySuggestedTitle(suggestedTitle, targetListId);
     }
 
-    // Nothing came out of the recording at all — say so warmly instead of
-    // silently doing nothing (the list just sitting unchanged reads as broken).
-    const nothingHappened =
-      !(commands && commands.length > 0) &&
-      !(complete && complete.length > 0) &&
-      !(items && items.length > 0);
-    if (nothingHappened && typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("ziplist-list-notice", {
-          detail: {
-            message:
-              "Couldn't catch any items in that one — the mic's ready for another go.",
-            success: false,
-          },
-        }),
-      );
-    }
+    // Nothing came out of the recording? MainContainer already says so, in
+    // the retry card next to the record button — same message, plus a "Try
+    // again" that re-runs this exact audio instead of asking for the whole
+    // thing again. A second notice inside the list said it twice.
   }
 
   /**

@@ -490,12 +490,16 @@
     window.dispatchEvent(new CustomEvent("ziplist-items-landed"));
   }
 
+  // The one definition of "that take did nothing". listsService used to keep
+  // a second, subtly different one and fire its own notice from it — two
+  // messages for one event, and they disagreed: this check ignored commands,
+  // so saying "clear the list" worked AND raised a "nothing came out" card.
   function landedNothing(result) {
-    const added = Array.isArray(result?.items) ? result.items.length : 0;
-    const completed = Array.isArray(result?.complete)
-      ? result.complete.length
-      : 0;
-    return added === 0 && completed === 0;
+    const count = (key) =>
+      Array.isArray(result?.[key]) ? result[key].length : 0;
+    return (
+      count("items") === 0 && count("complete") === 0 && count("commands") === 0
+    );
   }
 
   async function retryLastTranscription() {
