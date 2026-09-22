@@ -23,7 +23,11 @@ const TAG_PATTERN = /(^|\s)#([\p{L}\p{N}][\p{L}\p{N}_-]*)/gu;
  */
 export function cohereTag(tag, existingVocabulary = []) {
   if (!tag || typeof tag !== "string") return "";
-  const raw = tag.toLowerCase().trim().replace(/^#/, "");
+  const raw = tag
+    .toLowerCase()
+    .trim()
+    .replace(/^#+/, "")
+    .replace(/^[-_]+|[-_]+$/g, "");
   if (!raw) return "";
 
   if (!Array.isArray(existingVocabulary) || existingVocabulary.length === 0) {
@@ -31,7 +35,11 @@ export function cohereTag(tag, existingVocabulary = []) {
   }
 
   const vocab = existingVocabulary.map((v) =>
-    String(v).toLowerCase().replace(/^#/, "").trim(),
+    String(v)
+      .toLowerCase()
+      .replace(/^#+/, "")
+      .replace(/^[-_]+|[-_]+$/g, "")
+      .trim(),
   );
 
   // 1. Direct exact match

@@ -29,12 +29,17 @@
         <div class="about-mascot-slot shrink-0">
           <Mascot interactive={false} aura={false} />
         </div>
-        <h3
-          id="about_modal_title"
-          class="text-xl font-black tracking-tight text-gray-800"
-        >
-          The shareable voice list thing
-        </h3>
+        <div>
+          <h3
+            id="about_modal_title"
+            class="text-xl font-black tracking-tight text-gray-800"
+          >
+            Zip up a list, lickety-split
+          </h3>
+          <p class="text-xs font-semibold tracking-wide text-pink-600">
+            The shareable voice list thing
+          </p>
+        </div>
       </div>
 
       <div

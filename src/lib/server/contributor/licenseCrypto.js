@@ -6,9 +6,8 @@ const CODE_PREFIX = "ZL";
 const TOKEN_ALG = "HS256";
 const TOKEN_VERSION = 1;
 
-// Server-side token lifetime. Mirrors the client soft-expiry so a leaked token
-// can't outlive the secret — it stops verifying a year after it was issued.
-const TOKEN_TTL_SECONDS = 365 * 24 * 60 * 60;
+// Server-side token lifetime. Mirrors the client lifetime pass.
+const TOKEN_TTL_SECONDS = 100 * 365 * 24 * 60 * 60;
 
 // Minimum signing-key length. 32 chars so the HMAC key carries real entropy
 // and isn't a short shared value reused from elsewhere.

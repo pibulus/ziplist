@@ -80,10 +80,14 @@ assert.ok(
 assert.deepEqual(t("café #niño"), { text: "café", tags: ["niño"] });
 
 // normalizeTags is forgiving about whatever it's handed.
-assert.deepEqual(normalizeTags(["#Urgent", "shop", "", null, "urgent"]), [
-  "urgent",
-  "shop",
-]);
+assert.deepEqual(
+  normalizeTags(["##Urgent", "shop-", "_work_", "", null, "urgent"]),
+  ["urgent", "shop", "work"],
+);
+assert.deepEqual(t("renovation #weekend-reno-"), {
+  text: "renovation",
+  tags: ["weekend-reno"],
+});
 assert.deepEqual(normalizeTags("nope"), []);
 assert.deepEqual(normalizeTags(null), []);
 

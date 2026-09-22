@@ -1367,8 +1367,9 @@
     (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
   ).length;
   $: canDeleteList = showListManagement && nonLiveListCount > 1;
-  $: canManageList = list.items.length > 0 || canDeleteList;
-  // Clearing the last item can empty the drawer while it is open.
+  $: canManageList =
+    list.items.length > 0 || canDeleteList || showListManagement;
+  // If managing is no longer possible, close the drawer.
   $: if (!canManageList && manageTrayOpen) manageTrayOpen = false;
 
   // ── Sending part of a list ─────────────────────────────────────────────
@@ -1772,8 +1773,8 @@
     movingItemId = null;
 
     if (result?.success) {
-      soundService.copySuccess({ force: true });
-      hapticService.impact("light");
+      soundService.plop({ force: true });
+      hapticService.impact("medium");
       showListStatus(result.message || "Moved.", true, 2200);
     } else {
       soundService.locked();
@@ -2052,7 +2053,9 @@
   }
 
   function clearDoneItems() {
-    const doneItems = list.items.filter((item) => item.checked);
+    const doneItems = activeTagFilter
+      ? renderedCompletedItems
+      : list.items.filter((item) => item.checked);
     if (!doneItems.length) return;
 
     hapticService.impact("medium");
@@ -2068,10 +2071,11 @@
       originalListItems: [...list.items],
     };
 
+    const targetIds = new Set(doneItems.map((item) => item.id));
     listsStore.upsertList(
       {
         ...list,
-        items: list.items.filter((item) => !item.checked),
+        items: list.items.filter((item) => !targetIds.has(item.id)),
         updatedAt: new Date().toISOString(),
       },
       list.id,
@@ -2150,6 +2154,86 @@
     }, 6500);
 
     manageTrayOpen = false;
+  }
+
+  function uncheckAllItems() {
+    const doneItems = activeTagFilter
+      ? renderedCompletedItems
+      : list.items.filter((item) => item.checked);
+    if (!doneItems.length) return;
+
+    hapticService.notification("success");
+    soundService.reset({ force: true });
+
+    if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+
+    undoDelete = {
+      items: [...doneItems],
+      listId: list.id,
+      type: "uncheck",
+      count: doneItems.length,
+      originalListItems: [...list.items],
+    };
+
+    const targetIds = new Set(doneItems.map((item) => item.id));
+    listsStore.upsertList(
+      {
+        ...list,
+        items: list.items.map((item) =>
+          targetIds.has(item.id)
+            ? {
+                ...item,
+                checked: false,
+                completedAt: undefined,
+              }
+            : item,
+        ),
+        updatedAt: new Date().toISOString(),
+      },
+      list.id,
+    );
+
+    undoDeleteTimer = setTimeout(() => {
+      undoDelete = null;
+      undoDeleteTimer = null;
+    }, 5500);
+
+    manageTrayOpen = false;
+  }
+
+  function handleClearDoneFromMenu() {
+    clearDoneItems();
+    manageTrayOpen = false;
+  }
+
+  function duplicateCurrentList() {
+    if (!showListManagement) return;
+    const baseName = list.name || "List";
+    const duplicateName = `${baseName} copy`;
+    const createResult = listsStore.addList(duplicateName);
+    if (!createResult.ok) {
+      showListStatus(
+        createResult.message || "Could not duplicate list.",
+        false,
+      );
+      return;
+    }
+    const newListId = createResult.listId;
+    if (list.items && list.items.length > 0) {
+      listsStore.addItems(
+        list.items.map(({ text, checked, tags }) => ({ text, checked, tags })),
+        newListId,
+      );
+    }
+    hapticService.selection();
+    soundService.add?.({ force: true });
+    showListStatus(`Duplicated "${baseName}"`, true);
+    manageTrayOpen = false;
+  }
+
+  function handleRenameFromMenu() {
+    manageTrayOpen = false;
+    startEditingListName();
   }
 
   function restoreDeletedItem() {
@@ -2734,8 +2818,8 @@
             class:is-open={manageTrayOpen}
             on:click={toggleManageTray}
             aria-expanded={manageTrayOpen}
-            data-tip="Clear or delete"
-            aria-label={`More actions for ${list.name || "this list"}`}
+            data-tip="List options"
+            aria-label={`List options for ${list.name || "this list"}`}
           >
             <svg
               class="zl-header-icon"
@@ -2796,8 +2880,16 @@
              chrome. QR stays: scanning is the one handoff a share sheet
              cannot do, because it needs the other phone in the room. -->
         <div class="zl-share-actions" role="group" aria-label="Send this list">
-          <button type="button" class="zl-share-option" on:click={shareAsLink}>
-            {isLive ? "Copy link" : "Send a copy"}
+          <button
+            type="button"
+            class="zl-share-option"
+            title={isLive
+              ? "Copy live room link"
+              : "Send a copy via text, email, or share sheet"}
+            aria-label={isLive ? "Copy live link" : "Send a copy"}
+            on:click={shareAsLink}
+          >
+            Copy
           </button>
           {#if liveFeatureAvailable && !isLive}
             <button
@@ -2805,22 +2897,42 @@
               class="zl-share-option zl-share-live"
               disabled={isMakingLive}
               aria-busy={isMakingLive}
+              title="Open a shared live room with real-time sync"
+              aria-label="Share live"
               on:click={shareAsLiveRoom}
             >
-              {isMakingLive ? "Opening the room..." : "Share live"}
+              {isMakingLive ? "Connecting..." : "Live"}
             </button>
           {/if}
           {#if isLive}
             <button
               type="button"
               class="zl-share-option zl-share-stop"
+              title="Stop live sharing this room"
+              aria-label="Stop live sharing"
               on:click={handleStopLive}
             >
-              Stop live sharing
+              Stop
             </button>
           {/if}
-          <button type="button" class="zl-share-option" on:click={qrThisList}>
-            QR this list
+          <button
+            type="button"
+            class="zl-share-option"
+            class:is-active={shareInputMode === "paste"}
+            title="Paste text, notes, or recipes directly into list"
+            aria-label="Paste into list"
+            on:click={toggleShareInput}
+          >
+            Paste
+          </button>
+          <button
+            type="button"
+            class="zl-share-option"
+            title="Show QR code for this list"
+            aria-label="QR this list"
+            on:click={qrThisList}
+          >
+            QR
           </button>
         </div>
 
@@ -2835,16 +2947,6 @@
             <code>{syncPhrase}</code>
           </button>
         {/if}
-
-        <!-- Bringing things IN is not sharing, so it doesn't wear the same
-             chrome as the two buttons that send things out. -->
-        <button
-          type="button"
-          class="zl-share-import"
-          on:click={toggleShareInput}
-        >
-          {shareInputMode === "paste" ? "Close paste" : "Paste things in"}
-        </button>
 
         {#if shareInputMode === "paste"}
           <div class="zl-share-paste">
@@ -2888,22 +2990,68 @@
         aria-label="Manage this list"
         transition:fade={{ duration: 130 }}
       >
+        {#if completedItems.length > 0}
+          <button
+            type="button"
+            class="zl-share-option"
+            title="Reset all completed items back to active checklist"
+            aria-label="Reset completed items"
+            on:click={uncheckAllItems}
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            class="zl-share-option"
+            title="Clear completed items from list ({completedItems.length})"
+            aria-label="Clear completed items"
+            on:click={handleClearDoneFromMenu}
+          >
+            Clear
+          </button>
+        {/if}
         {#if list.items.length > 0}
           <button
             type="button"
             class="zl-share-option zl-share-clear"
+            title="Wipe all items from this list"
+            aria-label="Empty this list"
             on:click={clearEntireList}
           >
-            Clear entire list
+            Empty
+          </button>
+        {/if}
+        {#if showListManagement && list.items.length > 0}
+          <button
+            type="button"
+            class="zl-share-option"
+            title="Clone this list and all its items"
+            aria-label="Duplicate list"
+            on:click={duplicateCurrentList}
+          >
+            Duplicate
+          </button>
+        {/if}
+        {#if showListManagement}
+          <button
+            type="button"
+            class="zl-share-option"
+            title="Rename this list"
+            aria-label="Rename list"
+            on:click={handleRenameFromMenu}
+          >
+            Rename
           </button>
         {/if}
         {#if canDeleteList}
           <button
             type="button"
             class="zl-share-option zl-share-delete-list"
+            title="Delete this list"
+            aria-label="Delete this list"
             on:click={deleteEntireList}
           >
-            Delete this list
+            Delete
           </button>
         {/if}
       </div>
@@ -2939,7 +3087,9 @@
                 ? "Cleared entire list"
                 : undoDelete.type === "done"
                   ? `Cleared ${undoDelete.count} completed ${undoDelete.count === 1 ? "item" : "items"}`
-                  : `Deleted ${undoDelete.item.text}`}
+                  : undoDelete.type === "uncheck"
+                    ? `Unchecked ${undoDelete.count} ${undoDelete.count === 1 ? "item" : "items"}`
+                    : `Deleted ${undoDelete.item?.text || "item"}`}
         </span>
         <button
           type="button"
@@ -3023,9 +3173,9 @@
             class="zl-tag-action-btn zl-tag-spin-btn"
             on:click={spinOutTagToNewList}
             title={`Spin #${activeTagFilter} items into a new list`}
-            aria-label={`Resample #${activeTagFilter} into new list`}
+            aria-label={`Spin #${activeTagFilter} into new list`}
           >
-            ✂️ Resample
+            ✂️ Spin
           </button>
           <button
             type="button"
@@ -3041,9 +3191,9 @@
             class="zl-tag-action-btn zl-tag-action-untag"
             on:click={untagAllActiveTag}
             title={`Remove #${activeTagFilter} from all items`}
-            aria-label={`Remove #${activeTagFilter}`}
+            aria-label={`Remove #${activeTagFilter} tag`}
           >
-            Untag all
+            Untag
           </button>
         </div>
       {/if}
@@ -3220,10 +3370,13 @@
             </li>
           {/if}
 
-          {#if completedItems.length > 0}
+          {#if (activeTagFilter ? renderedCompletedItems.length : completedItems.length) > 0}
             <CompletedDivider
-              count={completedItems.length}
+              count={activeTagFilter
+                ? renderedCompletedItems.length
+                : completedItems.length}
               on:clear={clearDoneItems}
+              on:reset={uncheckAllItems}
             />
           {/if}
 

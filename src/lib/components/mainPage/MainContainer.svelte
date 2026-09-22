@@ -408,11 +408,47 @@
         visualizerAnalyser.frequencyBinCount,
       );
 
+      let hasSpoken = false;
+      let lastSpeechTimestamp = Date.now();
+      let recordingStartTimestamp = Date.now();
+
       const pumpWaveform = () => {
         if (!visualizerAnalyser) return;
 
         visualizerAnalyser.getByteFrequencyData(waveformBuffer);
         audioActions.setWaveformData(Array.from(waveformBuffer));
+
+        // Intelligent silence / voice completion detection
+        let sum = 0;
+        for (let i = 0; i < waveformBuffer.length; i++) {
+          sum += waveformBuffer[i];
+        }
+        const avg = sum / waveformBuffer.length;
+
+        const now = Date.now();
+        // Energy threshold: avg > 14 marks intentional speech above room tone
+        if (avg > 14) {
+          hasSpoken = true;
+          lastSpeechTimestamp = now;
+        }
+
+        // Only auto-stop if not physically held down in walkie-talkie mode
+        if (
+          !isHolding &&
+          mediaRecorder &&
+          mediaRecorder.state === "recording"
+        ) {
+          const silenceAfterSpeech =
+            hasSpoken && now - lastSpeechTimestamp > 3500;
+          const deadAirTimeout =
+            !hasSpoken && now - recordingStartTimestamp > 7000;
+
+          if (silenceAfterSpeech || deadAirTimeout) {
+            stopActiveRecording();
+            return;
+          }
+        }
+
         visualizerFrameId = requestAnimationFrame(pumpWaveform);
       };
 
@@ -562,13 +598,16 @@
   // gracefully degrades to toggle semantics and the user taps to stop.
   let holdReleasedWhilePending = false;
   let holdPendingExpiry = null;
+  let isHolding = false;
 
   function handleHoldStart() {
+    isHolding = true;
     hapticService.impact("medium");
     if (!$isRecording) handleToggleRecording();
   }
 
   function handleHoldEnd() {
+    isHolding = false;
     if ($isRecording) {
       stopActiveRecording();
       return;
@@ -1001,6 +1040,7 @@
       on:showAbout={showAboutModal}
       on:showSettings={openSettingsModal}
       on:showExtension={showExtensionModal}
+      on:showContributor={openContributorModal}
     />
   </svelte:fragment>
 </PageLayout>

@@ -26,8 +26,7 @@
   aria-modal="true"
 >
   <div
-    class="modal-box relative border-0 bg-[#fff9ed]"
-    style="box-shadow: 0 10px 25px -5px rgba(249, 168, 212, 0.3), 0 8px 10px -6px rgba(249, 168, 212, 0.2), 0 0 15px rgba(249, 168, 212, 0.15);"
+    class="modal-box relative max-h-[90vh] overflow-y-auto rounded-2xl border border-pink-200 bg-gradient-to-br from-[#fffaef] to-[#fff6e6] shadow-xl"
   >
     <form method="dialog">
       <ModalCloseButton
@@ -50,7 +49,7 @@
         id="intro_modal_title"
         class="text-center text-3xl font-black leading-[1.1] tracking-tight text-gray-900 sm:text-4xl"
       >
-        The shareable<br /> voice list thing.
+        Zip up a list,<br />lickety-split.
       </h1>
 
       <!-- Three beats, each a headline + one plain line. The two things

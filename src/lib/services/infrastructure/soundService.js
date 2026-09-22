@@ -97,6 +97,16 @@ const ZIPLIST_CUES = {
           voice: "bloom",
         },
       ],
+      [
+        { frequency: 830, duration: 0.034, gain: 0.02, voice: "sparkle" },
+        {
+          frequency: 1100,
+          offset: 0.032,
+          duration: 0.044,
+          gain: 0.018,
+          voice: "bloom",
+        },
+      ],
     ],
   },
   uncheck: {
@@ -311,6 +321,58 @@ const ZIPLIST_CUES = {
       [{ frequency: 430, duration: 0.06, gain: 0.02, voice: "knock" }],
     ],
   },
+  // Move / plop item across lists — a buoyant wooden pop into a new pocket
+  plop: {
+    cooldownMs: 80,
+    detuneCents: 8,
+    gainJitter: 0.1,
+    variants: [
+      [
+        { frequency: 460, duration: 0.04, gain: 0.024, voice: "knock" },
+        {
+          frequency: 690,
+          offset: 0.03,
+          duration: 0.065,
+          gain: 0.022,
+          voice: "bloom",
+        },
+      ],
+      [
+        { frequency: 500, duration: 0.04, gain: 0.022, voice: "knock" },
+        {
+          frequency: 750,
+          offset: 0.028,
+          duration: 0.06,
+          gain: 0.02,
+          voice: "bloom",
+        },
+      ],
+    ],
+  },
+  // Reset completed items back to checklist — a crisp double-chime rewind
+  reset: {
+    cooldownMs: 120,
+    detuneCents: 6,
+    variants: [
+      [
+        { frequency: 440, duration: 0.032, gain: 0.02, voice: "tap" },
+        {
+          frequency: 587,
+          offset: 0.035,
+          duration: 0.036,
+          gain: 0.022,
+          voice: "tap",
+        },
+        {
+          frequency: 880,
+          offset: 0.075,
+          duration: 0.07,
+          gain: 0.019,
+          voice: "bloom",
+        },
+      ],
+    ],
+  },
 };
 
 /**
@@ -342,6 +404,12 @@ class ZiplistSoundService extends Weightless {
   }
   stopRecording(opts) {
     return this.play("stop", opts);
+  }
+  plop(opts) {
+    return this.play("plop", opts);
+  }
+  reset(opts) {
+    return this.play("reset", opts);
   }
 
   // Runtime only — deliberately does NOT persist. Sound stopped being a

@@ -189,8 +189,8 @@
   $: recordButtonAriaLabel = recording
     ? `${buttonLabel}. Stop recording. ${formatTime(recordingDuration)} recorded`
     : hasActiveList
-      ? `${buttonLabel}. Add to list`
-      : `${buttonLabel}. Create a new list`;
+      ? `${buttonLabel}. Tap or hold to talk · Add to list`
+      : `${buttonLabel}. Tap or hold to talk · Create a new list`;
 
   $: baseButtonClasses = compact
     ? "record-button record-button-compact duration-400 rounded-full transition-all ease-out flex items-center justify-center font-bold shadow-md text-black select-none touch-manipulation"
@@ -305,6 +305,7 @@
         // Don't update phrases on hover to prevent flicker
       }}
       disabled={disabled || transcribing}
+      title={recording ? "Tap or release to finish" : "Tap or hold to talk"}
       aria-label={recordButtonAriaLabel}
       aria-pressed={recording}
       aria-busy={disabled || transcribing}

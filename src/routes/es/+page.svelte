@@ -32,7 +32,7 @@
       },
       {
         "@type": "Offer",
-        price: "19",
+        price: "29",
         priceCurrency: "USD",
         description: "Pase Vitalicio de Contribuidor con listas ilimitadas",
       },

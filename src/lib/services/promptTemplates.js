@@ -40,6 +40,7 @@ Rules for "items" (new things to add):
 7. Something the speaker rules out ("not the regular one", "not the cotton
    ones") is never its own item - it only tells you which qualifier to keep
 8. Tag Coherence: If categorizing an item with a #tag, STRONGLY PREFER reusing existing tags from the vocabulary context rather than inventing synonyms (e.g. use #groceries instead of #supermarket or #shopping).
+9. Spoken tags: If the speaker says "hashtag X" or "tag X", format it as a #tag at the end of the item (e.g. "Buy oat milk #groceries", "Call landlord #urgent").
 
 Rules for "complete" (things to tick off):
 1. If the speaker says they did, bought, finished, got, or completed something — and it matches an existing list item — include the EXACT text of that existing item in "complete"

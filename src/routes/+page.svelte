@@ -31,7 +31,7 @@
       },
       {
         "@type": "Offer",
-        price: "19",
+        price: "29",
         priceCurrency: "USD",
         description: "Lifetime Supporter Pass with unlimited lists",
       },

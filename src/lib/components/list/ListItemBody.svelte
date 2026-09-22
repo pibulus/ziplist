@@ -34,6 +34,9 @@
   export let onFilterTag = () => {};
   export let activeTagFilter = null;
 
+  let showMoveTargets = false;
+  $: if (!isMoving) showMoveTargets = false;
+
   /* Chips are quiet until they have something to say.
      Every item used to wear every one of its tags at all times — the same
      vocabulary the tag rack is already showing forty pixels above, reprinted
@@ -260,73 +263,123 @@
     class="zl-item-tray"
     transition:slide={{ duration: 220, easing: cubicOut }}
   >
-    <button
-      type="button"
-      class="zl-item-tray-action zl-item-tray-edit"
-      data-swipe-ignore="true"
-      title="Edit item"
-      aria-label="Edit item"
-      on:click|stopPropagation={() => {
-        onRequestMove(item.id);
-        onStartEdit(item);
-      }}
-    >
-      <svg
-        class="zl-tray-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-      </svg>
-    </button>
-    <!-- Each list is its colour, so the swatch IS the label. The name lives on
-         in the accessible name and the tooltip — the words are still there for
-         anyone who needs them, they just stopped taking up a pill each. -->
-    <span class="zl-item-tray-dots">
-      {#each moveTargets as target (target.id)}
+    {#if !showMoveTargets}
+      <div class="zl-item-tray-actions">
         <button
           type="button"
-          class="zl-item-tray-action zl-item-tray-target"
+          class="zl-item-tray-btn zl-item-tray-edit"
           data-swipe-ignore="true"
-          style={target.primary ? `--target-colour: ${target.primary}` : ""}
-          title={`Send to ${target.name}`}
-          aria-label={`Send ${item.text} to ${target.name}`}
-          on:click|stopPropagation={() => onMoveTo(item.id, target.id)}
+          title="Edit item text and tags"
+          aria-label="Edit item"
+          on:click|stopPropagation={() => {
+            onRequestMove(item.id);
+            onStartEdit(item);
+          }}
         >
-          <span class="zl-target-dot" aria-hidden="true"></span>
+          <svg
+            class="zl-tray-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+          <span>Edit</span>
         </button>
-      {/each}
-    </span>
-    <button
-      type="button"
-      class="zl-item-tray-action zl-item-tray-remove"
-      data-swipe-ignore="true"
-      title="Remove item"
-      aria-label="Remove item"
-      on:click|stopPropagation={() => onDelete(item.id)}
-    >
-      <svg
-        class="zl-tray-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
+
+        {#if moveTargets.length > 0}
+          <button
+            type="button"
+            class="zl-item-tray-btn zl-item-tray-move"
+            data-swipe-ignore="true"
+            title="Move to another list"
+            aria-label="Move to another list"
+            on:click|stopPropagation={() => (showMoveTargets = true)}
+          >
+            <svg
+              class="zl-tray-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m8 3-4 4 4 4" />
+              <path d="M4 7h16" />
+              <path d="m16 21 4-4-4-4" />
+              <path d="M20 17H4" />
+            </svg>
+            <span>Move</span>
+          </button>
+        {/if}
+
+        <button
+          type="button"
+          class="zl-item-tray-btn zl-item-tray-remove"
+          data-swipe-ignore="true"
+          title="Delete item"
+          aria-label="Delete item"
+          on:click|stopPropagation={() => onDelete(item.id)}
+        >
+          <svg
+            class="zl-tray-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 6h18" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+          <span>Delete</span>
+        </button>
+      </div>
+    {:else}
+      <div
+        class="zl-item-move-panel"
+        transition:slide={{ duration: 150, easing: cubicOut }}
       >
-        <path d="M3 6h18" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        <line x1="10" y1="11" x2="10" y2="17" />
-        <line x1="14" y1="11" x2="14" y2="17" />
-      </svg>
-    </button>
+        <span class="zl-item-move-label">Move to:</span>
+        <div class="zl-item-move-targets">
+          {#each moveTargets as target (target.id)}
+            <button
+              type="button"
+              class="zl-item-move-pill"
+              data-swipe-ignore="true"
+              style={target.primary ? `--target-colour: ${target.primary}` : ""}
+              title={`Move to ${target.name}`}
+              aria-label={`Move ${item.text} to ${target.name}`}
+              on:click|stopPropagation={() => onMoveTo(item.id, target.id)}
+            >
+              <span class="zl-target-dot" aria-hidden="true"></span>
+              <span class="zl-target-name">{target.name}</span>
+            </button>
+          {/each}
+        </div>
+        <button
+          type="button"
+          class="zl-item-move-cancel"
+          data-swipe-ignore="true"
+          title="Cancel move"
+          aria-label="Cancel move"
+          on:click|stopPropagation={() => (showMoveTargets = false)}
+        >
+          ✕
+        </button>
+      </div>
+    {/if}
   </div>
 {/if}

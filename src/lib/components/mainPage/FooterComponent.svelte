@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher, onDestroy } from "svelte";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import { isContributor } from "$lib";
 
   const dispatch = createEventDispatcher();
   /* 38px on phones, the frozen 44 from sm up. 44 is Apple's *recommendation*
@@ -33,6 +34,11 @@
 
   function showSettings() {
     dispatch("showSettings");
+  }
+
+  function showContributor() {
+    soundService.select();
+    dispatch("showContributor");
   }
 
   /* Extension is parked — not ready to be advertised yet. Restoring means
@@ -106,11 +112,35 @@
   >
     Share
   </button>
+  <button
+    type="button"
+    class="{footerButtonClass} zl-footer-pass"
+    on:click={showContributor}
+    title={$isContributor
+      ? "ZipList Supporter Pass (Active) ★"
+      : "ZipList Supporter Pass · 12 lists & multi-device sync"}
+    aria-label={$isContributor
+      ? "ZipList Supporter Pass"
+      : "ZipList Supporter Pass"}
+  >
+    {$isContributor ? "Pass ★" : "Pass"}
+  </button>
   <span class="sr-only" role="status" aria-live="polite">{shareStatus}</span>
 </nav>
 
 <style>
+  nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  nav::-webkit-scrollbar {
+    display: none;
+  }
+
   .footer-nav-button {
+    flex: 0 0 auto;
     border-radius: 0.75rem;
   }
 
@@ -124,5 +154,27 @@
     outline-offset: 2px;
     background-color: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
     color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
+  }
+
+  .zl-footer-pass {
+    color: #1e1714;
+    background-color: var(--zl-accent-color, #ff6ac2);
+    border: none;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(255, 106, 194, 0.35);
+    font-weight: 800;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .zl-footer-pass:hover,
+  .zl-footer-pass:focus-visible {
+    color: #1e1714;
+    background-color: var(--zl-accent-color, #ff6ac2);
+    box-shadow: 0 4px 12px rgba(255, 106, 194, 0.5);
+  }
+
+  .zl-footer-pass:active {
+    transform: scale(0.96);
   }
 </style>

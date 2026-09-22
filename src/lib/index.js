@@ -94,10 +94,10 @@ function isForcedContributorMode() {
   return publicEnv.PUBLIC_FORCE_CONTRIBUTOR_MODE === "true";
 }
 
-const CONTRIBUTOR_TERM_DAYS = 365;
+const CONTRIBUTOR_TERM_DAYS = 36500;
 const CONTRIBUTOR_TERM_MS = CONTRIBUTOR_TERM_DAYS * 24 * 60 * 60 * 1000;
 
-// Soft 1-year expiry (client-side localStorage — honest framing for a $24 app, not
+// Lifetime pass (client-side localStorage — honest framing for a $29 once-off pass, not
 // DRM). Missing stamp = legacy unlock, treated as still valid so we never lock out
 // existing contributors.
 function contributorExpiryOk() {
