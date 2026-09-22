@@ -156,12 +156,17 @@
     color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
   }
 
+  /* Flat brand pink — the one pink CTA, sat beside the yellow record
+     button rather than competing with it. Painted from --zl-pass-color, NOT
+     --zl-accent-color: the accent reads pink in :root but every theme
+     overrides it to the same warm near-black as the ink, which is how this
+     pill shipped as a black slab with an invisible label. */
   .zl-footer-pass {
     color: #1e1714;
-    background-color: var(--zl-accent-color, #ff6ac2);
+    background-color: var(--zl-pass-color, #ff6ac2);
     border: none;
     border-radius: 999px;
-    box-shadow: 0 2px 8px rgba(255, 106, 194, 0.35);
+    box-shadow: 0 2px 8px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.35);
     font-weight: 800;
     padding-left: 0.85rem;
     padding-right: 0.85rem;
@@ -170,8 +175,8 @@
   .zl-footer-pass:hover,
   .zl-footer-pass:focus-visible {
     color: #1e1714;
-    background-color: var(--zl-accent-color, #ff6ac2);
-    box-shadow: 0 4px 12px rgba(255, 106, 194, 0.5);
+    background-color: var(--zl-pass-color, #ff6ac2);
+    box-shadow: 0 4px 12px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.5);
   }
 
   .zl-footer-pass:active {

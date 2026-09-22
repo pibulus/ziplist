@@ -78,7 +78,7 @@
             class="underline hover:text-gray-800">Pablo</a
           > in Melbourne
         </p>
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-4">
           <a
             href="https://github.com/pibulus"
             target="_blank"

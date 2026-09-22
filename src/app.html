@@ -33,16 +33,19 @@
     />
 
     <!-- App configuration -->
-    <!-- NO per-page metadata in this file. It is emitted BEFORE
-         %sveltekit.head%, so whatever it declares wins over what the route
+    <!-- NO per-page metadata in this file. It is emitted BEFORE the head
+         placeholder below, so whatever it declares wins over what the route
          declares. A hardcoded title element and description meta lived here
          and shadowed every route's own on every page — which is how
          /es/mandado came to show the English homepage title in the tab and in
          search results. Titles, descriptions, canonicals, og/twitter and
          hreflang all belong to PageLayout, which takes them as props.
-         (Tag syntax is spelled out in words on purpose: literal markup inside
-         a comment still ships, and it breaks greps and audits that count
-         tags — including the one that caught this.) -->
+         (Tag syntax and the sveltekit placeholder tokens are spelled out in
+         words on purpose. Literal markup inside a comment still ships and
+         breaks tag-counting audits — and a literal placeholder token is
+         worse: Kit substitutes the FIRST one it finds, so a token in this
+         comment swallows the real head, the injected markup's own comment
+         markers close this comment early, and the prose lands on the page.) -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"

@@ -223,39 +223,23 @@
     box-shadow: var(--zl-footer-shadow);
   }
 
-  /* On a phone the copyright used to vanish entirely, leaving a couple of nav
-     words adrift in an empty band. Keep the row anchored; shrink the type and
-     shed as little as possible. */
   @media (max-width: 639px) {
-    /* 390px cannot hold the full attribution AND three nav words, so exactly
-       one thing gets cut. Two cuts have already been tried and rejected:
-         "❤️ Melbourne"   — dropped the lead-in; read as a beating heart in a
-                            relationship with a city (Pablo, 2026-08-17)
-         "Made with ❤️"   — dropped the place; a stub that goes nowhere, and
-                            loses the only word in the line worth keeping
-                            (Pablo, 2026-09-09)
-       So cut neither. Shed the single word "with" and let the charm carry
-       that sense the way it does on every other product on earth, landing on
-       "Made ❤️ in Melbourne" — complete, and it still names the city.
-       The © and the dot stay gone; they are the parts nobody reads. */
-    .copyright .footer-with,
-    .copyright .footer-copy,
-    .copyright .footer-dot {
+    /* The attribution steps off the phone entirely, and the nav centres.
+       390px gives the row 358px; the line needs 156 and the four controls
+       224, so it was ~28px short — and no squeeze fixes a 375px phone.
+       Two shortenings were already tried and rejected for mangling the
+       sense of the line ("❤️ Melbourne" reads as a heart dating a city;
+       "Made with ❤️" is a stub that loses the only word worth keeping),
+       and the centred flex box was clipping BOTH ends anyway, serving
+       "de ❤️ in Melbour". Better to say it properly in one place than
+       badly in two: About carries the full line, with Pablo linked.
+       It returns intact at 640px, where it fits. */
+    .copyright {
       display: none;
     }
 
-    .copyright {
-      font-size: 0.7rem;
-      /* min-w-0 + shrink + nowrap can push text straight out of the band
-         rather than yielding. Let it ellipsis as an absolute last resort
-         (a wide rare charm, a 320px phone) instead of spilling. */
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .copyright .footer-dot {
-      margin-left: 0.4rem;
-      margin-right: 0.4rem;
+    .footer-row {
+      justify-content: center;
     }
   }
 

@@ -41,6 +41,12 @@
   --zl-accent-color: #ff6ac2;
   --zl-cta-color: #ffb000; /* Brand voice-button yellow — constant across themes */
   --zl-cta-color-rgb: 255, 176, 0;
+  /* Brand pink, constant across themes, same as TalkType's CTA. Its own
+     token on purpose: --zl-accent-color reads pink here but every theme
+     overrides it to warm near-black, so anything painting a pink SURFACE
+     from the accent renders a black slab. */
+  --zl-pass-color: #ff6ac2;
+  --zl-pass-color-rgb: 255, 106, 194;
 
   /* Card gradient defaults */
   --zl-card-bg-gradient-animation-duration: 30s;
