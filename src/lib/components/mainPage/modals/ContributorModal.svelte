@@ -119,7 +119,7 @@
   aria-describedby="contributor_modal_description"
   aria-modal="true"
 >
-  <div class="zl-contributor-card">
+  <div class="zl-contributor-card zl-scroll">
     <form method="dialog">
       <!-- Same tiny pink corner X as the settings modal — the two share one
            visual language now (Pablo's call 2026-08-17). -->

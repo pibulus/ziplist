@@ -197,7 +197,7 @@
   aria-modal="true"
 >
   <div class="zl-settings-card">
-    <div class="zl-settings-content">
+    <div class="zl-settings-content zl-scroll">
       <!-- No visible "Options" header — the footer link you just tapped
            already said it (Pablo's call 2026-08-07). The title survives for
            screen readers; the X floats in the corner and shares its line
@@ -407,8 +407,8 @@
     padding: 0.85rem 1.25rem;
     border: 0;
     border-radius: 999px;
-    background: #ff6ac2;
-    color: #fffdf5;
+    background: var(--zl-cta-color, #ffb000);
+    color: #1e1714;
     font-weight: 900;
     font-size: 0.98rem;
     letter-spacing: -0.01em;
@@ -420,7 +420,7 @@
   }
   .zl-contributor-cta:hover {
     transform: scale(1.02);
-    box-shadow: 0 14px 30px rgba(255, 106, 194, 0.5);
+    box-shadow: 0 14px 30px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.45);
   }
   .zl-contributor-cta:active {
     transform: scale(0.97);
@@ -488,7 +488,7 @@
     padding-top: 1.4rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.7rem;
   }
 
   /* The modal chrome speaks the sans-black voice (TalkType's recipe —
@@ -599,7 +599,7 @@
   .zl-settings-section {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.5rem;
     margin-bottom: 0;
   }
 
@@ -611,7 +611,7 @@
      instead of another shouting section label. */
   .zl-settings-footer {
     border-top: 2px dashed var(--zl-item-border-color, rgba(0, 0, 0, 0.12));
-    padding-top: 0.85rem;
+    padding-top: 0.7rem;
   }
 
   .zl-setting-group {
@@ -636,7 +636,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.65rem 0.85rem;
+    padding: 0.5rem 0.85rem;
     transition: all 0.15s ease;
   }
 
@@ -649,7 +649,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.65rem 0.85rem;
+    padding: 0.5rem 0.85rem;
     background: rgba(255, 255, 255, 0.5);
     border: var(--zl-item-border-width, 2px) solid
       var(--zl-item-border-color, rgba(0, 0, 0, 0.1));

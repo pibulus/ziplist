@@ -11,15 +11,18 @@
     var(--zl-primary-color-rgb, 255, 176, 0),
     0.62
   );
+  /* The brand duo, amber into pink. The pink half used to come from
+     --zl-accent-color-rgb, which is 30,23,20 in every theme — so the
+     "gradient" faded into near-black. See the body ink note below. */
   --zl-scrollbar-thumb-bg: linear-gradient(
     180deg,
     rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.76),
-    rgba(var(--zl-accent-color-rgb, 255, 106, 194), 0.72)
+    rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.72)
   );
   --zl-scrollbar-thumb-hover-bg: linear-gradient(
     180deg,
     rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.88),
-    rgba(var(--zl-accent-color-rgb, 255, 106, 194), 0.84)
+    rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.84)
   );
 
   /* Modal motion — one source of truth */
@@ -27,6 +30,35 @@
   --zl-modal-close-ms: 180ms;
   --zl-modal-open-ease: cubic-bezier(0.16, 0.84, 0.24, 1.06);
   --zl-modal-close-ease: cubic-bezier(0.4, 0, 0.24, 1);
+}
+
+/* Any inner panel that scrolls wears the app's bar, not the OS one. html and
+   body already had this; nothing carried it to modal scroll containers. */
+.zl-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
+}
+
+.zl-scroll::-webkit-scrollbar {
+  width: var(--zl-scrollbar-size-compact);
+  height: var(--zl-scrollbar-size-compact);
+}
+
+.zl-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.zl-scroll::-webkit-scrollbar-thumb {
+  min-height: 2.5rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--zl-scrollbar-thumb-bg);
+  background-clip: padding-box;
+}
+
+.zl-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--zl-scrollbar-thumb-hover-bg);
+  background-clip: padding-box;
 }
 
 /* Remove outlines only when not using keyboard navigation */
