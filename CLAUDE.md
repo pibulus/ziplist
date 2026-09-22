@@ -57,11 +57,58 @@ homepage, which no hook can reach). Do NOT add a second `hooks.server.*` or a
 `_headers` file; both were tried on 2026-07-31 and each silently shadowed the
 real CSP, leaving the live site with no Content-Security-Policy at all.
 
+## When you hit a decision that isn't yours
+
+This repo diagnoses well and decides badly. Twice the right answer was
+written down, correctly, and then never acted on:
+
+- `349550e` regrouped the seven share-tray buttons and said in its own
+  commit message that the real fix was a cut it would not make, because
+  "cutting a working feature is a product call, not a layout one."
+- `NEXT.md` described the Prettier hole exactly, down to "it is a
+  decision, not a chore."
+
+Both were right. Neither reached a human, so the share tray stayed a
+junk drawer and 44 components went unformatted. The deferral was correct;
+the destination was not.
+
+**A commit message is not an inbox. `NEXT.md` is not an inbox.** When a
+task turns out to need a product call — cutting a feature, reformatting
+the repo, changing what a control means — ask in the conversation, as one
+question, before shipping the half you can do. It costs the human forty
+seconds. Writing it into a file nobody greps is how a two-minute decision
+becomes a months-long loop.
+
+## Surface-area budget
+
+`docs/V1.1.md` sets hard cutoffs for features (no dates, no nested items,
+no multi-list rooms, no accounts). Nothing set a cutoff for _controls_, so
+every shipped feature parked its affordance in the nearest open tray and
+the share tray reached seven buttons — not one bad call, a dozen good ones
+with nowhere else to go.
+
+- The share tray is for sharing; the list `⋯` is for unmaking. When
+  something lands in one of them that is neither, that is the smell.
+- Prefer replacing a control over adding one. Three-ish in a tray is
+  where it still reads as a choice rather than a menu.
+- Adding a button because there is nowhere else to put it is the signal
+  to stop and think about where it actually belongs.
+
+These are heuristics, not statute. They exist to stop drift, not to win
+arguments — if the sensible, functional thing breaks one of them, do the
+sensible thing and say why. A rule quoted back at a real problem instead
+of solving it is worse than no rule.
+
 ## Code Style Guidelines
 
 - **Framework**: Use idiomatic Svelte patterns; this is a SvelteKit project
 - **JavaScript**: Standard JS (not TypeScript) with JSConfig for minimal type checking
-- **Formatting**: Prettier with svelte and tailwind plugins
+- **Formatting**: Prettier with svelte and tailwind plugins, loaded by
+  `.prettierrc`. That config is load-bearing: without it Prettier has no
+  parser for `.svelte` and skips all 44 components in silence while still
+  reporting the run green. `prettier-plugin-tailwindcss` must stay last in
+  the plugin list, and below 0.8.0 it cannot wrap `prettier-plugin-svelte`
+  on Prettier 3.9 at all (`getVisitorKeys is not a function`).
 - **CSS**: Tailwind CSS with DaisyUI components
 - **Naming**: Use descriptive camelCase for variables, PascalCase for components
 - **Imports**: Use ES modules syntax, group imports by type

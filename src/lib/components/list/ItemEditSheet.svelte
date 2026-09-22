@@ -196,8 +196,10 @@
     border: none;
     background: transparent;
     box-sizing: border-box;
-    padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
-      max(18px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    padding: max(14px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
     align-items: center;
     justify-content: center;
     z-index: 1000;
@@ -314,11 +316,7 @@
     padding: 0 0.7rem;
     border-radius: 999px;
     cursor: pointer;
-    color: color-mix(
-      in srgb,
-      var(--zl-primary-color, #a970ea) 68%,
-      #1e1714
-    );
+    color: color-mix(in srgb, var(--zl-primary-color, #a970ea) 68%, #1e1714);
     background: var(--zl-item-bg, #fffef7);
     border: 1px dashed
       color-mix(in srgb, var(--zl-primary-color, #a970ea) 40%, transparent);

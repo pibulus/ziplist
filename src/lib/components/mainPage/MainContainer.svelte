@@ -902,9 +902,14 @@
     mediaRecorder.stop();
   }
 
+  /* Per-route SEO, forwarded to PageLayout. Routes used to hand-roll their own
+     <svelte:head> while PageLayout emitted its ENGLISH HOMEPAGE defaults over
+     the top, so every landing page shipped two of every og/twitter tag and
+     three canonicals. One emitter now; the route supplies the values. */
+  export let seo = {};
 </script>
 
-<PageLayout listFirst={$listFirstMode === "true"}>
+<PageLayout {...seo} listFirst={$listFirstMode === "true"}>
   {#if $listFirstMode !== "true"}
     <ContentContainer
       on:toggleRecording={handleToggleRecording}
@@ -915,7 +920,7 @@
 
   <!-- RecordButtonWithTimer above the List with reduced spacing -->
   <div
-    class="mt-1 mb-4 flex justify-center sm:my-3"
+    class="mb-4 mt-1 flex justify-center sm:my-3"
     class:list-first-record-button={$listFirstMode === "true"}
   >
     <RecordButtonWithTimer
@@ -1018,6 +1023,23 @@
   />
 {/if}
 
+{#if ContributorModal}
+  <svelte:component
+    this={ContributorModal}
+    closeModal={closeContributorModal}
+    on:close={closeContributorModal}
+  />
+{/if}
+
+{#if QrShareModal}
+  <svelte:component
+    this={QrShareModal}
+    closeModal={closeQrModal}
+    on:close={closeQrModal}
+    {...qrModalProps}
+  />
+{/if}
+
 <style>
   /* Space held for the list that is about to arrive — see the boot script in
      app.html. Only for visitors who already have a list; a min-height never
@@ -1104,21 +1126,3 @@
     margin-top: 0.5rem;
   }
 </style>
-
-{#if ContributorModal}
-  <svelte:component
-    this={ContributorModal}
-    closeModal={closeContributorModal}
-    on:close={closeContributorModal}
-  />
-{/if}
-
-{#if QrShareModal}
-  <svelte:component
-    this={QrShareModal}
-    closeModal={closeQrModal}
-    on:close={closeQrModal}
-    {...qrModalProps}
-  />
-{/if}
-

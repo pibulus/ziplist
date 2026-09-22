@@ -8,7 +8,7 @@
   `og-card.png`. Both shipped, so the served HTML declared `og:url` twice
   (with and without trailing slash), `twitter:card` twice (`summary` AND
   `summary_large_image`), and `og:image:width`/`height` twice — 512x512
-  landing in the document *before* the only real `og:image`. Messenger
+  landing in the document _before_ the only real `og:image`. Messenger
   rendered no card rather than guess. The legacy block is gone; every
   shareable route already emitted a complete one of its own.
 

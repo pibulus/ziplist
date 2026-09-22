@@ -88,17 +88,15 @@ Aura/glow/focus colors are also tokenized (`--mascot-aura-color-1..3`,
 
 ```svelte
 <script>
-  import { AppSuffix } from '$lib/components/ui';
+  import { AppSuffix } from "$lib/components/ui";
 </script>
 
 <h1>
   ZipList
-  <span style="position: relative; display: inline-block; width: 0; height: 0; overflow: visible;">
-    <AppSuffix
-      offsetX="-0.3em"
-      offsetY="8px"
-      position="bottom-right"
-    />
+  <span
+    style="position: relative; display: inline-block; width: 0; height: 0; overflow: visible;"
+  >
+    <AppSuffix offsetX="-0.3em" offsetY="8px" position="bottom-right" />
   </span>
 </h1>
 ```

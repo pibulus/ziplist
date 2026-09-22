@@ -63,9 +63,12 @@
   function handleOpenQr(event) {
     const detail = event?.detail || {};
     qrModalProps = {
-      shareUrl: detail.shareUrl || (typeof window !== "undefined" ? window.location.href : ""),
+      shareUrl:
+        detail.shareUrl ||
+        (typeof window !== "undefined" ? window.location.href : ""),
       title: detail.title || "Join Live List",
-      subtitle: detail.subtitle || "Scan with any phone camera to join in real time",
+      subtitle:
+        detail.subtitle || "Scan with any phone camera to join in real time",
       syncPhrase: detail.syncPhrase || "",
       isLive: true,
     };
@@ -391,13 +394,10 @@
     .live-brand-row {
       margin-bottom: 1.5rem;
     }
-
   }
 
   /* Guest welcome — gives the room a sense of place instead of a bare
      card. Warm badge + one plain line about what "live" means here. */
-
-
 
   .live-actions {
     display: flex;

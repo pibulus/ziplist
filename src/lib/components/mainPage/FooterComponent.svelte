@@ -3,8 +3,14 @@
   import { soundService } from "$lib/services/infrastructure/soundService";
 
   const dispatch = createEventDispatcher();
+  /* 38px on phones, the frozen 44 from sm up. 44 is Apple's *recommendation*
+     for primary targets; WCAG 2.2 AA asks 24. These are tertiary links in a
+     bar that is on screen permanently, and on a notched iPhone that bar was
+     spending ~90px of a small screen to hold three things nobody taps often.
+     38 is still a comfortable thumb target and buys back real estate the
+     list actually uses. */
   const footerButtonClass =
-    "footer-nav-button btn btn-ghost btn-sm !h-[44px] !min-h-[44px] min-w-11 px-1.5 py-2 text-xs text-gray-600 shadow-none transition-colors duration-150 focus-visible:ring-0 sm:px-3 sm:text-base";
+    "footer-nav-button btn btn-ghost btn-sm !h-[38px] !min-h-[38px] min-w-11 px-1.5 py-1.5 text-xs text-gray-600 shadow-none transition-colors duration-150 focus-visible:ring-0 sm:!h-[44px] sm:!min-h-[44px] sm:px-3 sm:py-2 sm:text-base";
   let shareStatus = "";
   let shareStatusTimer = null;
 

@@ -31,7 +31,7 @@
 
 **Evidence**:
 
-```svelte
+```text
 <style>
   /* Lines 453-1510 = 1,057 lines of CSS! */
   @keyframes sparkle { ... }
@@ -164,10 +164,8 @@ function autoFocus(node) {
       <!-- drag handle -->
     {/if}
   {/each}
-{:else}
-  {#if isCreatingNewItem}
-    <!-- new item input -->
-  {/if}
+{:else if isCreatingNewItem}
+  <!-- new item input -->
 {/if}
 ```
 

@@ -70,13 +70,13 @@
 
 <dialog
   id="qr_modal"
-  class="modal modal-middle overflow-hidden fixed z-50"
+  class="modal modal-middle fixed z-50 overflow-hidden"
   style="overflow-y: hidden!important;"
   aria-labelledby="qr_modal_title"
   aria-modal="true"
 >
   <div
-    class="modal-box bg-gradient-to-br from-[#fffaef] to-[#fff6e6] shadow-2xl border-2 border-[#1e1714]/15 rounded-3xl overflow-y-auto max-h-[85vh] max-w-sm text-center p-6"
+    class="modal-box max-h-[85vh] max-w-sm overflow-y-auto rounded-3xl border-2 border-[#1e1714]/15 bg-gradient-to-br from-[#fffaef] to-[#fff6e6] p-6 text-center shadow-2xl"
   >
     <form method="dialog">
       <ModalCloseButton
@@ -88,45 +88,49 @@
 
     <div class="space-y-4">
       <!-- Header -->
-      <div class="flex items-center justify-center gap-2.5 pr-8 pl-2">
-        <div class="w-8 h-8 shrink-0 flex items-center justify-center">
+      <div class="flex items-center justify-center gap-2.5 pl-2 pr-8">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center">
           <Mascot interactive={false} aura={false} />
         </div>
         <h3
           id="qr_modal_title"
-          class="font-black text-xl text-[#1e1714] tracking-tight text-left"
+          class="text-left text-xl font-black tracking-tight text-[#1e1714]"
         >
           {title}
         </h3>
       </div>
 
-      <p class="text-xs text-[#1e1714]/70 leading-relaxed font-medium">
+      <p class="text-xs font-medium leading-relaxed text-[#1e1714]/70">
         {subtitle}
       </p>
 
       <!-- Sync Phrase Pill (if live) -->
       {#if syncPhrase}
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-100/90 border border-pink-300 text-pink-950 text-xs font-black shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+        <div
+          class="inline-flex items-center gap-1.5 rounded-full border border-pink-300 bg-pink-100/90 px-3 py-1 text-xs font-black text-pink-950 shadow-sm"
+        >
+          <span class="h-2 w-2 animate-pulse rounded-full bg-pink-500"></span>
           <span>Room:</span>
           <code class="font-mono">{syncPhrase}</code>
         </div>
       {/if}
 
       <!-- QR Card Container -->
-      <div class="relative mx-auto w-64 h-64 p-3 bg-[#fffef7] rounded-2xl border-2 border-[#1e1714]/12 shadow-[3px_3px_0px_rgba(30,23,20,0.08)] flex items-center justify-center">
+      <div
+        class="border-[#1e1714]/12 relative mx-auto flex h-64 w-64 items-center justify-center rounded-2xl border-2 bg-[#fffef7] p-3 shadow-[3px_3px_0px_rgba(30,23,20,0.08)]"
+      >
         {#if qrDataUrl}
           <img
             src={qrDataUrl}
             alt="QR Code for {title}"
-            class="w-full h-full object-contain rounded-lg"
+            class="h-full w-full rounded-lg object-contain"
           />
         {:else if qrError}
-          <div class="text-xs text-rose-600 font-bold p-4">
+          <div class="p-4 text-xs font-bold text-rose-600">
             Could not generate QR code.
           </div>
         {:else}
-          <div class="text-xs text-[#1e1714]/50 animate-pulse">
+          <div class="animate-pulse text-xs text-[#1e1714]/50">
             Generating QR code...
           </div>
         {/if}
@@ -136,7 +140,7 @@
       <div class="flex flex-col gap-2 pt-2">
         <button
           type="button"
-          class="w-full py-2.5 px-4 rounded-xl border-2 border-[#1e1714] font-black text-xs transition-all duration-150 active:scale-95 shadow-[2px_2px_0px_#1e1714] flex items-center justify-center gap-2 {copied
+          class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] px-4 py-2.5 text-xs font-black shadow-[2px_2px_0px_#1e1714] transition-all duration-150 active:scale-95 {copied
             ? 'bg-emerald-300 text-emerald-950'
             : 'bg-amber-300 text-[#1e1714] hover:bg-amber-400'}"
           on:click={copyLink}
@@ -150,7 +154,7 @@
 
         <button
           type="button"
-          class="w-full py-2 px-3 rounded-xl border border-[#1e1714]/20 bg-[#fffef7]/80 font-bold text-xs text-[#1e1714]/80 hover:text-[#1e1714] hover:border-[#1e1714]/50 hover:bg-pink-50/80 transition-all duration-150 flex items-center justify-center gap-1.5"
+          class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#1e1714]/20 bg-[#fffef7]/80 px-3 py-2 text-xs font-bold text-[#1e1714]/80 transition-all duration-150 hover:border-[#1e1714]/50 hover:bg-pink-50/80 hover:text-[#1e1714]"
           on:click={openInQrBuddy}
           title="Open in QRBuddy to customize gradients and download high-res stickers"
         >

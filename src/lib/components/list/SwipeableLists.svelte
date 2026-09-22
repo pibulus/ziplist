@@ -66,7 +66,9 @@
     requestAnimationFrame(() => {
       const top = wrapperEl.getBoundingClientRect().top + window.scrollY - 12;
       if (window.scrollY <= top) return;
-      const still = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      const still = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      )?.matches;
       window.scrollTo({
         top: Math.max(0, top),
         behavior: still ? "auto" : "smooth",
@@ -372,7 +374,12 @@
   $: tilt = prefersReducedMotion ? 0 : Math.max(-1.3, Math.min(1.3, v * 0.004));
   function handleGlobalKeydown(e) {
     if (!wraps) return;
-    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable) return;
+    if (
+      e.target.tagName === "INPUT" ||
+      e.target.tagName === "TEXTAREA" ||
+      e.target.isContentEditable
+    )
+      return;
     if (e.key === "ArrowLeft") {
       stepList(-1);
     } else if (e.key === "ArrowRight") {
@@ -532,8 +539,8 @@
     padding: 0 calc(4px + var(--zl-card-shadow-x, 0px)) 0 4px;
     box-sizing: border-box;
     opacity: calc(1 - 0.6 * var(--away, 1));
-    transform: translateX(var(--sx, 0%))
-      scale(calc(1 - 0.05 * var(--away, 1))) rotate(var(--tilt, 0deg));
+    transform: translateX(var(--sx, 0%)) scale(calc(1 - 0.05 * var(--away, 1)))
+      rotate(var(--tilt, 0deg));
     will-change: transform;
     pointer-events: none;
   }

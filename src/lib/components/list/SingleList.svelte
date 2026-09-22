@@ -11,10 +11,7 @@
   );
   import { listsService } from "$lib/services/lists/listsService";
   import { geminiService } from "$lib/services/geminiService";
-  import {
-    listToText,
-    splitPastedList,
-  } from "$lib/services/lists/listTextFormat.js";
+  import { splitPastedList } from "$lib/services/lists/listTextFormat.js";
   import { shareList, generateShareableUrl } from "$lib/services/share";
   import { tagColour } from "$lib/services/lists/itemTags";
   import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
@@ -106,7 +103,9 @@
   let isMakingLive = false;
   let presence = []; // Who's online
   let localAvatar = "";
-  $: remotePresence = presence.filter((u) => u.avatar && u.avatar !== localAvatar);
+  $: remotePresence = presence.filter(
+    (u) => u.avatar && u.avatar !== localAvatar,
+  );
   let typingUsers = []; // Who's typing
   let liveActivity = { drafts: [], focuses: [], voices: [] };
   let recentlyEditedItems = new Set(); // Track items just edited by others
@@ -251,11 +250,11 @@
     }
     if (typeof window !== "undefined") {
       window.removeEventListener("ziplist-list-notice", handleListNotice);
-        window.removeEventListener("ziplist-heart", handleRemoteHeart);
-        window.removeEventListener(
-          "ziplist-item-checked",
-          handleRemoteItemChecked,
-        );
+      window.removeEventListener("ziplist-heart", handleRemoteHeart);
+      window.removeEventListener(
+        "ziplist-item-checked",
+        handleRemoteItemChecked,
+      );
       window.removeEventListener("keydown", handleGlobalKeyDown);
     }
   });
@@ -565,7 +564,9 @@
     ? sortedItems.filter((item) => item.tags?.includes(activeTagFilter))
     : sortedItems;
   $: renderedActiveItems = filteredSortedItems.filter((item) => !item.checked);
-  $: renderedCompletedItems = filteredSortedItems.filter((item) => item.checked);
+  $: renderedCompletedItems = filteredSortedItems.filter(
+    (item) => item.checked,
+  );
   $: remoteDrafts = isLive
     ? liveActivity.drafts.filter((draft) => !draft.itemId)
     : [];
@@ -742,8 +743,6 @@
       ? "true"
       : "false";
   }
-
-
 
   function registerItemNode(node, itemId) {
     itemNodes.set(itemId, node);
@@ -1350,11 +1349,27 @@
       primary: candidate.primaryColor || candidate.color || "",
     }));
 
-  // ── Share / export tray ────────────────────────────────────────────────
+  // ── Share tray ─────────────────────────────────────────────────────────
+  // Sharing, and nothing else. A link icon should never be where someone
+  // finds "Delete this list" — that pair lives in the ⋯ tray now.
   let shareTrayOpen = false;
   let shareInputMode = null;
   let pasteText = "";
   let syncPhrase = "";
+
+  // ── Manage tray (the ⋯) ────────────────────────────────────────────────
+  // These two sat under a hairline at the foot of the share tray. Grouping
+  // them there was tidy and still wrong: they are not ways of sending a
+  // list, they are ways of ending one.
+  let manageTrayOpen = false;
+
+  $: nonLiveListCount = $listsStore.lists.filter(
+    (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
+  ).length;
+  $: canDeleteList = showListManagement && nonLiveListCount > 1;
+  $: canManageList = list.items.length > 0 || canDeleteList;
+  // Clearing the last item can empty the drawer while it is open.
+  $: if (!canManageList && manageTrayOpen) manageTrayOpen = false;
 
   // ── Sending part of a list ─────────────────────────────────────────────
   // Only ever appears on a list that HAS tags — a filter row on a list with
@@ -1386,11 +1401,18 @@
 
   function toggleShareTray() {
     shareTrayOpen = !shareTrayOpen;
+    if (shareTrayOpen) manageTrayOpen = false;
     if (!shareTrayOpen) {
       shareInputMode = null;
       syncPhrase = "";
       shareTagFilter = null;
     }
+    soundService.select();
+  }
+
+  function toggleManageTray() {
+    manageTrayOpen = !manageTrayOpen;
+    if (manageTrayOpen) shareTrayOpen = false;
     soundService.select();
   }
 
@@ -1426,34 +1448,6 @@
     soundService.close({ force: true });
   }
 
-  async function copyAsText() {
-    try {
-      await navigator.clipboard.writeText(listToText(shareableList));
-      shareTrayOpen = false;
-      showListStatus("Copied as text.", true, 2200);
-      soundService.copySuccess({ force: true });
-    } catch {
-      showListStatus("Copy did not take this time.", false, 2400);
-    }
-  }
-
-  function downloadAsText() {
-    const baseName = shareTagFilter
-      ? `${list.name || "ziplist"} ${shareTagFilter}`
-      : list.name || "ziplist";
-    const name = baseName.replace(/[^\w\- ]+/g, "").trim() || "ziplist";
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(
-      new Blob([listToText(shareableList)], { type: "text/plain" }),
-    );
-    a.download = `${name}.txt`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    shareTrayOpen = false;
-    showListStatus("Saved as a text file.", true, 2200);
-    soundService.copySuccess({ force: true });
-  }
-
   function qrThisList() {
     if (!shareableList?.items?.length && !isLive) {
       showListStatus("Add an item before sharing.");
@@ -1462,7 +1456,8 @@
     }
 
     const rawUrl = isLive
-      ? (liveListsService.getShareUrl(list.id) || generateShareableUrl(shareableList))
+      ? liveListsService.getShareUrl(list.id) ||
+        generateShareableUrl(shareableList)
       : generateShareableUrl(shareableList);
 
     window.dispatchEvent(
@@ -1473,7 +1468,7 @@
           subtitle: isLive
             ? "Scan with any phone camera to edit together in real time"
             : "Scan with any phone camera to open and save this list",
-          syncPhrase: isLive ? (syncPhrase || "") : "",
+          syncPhrase: isLive ? syncPhrase || "" : "",
           isLive: Boolean(isLive),
         },
       }),
@@ -1522,10 +1517,7 @@
       );
 
       if (result?.items && result.items.length > 0) {
-        if (
-          result.title &&
-          (!list.name || DEFAULT_LIST_NAMES.has(list.name))
-        ) {
+        if (result.title && (!list.name || DEFAULT_LIST_NAMES.has(list.name))) {
           listsService.renameList(list.id, result.title);
         }
 
@@ -1614,7 +1606,8 @@
       const createResult = listsStore.addList(newListName);
       if (!createResult.ok) {
         showListStatus(
-          createResult.message || "Could not create new list. Check list limit.",
+          createResult.message ||
+            "Could not create new list. Check list limit.",
           false,
           3200,
         );
@@ -1652,7 +1645,11 @@
 
       soundService.sparkle({ force: true });
       hapticService.notification("success");
-      showListStatus(`Resampled #${newListName} into its own list!`, true, 3000);
+      showListStatus(
+        `Resampled #${newListName} into its own list!`,
+        true,
+        3000,
+      );
     } catch (err) {
       console.error("Error spinning out tag:", err);
       showListStatus("Could not resample tag into a new list.", false, 2500);
@@ -1765,7 +1762,6 @@
     );
   }
 
-
   function requestMove(itemId) {
     movingItemId = movingItemId === itemId ? null : itemId;
     if (movingItemId) soundService.select();
@@ -1781,7 +1777,11 @@
       showListStatus(result.message || "Moved.", true, 2200);
     } else {
       soundService.locked();
-      showListStatus(result?.message || "Could not move that item.", false, 2600);
+      showListStatus(
+        result?.message || "Could not move that item.",
+        false,
+        2600,
+      );
     }
   }
 
@@ -2016,10 +2016,7 @@
       saveItemEdit();
     } else if (event.key === "Escape") {
       cancelItemEdit();
-    } else if (
-      event.key === "Backspace" &&
-      (event.metaKey || event.ctrlKey)
-    ) {
+    } else if (event.key === "Backspace" && (event.metaKey || event.ctrlKey)) {
       // Cmd/Ctrl+Backspace while editing deletes the whole item.
       event.preventDefault();
       deleteItem(editingItemId);
@@ -2116,7 +2113,7 @@
       undoDeleteTimer = null;
     }, 5500);
 
-    shareTrayOpen = false;
+    manageTrayOpen = false;
   }
 
   function deleteEntireList() {
@@ -2152,14 +2149,17 @@
       undoDeleteTimer = null;
     }, 6500);
 
-    shareTrayOpen = false;
+    manageTrayOpen = false;
   }
 
   function restoreDeletedItem() {
     if (!undoDelete) return;
 
     if (undoDelete.type === "list" && undoDelete.listSnapshot) {
-      listsStore.upsertList(undoDelete.listSnapshot, undoDelete.listSnapshot.id);
+      listsStore.upsertList(
+        undoDelete.listSnapshot,
+        undoDelete.listSnapshot.id,
+      );
       listsStore.setActiveList(undoDelete.listSnapshot.id);
       hapticService.selection();
       soundService.add({ force: true });
@@ -2172,7 +2172,10 @@
     }
 
     if (undoDelete.type === "untag" && undoDelete.listSnapshot) {
-      listsStore.upsertList(undoDelete.listSnapshot, undoDelete.listSnapshot.id);
+      listsStore.upsertList(
+        undoDelete.listSnapshot,
+        undoDelete.listSnapshot.id,
+      );
       hapticService.selection();
       soundService.add({ force: true });
       undoDelete = null;
@@ -2199,7 +2202,10 @@
       const currentItems = list.items.filter(
         (item) => item.id !== undoDelete.item.id,
       );
-      const insertIndex = Math.min(undoDelete.originalIndex, currentItems.length);
+      const insertIndex = Math.min(
+        undoDelete.originalIndex,
+        currentItems.length,
+      );
       const restoredItems = [
         ...currentItems.slice(0, insertIndex),
         undoDelete.item,
@@ -2545,7 +2551,8 @@
                     : "Live list active. Tap for heart"}
                   aria-label="Live list status"
                 >
-                  <span class="zl-live-presence-pulse" aria-hidden="true"></span>
+                  <span class="zl-live-presence-pulse" aria-hidden="true"
+                  ></span>
                   {#if remotePresence.length > 0}
                     <div class="zl-presence-dots" aria-hidden="true">
                       {#each remotePresence.slice(0, 3) as user (user.id)}
@@ -2554,7 +2561,9 @@
                           title={user.avatar}
                           alt=""
                           src={getAvatarImage(user.avatar)}
-                          style="background-color: {getAvatarColor(user.avatar)}"
+                          style="background-color: {getAvatarColor(
+                            user.avatar,
+                          )}"
                         />
                       {/each}
                     </div>
@@ -2564,7 +2573,9 @@
                       >
                     {/if}
                   {:else}
-                    <span class="zl-live-presence-label" aria-hidden="true">Live</span>
+                    <span class="zl-live-presence-label" aria-hidden="true"
+                      >Live</span
+                    >
                   {/if}
                   <span class="zl-presence-heart" aria-hidden="true">♥</span>
                   {#each hearts as heart (heart.id)}
@@ -2622,11 +2633,36 @@
               stroke-linejoin="round"
             >
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"></circle>
-              <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"></circle>
-              <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"></circle>
-              <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"></circle>
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+              <circle
+                cx="8.5"
+                cy="8.5"
+                r="1.5"
+                fill="currentColor"
+                stroke="none"
+              ></circle>
+              <circle
+                cx="15.5"
+                cy="15.5"
+                r="1.5"
+                fill="currentColor"
+                stroke="none"
+              ></circle>
+              <circle
+                cx="15.5"
+                cy="8.5"
+                r="1.5"
+                fill="currentColor"
+                stroke="none"
+              ></circle>
+              <circle
+                cx="8.5"
+                cy="15.5"
+                r="1.5"
+                fill="currentColor"
+                stroke="none"
+              ></circle>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"
+              ></circle>
             </svg>
           </button>
           <button
@@ -2688,6 +2724,33 @@
             ></path>
           </svg>
         </button>
+
+        <!-- Only appears when there is something to unmake. A ⋯ that opens
+             an empty drawer is worse than no ⋯. -->
+        {#if canManageList}
+          <button
+            type="button"
+            class="zl-manage-button"
+            class:is-open={manageTrayOpen}
+            on:click={toggleManageTray}
+            aria-expanded={manageTrayOpen}
+            data-tip="Clear or delete"
+            aria-label={`More actions for ${list.name || "this list"}`}
+          >
+            <svg
+              class="zl-header-icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+            >
+              <circle cx="5" cy="12" r="1.9"></circle>
+              <circle cx="12" cy="12" r="1.9"></circle>
+              <circle cx="19" cy="12" r="1.9"></circle>
+            </svg>
+          </button>
+        {/if}
       </div>
     </div>
 
@@ -2700,7 +2763,11 @@
              tags, so a plain list never sees it. Not shown for a live room —
              a room is the whole list by definition. -->
         {#if !isLive && suggestedTags.length > 0}
-          <div class="zl-share-filter" role="group" aria-label="Send only items tagged">
+          <div
+            class="zl-share-filter"
+            role="group"
+            aria-label="Send only items tagged"
+          >
             {#each suggestedTags as tag (tag)}
               <button
                 type="button"
@@ -2722,93 +2789,39 @@
           </div>
         {/if}
 
-        <!-- Three jobs, three rows, in the order they get reached for.
-             These seven buttons used to sit in one `flex-wrap` pile, which
-             meant the browser decided what shared a row with what — and it
-             chose to put "Clear entire list" next to "QR this list" and
-             orphan "Delete this list" underneath. The grouping READ as
-             deliberate and was purely a function of label width. Rows are
-             explicit now, so meaning survives every viewport:
-
-               send    — hand the list to a person
-               export  — hand the list to a machine
-               danger  — unmake the list
-
-             Export sits at lighter weight because it is the rarest of the
-             three and was previously shouting at the same volume as sharing. -->
-        <div class="zl-share-actions">
-          <div class="zl-share-group" role="group" aria-label="Send this list">
-            <button type="button" class="zl-share-option" on:click={shareAsLink}>
-              {isLive ? "Copy link" : "Send a copy"}
-            </button>
-            {#if liveFeatureAvailable && !isLive}
-              <button
-                type="button"
-                class="zl-share-option zl-share-live"
-                disabled={isMakingLive}
-                aria-busy={isMakingLive}
-                on:click={shareAsLiveRoom}
-              >
-                {isMakingLive ? "Opening the room..." : "Share live"}
-              </button>
-            {/if}
-            {#if isLive}
-              <button
-                type="button"
-                class="zl-share-option zl-share-stop"
-                on:click={handleStopLive}
-              >
-                Stop live sharing
-              </button>
-            {/if}
-          </div>
-
-          <div
-            class="zl-share-group zl-share-group-export"
-            role="group"
-            aria-label="Export this list"
-          >
-            <button type="button" class="zl-share-option" on:click={copyAsText}>
-              Copy as text
-            </button>
+        <!-- One job now: hand this list to someone. "Copy as text" and
+             "Save as file" used to sit below this row, but `shareAsLink`
+             delegates to navigator.share and the sheet it opens already
+             offers Copy and Save to Files — they were the OS wearing our
+             chrome. QR stays: scanning is the one handoff a share sheet
+             cannot do, because it needs the other phone in the room. -->
+        <div class="zl-share-actions" role="group" aria-label="Send this list">
+          <button type="button" class="zl-share-option" on:click={shareAsLink}>
+            {isLive ? "Copy link" : "Send a copy"}
+          </button>
+          {#if liveFeatureAvailable && !isLive}
             <button
               type="button"
-              class="zl-share-option"
-              on:click={downloadAsText}
+              class="zl-share-option zl-share-live"
+              disabled={isMakingLive}
+              aria-busy={isMakingLive}
+              on:click={shareAsLiveRoom}
             >
-              Save as file
+              {isMakingLive ? "Opening the room..." : "Share live"}
             </button>
-            <button type="button" class="zl-share-option" on:click={qrThisList}>
-              QR this list
-            </button>
-          </div>
-
-          {#if list.items.length > 0 || (showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1)}
-            <div
-              class="zl-share-group zl-share-group-danger"
-              role="group"
-              aria-label="Undo this list"
-            >
-              {#if list.items.length > 0}
-                <button
-                  type="button"
-                  class="zl-share-option zl-share-clear"
-                  on:click={clearEntireList}
-                >
-                  Clear entire list
-                </button>
-              {/if}
-              {#if showListManagement && $listsStore.lists.filter((l) => typeof l?.id !== "string" || !l.id.startsWith("live_")).length > 1}
-                <button
-                  type="button"
-                  class="zl-share-option zl-share-delete-list"
-                  on:click={deleteEntireList}
-                >
-                  Delete this list
-                </button>
-              {/if}
-            </div>
           {/if}
+          {#if isLive}
+            <button
+              type="button"
+              class="zl-share-option zl-share-stop"
+              on:click={handleStopLive}
+            >
+              Stop live sharing
+            </button>
+          {/if}
+          <button type="button" class="zl-share-option" on:click={qrThisList}>
+            QR this list
+          </button>
         </div>
 
         {#if syncPhrase}
@@ -2861,6 +2874,37 @@
               </button>
             </div>
           </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Ending a list is not a way of sending it, so it gets its own drawer
+         rather than a hairline at the foot of someone else's. Inline for the
+         same reason the share tray is: .zl-card is overflow:clip. -->
+    {#if manageTrayOpen && canManageList}
+      <div
+        class="zl-manage-tray"
+        role="group"
+        aria-label="Manage this list"
+        transition:fade={{ duration: 130 }}
+      >
+        {#if list.items.length > 0}
+          <button
+            type="button"
+            class="zl-share-option zl-share-clear"
+            on:click={clearEntireList}
+          >
+            Clear entire list
+          </button>
+        {/if}
+        {#if canDeleteList}
+          <button
+            type="button"
+            class="zl-share-option zl-share-delete-list"
+            on:click={deleteEntireList}
+          >
+            Delete this list
+          </button>
         {/if}
       </div>
     {/if}
@@ -3067,7 +3111,10 @@
               on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
-              animate:flip={{ duration: touchDragItemId ? 220 : 260, easing: quintOut }}
+              animate:flip={{
+                duration: touchDragItemId ? 220 : 260,
+                easing: quintOut,
+              }}
               in:itemIn={{ delay: getStaggerDelay(index) }}
               out:itemOut
               aria-grabbed={getItemGrabbedState(item.id)}
@@ -3146,7 +3193,10 @@
                 if (draggedItemId === lastActive.id) return;
                 e.preventDefault();
                 if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-                if (dragOverItemId !== lastActive.id || dragOverPosition !== "after") {
+                if (
+                  dragOverItemId !== lastActive.id ||
+                  dragOverPosition !== "after"
+                ) {
                   dragOverItemId = lastActive.id;
                   dragOverPosition = "after";
                   hapticService.impact("light");
@@ -3196,7 +3246,10 @@
               on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
-              animate:flip={{ duration: touchDragItemId ? 220 : 260, easing: quintOut }}
+              animate:flip={{
+                duration: touchDragItemId ? 220 : 260,
+                easing: quintOut,
+              }}
               in:itemIn={{
                 delay: getStaggerDelay(renderedActiveItems.length + index + 1),
               }}
@@ -3283,7 +3336,12 @@
           <div
             class="zl-item zl-touch-ghost-item"
             style="--zl-item-step: {renderedActiveItems.length > 1
-              ? Math.max(0, renderedActiveItems.findIndex((it) => it.id === touchDraggedItem.id)) /
+              ? Math.max(
+                  0,
+                  renderedActiveItems.findIndex(
+                    (it) => it.id === touchDraggedItem.id,
+                  ),
+                ) /
                 (renderedActiveItems.length - 1)
               : 0}"
           >
@@ -3297,7 +3355,10 @@
                 {#if touchDraggedItem.tags?.length}
                   <span class="zl-item-tags">
                     {#each touchDraggedItem.tags as tag (tag)}
-                      <span class="zl-item-tag" style={`--tag-colour: ${tagColour(tag)}`}>#{tag}</span>
+                      <span
+                        class="zl-item-tag"
+                        style={`--tag-colour: ${tagColour(tag)}`}>#{tag}</span
+                      >
                     {/each}
                   </span>
                 {/if}

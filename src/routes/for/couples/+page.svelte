@@ -1,88 +1,121 @@
 <script>
-  import { MainContainer } from '$lib/components/mainPage';
+  /* A use-case page: it describes one thing people do with ZipList and sends
+     them to the app. It does not render the app. */
+  import VerticalPage from "$lib/components/layout/VerticalPage.svelte";
 
-  const canonicalUrl = 'https://ziplist.app/for/couples';
-  const title = 'Shared Grocery & Chores List App for Couples — Instant QR Sync | ZipList';
+  const canonicalUrl = "https://ziplist.app/for/couples";
+  const title =
+    "Shared List for Two People \u2014 One List, Two Phones | ZipList";
   const description =
-    'Real-time shared checklist for couples. Plan dinner, split supermarket aisles, and pack for trips together with instant QR pairing and zero accounts or signups.';
+    "A list both of you can see and tick off, live, on two phones. No shared account and no app to talk anyone into installing. Scan a code and you are on the same list.";
+
+  /* One array, two destinations: these questions are rendered on the page AND
+     fed to the FAQPage markup. Google wants the answers visible, and a single
+     source is the only way the two cannot drift apart. */
+  const faqs = [
+    {
+      q: "Do we need accounts?",
+      a: "No. Neither of you. There is no sign-up anywhere in this, which is also why there is no shared login to argue about.",
+    },
+    {
+      q: "Can we both tick things off at the same time?",
+      a: "Yes, that is what a live list is for. Both phones hold the same list and each tick shows up on the other.",
+    },
+    {
+      q: "What if they do not want another app?",
+      a: "They do not need one. It opens in whatever browser is already on their phone.",
+    },
+    {
+      q: "Does it stay shared forever?",
+      a: "Only while you want it to. Live sharing can be stopped from the list header, and the list goes back to being yours alone.",
+    },
+  ];
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        name: title,
+        url: canonicalUrl,
+        description,
+        inLanguage: "en",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "ZipList",
+          url: "https://ziplist.app",
+        },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      },
+    ],
+  };
+
+  // Assembled here rather than inline in markup: a literal `<script>` in a
+  // template makes svelte-eslint-parser read the rest of the file as JS.
+  const jsonLdScript =
+    `<script type="application/ld+json">${JSON.stringify(structuredData)}` +
+    // The escape stops this literal closing the module block it lives in.
+    // eslint-disable-next-line no-useless-escape
+    `<\/script>`;
 </script>
 
 <svelte:head>
-  <title>{title}</title>
-  <meta name="description" content={description} />
-  <link rel="canonical" href={canonicalUrl} />
-  <link rel="alternate" hreflang="en" href={canonicalUrl} />
-  <link rel="alternate" hreflang="es" href="https://ziplist.app/es/parejas" />
-
-  <!-- OpenGraph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="ZipList" />
-  <meta property="og:url" content={canonicalUrl} />
-  <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
-  <meta property="og:image" content="https://ziplist.app/og-card.png" />
-  <meta property="og:locale" content="en_US" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:url" content={canonicalUrl} />
-  <meta name="twitter:title" content={title} />
-  <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content="https://ziplist.app/og-card.png" />
-
-  <!-- Structured Data -->
-  {@html `<script type="application/ld+json">
-  ${JSON.stringify({
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebApplication',
-        name: 'ZipList Shared Lists for Couples',
-        url: canonicalUrl,
-        image: 'https://ziplist.app/og-card.png',
-        description: description,
-        applicationCategory: 'LifestyleApplication',
-        operatingSystem: 'Web',
-        inLanguage: 'en',
-        offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD',
-          description: 'Free shared real-time lists with instant QR pairing'
-        }
-      },
-      {
-        '@type': 'FAQPage',
-        mainEntity: [
-          {
-            '@type': 'Question',
-            name: 'How do couples share a list in ZipList without accounts?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Tap "Share QR" to generate a live room. Your partner scans it with their phone camera and you are instantly connected in real-time. No emails, no passwords, no logins.'
-            }
-          },
-          {
-            '@type': 'Question',
-            name: 'Can we tick off items simultaneously at opposite ends of the supermarket?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Yes! Updates sync across both phones in sub-10 milliseconds via WebSockets. When your partner grabs oat milk in aisle 1, it checks off on your phone in aisle 8 immediately.'
-            }
-          },
-          {
-            '@type': 'Question',
-            name: 'Can we use voice dictation together?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Either person can tap the microphone button and dictate grocery items, packing gear, or weekend chores. ZipList parses spoken phrases into discrete checklist items automatically.'
-            }
-          }
-        ]
-      }
-    ]
-  })}
-  </script>`}
+  <!-- Built from module constants above; no user input reaches it. -->
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  {@html jsonLdScript}
 </svelte:head>
 
-<MainContainer />
+<VerticalPage
+  {title}
+  {description}
+  {faqs}
+  canonical={canonicalUrl}
+  heading={"One list, two phones"}
+  lede={"The list your person can actually see. No account between you, and nothing to talk them into installing first."}
+  currentUse={"couples"}
+  hreflangEn={canonicalUrl}
+  hreflangEs="https://ziplist.app/es/parejas"
+>
+  <section class="zl-prose-section">
+    <h2>Scanning a code is the whole setup</h2>
+    <p>
+      Open the list, tap “QR this list”, they point a camera at it. No invite
+      email, no “create an account to continue”, no standing there holding a
+      phone while someone else finishes signing up.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Both of you, at the same time</h2>
+    <p>
+      They tick the milk while you are still in the car park and it goes
+      through. Add something from the tram and it is on their screen before you
+      get home. Same list, both ends, nothing to refresh.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Or just send a copy</h2>
+    <p>
+      Not everything needs to be live. A copy is a link holding the list exactly
+      as it is now — good for handing someone the shopping and then forgetting
+      about it.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Four words instead of a link</h2>
+    <p>
+      Every live list also has a four-word phrase. It can be said down the
+      phone, and the list opens on the other device. Nobody has to go looking
+      for the message you sent.
+    </p>
+  </section>
+</VerticalPage>

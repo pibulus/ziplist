@@ -104,14 +104,10 @@
   // lists at three, and an import that can fail on a limit is a worse feature
   // than one that always works.
 
-
-
   // ── Device sync ────────────────────────────────────────────────────────
   let joinPhrase = "";
   let syncStatus = "";
   let syncBusy = false;
-
-
 
   async function handleJoinSync() {
     if (!joinPhrase.trim()) return;
@@ -342,7 +338,9 @@
         <div class="zl-setting-row zl-sync-row">
           <div class="zl-setting-info">
             <span class="zl-setting-name">Link a device</span>
-            <p class="zl-setting-desc">Sync with 4-word passphrase from another device</p>
+            <p class="zl-setting-desc">
+              Sync with 4-word passphrase from another device
+            </p>
           </div>
           <div class="zl-sync-receive">
             <input
@@ -378,7 +376,11 @@
           on:click={openContributorModal}
         >
           <span aria-hidden="true">✦</span>
-          <span>{contributorUnlocked ? "Unlocked ★ (12 lists)" : "Get more lists (12 max)"}</span>
+          <span
+            >{contributorUnlocked
+              ? "Unlocked ★ (12 lists)"
+              : "Get more lists (12 max)"}</span
+          >
         </button>
       </section>
     </div>
@@ -570,7 +572,6 @@
     flex: 1 1 55%;
   }
 
-
   .zl-sync-input {
     flex: 1;
     min-width: 0;
@@ -584,7 +585,6 @@
     color: #1e1714;
     overflow-wrap: anywhere;
   }
-
 
   .zl-sync-hint {
     font-size: 0.72rem;
@@ -1028,7 +1028,6 @@
       flex: 1;
       min-width: 0;
     }
-
   }
 
   /* The avatar row is the one row that needs to wrap; the rest stay inline. */

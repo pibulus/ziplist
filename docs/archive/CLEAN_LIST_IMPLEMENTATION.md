@@ -246,8 +246,8 @@ src/lib/components/list/list-components-fixed.css (784 lines)
 ```svelte
 <!-- List.svelte -->
 <script>
-  import ListItem from './ListItem.svelte';
-  import './list.css';
+  import ListItem from "./ListItem.svelte";
+  import "./list.css";
   // 100 lines of clean logic
 </script>
 

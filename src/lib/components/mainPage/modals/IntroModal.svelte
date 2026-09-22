@@ -26,7 +26,7 @@
   aria-modal="true"
 >
   <div
-    class="modal-box relative bg-[#fff9ed] border-0"
+    class="modal-box relative border-0 bg-[#fff9ed]"
     style="box-shadow: 0 10px 25px -5px rgba(249, 168, 212, 0.3), 0 8px 10px -6px rgba(249, 168, 212, 0.2), 0 0 15px rgba(249, 168, 212, 0.15);"
   >
     <form method="dialog">
@@ -42,13 +42,13 @@
     <div class="space-y-5 sm:space-y-6">
       <!-- Mascot slot (skeleton) — the ZipList dude, decorative, smaller in
            the modal so it reads alongside the title without crowding it. -->
-      <div class="flex justify-center intro-mascot-slot">
+      <div class="intro-mascot-slot flex justify-center">
         <Mascot interactive={false} aura={false} />
       </div>
 
       <h1
         id="intro_modal_title"
-        class="text-center text-3xl sm:text-4xl font-black tracking-tight leading-[1.1] text-gray-900"
+        class="text-center text-3xl font-black leading-[1.1] tracking-tight text-gray-900 sm:text-4xl"
       >
         The shareable<br /> voice list thing.
       </h1>
@@ -80,7 +80,7 @@
 
       <button
         type="button"
-        class="w-full text-base sm:text-lg font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-full bg-[#ff6ac2] text-slate-950 shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.98] transition-all duration-300"
+        class="w-full rounded-full bg-[#ff6ac2] px-4 py-2.5 text-base font-bold text-slate-950 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-[0.98] sm:px-6 sm:py-3 sm:text-lg"
         on:click={handleActionButton}
       >
         Zip it up
@@ -88,7 +88,12 @@
     </div>
   </div>
   <form method="dialog" class="modal-backdrop">
-    <button type="submit" class="text-[0]" aria-label="Close intro" tabindex="-1">close</button>
+    <button
+      type="submit"
+      class="text-[0]"
+      aria-label="Close intro"
+      tabindex="-1">close</button
+    >
   </form>
 </dialog>
 

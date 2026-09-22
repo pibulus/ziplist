@@ -60,4 +60,32 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://ziplist.app/es/parejas" />
     <xhtml:link rel="alternate" hreflang="en" href="https://ziplist.app/for/couples" />
   </url>
+  <!-- How it works / about -->
+  <url>
+    <loc>https://ziplist.app/about</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <!-- Packing lists -->
+  <url>
+    <loc>https://ziplist.app/for/packing</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Moving house -->
+  <url>
+    <loc>https://ziplist.app/for/moving</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Band load-in -->
+  <url>
+    <loc>https://ziplist.app/for/gigs</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

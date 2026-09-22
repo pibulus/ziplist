@@ -151,16 +151,15 @@ export const CTA_PHRASES = [
   "Ready When You Are",
 ];
 
-// ZipList specific phrases for different button contexts
-export const ZIPLIST_START_PHRASES = ["Talk That List"];
-
-export const ZIPLIST_ADD_PHRASES = [
-  "Add More",
-  "Talk More",
-  "Add A Thing",
-  "Keep Going",
-  "Add To List",
-];
+// The primary control says the same thing every time.
+//
+// It used to draw from five labels at random on mount AND deliberately pick a
+// different one after every use, so the single button a new user has to learn
+// never looked the same twice — and half the options ("Ready When You Are",
+// "Keep Going") never named the action at all. Two states, two words each,
+// and the glyph carries the rest.
+export const ZIPLIST_CTA_START = "Talk a list";
+export const ZIPLIST_CTA_ADD = "Add more";
 
 // Clipboard Success Messages
 export const COPY_MESSAGES = [

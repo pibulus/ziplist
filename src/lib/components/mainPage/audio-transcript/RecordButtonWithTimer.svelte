@@ -1,8 +1,8 @@
 <script>
   import {
     ANIMATION,
-    ZIPLIST_START_PHRASES,
-    ZIPLIST_ADD_PHRASES,
+    ZIPLIST_CTA_START,
+    ZIPLIST_CTA_ADD,
     getRandomFromArray,
   } from "$lib/constants";
   import { activeListItems } from "$lib/services/lists/listsStore";
@@ -100,8 +100,8 @@
   $: if (recording) startVisualization();
 
   let hasActiveList = false;
-  let currentStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
-  let currentAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
+  const currentStartPhrase = ZIPLIST_CTA_START;
+  const currentAddPhrase = ZIPLIST_CTA_ADD;
 
   const unsubscribe = activeListItems.subscribe((items) => {
     const wasActiveList = hasActiveList;
@@ -133,23 +133,6 @@
     }
   }
 
-  function updateRandomPhrases() {
-    if (ZIPLIST_START_PHRASES.length > 1) {
-      let newStartPhrase;
-      do {
-        newStartPhrase = getRandomFromArray(ZIPLIST_START_PHRASES);
-      } while (newStartPhrase === currentStartPhrase);
-      currentStartPhrase = newStartPhrase;
-    }
-
-    if (ZIPLIST_ADD_PHRASES.length > 1) {
-      let newAddPhrase;
-      do {
-        newAddPhrase = getRandomFromArray(ZIPLIST_ADD_PHRASES);
-      } while (newAddPhrase === currentAddPhrase);
-      currentAddPhrase = newAddPhrase;
-    }
-  }
   export function animateButtonPress() {
     if (recordButtonElement) {
       clearPressAnimationTimeout();
@@ -171,8 +154,7 @@
   $: timeRemaining = getTimeRemaining();
   $: isWarning = timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
   $: isDanger = timeRemaining <= ANIMATION.RECORDING.DANGER_THRESHOLD;
-  $: isAlmostDone =
-    timeRemaining <= ANIMATION.RECORDING.ALMOST_DONE_THRESHOLD;
+  $: isAlmostDone = timeRemaining <= ANIMATION.RECORDING.ALMOST_DONE_THRESHOLD;
   $: secondsLeft = Math.max(0, Math.ceil(timeRemaining));
 
   function formatTime(seconds) {
@@ -278,7 +260,7 @@
     <div
       class="progress-container overflow-hidden rounded-full shadow-md shadow-black/10 {compact
         ? 'h-[64px] w-[64px]'
-        : 'h-[64px] w-[75%] max-w-[420px] sm:h-[64px] sm:w-[85%] mx-auto'}"
+        : 'mx-auto h-[64px] w-[75%] max-w-[420px] sm:h-[64px] sm:w-[85%]'}"
       role="progressbar"
       aria-label="List-making progress"
       aria-valuenow={progress}
@@ -287,11 +269,11 @@
       aria-valuetext={`Making list ${Math.round(progress)} percent complete`}
     >
       <div
-        class="flex items-center justify-center h-full transition-all duration-300 progress-bar"
+        class="progress-bar flex h-full items-center justify-center transition-all duration-300"
         style="width: {progress}%;"
       >
         {#if !compact}
-          <span class="text-white font-bold z-10 relative">Ziplisting...</span>
+          <span class="relative z-10 font-bold text-white">Ziplisting...</span>
         {/if}
       </div>
     </div>
@@ -314,10 +296,6 @@
           return;
         }
         dispatch("click");
-        // Only update phrases for next time after a click
-        if (!recording) {
-          updateRandomPhrases();
-        }
       }}
       on:pointerdown={handlePointerDown}
       on:pointerup={handlePointerRelease}
@@ -394,19 +372,39 @@
         </span>
       {:else}
         <span
-          class="cta-text relative inline-flex w-full justify-center items-center whitespace-nowrap transition-all duration-300 ease-out"
+          class="cta-text relative inline-flex w-full items-center justify-center whitespace-nowrap transition-all duration-300 ease-out"
           style="letter-spacing: 0.02em;"
         >
           <span
-            class="transform transition-all duration-300 ease-out scale-100 opacity-100"
+            class="scale-100 transform opacity-100 transition-all duration-300 ease-out"
           >
             <span class="button-content relative z-10">
-              <span class="flex items-center justify-center relative w-full">
+              <span class="relative flex w-full items-center justify-center">
                 <span
-                  class="cta__label relative z-10 px-1 py-0.5 rounded-lg"
+                  class="cta__label relative z-10 inline-flex items-center justify-center gap-2 rounded-lg px-1 py-0.5"
                   class:text-shadow-recording={recording}
                   style="font-size: clamp(1.05rem, 0.4vw + 1rem, 1.2rem); letter-spacing: .02em; text-align: center; width: 100%;"
                 >
+                  {#if !recording}
+                    <!-- Says "this is a microphone" before anyone reads a
+                         word. Hidden while recording, where the waveform and
+                         timer already say what is happening. -->
+                    <svg
+                      class="cta__glyph"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="9" y="2" width="6" height="11" rx="3"></rect>
+                      <path d="M5 10v1a7 7 0 0 0 14 0v-1"></path>
+                      <line x1="12" y1="19" x2="12" y2="22"></line>
+                    </svg>
+                  {/if}
                   {buttonLabel}
                 </span>
                 <span class="sr-only">
@@ -442,6 +440,16 @@
   .compact-glyph {
     width: 26px;
     height: 26px;
+  }
+
+  /* Sized against the label rather than in px, so it tracks the CTA's
+     clamp() as the button scales. flex-shrink:0 keeps it a mic and not an
+     oval when the text is long. */
+  .cta__glyph {
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
+    opacity: 0.9;
   }
 
   /* Base button styling */
@@ -653,8 +661,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: 0 0 20px 6px
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
+    box-shadow: 0 0 20px 6px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     opacity: calc(0.55 * var(--breathe-glow));
     animation: button-breathe-glow 4.8s ease-in-out infinite;
     will-change: opacity;
@@ -752,16 +759,13 @@
 
   @keyframes pulse-glow {
     0% {
-      box-shadow: inset 0 0 5px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
+      box-shadow: inset 0 0 5px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     }
     50% {
-      box-shadow: inset 0 0 15px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.8);
+      box-shadow: inset 0 0 15px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.8);
     }
     100% {
-      box-shadow: inset 0 0 5px
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
+      box-shadow: inset 0 0 5px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
     }
   }
 
@@ -776,8 +780,7 @@
       linear-gradient(
         to right,
         rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9),
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9)
-          var(--progress, 0%),
+        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9) var(--progress, 0%),
         rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.38)
           calc(var(--progress, 0%) + 0.5%),
         rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.24) 100%
@@ -871,8 +874,7 @@
     background-image: linear-gradient(
       to right,
       rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7)
-        var(--progress, 0%),
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7) var(--progress, 0%),
       rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.45) 100%
     );
     box-shadow:
@@ -885,8 +887,7 @@
     background-image: linear-gradient(
       to right,
       rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7)
-        var(--progress, 0%),
+      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7) var(--progress, 0%),
       rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.62) 100%
     );
     box-shadow:

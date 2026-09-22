@@ -33,12 +33,16 @@
     />
 
     <!-- App configuration -->
-    <title>ZipList — Talk it into a list. Tick it off.</title>
-    <meta
-      name="description"
-      content="A warm, tactile voice checklist for groceries, errands, packing, and chores. No dates, no streaks, no pressure."
-    />
-    <link rel="canonical" href="https://ziplist.app" />
+    <!-- NO per-page metadata in this file. It is emitted BEFORE
+         %sveltekit.head%, so whatever it declares wins over what the route
+         declares. A hardcoded title element and description meta lived here
+         and shadowed every route's own on every page — which is how
+         /es/mandado came to show the English homepage title in the tab and in
+         search results. Titles, descriptions, canonicals, og/twitter and
+         hreflang all belong to PageLayout, which takes them as props.
+         (Tag syntax is spelled out in words on purpose: literal markup inside
+         a comment still ships, and it breaks greps and audits that count
+         tags — including the one that caught this.) -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -194,49 +198,6 @@
       }
     </script>
 
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "ZipList",
-        "url": "https://ziplist.app",
-        "applicationCategory": "UtilitiesApplication",
-        "applicationSubCategory": "Checklist Utility",
-        "operatingSystem": "Web",
-        "isAccessibleForFree": true,
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Make a checklist by talking. ZipList is a warm little web app for groceries, errands, packing, gear, chores, and quick shared lists.",
-        "featureList": [
-          "Talk-to-list capture",
-          "Checklist editing and reordering",
-          "Multiple saved lists",
-          "Progressive web app installation",
-          "Optional shared live lists"
-        ],
-        "potentialAction": {
-          "@type": "ConsumeAction",
-          "target": {
-            "@type": "EntryPoint",
-            "urlTemplate": "https://ziplist.app",
-            "actionPlatform": [
-              "http://schema.org/DesktopWebPlatform",
-              "http://schema.org/MobileWebPlatform"
-            ]
-          },
-          "expectsAcceptanceOf": {
-            "@type": "Offer",
-            "category": "free",
-            "description": "Free talk-to-list checklist service"
-          }
-        },
-        "browserRequirements": "Requires HTTPS and a modern browser with microphone and MediaRecorder support. Works best in Chrome, Edge, Safari, and Firefox.",
-        "keywords": "voice checklist app, talk to list, voice to list, grocery checklist, shared checklist, packing checklist, web checklist app"
-      }
-    </script>
     %sveltekit.head%
     <script
       defer
@@ -245,21 +206,11 @@
     ></script>
   </head>
   <body data-sveltekit-preload-data="hover">
-    <h1
-      style="
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-      "
-    >
-      ZipList — Talk it into a list. Tick it off.
-    </h1>
+    <!-- A visually-hidden top-level heading lived here, carrying the English
+         homepage headline on EVERY route. It duplicated the real hero heading
+         on the app pages and contradicted the visible Spanish copy on /es/* —
+         hidden text disagreeing with the page it sits on, which is what
+         search engines penalise. AnimatedTitle renders the real one. -->
     <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>

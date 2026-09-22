@@ -56,7 +56,7 @@
 <!-- click|self: only backdrop clicks dismiss — clicks inside the card while
      reading the steps must not close it. Escape closes from anywhere. -->
 <div
-  class="flex justify-center w-full permission-error-container"
+  class="permission-error-container flex w-full justify-center"
   on:click|self={closeModal}
   on:keydown={(e) => e.key === "Escape" && closeModal()}
   role="alertdialog"
@@ -77,7 +77,7 @@
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="w-6 h-6"
+          class="h-6 w-6"
         >
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>

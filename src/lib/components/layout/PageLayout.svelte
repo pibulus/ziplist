@@ -17,6 +17,12 @@
   export let ogImageAlt =
     "ZipList's speech-bubble mascot above the ZipList.app wordmark and a yellow strip reading: the talkable shareable list thing — with a pink no-signup badge.";
   export let ogType = "website";
+  /* Locale and the hreflang pair are per-ROUTE, not per-site: /for/groceries
+     pairs with /es/mandado, not with the Spanish homepage. Defaults keep the
+     old behaviour for any page that does not care. */
+  export let ogLocale = "en_US";
+  export let hreflangEn = "https://ziplist.app";
+  export let hreflangEs = "https://ziplist.app/es";
   export let footerYear = new Date().getFullYear();
   export let appName = "ZipList";
   export let listFirst = false;
@@ -33,13 +39,17 @@
   <meta name="robots" content={robots} />
   {#if canonical}
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" hreflang="en" href="https://ziplist.app" />
-    <link rel="alternate" hreflang="es" href="https://ziplist.app/es" />
+    {#if hreflangEn && hreflangEs}
+      <!-- Only claim a translation pair when one exists. A page with no
+           Spanish twin pointing at /es tells Google the wrong thing. -->
+      <link rel="alternate" hreflang="en" href={hreflangEn} />
+      <link rel="alternate" hreflang="es" href={hreflangEs} />
+    {/if}
   {/if}
 
   <meta property="og:type" content={ogType} />
   <meta property="og:site_name" content="ZipList" />
-  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale" content={ogLocale} />
   {#if resolvedOgUrl}
     <meta property="og:url" content={resolvedOgUrl} />
   {/if}
@@ -65,7 +75,7 @@
 <a class="skip-link" href="#main-content">Skip to lists</a>
 
 <div
-  class="bg-gradient-mesh main center hero page-shell grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10"
+  class="bg-gradient-mesh main center page-shell hero grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10"
   class:list-first-shell={listFirst}
 >
   {#if listFirst}
@@ -85,13 +95,13 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
-    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t pb-2 pt-3 text-center text-xs sm:pb-4 sm:pt-6 px-4 sm:px-6 md:px-8"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t px-4 pb-2 pt-3 text-center text-xs sm:px-6 sm:pb-4 sm:pt-6 md:px-8"
   >
     <div
       class="footer-row mx-auto flex w-full flex-row items-center justify-between gap-2 sm:gap-3"
     >
       <div
-        class="copyright flex items-center justify-center min-w-0 shrink whitespace-nowrap"
+        class="copyright flex min-w-0 shrink items-center justify-center whitespace-nowrap"
       >
         <span class="footer-copy mr-1 text-sm font-medium tracking-normal">
           © {footerYear}
@@ -103,9 +113,13 @@
              abrupt. Mobile drops the lead-in and the "in" instead, landing on
              "❤️ Melbourne": short, complete, still warm. -->
         <span class="footer-meta text-sm font-medium">
-          <span class="footer-lead">Made<span class="footer-with">&nbsp;with</span></span>
-          <FooterCharm charms={['❤️']} rare={['🍒', '⚡']} />
-          <span class="footer-place"><span class="footer-in">&nbsp;in</span>&nbsp;Melbourne</span>
+          <span class="footer-lead"
+            >Made<span class="footer-with">&nbsp;with</span></span
+          >
+          <FooterCharm charms={["❤️"]} rare={["🍒", "⚡"]} />
+          <span class="footer-place"
+            ><span class="footer-in">&nbsp;in</span>&nbsp;Melbourne</span
+          >
         </span>
       </div>
       <div class="flex shrink-0 items-center">
@@ -326,12 +340,20 @@
          max(1rem, env(safe-area-inset-bottom)) on phones — the one place
          the inset actually exists — so on a notched iPhone the footer row
          sat under the home indicator. */
-      padding-top: 0.75rem;
-      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+      /* Mobile-only trim (2026-09-19). The frozen desktop values above are
+         untouched — four apps still wear the same bar at sm and up.
+         Most of this bar's height on a phone is not padding and cannot be
+         reclaimed: 44px is the tap-target floor on the nav buttons, and
+         env(safe-area-inset-bottom) is ~34px of home-indicator clearance on
+         a notched iPhone. Between them they account for nearly all of it.
+         What was actually discretionary was the top padding and the row
+         gap, so that is what came off. */
+      padding-top: 0.5rem;
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
     }
 
     footer .footer-row {
-      gap: 0.5rem;
+      gap: 0.375rem;
     }
   }
 

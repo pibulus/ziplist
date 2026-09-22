@@ -34,12 +34,18 @@
   export let onFilterTag = () => {};
   export let activeTagFilter = null;
 
-  /* Filtered to #ziplist, every visible row wears a #ziplist chip — the chip
-     restates the filter that selected the row. Drop the implied one and keep
-     the rest, so the chips still tell you what ELSE an item is. Derived once
-     and shared with the edit ghost, or the ghost stops matching the row's
-     height and two-line items jump on click. */
-  $: visibleTags = (item.tags || []).filter((tag) => tag !== activeTagFilter);
+  /* Chips are quiet until they have something to say.
+     Every item used to wear every one of its tags at all times — the same
+     vocabulary the tag rack is already showing forty pixels above, reprinted
+     on every row. They earn their place only while a filter is on.
+     Even then the tag being filtered BY is dropped: filtered to #ziplist,
+     every visible row wears a #ziplist chip that restates the filter which
+     selected it. What is left is the useful part — what ELSE an item is.
+     Derived once and shared with the edit ghost, or the ghost stops matching
+     the row's height and two-line items jump on click. */
+  $: visibleTags = activeTagFilter
+    ? (item.tags || []).filter((tag) => tag !== activeTagFilter)
+    : [];
 
   $: isSection =
     !item.checked && (/^##\s*/.test(item.text) || item.text.trim() === "---");
@@ -49,7 +55,9 @@
       : item.text.replace(/^##\s*/, "").trim()
     : "";
   $: isPortal = !item.checked && /^(\u2192|->)\s+/.test(item.text);
-  $: portalTarget = isPortal ? item.text.replace(/^(\u2192|->)\s+/, "").trim() : "";
+  $: portalTarget = isPortal
+    ? item.text.replace(/^(\u2192|->)\s+/, "").trim()
+    : "";
 </script>
 
 {#if checkedBloom}
@@ -137,7 +145,9 @@
   {:else}
     <button
       type="button"
-      class="zl-item-text-button {item.checked ? 'checked' : ''} {isSection ? 'section-header-button' : ''}"
+      class="zl-item-text-button {item.checked ? 'checked' : ''} {isSection
+        ? 'section-header-button'
+        : ''}"
       on:click|stopPropagation={() => {
         if (isPortal) {
           onNavigateToPortal(portalTarget);
@@ -166,7 +176,8 @@
         {/if}
       {:else if isPortal}
         <span class="zl-item-text zl-item-portal-text">
-          <span class="zl-portal-arrow-inline">→</span> {portalTarget}
+          <span class="zl-portal-arrow-inline">→</span>
+          {portalTarget}
         </span>
       {:else}
         <span class="zl-item-text {item.checked ? 'checked' : ''}">

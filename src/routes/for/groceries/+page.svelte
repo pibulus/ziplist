@@ -1,88 +1,112 @@
 <script>
-  import { MainContainer } from '$lib/components/mainPage';
+  /* A use-case page: it describes one thing people do with ZipList and sends
+     them to the app. It does not render the app. */
+  import VerticalPage from "$lib/components/layout/VerticalPage.svelte";
 
-  const canonicalUrl = 'https://ziplist.app/for/groceries';
-  const title = 'Hands-Free Voice Grocery List App — Supermarket Shopping | ZipList';
+  const canonicalUrl = "https://ziplist.app/for/groceries";
+  const title =
+    "Voice Grocery List App \u2014 Talk Your Shopping List | ZipList";
   const description =
-    'Build and tick off grocery shopping lists by voice. Speak ingredients hands-free while walking aisles. Live QR rooms let your partner tick off aisle 4 in real-time with zero signups.';
+    "Say the shopping list on the way out the door and it is waiting at the supermarket. Share it live so whoever is in aisle four ticks things off too. No account.";
+
+  /* One array, two destinations: these questions are rendered on the page AND
+     fed to the FAQPage markup. Google wants the answers visible, and a single
+     source is the only way the two cannot drift apart. */
+  const faqs = [
+    {
+      q: "Does it work in the supermarket, where the signal is terrible?",
+      a: "The list does. It lives on the phone, so it opens and ticks off with no connection at all. Turning speech into new items is the one part that needs signal, since that happens off the phone.",
+    },
+    {
+      q: "Can two of us shop the same list at once?",
+      a: "Yes. Open the list, tap “QR this list”, and the other phone scans it. From then on both phones show the same list and every tick appears on the other one.",
+    },
+    {
+      q: "Do I have to install something?",
+      a: "No. It runs in the browser, and it can be added to a home screen afterwards if you want it sitting with your other apps.",
+    },
+    {
+      q: "Where does the list go when I am done?",
+      a: "Nowhere, unless you clear it. Lists stay on the device rather than on a server, which is also why there is nothing to log into.",
+    },
+  ];
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        name: title,
+        url: canonicalUrl,
+        description,
+        inLanguage: "en",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "ZipList",
+          url: "https://ziplist.app",
+        },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      },
+    ],
+  };
+
+  // Assembled here rather than inline in markup: a literal `<script>` in a
+  // template makes svelte-eslint-parser read the rest of the file as JS.
+  const jsonLdScript =
+    `<script type="application/ld+json">${JSON.stringify(structuredData)}` +
+    // The escape stops this literal closing the module block it lives in.
+    // eslint-disable-next-line no-useless-escape
+    `<\/script>`;
 </script>
 
 <svelte:head>
-  <title>{title}</title>
-  <meta name="description" content={description} />
-  <link rel="canonical" href={canonicalUrl} />
-  <link rel="alternate" hreflang="en" href={canonicalUrl} />
-  <link rel="alternate" hreflang="es" href="https://ziplist.app/es/mandado" />
-
-  <!-- OpenGraph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="ZipList" />
-  <meta property="og:url" content={canonicalUrl} />
-  <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
-  <meta property="og:image" content="https://ziplist.app/og-card.png" />
-  <meta property="og:locale" content="en_US" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:url" content={canonicalUrl} />
-  <meta name="twitter:title" content={title} />
-  <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content="https://ziplist.app/og-card.png" />
-
-  <!-- Structured Data -->
-  {@html `<script type="application/ld+json">
-  ${JSON.stringify({
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebApplication',
-        name: 'ZipList Voice Grocery & Shopping Lists',
-        url: canonicalUrl,
-        image: 'https://ziplist.app/og-card.png',
-        description: description,
-        applicationCategory: 'ShoppingApplication',
-        operatingSystem: 'Web',
-        inLanguage: 'en',
-        offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD',
-          description: 'Free voice grocery lists with live QR sharing'
-        }
-      },
-      {
-        '@type': 'FAQPage',
-        mainEntity: [
-          {
-            '@type': 'Question',
-            name: 'How does hands-free voice grocery shopping work in ZipList?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'You speak all your pantry items in one breath (e.g. "oat milk, sourdough, avocados, olive oil, coffee beans"). ZipList automatically structures them into distinct checklist rows with pantry tags.'
-            }
-          },
-          {
-            '@type': 'Question',
-            name: 'Can my partner and I shop the supermarket together on different phones?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Yes! Tap "Share QR" and let your partner scan the code. Both phones sync instantly in sub-10ms via WebSockets with zero account creation or logins.'
-            }
-          },
-          {
-            '@type': 'Question',
-            name: 'Do I need to install an app from the App Store?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'No app download or account required. It runs instantly in Safari or Chrome, and can be installed as an offline-capable PWA to your home screen in 1 tap.'
-            }
-          }
-        ]
-      }
-    ]
-  })}
-  </script>`}
+  <!-- Built from module constants above; no user input reaches it. -->
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  {@html jsonLdScript}
 </svelte:head>
 
-<MainContainer />
+<VerticalPage
+  {title}
+  {description}
+  {faqs}
+  canonical={canonicalUrl}
+  heading={"The shopping list you talk into"}
+  lede={"Hands full, trolley moving, and the list is already written. You said it on the way out the door."}
+  currentUse={"groceries"}
+  hreflangEn={canonicalUrl}
+  hreflangEs="https://ziplist.app/es/mandado"
+>
+  <section class="zl-prose-section">
+    <h2>One breath, a whole shop</h2>
+    <p>
+      Oat milk, sourdough, the good coffee, something for dinner Thursday, bin
+      bags. It goes in as one sentence and comes out as separate lines, already
+      split, in the order it fell out of your head.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Two trolleys, one list</h2>
+    <p>
+      Send it live and the other phone sees every tick. Whoever reaches the
+      tinned tomatoes first takes them off, and nobody comes home with three
+      jars of capers. No account between you — the link is the whole handshake.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>The aisle is a bad place to type</h2>
+    <p>
+      That is rather the point. The list is already on the phone, so it opens
+      with no signal and no waiting, and adding one more thing takes a sentence
+      instead of a keyboard and both thumbs.
+    </p>
+  </section>
+</VerticalPage>

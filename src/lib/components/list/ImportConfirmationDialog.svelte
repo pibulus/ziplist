@@ -32,8 +32,7 @@
     <ul class="preview-items">
       {#each sharedList.items as item, i (i)}
         <li class="preview-item {item.checked ? 'checked' : ''}">
-          <span class="preview-checkbox {item.checked ? 'checked' : ''}"
-          ></span>
+          <span class="preview-checkbox {item.checked ? 'checked' : ''}"></span>
           <span class="preview-text">{item.text}</span>
         </li>
       {/each}
@@ -200,8 +199,7 @@
   .share-card-footer {
     padding: 0.95rem 1.35rem;
     background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
-    border-top: 2px dashed
-      var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
+    border-top: 2px dashed var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
   }
 
   .save-button {
