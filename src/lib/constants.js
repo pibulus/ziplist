@@ -139,18 +139,6 @@ export const ANIMATION = {
   },
 };
 
-// CTA Button Phrases
-export const CTA_PHRASES = [
-  "Start Recording", // Always first
-  "Talk a List",
-  "Add by Voice",
-  "Say the List",
-  "Add More",
-  "Talk More",
-  "Just Say It",
-  "Ready When You Are",
-];
-
 // The primary control says the same thing every time.
 //
 // It used to draw from five labels at random on mount AND deliberately pick a
