@@ -56,6 +56,15 @@ body {
   -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
   scrollbar-width: thin;
   scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
+  /* The app's default ink. Load-bearing: the only daisyUI themes registered
+     in tailwind.config.js are `mytheme` (base-100 #2a2a2a) and `coffee`, both
+     DARK — and ZipList's data-theme values ("highlighter", ...) are its own,
+     not daisyUI's, so daisyUI's :root never stops applying and derives
+     --bc: 85.7% 0 0, light-grey ink meant for a dark page. Every element
+     that doesn't name its own colour inherited that grey onto cream; the
+     Options vibe labels kept "going light grey again" because each fix
+     painted one element instead of the root. Set the ink here, once. */
+  color: var(--zl-text-color-primary, #1e1714);
 }
 
 /* Prevent horizontal overflow */
