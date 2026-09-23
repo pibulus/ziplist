@@ -1,6 +1,7 @@
 <script>
   import { onDestroy } from "svelte";
-  import { listsStore } from "$lib/services/lists/listsStore";
+  import { listsStore, getMaxListCount } from "$lib/services/lists/listsStore";
+  import { isContributor } from "$lib";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import SingleList from "./SingleList.svelte";
@@ -334,6 +335,12 @@
     }
   }
 
+  /* 12 is the ceiling for a contributor — there is nothing left to sell, so
+     the "+" goes away rather than inviting a tap that answers with a sales
+     modal for something already owned. A free list at 3 keeps its "+": that
+     cap IS the upgrade path, and Extras is the honest answer to it. */
+  $: atHardCap = $isContributor && lists.length >= getMaxListCount();
+
   function handleAddNewList() {
     const result = listsStore.addList();
     if (result.ok) {
@@ -442,15 +449,17 @@
           aria-controls="list-slide-{list.id}"
         ></button>
       {/each}
-      <button
-        type="button"
-        class="nav-add-list"
-        on:click={handleAddNewList}
-        title="Add a new list"
-        aria-label="Add a new list"
-      >
-        +
-      </button>
+      {#if !atHardCap}
+        <button
+          type="button"
+          class="nav-add-list"
+          on:click={handleAddNewList}
+          title="Add a new list"
+          aria-label="Add a new list"
+        >
+          +
+        </button>
+      {/if}
     </div>
     {#if wraps}
       <button
