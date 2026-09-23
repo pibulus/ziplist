@@ -23,8 +23,49 @@ export function encodeListForSharing(list) {
     }),
   };
 
-  // Compress and encode
-  return btoa(JSON.stringify(essentialData));
+  return toBase64Url(JSON.stringify(essentialData));
+}
+
+/* Share links are base64url over UTF-8 bytes. Two real bugs lived in the
+   plain `btoa(JSON.stringify(...))` this replaced:
+
+   1. btoa throws on any code point above Latin1. A curly apostrophe, an em
+      dash, an arrow, an emoji — anything a speech model routinely produces —
+      and the whole share threw InvalidCharacterError, taking the QR button,
+      the copy link and the share sheet down with it. Encoding UTF-8 bytes
+      first is the fix; btoa only ever sees 0-255.
+   2. The payload rides in a hash read by URLSearchParams, which decodes "+"
+      as a space — so any payload whose base64 happened to contain "+" was
+      silently corrupted on import. base64url has no "+" or "/" at all. */
+function toBase64Url(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function fromBase64Url(encoded) {
+  // Old links used the standard alphabet, so "-"/"_" are absent from them and
+  // this is a no-op there. A space can only be a "+" that URLSearchParams ate,
+  // so putting it back repairs links that shipped before base64url.
+  let normalized = encoded
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .replace(/ /g, "+");
+  while (normalized.length % 4) normalized += "=";
+
+  const binary = atob(normalized);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    // Pre-UTF-8 link carrying a raw Latin1 byte (é as 0xE9). Invalid UTF-8,
+    // so decode it the way it was written rather than serving U+FFFD.
+    return binary;
+  }
 }
 
 /**
@@ -34,7 +75,7 @@ export function encodeListForSharing(list) {
  */
 export function decodeSharedList(encodedData) {
   try {
-    const listData = JSON.parse(atob(encodedData));
+    const listData = JSON.parse(fromBase64Url(encodedData));
 
     // Validate structure
     if (!listData || typeof listData !== "object") return null;
