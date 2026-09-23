@@ -44,9 +44,11 @@
     font-family: inherit;
     font-variation-settings: inherit;
     transform: translateY(var(--offset-y, 0));
-    opacity: 0.95;
+    opacity: 1;
     z-index: 1;
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.12));
+    /* No shadow here. This was a PURE BLACK drop-shadow stacking on top of
+       the per-theme warm one in --app-suffix-filter, and on 35%-size type
+       it muddied the gradient into something closer to brown. */
     background: transparent;
     border: none;
     padding: 0;
@@ -66,7 +68,6 @@
     background-clip: text !important;
     -webkit-background-clip: text !important;
     color: transparent !important;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
     filter: var(--app-suffix-filter, none);
     transition:
       filter 0.2s ease,

@@ -146,9 +146,9 @@
           on:click={copyLink}
         >
           {#if copied}
-            <span>✓ Copied Link!</span>
+            <span aria-hidden="true">✓</span><span>Copied Link!</span>
           {:else}
-            <span>📋 Copy Join Link</span>
+            <span aria-hidden="true">📋</span><span>Copy Join Link</span>
           {/if}
         </button>
 
@@ -158,7 +158,7 @@
           on:click={openInQrBuddy}
           title="Open in QRBuddy to customize gradients and download high-res stickers"
         >
-          <span>🎨 Open in QRBuddy</span>
+          <span aria-hidden="true">🎨</span><span>Open in QRBuddy</span>
           <span class="text-[10px] opacity-60">↗</span>
         </button>
       </div>

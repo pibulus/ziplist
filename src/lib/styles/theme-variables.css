@@ -47,6 +47,12 @@
      from the accent renders a black slab. */
   --zl-pass-color: #ff6ac2;
   --zl-pass-color-rgb: 255, 106, 194;
+  /* ZipList's "careful" tone, for destructive controls. It is the palette's
+     own Coral, not a stock red — Empty and Delete were wearing raw Tailwind
+     #ef4444/#991b1b, the only pure reds in an app with no pure anything. */
+  --zl-caution-color: #ff8a7a;
+  --zl-caution-color-rgb: 255, 138, 122;
+  --zl-caution-ink: #8f3a28;
 
   /* Card gradient defaults */
   --zl-card-bg-gradient-animation-duration: 30s;
@@ -135,8 +141,8 @@
   --app-suffix-gradient: linear-gradient(to right, #ffcc33, #ff6ac2);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(0, 0, 0, 0.1);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 176, 0, 0.24));
+  --app-suffix-stroke: none;
+  --app-suffix-filter: drop-shadow(0 1px 3px rgba(255, 176, 0, 0.16));
 }
 
 /**
@@ -279,8 +285,8 @@ html[data-theme="highlighter"] {
   --app-suffix-gradient: linear-gradient(to right, #ffcc33, #ff6ac2);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 176, 0, 0.24));
+  --app-suffix-stroke: none;
+  --app-suffix-filter: drop-shadow(0 1px 3px rgba(255, 176, 0, 0.16));
 }
 
 /**
@@ -387,11 +393,11 @@ html[data-theme="sticky-note"] {
   --zl-empty-title-color: #1e1714;
 
   /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to right, #e6a300, #a87b00);
+  --app-suffix-gradient: linear-gradient(to right, #ffc94d, #f0a428);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(255, 179, 0, 0.28));
+  --app-suffix-stroke: none;
+  --app-suffix-filter: drop-shadow(0 1px 3px rgba(255, 179, 0, 0.16));
 }
 
 /**
@@ -495,11 +501,11 @@ html[data-theme="gel-pen"] {
   --zl-empty-title-color: #1e1714;
 
   /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to right, #ed1a75, #b8005a);
+  --app-suffix-gradient: linear-gradient(to right, #ff8ac4, #ff4d9e);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(224, 0, 107, 0.28));
+  --app-suffix-stroke: none;
+  --app-suffix-filter: drop-shadow(0 1px 3px rgba(224, 0, 107, 0.16));
 }
 
 /**
@@ -603,11 +609,11 @@ html[data-theme="legal-pad"] {
   --zl-empty-title-color: #1e1714;
 
   /* AppSuffix (.app) token */
-  --app-suffix-gradient: linear-gradient(to right, #68a000, #4a7500);
+  --app-suffix-gradient: linear-gradient(to right, #a8d94f, #84c224);
   --app-suffix-bg-size: auto;
   --app-suffix-anim: none;
-  --app-suffix-stroke: 0.5px rgba(30, 23, 20, 0.1);
-  --app-suffix-filter: drop-shadow(0 2px 4px rgba(111, 163, 0, 0.28));
+  --app-suffix-stroke: none;
+  --app-suffix-filter: drop-shadow(0 1px 3px rgba(111, 163, 0, 0.16));
 }
 
 /**
