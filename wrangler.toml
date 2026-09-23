@@ -19,5 +19,14 @@ class_name = "ListRoom"
 tag = "v1"
 new_sqlite_classes = ["ListRoom"]
 
+# Edge rate limiter for room lookups. Counted before any Durable Object is
+# instantiated, which is the point: a phrase-derived room id is ~28 bits, and
+# that only holds up while guessing costs something. Free probing made the
+# keyspace decorative.
+[[ratelimits]]
+name = "ROOM_PROBE_LIMIT"
+namespace_id = "1001"
+simple = { limit = 40, period = 60 }
+
 [observability]
 enabled = true

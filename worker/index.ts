@@ -37,6 +37,11 @@ import {
 export interface Env {
   LIST_ROOM: DurableObjectNamespace;
   PARTYKIT_CREATE_SECRET?: string;
+  // Cloudflare's native edge rate limiter (wrangler [[ratelimits]]). Optional
+  // so a local `wrangler dev` without the binding still runs.
+  ROOM_PROBE_LIMIT?: {
+    limit(options: { key: string }): Promise<{ success: boolean }>;
+  };
 }
 
 export interface LiveListItem {
@@ -454,6 +459,15 @@ export class ListRoom {
   }
 }
 
+/**
+ * Deliberately loose. Two shapes exist in the wild — `zl_` + randomUUID (36
+ * chars, hyphenated) and `zl_p` + 32 hex from a phrase — and this guard only
+ * has to separate "plausibly ours" from "garbage", not parse them. Anything
+ * tighter risks 404ing a room minted by an older build, which would break a
+ * link somebody already shared.
+ */
+const ROOM_ID_PATTERN = /^zl_p?[0-9a-f-]{16,48}$/;
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -466,6 +480,31 @@ export default {
     }
 
     const roomId = decodeURIComponent(match[1]);
+
+    // Shape-check BEFORE idFromName, because idFromName + fetch INSTANTIATES a
+    // Durable Object. Unvalidated, any string minted one, so anyone could spin
+    // up DOs on this account for the price of an HTTP request.
+    if (!ROOM_ID_PATTERN.test(roomId)) {
+      return new Response("Not found", { status: 404 });
+    }
+
+    // Room ids are derived from a four-word phrase, and that phrase is ~28 bits
+    // (see syncPhrase.js). 28 bits is only out of reach while WALKING it stays
+    // expensive — and probing was free: every guess was one unmetered request.
+    // Per-IP limiting is what actually makes the keyspace mean something.
+    // A real person joins a room a handful of times a minute; 40 is generous
+    // even behind a shared NAT, and it puts a full enumeration out of reach.
+    if (env.ROOM_PROBE_LIMIT) {
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const { success } = await env.ROOM_PROBE_LIMIT.limit({ key: ip });
+      if (!success) {
+        return new Response("Too many room lookups. Slow down.", {
+          status: 429,
+          headers: { "Retry-After": "60" },
+        });
+      }
+    }
+
     const id = env.LIST_ROOM.idFromName(roomId);
     return env.LIST_ROOM.get(id).fetch(request);
   },
