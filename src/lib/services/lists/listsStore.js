@@ -7,12 +7,22 @@ import { ensureDurableStorage } from "../infrastructure/durableStorage.js";
 
 export const LIST_COLOR_PRESETS = [
   {
+    // Softened from #00d4ff (Pablo, 2026-09-23). Every other preset sits at
+    // 0.45-0.77 saturation; that cyan was a flat 1.00 — the only fully
+    // saturated COLD colour in a warm pastel app, and the first dot anyone
+    // sees. It was not even ours: it traces to the "vibrant blue for accents"
+    // primary in tailwind.config.js, the same leftover template theme that
+    // was quietly supplying the app's grey default ink.
+    //
+    // Pink and Yellow below are deliberately left alone — they ARE
+    // --zl-pass-color and --zl-cta-color, so the first three dots echo the
+    // brand instead of merely coexisting with it.
     id: "list-blue",
     defaultName: "Blue List",
     color: "blue",
-    primaryColor: "#00d4ff",
-    accentColor: "#4dd0e1",
-    glowColor: "rgba(0, 212, 255, 0.3)",
+    primaryColor: "#62c9e8",
+    accentColor: "#93dcf0",
+    glowColor: "rgba(98, 201, 232, 0.28)",
   },
   {
     id: "list-pink",
@@ -241,7 +251,28 @@ function getListPaletteForRecord(list, index = 0) {
   return getListPaletteForIndex(index);
 }
 
-function normalizeListRecord(list, index = 0) {
+/* Lists already on a device keep whatever colour they were saved with, so
+   softening a preset would only ever reach NEW installs — everyone who already
+   had ZipList would stare at the retired cyan forever. This repaints that one
+   exact hex on load. Narrow on purpose: it matches the retired value only, and
+   nothing in the app lets a person choose a list colour, so a list carrying
+   #00d4ff was painted by the old preset and never by a human. */
+const RETIRED_LIST_COLORS = {
+  "#00d4ff": {
+    primaryColor: "#62c9e8",
+    accentColor: "#93dcf0",
+    glowColor: "rgba(98, 201, 232, 0.28)",
+  },
+};
+
+function repaintRetiredColor(list) {
+  const replacement =
+    RETIRED_LIST_COLORS[String(list?.primaryColor || "").toLowerCase()];
+  return replacement ? { ...list, ...replacement } : list;
+}
+
+function normalizeListRecord(rawList, index = 0) {
+  const list = repaintRetiredColor(rawList);
   const timestamp = new Date().toISOString();
   const palette = getListPaletteForRecord(list, index);
   const name =

@@ -1154,7 +1154,12 @@
      round means it never covers the content column. */
   .list-first-record-button {
     position: fixed;
-    bottom: calc(4.25rem + env(safe-area-inset-bottom));
+    /* Sits ON the measured footer height, not a guess at it. The old
+       4.25rem was 68px against an 85px desktop footer, so the button
+       overlapped the bar by 17px and its shadow bled across the border.
+       The fallback only matters for the frame before the observer reports,
+       and is deliberately generous. */
+    bottom: calc(var(--zl-footer-height, 5.5rem) + 0.85rem);
     right: max(env(safe-area-inset-right), 1rem);
     left: auto;
     z-index: 40;

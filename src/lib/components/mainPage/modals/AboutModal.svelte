@@ -116,9 +116,9 @@
             </li>
           {/each}
         </ul>
-        <!-- The long version lives at /about. Linked from inside the modal
-             rather than given its own footer button — the footer already has
-             an About affordance and this is the same idea, further down. -->
+        <!-- The long version at /about is PARKED, not deleted (Pablo, 2026-09-23
+             — "hide it for now"). The route still exists and still ranks; only
+             this in-modal link is hidden. Restore by uncommenting.
         <p class="pt-3">
           <a
             href="/about"
@@ -126,6 +126,7 @@
             >How it works, at more length</a
           >
         </p>
+        -->
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-3 pt-2">

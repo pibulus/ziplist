@@ -1,6 +1,27 @@
 <script>
+  import { onMount } from "svelte";
   import BrandMark from "$lib/components/ui/BrandMark.svelte";
   import FooterCharm from "$lib/components/FooterCharm.svelte";
+
+  /* The footer is fixed, so anything docked above it has to know how tall it
+     is — and three separate places were GUESSING. The list-first record button
+     guessed 4.25rem (68px) against a footer that is 85px on desktop, so it sat
+     17px inside the footer. Publish the measured height once instead; a guess
+     cannot drift out of date if there is no guess. */
+  let footerEl;
+  onMount(() => {
+    if (!footerEl || typeof ResizeObserver === "undefined") return;
+    const publish = () => {
+      document.documentElement.style.setProperty(
+        "--zl-footer-height",
+        `${Math.round(footerEl.getBoundingClientRect().height)}px`,
+      );
+    };
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(footerEl);
+    return () => observer.disconnect();
+  });
 
   export let title = "ZipList | Talk a List. Tick It Off.";
   export let description =
@@ -95,6 +116,7 @@
 
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
+    bind:this={footerEl}
     class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t px-4 pb-2 pt-3 text-center text-xs sm:px-6 sm:pb-4 sm:pt-6 md:px-8"
   >
     <div
