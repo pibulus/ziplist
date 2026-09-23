@@ -332,14 +332,23 @@
         </div>
       </section>
 
-      <!-- Receiving is the one inbound action with no list to hang off — you
-           haven't got the list yet. Sending lives on the list itself. -->
-      <section class="zl-settings-section" aria-label="Link a device">
+      <!-- Receiving is the one inbound action with no list to hang off — the
+           list isn't here yet. Sending lives on the list itself.
+
+           This said "Link a device / Sync with 4-word passphrase" and that was
+           a promise the app does not keep: joinByPhrase resolves to ONE room,
+           which is ONE list (liveListsService.js:217). Device-wide sync of
+           every list does not exist. The words bring a single list across, so
+           that is what it says now. The QR from the sending list opens the
+           same room — any phone camera reads it, so there is no scanner in
+           here to build. -->
+      <section class="zl-settings-section" aria-label="Bring a list in">
         <div class="zl-setting-row zl-sync-row">
           <div class="zl-setting-info">
-            <span class="zl-setting-name">Link a device</span>
+            <span class="zl-setting-name">Bring a list in</span>
             <p class="zl-setting-desc">
-              Sync with 4-word passphrase from another device
+              Four words from the device that has it. Its QR opens the same
+              room.
             </p>
           </div>
           <div class="zl-sync-receive">
@@ -347,7 +356,7 @@
               class="zl-sync-input"
               bind:value={joinPhrase}
               placeholder="quiet-satchel-sighs-midair"
-              aria-label="Four-word phrase from your other device"
+              aria-label="Four-word phrase from the sending device"
               on:keydown={(e) => e.key === "Enter" && handleJoinSync()}
             />
             <button

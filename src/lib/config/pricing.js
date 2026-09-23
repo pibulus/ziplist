@@ -10,8 +10,11 @@ export const PRICING = {
   termDays: 36500,
 };
 
-// Contributor buys ROOM, not features. Every feature works free;
-// this unlocks 12 lists, multiple simultaneous live rooms, and multi-device sync.
+// Contributor buys ROOM, not features. Every feature works free; this unlocks
+// 12 lists and multiple simultaneous live rooms. NOT "multi-device sync" —
+// this comment claimed that for months and nothing implements it. A room
+// holds one list, so a phrase carries one list. The unlock itself does travel
+// between devices, via a code; the lists do not.
 export const CONTRIBUTOR_BENEFITS = [
   "12 lists instead of 3",
   "Several live rooms at once",
