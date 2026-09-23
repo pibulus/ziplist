@@ -1,5 +1,6 @@
 <script>
   import { MainContainer } from "$lib/components/mainPage";
+  import { PRICING } from "$lib/config/pricing.js";
 
   const canonicalUrl = "https://ziplist.app";
   const title = "ZipList — Talk it into a list. Tick it off.";
@@ -26,14 +27,19 @@
       {
         "@type": "Offer",
         price: "0",
-        priceCurrency: "USD",
+        priceCurrency: PRICING.currency,
         description: "Free voice checklist creation and live QR rooms",
       },
       {
         "@type": "Offer",
-        price: "29",
-        priceCurrency: "USD",
-        description: "Lifetime Supporter Pass with unlimited lists",
+        // Both of these used to be wrong where it matters most — this is the
+        // machine-readable claim search engines quote. It said "unlimited
+        // lists" (it is 12) and USD (Square charges AUD), so the advertised
+        // price was a different currency from the one taken at checkout.
+        price: String(PRICING.currentPrice),
+        priceCurrency: PRICING.currency,
+        description:
+          "Lifetime Supporter Pass — 12 lists, live rooms, every device",
       },
     ],
     keywords:

@@ -117,13 +117,13 @@
     class="{footerButtonClass} zl-footer-pass"
     on:click={showContributor}
     title={$isContributor
-      ? "ZipList Supporter Pass (Active) ★"
-      : "ZipList Supporter Pass · 12 lists & multi-device sync"}
+      ? "Extras unlocked ★"
+      : "Extras · 12 lists, live rooms, every device"}
     aria-label={$isContributor
-      ? "ZipList Supporter Pass"
-      : "ZipList Supporter Pass"}
+      ? "Extras, unlocked"
+      : "Extras — more lists and live rooms"}
   >
-    {$isContributor ? "Pass ★" : "Pass"}
+    {$isContributor ? "Extras ★" : "Extras"}
   </button>
   <span class="sr-only" role="status" aria-live="polite">{shareStatus}</span>
 </nav>
