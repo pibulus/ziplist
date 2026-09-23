@@ -42,10 +42,25 @@ encryption key. **Do not do this**, and the reason is written in this repo:
 > nothing here should ever be reused for anything that wants to be one."_
 > — `src/lib/services/realtime/syncPhrase.js:9`
 
-A single shopping list is a fair bet at 1.6M. **Every list someone owns is not.**
-If the key were phrase-derived, anyone who can see room ids — the relay operator,
-or anyone enumerating — could brute-force a 1.6M keyspace offline and decrypt.
-That turns the encryption into decoration.
+1.6M is not a claim about lists — it is how many four-word phrases exist
+(40 adjectives × 40 nouns × 32 verbs × 32 places = 1,638,400). The only
+question is how long it takes to try all of them, and that was measured
+rather than guessed: **753ms to hash the entire keyspace on one CPU core in
+plain Node.** No GPU, no cluster.
+
+That is still fine for what the phrase does _today_, because it is an
+**address, not a key**. Exploiting it blind means 1.6M rate-limited network
+connections hunting for a live room, and the prize is somebody's groceries.
+Note also that rooms already store `listData` in plaintext, so the phrase was
+never protecting content from the server — it is a door number that is hard
+enough to guess.
+
+It breaks completely the moment it becomes a **key**. The whole point of
+encrypting a bundle is to hide it from the relay — and the relay sees every
+room id. A phrase-derived key means the relay reverses room id → phrase → key
+in under a second and reads everything. **That defeats precisely the party
+being encrypted against**, which makes the encryption theatre. Hence a random
+key, carried in the fragment, never derived from anything the server sees.
 
 So the phrase and the key are separated:
 
