@@ -488,12 +488,16 @@ export default {
       return new Response("Not found", { status: 404 });
     }
 
-    // Room ids are derived from a four-word phrase, and that phrase is ~28 bits
-    // (see syncPhrase.js). 28 bits is only out of reach while WALKING it stays
-    // expensive — and probing was free: every guess was one unmetered request.
-    // Per-IP limiting is what actually makes the keyspace mean something.
-    // A real person joins a room a handful of times a minute; 40 is generous
-    // even behind a shared NAT, and it puts a full enumeration out of reach.
+    // Room ids derive from a four-word phrase worth ~28 bits (syncPhrase.js),
+    // and 28 bits only holds up while WALKING the keyspace costs something.
+    // Probing was free: every guess was one unmetered request.
+    //
+    // 12-per-10s was measured, not guessed. Cloudflare tracks these counters
+    // locally PER LOCATION, so a high nominal limit never bites — at 40/60s a
+    // 150-request burst sailed through untouched, because no single isolate
+    // saw 40 of them. At 12/10s the same burst lost 68 of 150, while six
+    // human-paced lookups all passed. Generous for a person opening a couple
+    // of live lists; expensive for anyone walking 268 million room ids.
     if (env.ROOM_PROBE_LIMIT) {
       const ip = request.headers.get("CF-Connecting-IP") || "unknown";
       const { success } = await env.ROOM_PROBE_LIMIT.limit({ key: ip });
