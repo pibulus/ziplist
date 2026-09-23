@@ -88,7 +88,7 @@
         class="rounded-lg border border-pink-200/60 bg-gradient-to-r from-pink-50/90 to-amber-50/90 p-4 shadow-sm"
       >
         <p class="text-sm leading-relaxed text-gray-700">
-          Say the thing, and it's on the list. That's the whole trick.
+          Say the thing, and it's on the list.
         </p>
       </div>
 

@@ -80,7 +80,7 @@
   {faqs}
   canonical={canonicalUrl}
   heading="How ZipList works"
-  lede="Say the thing, and it's on the list. That's the whole trick."
+  lede="Say the thing, and it's on the list."
   faqHeading="Questions people actually ask"
   currentUse="about"
   moreHeading="What people talk into it"
