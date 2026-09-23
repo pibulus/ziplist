@@ -2671,15 +2671,12 @@
                   {/each}
                 </button>
                 {#if showListManagement}
-                  <button
-                    type="button"
-                    class="zl-live-qr-btn"
-                    on:click|stopPropagation={qrThisList}
-                    title="Show QR code to join this room"
-                    aria-label="Show QR code to join this room"
-                  >
-                    📱
-                  </button>
+                  <!-- The QR button that used to sit here was a SECOND caller
+                       of qrThisList — the share tray's QR pill is the first,
+                       same function, no arguments, identical behaviour. Going
+                       live silently added a duplicate entry point to a header
+                       that already had six controls. Removed, not relocated:
+                       the share tray is where sharing lives. -->
                   <button
                     type="button"
                     class="zl-live-stop-btn"
@@ -2687,7 +2684,19 @@
                     title="Stop live sharing"
                     aria-label="Stop live sharing for this list"
                   >
-                    ✕
+                    <svg
+                      class="zl-header-icon"
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                   </button>
                 {/if}
               </div>
