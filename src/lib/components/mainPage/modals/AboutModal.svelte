@@ -80,7 +80,7 @@
           <p class="about-eyebrow">The shareable voice list thing</p>
         </div>
         <h3 id="about_modal_title" class="about-title">
-          Zip up a list, lickety-split.
+          Zip up a list, <span class="zl-marker">lickety-split.</span>
         </h3>
       </div>
 
@@ -129,34 +129,35 @@
         -->
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-        <p class="about-attrib text-xs">
-          © 2026 ZipList • Made by <a
-            href="https://madebypablo.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="underline hover:text-gray-800">Pablo</a
-          > in Melbourne
-        </p>
-        <div class="flex items-center gap-4">
+      <div class="space-y-3 pt-3">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <a
             href="https://github.com/pibulus"
             target="_blank"
             rel="noopener noreferrer"
-            class="about-link text-xs font-medium transition-colors"
+            class="about-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-gray-900 bg-white px-3 text-xs font-black text-gray-900 shadow-[2px_2px_0px_#1e1714] transition-all duration-150 hover:-translate-y-0.5 hover:bg-stone-100 hover:shadow-[3px_3px_0px_#1e1714] active:translate-y-0 active:shadow-none"
             aria-label="Source code on GitHub"
           >
-            <span aria-hidden="true">🐙</span>Peek at the guts
+            <span class="text-sm" aria-hidden="true">🐙</span>
+            <span>Peek at the guts</span>
           </a>
           <a
             href="https://ko-fi.com/madebypablo"
             target="_blank"
             rel="noopener noreferrer"
-            class="about-link text-xs font-medium transition-colors"
+            class="about-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-gray-900 bg-amber-100 px-3 text-xs font-black text-amber-950 shadow-[2px_2px_0px_#1e1714] transition-all duration-150 hover:-translate-y-0.5 hover:bg-amber-200 hover:shadow-[3px_3px_0px_#1e1714] active:translate-y-0 active:shadow-none"
+            aria-label="Support on Ko-fi"
           >
-            <span aria-hidden="true">☕</span>Buy me a coffee
+            <span class="text-sm" aria-hidden="true">☕</span>
+            <span>Buy me a coffee</span>
           </a>
         </div>
+
+        <p class="text-center text-xs font-semibold text-gray-500">
+          © 2026 ZipList • Made by <span class="font-black text-gray-900"
+            >Pablo</span
+          > in Melbourne
+        </p>
       </div>
     </div>
   </div>
@@ -217,31 +218,6 @@
     width: 18px;
   }
 
-  .about-more {
-    color: var(--zl-text-color-primary, #1e1714);
-    text-decoration-color: var(--zl-pass-color, #ff6ac2);
-  }
-
-  /* The charm emoji keep their place (footer and support links always do),
-     but they sat flush against the first letter — a text space disappears
-     into an emoji's advance width. A flex gap is a gap the glyph can't eat.
-     Teal was the only teal in the app; these speak brand ink and pink. */
-  .about-link {
-    align-items: center;
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    display: inline-flex;
-    gap: 0.35rem;
-  }
-
-  .about-link:hover {
-    color: var(--zl-pass-color, #ff6ac2);
-  }
-
-  .about-attrib {
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    opacity: 0.8;
-  }
-
   /* Mascot slot — shrink the shared Mascot to sit inline beside the title
      without crowding it. The character art itself is untouched. */
   .about-mascot-slot :global(.mascot) {
@@ -253,10 +229,19 @@
     margin-bottom: 0;
   }
 
-  /* ~44px tap target for thumbs. */
-  .about-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
+  .zl-marker {
+    background-image: linear-gradient(
+      to top,
+      rgba(255, 106, 194, 0.45) 0%,
+      rgba(255, 106, 194, 0.45) 38%,
+      transparent 38%
+    );
+    border-radius: 2px;
+    padding: 0 0.08em;
+  }
+
+  .about-action-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 </style>

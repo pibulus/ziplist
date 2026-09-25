@@ -49,7 +49,7 @@
         id="intro_modal_title"
         class="text-center text-3xl font-black leading-[1.1] tracking-tight text-gray-900 sm:text-4xl"
       >
-        Zip up a list,<br />lickety-split.
+        Zip up a list,<br /><span class="zl-marker">lickety-split.</span>
       </h1>
 
       <!-- Three beats, each a headline + one plain line. The two things
@@ -79,7 +79,7 @@
 
       <button
         type="button"
-        class="w-full rounded-full bg-[#ff6ac2] px-4 py-2.5 text-base font-bold text-slate-950 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-[0.98] sm:px-6 sm:py-3 sm:text-lg"
+        class="btn min-h-12 w-full rounded-2xl border-2 border-gray-900 bg-pink-500 text-base font-black tracking-tight text-white shadow-[3px_3px_0px_#1e1714] transition-all duration-150 hover:-translate-y-0.5 hover:bg-pink-600 hover:shadow-[4px_4px_0px_#1e1714] active:translate-y-0.5 active:shadow-none sm:text-lg"
         on:click={handleActionButton}
       >
         Zip it up
@@ -156,5 +156,16 @@
     .intro-footnote {
       font-size: 0.9375rem;
     }
+  }
+
+  .zl-marker {
+    background-image: linear-gradient(
+      to top,
+      rgba(255, 106, 194, 0.45) 0%,
+      rgba(255, 106, 194, 0.45) 38%,
+      transparent 38%
+    );
+    border-radius: 2px;
+    padding: 0 0.08em;
   }
 </style>

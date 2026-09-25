@@ -8,14 +8,14 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const src = readFileSync(
-  new URL("./syncPhrase.js", import.meta.url),
-  "utf8",
-);
+const src = readFileSync(new URL("./syncPhrase.js", import.meta.url), "utf8");
 
 const bankOf = (name) =>
-  (src.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`))[1].match(/"[a-z]+"/g) || [])
-    .map((w) => w.slice(1, -1));
+  (
+    src
+      .match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`))[1]
+      .match(/"[a-z]+"/g) || []
+  ).map((w) => w.slice(1, -1));
 
 const BANKS = ["ADJECTIVES", "NOUNS", "VERBS", "PLACES"].map(bankOf);
 
@@ -42,7 +42,10 @@ assert.ok(
 // room, or expanding the banks silently breaks every shared link.
 const roomIdOf = (phrase) =>
   "zl_p" +
-  createHash("sha256").update(`ziplist:sync:v1:${phrase}`).digest("hex").slice(0, 32);
+  createHash("sha256")
+    .update(`ziplist:sync:v1:${phrase}`)
+    .digest("hex")
+    .slice(0, 32);
 
 // A real room minted on ziplist.app on 2026-09-23, BEFORE the banks grew:
 // /j/bouncy-muffin-salutes-underfoot redirected to this exact room. If growing

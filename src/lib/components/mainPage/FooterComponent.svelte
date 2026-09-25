@@ -66,10 +66,23 @@
         await navigator.share(shareData);
         setShareStatus("Shared ZipList");
         soundService.copySuccess({ force: true });
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: { message: "Shared ZipList! ⚡", type: "success" },
+          }),
+        );
       } else if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareData.url);
         setShareStatus("ZipList link copied");
         soundService.copySuccess({ force: true });
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              message: "Link copied! Share ZipList with a friend ✨",
+              type: "success",
+            },
+          }),
+        );
       } else {
         setShareStatus("Share unavailable");
         soundService.locked({ force: true });
@@ -133,6 +146,7 @@
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   nav::-webkit-scrollbar {
@@ -142,6 +156,8 @@
   .footer-nav-button {
     flex: 0 0 auto;
     border-radius: 0.75rem;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .footer-nav-button:hover {
@@ -156,27 +172,36 @@
     color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
   }
 
-  /* Flat brand pink — the one pink CTA, sat beside the yellow record
-     button rather than competing with it. Painted from --zl-pass-color, NOT
-     --zl-accent-color: the accent reads pink in :root but every theme
-     overrides it to the same warm near-black as the ink, which is how this
-     pill shipped as a black slab with an invisible label. */
+  /* Vibe-reactive Extras action pill: adapts to chosen vibe (matches TalkType Caboodle pill) */
   .zl-footer-pass {
-    color: #1e1714;
-    background-color: var(--zl-pass-color, #ff6ac2);
-    border: none;
+    color: var(--zl-footer-pass-ink, #1e1714);
+    background: var(--zl-footer-pass-bg, var(--zl-pass-color, #ff6ac2));
+    border: 1.5px solid #1e1714;
     border-radius: 999px;
-    box-shadow: 0 2px 8px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.35);
+    box-shadow: 0 2px 8px
+      var(
+        --zl-footer-pass-glow,
+        rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.35)
+      );
     font-weight: 800;
     padding-left: 0.85rem;
     padding-right: 0.85rem;
+    transition:
+      background 0.25s ease,
+      color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.15s ease;
   }
 
   .zl-footer-pass:hover,
   .zl-footer-pass:focus-visible {
-    color: #1e1714;
-    background-color: var(--zl-pass-color, #ff6ac2);
-    box-shadow: 0 4px 12px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.5);
+    color: var(--zl-footer-pass-ink, #1e1714);
+    background: var(--zl-footer-pass-hover-bg, var(--zl-pass-color, #ff6ac2));
+    box-shadow: 0 4px 12px
+      var(
+        --zl-footer-pass-glow-hover,
+        rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.5)
+      );
   }
 
   .zl-footer-pass:active {

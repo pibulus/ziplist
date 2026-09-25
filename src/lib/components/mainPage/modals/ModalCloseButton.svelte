@@ -45,52 +45,54 @@
   on:click|preventDefault={handleClick}
 >
   <span
-    class="relative flex h-full w-full items-center justify-center leading-none"
+    class="relative flex h-full w-full items-center justify-center font-black leading-none"
     >✕</span
   >
 </button>
 
 <style>
-  /* Family X: a small pink dot tucked into the corner, squishy on press
-     (Pablo's call 2026-08-17 — it used to be a grey ghost circle in slate,
-     a colour from nobody's palette). The backdrop closes these too, so the
-     X gets to be a cute accent rather than furniture. Settings and
-     Contributor wear the identical dot, so all five modals close the same
-     way. Fingers get a bigger target via the coarse-pointer bump below. */
+  /* Soft Neo Toybrut Close Button: signature vibrant button with tactile black border,
+     centered with modal header, squishy on press, rotates 90deg on hover (TalkType parity). */
   .modal-close-btn {
-    /* Same tuck as TalkType's X so the two apps close the same way. */
-    top: 0.35rem;
-    right: 0.35rem;
-    background: #ff6ac2;
-    color: #fffdf5;
-    border: none;
-    box-shadow: 0 3px 8px rgba(255, 106, 194, 0.35);
+    top: 2px;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    background: var(--zl-modal-close-bg, #ff5ca8);
+    color: var(--zl-modal-close-ink, #ffffff);
+    border: 2px solid #1e1714;
+    box-shadow: 2px 2px 0px #1e1714;
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     user-select: none;
     transition:
       box-shadow 0.15s ease,
-      transform 0.22s linear(0, 0.5 15%, 1.15 40%, 0.97 65%, 1);
+      background 0.2s ease,
+      color 0.2s ease,
+      transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .modal-close-btn:hover {
-    box-shadow: 0 5px 12px rgba(255, 106, 194, 0.5);
-    transform: scale(1.1) rotate(90deg);
+    background: var(--zl-modal-close-hover-bg, #ff6eb3);
+    box-shadow: 3px 3px 0px #1e1714;
+    transform: scale(1.08) rotate(90deg);
   }
 
   .modal-close-btn:active {
-    transform: scale(0.82);
+    box-shadow: 1px 1px 0px #1e1714;
+    transform: scale(0.92);
   }
 
   .modal-close-btn:focus-visible {
-    outline: 2px solid var(--zl-accent-color, #ff6ac2);
+    outline: 2px solid #1e1714;
     outline-offset: 2px;
   }
 
   @media (pointer: coarse) {
     .modal-close-btn {
-      min-width: 40px;
-      min-height: 40px;
+      width: 32px;
+      height: 32px;
+      top: 0;
     }
   }
 </style>

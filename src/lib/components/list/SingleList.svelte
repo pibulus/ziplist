@@ -366,6 +366,17 @@
       );
       if (copied) {
         soundService.copySuccess({ force: true });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("ziplist:toast", {
+              detail: {
+                message: "Live link copied to clipboard!",
+                icon: "🔗",
+                type: "success",
+              },
+            }),
+          );
+        }
       } else {
         soundService.locked({ force: true });
       }
@@ -400,6 +411,19 @@
           result.urlTooLong ? 5000 : 3000,
         );
         soundService.copySuccess({ force: true });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("ziplist:toast", {
+              detail: {
+                message: result.urlTooLong
+                  ? "Long link copied to clipboard!"
+                  : "List link copied to clipboard!",
+                icon: "📋",
+                type: "success",
+              },
+            }),
+          );
+        }
         notePwaMoment(); // a shared list earns the install suggestion
       } else {
         showListStatus("Share needs one more try.");
@@ -487,6 +511,17 @@
         true,
       );
       soundService.success({ force: true });
+      if (copied && typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              message: "Live room created & link copied!",
+              icon: "✨",
+              type: "success",
+            },
+          }),
+        );
+      }
 
       subscribeToLiveStores(list.id);
     } catch (error) {
@@ -1761,6 +1796,17 @@
       copied,
       2400,
     );
+    if (copied && typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: {
+            message: "Room link copied to clipboard!",
+            icon: "🔑",
+            type: "success",
+          },
+        }),
+      );
+    }
   }
 
   function requestMove(itemId) {

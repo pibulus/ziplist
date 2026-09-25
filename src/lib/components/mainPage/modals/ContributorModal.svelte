@@ -6,6 +6,7 @@
     CONTRIBUTOR_BENEFITS,
     CONTRIBUTOR_COPY,
   } from "$lib/config/pricing.js";
+  import ModalCloseButton from "./ModalCloseButton.svelte";
   export let closeModal = () => {};
 
   const dispatch = createEventDispatcher();
@@ -93,6 +94,15 @@
       code = "";
 
       window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: {
+            message: "Extras unlocked on this device! ★",
+            type: "success",
+          },
+        }),
+      );
+
+      window.dispatchEvent(
         new CustomEvent("ziplist-setting-changed", {
           detail: { setting: "contributor", value: true },
         }),
@@ -121,29 +131,11 @@
 >
   <div class="zl-contributor-card zl-scroll">
     <form method="dialog">
-      <!-- Same tiny pink corner X as the settings modal — the two share one
-           visual language now (Pablo's call 2026-08-17). -->
-      <button
-        type="button"
-        class="zl-contributor-close"
-        on:click={handleClose}
-        aria-label="Close modal"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="3.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
+      <ModalCloseButton
+        closeModal={handleClose}
+        label="Close extras modal"
+        modalId="contributor_modal"
+      />
     </form>
 
     <div class="zl-contributor-content">
@@ -278,42 +270,6 @@
     background: var(--zl-card-bg-gradient-color-start, #fff9f0);
     box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(30, 23, 20, 0.12));
     padding: 1.5rem;
-  }
-
-  .zl-contributor-close {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 3;
-    background: #ff6ac2;
-    border: none;
-    cursor: pointer;
-    color: #fffdf5;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border-radius: 50%;
-    box-shadow: 0 3px 8px rgba(255, 106, 194, 0.35);
-    transition:
-      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-      box-shadow 0.18s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .zl-contributor-close:hover {
-    transform: scale(1.12) rotate(90deg);
-    box-shadow: 0 5px 12px rgba(255, 106, 194, 0.5);
-  }
-
-  .zl-contributor-close:active {
-    transform: scale(0.88);
-  }
-
-  .zl-contributor-close:focus-visible {
-    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
-    outline-offset: 3px;
   }
 
   .zl-contributor-content {

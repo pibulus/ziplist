@@ -205,28 +205,32 @@
   .save-button {
     width: 100%;
     min-height: 52px;
-    border: none;
+    border: 2px solid #1e1714;
     border-radius: 999px;
     background: var(--zl-cta-color, #ffb000);
-    color: #111111;
+    color: #1e1714;
     font-family: "Space Mono", monospace;
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25);
+    box-shadow: 2px 3px 0px #1e1714;
+    transition:
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.15s ease,
+      filter 0.15s ease;
   }
 
   .save-button:hover,
   .save-button:focus-visible {
     transform: translateY(-2px);
     filter: saturate(1.08) brightness(1.04);
-    box-shadow: 0 5px 15px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.3);
+    box-shadow: 3px 5px 0px #1e1714;
     outline: none;
   }
 
   .save-button:active {
-    transform: translateY(0) scale(0.99);
+    transform: translateY(1px);
+    box-shadow: 0px 0px 0px #1e1714;
   }
 
   /* The onward path, quiet under the card */

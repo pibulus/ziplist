@@ -241,27 +241,54 @@
   }
 
   .zl-app-footer {
-    border-color: var(--zl-footer-border-color);
+    color: var(--footer-text-color, #463f3a);
+    border-color: var(--footer-border-color, #1e1714);
+    border-top: 2px solid var(--footer-border-color, #1e1714);
+    background: var(--zl-footer-bg-image);
     box-shadow: var(--zl-footer-shadow);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.4);
+    transition:
+      background 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   @media (max-width: 639px) {
-    /* The attribution steps off the phone entirely, and the nav centres.
-       390px gives the row 358px; the line needs 156 and the four controls
-       224, so it was ~28px short — and no squeeze fixes a 375px phone.
-       Two shortenings were already tried and rejected for mangling the
-       sense of the line ("❤️ Melbourne" reads as a heart dating a city;
-       "Made with ❤️" is a stub that loses the only word worth keeping),
-       and the centred flex box was clipping BOTH ends anyway, serving
-       "de ❤️ in Melbour". Better to say it properly in one place than
-       badly in two: About carries the full line, with Pablo linked.
-       It returns intact at 640px, where it fits. */
-    .copyright {
+    /* Mobile footer parity with TalkType: the words step aside cleanly
+       via clip-path so screen readers keep the attribution, while the
+       living charm creature stays visible and interactive! */
+    .copyright .footer-copy,
+    .copyright .footer-dot {
       display: none;
     }
 
+    .copyright .footer-lead,
+    .copyright .footer-place {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    .copyright {
+      font-size: 0.78rem;
+    }
+
+    .copyright .footer-meta {
+      font-size: 1.35rem;
+    }
+
+    .copyright :global(.footer-charm) {
+      padding: 0.3rem 0.45rem;
+    }
+
     .footer-row {
-      justify-content: center;
+      justify-content: space-between;
+      gap: 0.5rem;
     }
   }
 

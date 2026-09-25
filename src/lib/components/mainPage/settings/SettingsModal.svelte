@@ -13,6 +13,7 @@
   } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
+  import ModalCloseButton from "../modals/ModalCloseButton.svelte";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -207,27 +208,11 @@
         Adjust startup, sound, contributor, and theme settings.
       </p>
       <form method="dialog">
-        <button
-          type="button"
-          class="zl-settings-close"
-          on:click={handleModalClose}
-          aria-label="Close settings"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <ModalCloseButton
+          closeModal={handleModalClose}
+          label="Close options"
+          modalId="settings_modal"
+        />
       </form>
 
       <!-- Vibe picker sits in the open (Pablo's call 2026-07-22): the old
@@ -408,13 +393,15 @@
   /* One yummy button, same family curve as the app's other squishy controls.
      Was a quiet label with a small amber pill; it now says what you get. */
   .zl-contributor-cta {
+    position: relative;
+    overflow: hidden;
     display: flex;
     width: 100%;
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
     padding: 0.85rem 1.25rem;
-    border: 0;
+    border: 2px solid #1e1714;
     border-radius: 999px;
     background: var(--zl-cta-color, #ffb000);
     color: #1e1714;
@@ -422,17 +409,34 @@
     font-size: 0.98rem;
     letter-spacing: -0.01em;
     cursor: pointer;
-    box-shadow: 0 10px 22px rgba(255, 106, 194, 0.35);
+    box-shadow: 2px 3px 0px #1e1714;
     transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.15s ease,
+      filter 0.15s ease;
+  }
+  .zl-contributor-cta::before {
+    content: "";
+    position: absolute;
+    inset: 2px 4px;
+    z-index: 1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 50% 20%,
+      rgba(255, 255, 255, 0.45),
+      transparent 65%
+    );
+    opacity: 0.8;
   }
   .zl-contributor-cta:hover {
-    transform: scale(1.02);
-    box-shadow: 0 14px 30px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.45);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 3px 5px 0px #1e1714;
+    filter: brightness(1.03);
   }
   .zl-contributor-cta:active {
-    transform: scale(0.97);
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 1px 1px 0px #1e1714;
   }
 
   :global(dialog.zl-settings-dialog) {
@@ -505,42 +509,6 @@
      in a settings context). The mono survives only in the name input,
      where typed text matches the list items' typewriter identity. */
 
-  /* Tiny pink dot of an X, tucked in the corner (Pablo's call 2026-08-17):
-     the backdrop closes the modal too, so the X can be a cute accent instead
-     of a 44px ghost circle squatting on the Legal Pad tile. Squishy on
-     press, same family as the app's other round controls. */
-  .zl-settings-close {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 3;
-    background: #ff6ac2;
-    border: none;
-    cursor: pointer;
-    color: #fffdf5;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border-radius: 50%;
-    box-shadow: 0 3px 8px rgba(255, 106, 194, 0.35);
-    transition:
-      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-      box-shadow 0.18s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .zl-settings-close:hover {
-    transform: scale(1.12) rotate(90deg);
-    box-shadow: 0 5px 12px rgba(255, 106, 194, 0.5);
-  }
-
-  .zl-settings-close:active {
-    transform: scale(0.88);
-  }
-
-  .zl-settings-close:focus-visible,
   .zl-vibe-option:focus-visible {
     outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
     outline-offset: 3px;
@@ -554,23 +522,36 @@
     font-family: inherit;
     font-size: 0.8rem;
     font-weight: 800;
-    padding: 0.42rem 0.8rem;
+    padding: 0.42rem 0.85rem;
     border-radius: 999px;
-    border: 2px solid rgba(30, 23, 20, 0.22);
+    border: 2px solid #1e1714;
     background: #fffdf5;
     color: #1e1714;
     cursor: pointer;
     white-space: nowrap;
-    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 1px 1px 0px #1e1714;
+    transition:
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.15s ease,
+      background-color 0.15s ease;
   }
 
-  .zl-sync-copy:active {
-    transform: scale(0.94);
+  .zl-sync-copy:hover:not(:disabled) {
+    background: #fdf2f8;
+    transform: translateY(-1px);
+    box-shadow: 2px 2px 0px #1e1714;
+  }
+
+  .zl-sync-copy:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 0px 0px 0px #1e1714;
   }
 
   .zl-sync-copy:disabled {
     opacity: 0.45;
     cursor: default;
+    box-shadow: none;
+    transform: none;
   }
 
   .zl-sync-receive {
@@ -821,15 +802,17 @@
     outline: none;
   }
 
-  /* Toggle Switch */
+  /* Toggle Switch with Toybrut physics and cubic-bezier spring (TalkType parity) */
   .zl-toggle {
     position: relative;
     display: inline-flex;
     align-items: center;
-    width: 56px;
-    min-width: 56px;
+    width: 54px;
+    min-width: 54px;
     height: 44px;
     flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .zl-toggle input {
@@ -843,15 +826,14 @@
     cursor: pointer;
     top: 50%;
     left: 0;
-    right: auto;
-    bottom: auto;
     width: 52px;
     height: 30px;
-    background-color: var(--zl-text-color-disabled, #ccc);
-    transition: 0.4s;
-    border-radius: 24px;
-    border: 2px solid transparent;
+    background-color: #e5e7eb;
+    border: 2px solid #1e1714;
+    border-radius: 9999px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
     transform: translateY(-50%);
+    transition: background-color 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .zl-toggle-slider:before {
@@ -859,11 +841,13 @@
     content: "";
     height: 22px;
     width: 22px;
-    left: 4px;
+    left: 3px;
     bottom: 2px;
-    background-color: #fffdf5;
-    transition: 0.4s;
+    background-color: #ffffff;
+    border: 1.5px solid #1e1714;
+    box-shadow: 1px 1px 0px #1e1714;
     border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   input:checked + .zl-toggle-slider {
@@ -871,12 +855,20 @@
   }
 
   input:checked + .zl-toggle-slider:before {
-    transform: translateX(22px);
+    transform: translateX(20px);
+  }
+
+  .zl-toggle:active .zl-toggle-slider:before {
+    transform: scale(0.9) translateX(0);
+  }
+
+  .zl-toggle:active input:checked + .zl-toggle-slider:before {
+    transform: scale(0.9) translateX(20px);
   }
 
   .zl-toggle input:focus-visible + .zl-toggle-slider {
-    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
-    outline-offset: 3px;
+    outline: 2px solid #1e1714;
+    outline-offset: 2px;
   }
 
   /* Chunky mode gets its hard-shadow identity back — gated, not leaked.
@@ -938,7 +930,6 @@
       var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
     border-radius: 14px;
     cursor: pointer;
-    transition: all 0.2s;
     font-weight: 800;
     letter-spacing: -0.01em;
     /* fits "Highlighter" in a 4-up tile on a 390px phone */
@@ -948,22 +939,37 @@
     gap: 0.18rem;
     align-items: center;
     justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   .zl-vibe-art {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .zl-vibe-option:hover {
     border-color: var(--zl-primary-color);
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.04);
   }
 
   .zl-vibe-option:hover .zl-vibe-art {
-    transform: scale(1.12);
+    transform: scale(1.15) rotate(4deg);
+  }
+
+  .zl-vibe-option:active {
+    transform: translateY(1px) scale(0.92);
+    box-shadow: 1px 1px 0px #1e1714 !important;
+  }
+
+  .zl-vibe-option:active .zl-vibe-art {
+    transform: scale(0.88) rotate(-2deg);
   }
 
   @media (prefers-reduced-motion: reduce) {

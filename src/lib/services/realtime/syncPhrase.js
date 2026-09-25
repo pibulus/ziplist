@@ -587,7 +587,7 @@ export function normalizeSyncPhrase(value) {
   return (value ?? "")
     .toString()
     .toLowerCase()
-    .replace(/[^a-z]+/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
     .trim()
     .split(/\s+/)
     .filter(Boolean)

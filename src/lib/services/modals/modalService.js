@@ -15,9 +15,9 @@ import { browser } from "$app/environment";
 // ─────────────────────────────────────────────────────────────────────────
 
 // Keep in sync with the zl-modal-pop-out duration in app.css.
-// Must match the zl-modal-pop-out duration in app.css (180ms). This is how
+// Must match the zl-modal-pop-out duration in app.css (150ms). This is how
 // long we wait before dialog.close() removes the element from the top layer.
-const MODAL_CLOSE_DURATION = 180;
+const MODAL_CLOSE_DURATION = 150;
 
 export class ModalService {
   constructor() {

@@ -25,11 +25,13 @@
     rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.84)
   );
 
-  /* Modal motion — one source of truth */
-  --zl-modal-open-ms: 280ms;
-  --zl-modal-close-ms: 180ms;
-  --zl-modal-open-ease: cubic-bezier(0.16, 0.84, 0.24, 1.06);
-  --zl-modal-close-ease: cubic-bezier(0.4, 0, 0.24, 1);
+  /* Modal motion — one source of truth. Opens are snappy and springy with a
+     soft bounce, closes are brisk and clean. Keep --zl-modal-close-ms in sync with
+     MODAL_CLOSE_DURATION in modalService.js. */
+  --zl-modal-open-ms: 240ms;
+  --zl-modal-close-ms: 150ms;
+  --zl-modal-open-ease: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --zl-modal-close-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Any inner panel that scrolls wears the app's bar, not the OS one. html and

@@ -15,6 +15,8 @@
   let qrError = false;
   let copied = false;
   let copyTimer = null;
+  let phraseCopied = false;
+  let phraseTimer = null;
 
   $: if (shareUrl) {
     generateQr(shareUrl);
@@ -46,6 +48,17 @@
       copied = true;
       soundService.copySuccess({ force: true });
       hapticService.selection();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              message: "Join link copied to clipboard!",
+              icon: "📋",
+              type: "success",
+            },
+          }),
+        );
+      }
       if (copyTimer) clearTimeout(copyTimer);
       copyTimer = setTimeout(() => {
         copied = false;
@@ -53,6 +66,34 @@
       }, 2200);
     } catch (err) {
       console.error("[QrShareModal] Copy failed:", err);
+    }
+  }
+
+  async function copyPhrase() {
+    if (!syncPhrase) return;
+    try {
+      await navigator.clipboard.writeText(syncPhrase);
+      phraseCopied = true;
+      soundService.copySuccess({ force: true });
+      hapticService.selection();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              message: `Room phrase "${syncPhrase}" copied!`,
+              icon: "🔑",
+              type: "success",
+            },
+          }),
+        );
+      }
+      if (phraseTimer) clearTimeout(phraseTimer);
+      phraseTimer = setTimeout(() => {
+        phraseCopied = false;
+        phraseTimer = null;
+      }, 2200);
+    } catch (err) {
+      console.error("[QrShareModal] Phrase copy failed:", err);
     }
   }
 
@@ -106,13 +147,20 @@
 
       <!-- Sync Phrase Pill (if live) -->
       {#if syncPhrase}
-        <div
-          class="inline-flex items-center gap-1.5 rounded-full border border-pink-300 bg-pink-100/90 px-3 py-1 text-xs font-black text-pink-950 shadow-sm"
+        <button
+          type="button"
+          class="group inline-flex items-center gap-1.5 rounded-full border-2 border-pink-400 bg-pink-100/90 px-3 py-1 text-xs font-black text-pink-950 shadow-[1px_1px_0px_#1e1714] transition-all duration-150 hover:-translate-y-0.5 hover:bg-pink-200 hover:shadow-[2px_2px_0px_#1e1714] active:translate-y-0 active:shadow-none"
+          on:click={copyPhrase}
+          title="Tap to copy room phrase"
+          aria-label="Room phrase {syncPhrase}. Tap to copy."
         >
           <span class="h-2 w-2 animate-pulse rounded-full bg-pink-500"></span>
           <span>Room:</span>
           <code class="font-mono">{syncPhrase}</code>
-        </div>
+          <span class="ml-1 text-[11px] opacity-70 group-hover:opacity-100">
+            {phraseCopied ? "✓ Copied" : "📋"}
+          </span>
+        </button>
       {/if}
 
       <!-- QR Card Container -->
@@ -140,8 +188,8 @@
       <div class="flex flex-col gap-2 pt-2">
         <button
           type="button"
-          class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] px-4 py-2.5 text-xs font-black shadow-[2px_2px_0px_#1e1714] transition-all duration-150 active:scale-95 {copied
-            ? 'bg-emerald-300 text-emerald-950'
+          class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] px-4 py-2.5 text-xs font-black shadow-[2px_2px_0px_#1e1714] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_#1e1714] active:translate-y-0 active:shadow-none {copied
+            ? 'bg-emerald-300 text-emerald-950 shadow-[1px_1px_0px_#10b981]'
             : 'bg-amber-300 text-[#1e1714] hover:bg-amber-400'}"
           on:click={copyLink}
         >
@@ -154,7 +202,7 @@
 
         <button
           type="button"
-          class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#1e1714]/20 bg-[#fffef7]/80 px-3 py-2 text-xs font-bold text-[#1e1714]/80 transition-all duration-150 hover:border-[#1e1714]/50 hover:bg-pink-50/80 hover:text-[#1e1714]"
+          class="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-[#1e1714]/30 bg-[#fffef7] px-3 py-2 text-xs font-bold text-[#1e1714] shadow-[1px_1px_0px_#1e1714] transition-all duration-150 hover:-translate-y-0.5 hover:border-[#1e1714] hover:bg-pink-50 hover:shadow-[2px_2px_0px_#1e1714] active:translate-y-0 active:shadow-none"
           on:click={openInQrBuddy}
           title="Open in QRBuddy to customize gradients and download high-res stickers"
         >

@@ -58,6 +58,18 @@
   }
 }
 
+/* Live streaming cursor — retro terminal breathing caret trailing spoken / typed words */
+@keyframes liveCursorPulse {
+  0% {
+    opacity: 0.15;
+    transform: scaleY(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
 @keyframes live-voice-wave {
   0%,
   100% {
@@ -419,16 +431,16 @@
 }
 
 .zl-title-caret {
-  display: block;
-  width: 2px;
-  height: 0.95rem;
-  margin-left: 1px;
-  background: color-mix(
-    in srgb,
-    var(--zl-text-color-primary, #1e1714) 55%,
-    transparent
-  );
-  animation: zl-title-caret-blink 1.15s steps(1, end) infinite;
+  display: inline-block;
+  width: 0.42em;
+  height: 0.95em;
+  margin-left: 2px;
+  background: var(--zl-vibe-caret, #f472b6);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--zl-vibe-caret-glow, rgba(244, 114, 182, 0.45));
+  animation: liveCursorPulse 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite
+    alternate;
+  vertical-align: -0.1em;
 }
 
 @keyframes zl-title-caret-blink {
@@ -449,7 +461,7 @@
 @media (prefers-reduced-motion: reduce) {
   .zl-title-caret {
     animation: none;
-    opacity: 0.7;
+    opacity: 0.75;
   }
 }
 
@@ -1716,13 +1728,16 @@
 }
 
 .zl-live-caret {
-  animation: live-caret-blink 0.9s steps(1, end) infinite;
+  animation: liveCursorPulse 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite
+    alternate;
   background: var(--remote-color);
-  border-radius: 999px;
+  border-radius: 2px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--remote-color) 65%, transparent);
   display: inline-block;
   flex: 0 0 auto;
-  height: 1.25rem;
-  width: 0.22rem;
+  height: 1.15rem;
+  width: 0.35rem;
+  vertical-align: -0.12em;
 }
 
 .zl-live-draft-empty,

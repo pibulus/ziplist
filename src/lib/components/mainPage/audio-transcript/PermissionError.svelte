@@ -15,33 +15,49 @@
     "Refresh the page and try again",
   ];
 
-  if (browser) {
-    const platform = pwaService.getPlatformInfo();
+  import {
+    getInAppBrowserName,
+    getUnsupportedBrowserMessage,
+  } from "$lib/services/audio/inAppBrowser.js";
 
-    if (platform.isIOS) {
-      title = "Microphone Needs Access";
-      description =
-        "ZipList needs microphone access for voice lists. iPhone permissions are managed outside the app.";
-      steps = platform.isStandalone
-        ? [
-            "Open iOS Settings",
-            "Find ZipList or Safari",
-            "Allow Microphone, then reopen ZipList",
-          ]
-        : [
-            "Open iOS Settings",
-            "Go to Safari, then Microphone",
-            "Allow access, then reopen ZipList",
-          ];
-    } else if (platform.isAndroid) {
-      title = "Microphone Needs Access";
-      description =
-        "ZipList needs microphone access for voice lists. Update this site's microphone permission when you are ready.";
+  if (browser) {
+    const inApp = getInAppBrowserName();
+    if (inApp) {
+      title = `${inApp} Blocks the Microphone`;
+      description = getUnsupportedBrowserMessage();
       steps = [
-        "Open site settings from your browser menu",
-        'Set Microphone to "Allow"',
-        "Refresh ZipList and try again",
+        "Tap the ••• or share menu in this app",
+        'Select "Open in Safari" or "Open in Chrome"',
+        "Speak your list freely in your standard browser",
       ];
+    } else {
+      const platform = pwaService.getPlatformInfo();
+
+      if (platform.isIOS) {
+        title = "Microphone Needs Access";
+        description =
+          "ZipList needs microphone access for voice lists. iPhone permissions are managed outside the app.";
+        steps = platform.isStandalone
+          ? [
+              "Open iOS Settings",
+              "Find ZipList or Safari",
+              "Allow Microphone, then reopen ZipList",
+            ]
+          : [
+              "Open iOS Settings",
+              "Go to Safari, then Microphone",
+              "Allow access, then reopen ZipList",
+            ];
+      } else if (platform.isAndroid) {
+        title = "Microphone Needs Access";
+        description =
+          "ZipList needs microphone access for voice lists. Update this site's microphone permission when you are ready.";
+        steps = [
+          "Open site settings from your browser menu",
+          'Set Microphone to "Allow"',
+          "Refresh ZipList and try again",
+        ];
+      }
     }
   }
 

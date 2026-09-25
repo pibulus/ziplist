@@ -82,8 +82,26 @@
      resting color for the footer chrome (replaces the old hardcoded
      text-gray-600 literal). Defined per-theme below so it stays readable on
      every theme; light themes get a muted dark value, dark themes a light one. */
-  --footer-text-color: #4b5563;
+  --footer-text-color: #463f3a;
+  --footer-border-color: #1e1714;
   --footer-heart-color: var(--zl-accent-color);
+
+  /* Vibe Tokens - Single source of truth (TalkType parity) */
+  --zl-footer-pass-bg: #ff6ac2;
+  --zl-footer-pass-hover-bg: #ff7ecd;
+  --zl-footer-pass-ink: #1e1714;
+  --zl-footer-pass-glow: rgba(255, 106, 194, 0.35);
+  --zl-footer-pass-glow-hover: rgba(255, 106, 194, 0.55);
+
+  --zl-modal-close-bg: #ff5ca8;
+  --zl-modal-close-hover-bg: #ff6eb3;
+  --zl-modal-close-ink: #ffffff;
+
+  --zl-vibe-caret: #f472b6;
+  --zl-vibe-caret-glow: rgba(244, 114, 182, 0.45);
+  --zl-vibe-accent-text: #db2777;
+
+  --zl-footer-shadow: 0 -4px 16px rgba(255, 106, 194, 0.08);
 
   /* Default item and component styling */
   --zl-item-border-radius: 20px;
@@ -287,6 +305,22 @@ html[data-theme="highlighter"] {
   --app-suffix-anim: none;
   --app-suffix-stroke: none;
   --app-suffix-filter: drop-shadow(0 1px 3px rgba(255, 176, 0, 0.16));
+
+  /* VIBE TOKENS - Highlighter */
+  --zl-footer-pass-bg: #ff6ac2;
+  --zl-footer-pass-hover-bg: #ff7ecd;
+  --zl-footer-pass-ink: #1e1714;
+  --zl-footer-pass-glow: rgba(255, 106, 194, 0.35);
+  --zl-footer-pass-glow-hover: rgba(255, 106, 194, 0.55);
+
+  --zl-modal-close-bg: #ff5ca8;
+  --zl-modal-close-hover-bg: #ff6eb3;
+  --zl-modal-close-ink: #ffffff;
+
+  --zl-vibe-caret: #f472b6;
+  --zl-vibe-caret-glow: rgba(244, 114, 182, 0.45);
+  --zl-vibe-accent-text: #db2777;
+  --zl-footer-shadow: 0 -4px 16px rgba(255, 106, 194, 0.1);
 }
 
 /**
@@ -398,6 +432,22 @@ html[data-theme="sticky-note"] {
   --app-suffix-anim: none;
   --app-suffix-stroke: none;
   --app-suffix-filter: drop-shadow(0 1px 3px rgba(255, 179, 0, 0.16));
+
+  /* VIBE TOKENS - Sticky Note */
+  --zl-footer-pass-bg: #ffaa00;
+  --zl-footer-pass-hover-bg: #ffbb22;
+  --zl-footer-pass-ink: #1e1714;
+  --zl-footer-pass-glow: rgba(255, 170, 0, 0.35);
+  --zl-footer-pass-glow-hover: rgba(255, 170, 0, 0.55);
+
+  --zl-modal-close-bg: #ffaa00;
+  --zl-modal-close-hover-bg: #ffbb22;
+  --zl-modal-close-ink: #1e1714;
+
+  --zl-vibe-caret: #ffaa00;
+  --zl-vibe-caret-glow: rgba(255, 170, 0, 0.45);
+  --zl-vibe-accent-text: #d97706;
+  --zl-footer-shadow: 0 -4px 16px rgba(255, 170, 0, 0.12);
 }
 
 /**
@@ -506,6 +556,22 @@ html[data-theme="gel-pen"] {
   --app-suffix-anim: none;
   --app-suffix-stroke: none;
   --app-suffix-filter: drop-shadow(0 1px 3px rgba(224, 0, 107, 0.16));
+
+  /* VIBE TOKENS - Gel Pen */
+  --zl-footer-pass-bg: #2dd4bf;
+  --zl-footer-pass-hover-bg: #3bf0d8;
+  --zl-footer-pass-ink: #1e1714;
+  --zl-footer-pass-glow: rgba(45, 212, 191, 0.35);
+  --zl-footer-pass-glow-hover: rgba(45, 212, 191, 0.55);
+
+  --zl-modal-close-bg: #2dd4bf;
+  --zl-modal-close-hover-bg: #3bf0d8;
+  --zl-modal-close-ink: #1e1714;
+
+  --zl-vibe-caret: #2dd4bf;
+  --zl-vibe-caret-glow: rgba(45, 212, 191, 0.45);
+  --zl-vibe-accent-text: #0d9488;
+  --zl-footer-shadow: 0 -4px 16px rgba(45, 212, 191, 0.12);
 }
 
 /**
@@ -614,6 +680,22 @@ html[data-theme="legal-pad"] {
   --app-suffix-anim: none;
   --app-suffix-stroke: none;
   --app-suffix-filter: drop-shadow(0 1px 3px rgba(111, 163, 0, 0.16));
+
+  /* VIBE TOKENS - Legal Pad */
+  --zl-footer-pass-bg: #a3e635;
+  --zl-footer-pass-hover-bg: #bef264;
+  --zl-footer-pass-ink: #1e1714;
+  --zl-footer-pass-glow: rgba(163, 230, 53, 0.35);
+  --zl-footer-pass-glow-hover: rgba(163, 230, 53, 0.55);
+
+  --zl-modal-close-bg: #a3e635;
+  --zl-modal-close-hover-bg: #bef264;
+  --zl-modal-close-ink: #1e1714;
+
+  --zl-vibe-caret: #84cc16;
+  --zl-vibe-caret-glow: rgba(132, 204, 22, 0.45);
+  --zl-vibe-accent-text: #65a30d;
+  --zl-footer-shadow: 0 -4px 16px rgba(163, 230, 53, 0.12);
 }
 
 /**
