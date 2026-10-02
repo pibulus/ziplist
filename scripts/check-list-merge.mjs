@@ -3,6 +3,7 @@ import {
   mergeCollections,
   mergeSingleItem,
   mergeTombstones,
+  stampItemChanges,
 } from "../src/lib/services/lists/listMergeService.js";
 
 console.log("▶ Testing listMergeService LWW-Element-Set merge engine...");
@@ -254,6 +255,91 @@ console.log("▶ Testing listMergeService LWW-Element-Set merge engine...");
   assert.equal(mergeSingleItem(unticked, ticked).checked, false);
   assert.equal(mergeSingleItem(ticked, unticked).checkedAt, 4000);
   console.log("  ✓ Newer uncheck wins in both merge directions");
+}
+
+// Test: whole-array replacements (SingleList → upsertList) keep sync honest.
+// Each case merges against the OTHER device's untouched copy, because that
+// is where a missing stamp turns into a zombie or a reverted edit.
+{
+  const ticked = (id, text, t) => ({
+    id,
+    text,
+    checked: true,
+    completedAt: new Date(t).toISOString(),
+    checkedAt: t,
+    updatedAt: t,
+  });
+  const before = {
+    id: "l1",
+    updatedAt: 1000,
+    items: [
+      { id: "a", text: "Oat milk", checked: false, updatedAt: 1000 },
+      ticked("b", "Bread", 1000),
+    ],
+    deletedItemIds: {},
+  };
+  const otherDevice = structuredClone(before);
+  const mergeWithOther = (list) =>
+    mergeCollections({
+      localLists: [{ ...list, updatedAt: 9000 }],
+      incomingLists: [otherDevice],
+      now: 9000,
+    }).lists[0].items;
+
+  // Clear done: Bread vanishes, so it must leave a tombstone behind.
+  const cleared = stampItemChanges(before, [before.items[0]], 5000);
+  assert.equal(cleared.deletedItemIds.b, 5000);
+  assert.deepEqual(
+    mergeWithOther({ ...before, ...cleared }).map((i) => i.id),
+    ["a"],
+    "Cleared item must not come back from the other device",
+  );
+
+  // Undo: Bread returns and must outrank its own tombstone, even after the
+  // other device has already seen that tombstone.
+  const afterClear = { ...before, ...cleared };
+  const undone = stampItemChanges(afterClear, before.items, 6000);
+  assert.equal(undone.deletedItemIds.b, undefined);
+  const undoneMerged = mergeCollections({
+    localLists: [{ ...before, ...undone, updatedAt: 9000 }],
+    incomingLists: [{ ...otherDevice, deletedItemIds: { b: 5000 } }],
+    now: 9000,
+  }).lists[0].items;
+  assert.ok(
+    undoneMerged.some((i) => i.id === "b"),
+    "Undo must survive sync",
+  );
+
+  // Uncheck all: no completedAt left, so checkedAt has to carry the time.
+  const unchecked = stampItemChanges(
+    before,
+    before.items.map((i) => ({ ...i, checked: false, completedAt: undefined })),
+    7000,
+  );
+  assert.equal(unchecked.items[1].checkedAt, 7000);
+  assert.equal(
+    mergeWithOther({ ...before, ...unchecked }).find((i) => i.id === "b")
+      .checked,
+    false,
+  );
+
+  // Undoing the uncheck restores an OLDER checkedAt — still a new decision.
+  const afterUncheck = { ...before, ...unchecked };
+  const recheck = stampItemChanges(afterUncheck, before.items, 8000);
+  assert.equal(recheck.items[1].checkedAt, 8000);
+
+  // Tag/text edits through upsertList get a fresh updatedAt.
+  const retagged = stampItemChanges(
+    before,
+    [{ ...before.items[0], text: "Oat milk #dairy", tags: ["dairy"] }],
+    7500,
+  );
+  assert.equal(retagged.items[0].updatedAt, 7500);
+  assert.equal(
+    mergeWithOther({ ...before, ...retagged }).find((i) => i.id === "a").text,
+    "Oat milk #dairy",
+  );
+  console.log("  ✓ upsertList bookkeeping: clear, undo, uncheck, retag sync");
 }
 
 console.log("✅ All listMergeService tests passed successfully!");

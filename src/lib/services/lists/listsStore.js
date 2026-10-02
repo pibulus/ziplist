@@ -4,7 +4,11 @@ import { getContributorSnapshot } from "$lib";
 import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
 import { extractTags, normalizeTags } from "./itemTags.js";
 import { ensureDurableStorage } from "../infrastructure/durableStorage.js";
-import { mergeCollections, pruneStaleTombstones } from "./listMergeService.js";
+import {
+  mergeCollections,
+  pruneStaleTombstones,
+  stampItemChanges,
+} from "./listMergeService.js";
 import {
   encryptSyncEnvelope,
   decryptSyncEnvelope,
@@ -300,6 +304,19 @@ function normalizeListRecord(rawList, index = 0) {
     createdAt: list?.createdAt || timestamp,
     updatedAt: list?.updatedAt || list?.createdAt || timestamp,
   };
+}
+
+// The untouched starter list is a per-device tutorial, not data. It never
+// travels, and it steps aside when a real list with its id arrives — before
+// this, pairing a fresh phone renamed the other device's first list back to
+// "Blue List" and filled it with tutorial lines.
+function isPristineStarterList(list) {
+  const starter = DEFAULT_LISTS[0];
+  return (
+    list.id === starter.id &&
+    list.name === starter.name &&
+    list.items.every((item) => String(item.id).startsWith("starter-"))
+  );
 }
 
 function getUniqueListName(baseName, existingLists = []) {
@@ -1203,30 +1220,40 @@ function createListsStore() {
       const existingIndex = state.lists.findIndex(
         (list) => list.id === targetListId,
       );
+      const existing = existingIndex === -1 ? null : state.lists[existingIndex];
+      // Partial updates ({ id, isLive: false }) layer over the stored list.
+      // Normalized bare, they rebuilt it from nothing — no items, default
+      // name — which is how ending a live share used to empty the list.
+      const merged = { ...existing, ...listData, id: targetListId };
+      const items = Array.isArray(merged.items) ? merged.items : [];
+      const stamped = existing
+        ? stampItemChanges(existing, items)
+        : { items, deletedItemIds: merged.deletedItemIds };
+
+      let { deletedListIds } = state;
+      let updatedAt = listData.updatedAt || new Date().toISOString();
+      if (deletedListIds?.[targetListId]) {
+        // An undone list delete has to outrank its own tombstone, or the
+        // next sync deletes it again.
+        deletedListIds = { ...deletedListIds };
+        delete deletedListIds[targetListId];
+        updatedAt = new Date().toISOString();
+      }
+
       const normalizedList = normalizeListRecord(
-        {
-          ...listData,
-          id: targetListId,
-          items: Array.isArray(listData.items) ? listData.items : [],
-          updatedAt: listData.updatedAt || new Date().toISOString(),
-        },
+        { ...merged, ...stamped, updatedAt },
         existingIndex === -1 ? state.lists.length : existingIndex,
       );
 
-      if (existingIndex === -1) {
-        return {
-          ...state,
-          lists: [...state.lists, normalizedList],
-        };
-      }
-
       return {
         ...state,
-        lists: state.lists.map((list) =>
-          list.id === targetListId
-            ? { ...list, ...normalizedList, id: targetListId }
-            : list,
-        ),
+        deletedListIds,
+        lists:
+          existingIndex === -1
+            ? [...state.lists, normalizedList]
+            : state.lists.map((list) =>
+                list.id === targetListId ? normalizedList : list,
+              ),
       };
     });
 
@@ -1282,17 +1309,11 @@ function createListsStore() {
   ) {
     const state = get({ subscribe });
     const ownedLists = state.lists
-      .filter((l) => !l.id.startsWith("live_"))
+      .filter((l) => !l.id.startsWith("live_") && !isPristineStarterList(l))
       .map((l) => ({
         ...l,
         deletedItemIds: pruneStaleTombstones(l.deletedItemIds || {}),
       }));
-
-    let maxTimestamp = Date.now();
-    for (const l of ownedLists) {
-      const t = Date.parse(l.updatedAt || l.createdAt || 0) || 0;
-      if (t > maxTimestamp) maxTimestamp = t;
-    }
 
     const bundle = {
       version: 1,
@@ -1317,7 +1338,7 @@ function createListsStore() {
       iv: envelope.iv,
       ct: envelope.ct,
       salt: envelope.salt,
-      updatedAt: maxTimestamp,
+      updatedAt: Date.now(),
     };
   }
 
@@ -1355,18 +1376,36 @@ function createListsStore() {
 
     let mergeResult = null;
     update((state) => {
-      const maxLists = getMaxListCount();
+      const incomingIds = new Set(bundle.lists.map((l) => l.id));
       const reconciled = mergeCollections({
-        localLists: state.lists,
+        localLists: state.lists.filter(
+          (l) => !(isPristineStarterList(l) && incomingIds.has(l.id)),
+        ),
         incomingLists: bundle.lists,
         localDeletedListIds: state.deletedListIds || {},
         incomingDeletedListIds: bundle.deletedListIds || {},
-        maxLists,
+        maxLists: getMaxListCount(),
       });
 
-      const normalizedLists = reconciled.lists.map((l, index) =>
-        normalizeListRecord(l, index),
+      // mergeCollections only sees owned lists. Joined live lists (live_*)
+      // are rooms, not collection data — they keep their carousel slot
+      // instead of vanishing on every sync.
+      const merged = new Map(
+        reconciled.lists.map((l, index) => [
+          l.id,
+          normalizeListRecord(l, index),
+        ]),
       );
+      const normalizedLists = [];
+      for (const list of state.lists) {
+        if (list.id.startsWith("live_")) {
+          normalizedLists.push(list);
+        } else if (merged.has(list.id)) {
+          normalizedLists.push(merged.get(list.id));
+          merged.delete(list.id);
+        }
+      }
+      normalizedLists.push(...merged.values());
 
       let activeListId = state.activeListId;
       if (!normalizedLists.some((l) => l.id === activeListId)) {

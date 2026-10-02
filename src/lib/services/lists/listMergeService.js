@@ -297,3 +297,43 @@ export function mergeCollections({
     overflowCount,
   };
 }
+
+/**
+ * Sync bookkeeping for a whole-array item replacement. SingleList hands
+ * listsStore.upsertList entire new item arrays (clear done, undo, tag edits,
+ * resample), so that is the one door where this can't be skipped: an item
+ * that vanished gets a tombstone, one that came back loses its tombstone and
+ * outranks it, and one whose content changed gets fresh stamps so other
+ * devices' merges know it is the newer copy.
+ */
+export function stampItemChanges(prevList, nextItems, now = Date.now()) {
+  const prevById = new Map(prevList.items.map((item) => [item.id, item]));
+  const deleted = { ...(prevList.deletedItemIds || {}) };
+
+  const items = nextItems.map((item) => {
+    const prev = prevById.get(item.id);
+    prevById.delete(item.id);
+    let next = item;
+    if (deleted[item.id]) {
+      delete deleted[item.id];
+      next = { ...next, updatedAt: now };
+    }
+    if (!prev) return next;
+    if (
+      prev.checked !== next.checked &&
+      !((next.checkedAt || 0) > (prev.checkedAt || 0))
+    ) {
+      next = { ...next, checkedAt: now, updatedAt: now };
+    }
+    if (
+      (prev.text !== next.text || String(prev.tags) !== String(next.tags)) &&
+      !(getItemTimestamp(next) > getItemTimestamp(prev))
+    ) {
+      next = { ...next, updatedAt: now };
+    }
+    return next;
+  });
+
+  for (const id of prevById.keys()) deleted[id] = now;
+  return { items, deletedItemIds: pruneStaleTombstones(deleted, now) };
+}
