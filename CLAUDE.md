@@ -151,6 +151,15 @@ of solving it is worse than no rule.
 - **realtime/**: PartyKit live collaboration (liveListsService, partyService, presenceStore, typingStore, avatarService)
 - **party/listRoom.ts**: PartyKit room server for validated live-list snapshots
   and ephemeral presence
+- **realtime/deviceSyncStore.js** + **syncCrypto.js** + **lists/listMergeService.js**:
+  Device Sync — every list on every paired device, AES-GCM sealed client-side,
+  relayed by `worker/index.ts` (`zl_p*` rooms). Pairing is by link only (QR,
+  opened link, or pasted link); the key lives in the `#k=` fragment. Every
+  item mutation must stamp `updatedAt`/`checkedAt` and every removal must
+  tombstone — store methods do it directly, whole-array replacements get it
+  from `upsertList` → `stampItemChanges`. Spec + verify commands:
+  `docs/DEVICE_SYNC_SPEC.md`. After any worker change run
+  `node scripts/verify-live-relay-sync.mjs` (wrangler never type-checks).
 
 ### Modal System
 
