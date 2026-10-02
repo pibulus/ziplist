@@ -2,52 +2,27 @@
   import "../app.css";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
-  import { goto } from "$app/navigation";
   import Toast from "$lib/components/Toast.svelte";
   import PwaInstallCard from "$lib/components/PwaInstallCard.svelte";
-  import {
-    normalizeSyncPhrase,
-    isValidSyncPhrase,
-    deriveRoomIdFromPhrase,
-  } from "$lib/services/realtime/syncPhrase.js";
+  import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
 
   let { children } = $props();
 
   if (browser) {
     onMount(async () => {
-      const params = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(
-        window.location.hash.replace(/^#/, ""),
-      );
-      const rawSync = params.get("sync") || hashParams.get("sync");
-
-      if (rawSync) {
-        const syncPhrase = normalizeSyncPhrase(rawSync);
-        if (isValidSyncPhrase(syncPhrase)) {
-          params.delete("sync");
-          hashParams.delete("sync");
-          const newQuery = params.toString();
-          const newHash = hashParams.toString();
-          const newUrl =
-            window.location.pathname +
-            (newQuery ? `?${newQuery}` : "") +
-            (newHash ? `#${newHash}` : "");
-          window.history.replaceState({}, "", newUrl);
-
-          window.dispatchEvent(
-            new CustomEvent("ziplist:toast", {
-              detail: {
-                type: "success",
-                message: `Linked device sync: ${syncPhrase} ⚡`,
-              },
-            }),
-          );
-
-          const roomId = await deriveRoomIdFromPhrase(syncPhrase);
-          if (roomId && !window.location.pathname.startsWith("/live/")) {
-            await goto(`/live/${roomId}`);
-          }
-        }
+      const handled = deviceSyncStore.handleIncomingUrl();
+      if (handled) {
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              type: "success",
+              message: "Linked with your other device! ⚡",
+            },
+          }),
+        );
+      } else {
+        // Connect to sync room if credentials already exist
+        deviceSyncStore.connect();
       }
     });
   }

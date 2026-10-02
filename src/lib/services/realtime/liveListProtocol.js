@@ -12,6 +12,7 @@ export const LIVE_MESSAGE_TYPES = Object.freeze({
   VOICE_ACTIVITY: "voice_activity",
   HEART: "heart",
   ITEM_CHECKED: "item_checked",
+  SYNC_ENVELOPE: "sync_envelope",
 });
 
 export const LIVE_CLOSE_CODES = Object.freeze({
@@ -282,10 +283,34 @@ function normalizeVoiceActivityData(data) {
   };
 }
 
+export function sanitizeSyncEnvelope(input) {
+  if (!isRecord(input)) return null;
+  if (typeof input.iv !== "string" || !input.iv || input.iv.length > 64)
+    return null;
+  if (typeof input.ct !== "string" || !input.ct || input.ct.length > 5_000_000)
+    return null;
+  const updatedAt =
+    typeof input.updatedAt === "number" ? input.updatedAt : Date.now();
+  const envelope = {
+    type: LIVE_MESSAGE_TYPES.SYNC_ENVELOPE,
+    version: Number(input.version) || 1,
+    iv: input.iv,
+    ct: input.ct,
+    updatedAt,
+  };
+  if (typeof input.salt === "string" && input.salt.length <= 64) {
+    envelope.salt = input.salt;
+  }
+  return envelope;
+}
+
 export function normalizeLiveMessage(input) {
   if (!isRecord(input)) return null;
 
   switch (input.type) {
+    case LIVE_MESSAGE_TYPES.SYNC_ENVELOPE:
+      return sanitizeSyncEnvelope(input);
+
     case LIVE_MESSAGE_TYPES.LIST_UPDATE: {
       const data = sanitizeLiveListData(input.data);
       return data ? { type: LIVE_MESSAGE_TYPES.LIST_UPDATE, data } : null;

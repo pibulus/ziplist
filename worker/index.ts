@@ -83,6 +83,7 @@ type ConnectionState = {
   id: string;
   avatar: string;
   joinedAt: number;
+  isSync?: boolean;
 };
 
 // SHA-256 hash of the room password, hex-encoded. Salting is intentionally
@@ -120,6 +121,15 @@ export class ListRoom {
     private env: Env,
   ) {}
 
+  private isSyncRoom(url: URL): boolean {
+    const roomId = decodeURIComponent(url.pathname.split("/").pop() || "");
+    return roomId.startsWith("zl_p") || roomId.startsWith("zl_sync_");
+  }
+
+  async alarm() {
+    await this.ctx.storage.deleteAll();
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
@@ -132,6 +142,14 @@ export class ListRoom {
     }
 
     if (request.method === "GET") {
+      if (this.isSyncRoom(url)) {
+        const storedEnvelope = await this.ctx.storage.get("sync_envelope");
+        if (!storedEnvelope) {
+          return json({ error: "No sync envelope yet" }, 404);
+        }
+        return json(storedEnvelope);
+      }
+
       if (!(await this.isPasswordAllowed(url))) {
         return json({ error: "Forbidden" }, 403);
       }
@@ -162,6 +180,26 @@ export class ListRoom {
 
     this.ctx.acceptWebSocket(server);
 
+    const isSync = this.isSyncRoom(url);
+
+    server.serializeAttachment({
+      id: crypto.randomUUID(),
+      avatar: sanitizeAvatar(
+        url.searchParams.get("avatar") || (isSync ? "Device" : "Guest"),
+      ),
+      joinedAt: Date.now(),
+      isSync,
+    } satisfies ConnectionState);
+
+    if (isSync) {
+      const storedEnvelope = await this.ctx.storage.get("sync_envelope");
+      if (storedEnvelope) {
+        server.send(JSON.stringify(storedEnvelope));
+      }
+      this.broadcastPresence();
+      return new Response(null, { status: 101, webSocket: client });
+    }
+
     // Rejections accept the socket first and then close with a code, rather
     // than returning an HTTP error. The client distinguishes "room not found"
     // from "expired" by close code, and a failed upgrade carries neither.
@@ -184,12 +222,6 @@ export class ListRoom {
 
     const metadata = await this.touchRoomMetadata(roomState.metadata);
 
-    server.serializeAttachment({
-      id: crypto.randomUUID(),
-      avatar: sanitizeAvatar(url.searchParams.get("avatar")),
-      joinedAt: Date.now(),
-    } satisfies ConnectionState);
-
     server.send(
       JSON.stringify({
         type: LIVE_MESSAGE_TYPES.INIT,
@@ -206,15 +238,8 @@ export class ListRoom {
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
     if (typeof message !== "string") return;
 
-    const roomState = await this.getRoomState();
-    if (!roomState.listData) {
-      ws.close(LIVE_CLOSE_CODES.ROOM_NOT_FOUND, "Live list not found");
-      return;
-    }
-    if (roomState.expired) {
-      ws.close(LIVE_CLOSE_CODES.ROOM_EXPIRED, "Live list expired");
-      return;
-    }
+    const user = ws.deserializeAttachment() as ConnectionState | null;
+    const isSync = Boolean(user?.isSync);
 
     let parsed: unknown = null;
     try {
@@ -225,6 +250,30 @@ export class ListRoom {
 
     const normalized = normalizeLiveMessage(parsed);
     if (!normalized) return;
+
+    if (isSync) {
+      if (normalized.type === LIVE_MESSAGE_TYPES.SYNC_ENVELOPE) {
+        await this.ctx.storage.put("sync_envelope", normalized);
+        // Retain for 30 days
+        await this.ctx.storage.setAlarm(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      }
+      const sender = this.getPresenceUser(ws);
+      this.broadcast(
+        JSON.stringify({ ...normalized, sender }),
+        sender?.id ?? null,
+      );
+      return;
+    }
+
+    const roomState = await this.getRoomState();
+    if (!roomState.listData) {
+      ws.close(LIVE_CLOSE_CODES.ROOM_NOT_FOUND, "Live list not found");
+      return;
+    }
+    if (roomState.expired) {
+      ws.close(LIVE_CLOSE_CODES.ROOM_EXPIRED, "Live list expired");
+      return;
+    }
 
     if (normalized.type === LIVE_MESSAGE_TYPES.LIST_UPDATE) {
       await this.saveListData(normalized.data as ListData);
@@ -466,7 +515,7 @@ export class ListRoom {
  * tighter risks 404ing a room minted by an older build, which would break a
  * link somebody already shared.
  */
-const ROOM_ID_PATTERN = /^zl_p?[0-9a-f-]{16,48}$/;
+const ROOM_ID_PATTERN = /^(zl_sync_[0-9a-f-]{16,64}|zl_p?[0-9a-f-]{16,48})$/;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {

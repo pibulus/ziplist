@@ -38,7 +38,7 @@ function isLocalNetworkHost(hostname) {
  * Get the PartyKit host based on environment
  * @returns {string} PartyKit host URL
  */
-function getPartyKitHost() {
+export function getPartyKitHost() {
   if (typeof window === "undefined") {
     return getConfiguredPartyKitHost();
   }

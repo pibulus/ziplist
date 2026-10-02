@@ -49,6 +49,7 @@ Release baseline:
 What is shipped & live:
 
 - **RiffRap pastel waterfall gradient** with 12:1 WCAG AAA text contrast
+- **Sovereign Device Sync**: Zero-knowledge E2EE multi-list sync and continuous catch-up across mobile and desktop. 30-day tombstones permanently prevent zombie resurrections, 500ms debounced snapshot envelopes prevent echo storms, Cloudflare DO relay stores opaque envelopes for 30 days, and pairing via QR bundle `#k=<key>&code=<code>` brings full collection + Contributor unlock in one scan.
 - **1-layer modular hierarchy**: `## Section` headers, movable divider bars (`##` / `---`), and `→ List Portals` with spring roulette flipping
 - **Tag engine & resampling**: `#tag` filtering + 1-tap `[ ✂️ Resample to new list ]`
 - **1-Tap 'Clear done' & 'Clear list'**: instant list cleanup with a 5.5s tactile Undo toast safety net

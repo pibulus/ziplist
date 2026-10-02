@@ -4,6 +4,11 @@ import { getContributorSnapshot } from "$lib";
 import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
 import { extractTags, normalizeTags } from "./itemTags.js";
 import { ensureDurableStorage } from "../infrastructure/durableStorage.js";
+import { mergeCollections, pruneStaleTombstones } from "./listMergeService.js";
+import {
+  encryptSyncEnvelope,
+  decryptSyncEnvelope,
+} from "../realtime/syncCrypto.js";
 
 export const LIST_COLOR_PRESETS = [
   {
@@ -291,6 +296,7 @@ function normalizeListRecord(rawList, index = 0) {
     // snapshot — arrives already obeying the order invariant, so lists saved
     // by older builds heal on first load.
     items: withCompletedLast(Array.isArray(list?.items) ? list.items : []),
+    deletedItemIds: pruneStaleTombstones(list?.deletedItemIds || {}),
     createdAt: list?.createdAt || timestamp,
     updatedAt: list?.updatedAt || list?.createdAt || timestamp,
   };
@@ -380,6 +386,7 @@ function createListsStore() {
   const { subscribe, set, update } = writable({
     lists: [],
     activeListId: null,
+    deletedListIds: {},
     version: CURRENT_VERSION,
   });
 
@@ -392,6 +399,23 @@ function createListsStore() {
 
     try {
       const rawListsJSON = localStorage.getItem(STORAGE_KEYS.LISTS);
+      const rawDeletedJSON = localStorage.getItem(
+        STORAGE_KEYS.DELETED_LIST_IDS,
+      );
+      let storedDeletedListIds = {};
+      try {
+        if (rawDeletedJSON) {
+          storedDeletedListIds = pruneStaleTombstones(
+            JSON.parse(rawDeletedJSON),
+          );
+        }
+      } catch (err) {
+        console.warn(
+          "[ListsStore] Could not parse deleted list tombstones:",
+          err,
+        );
+      }
+
       let storedLists = null;
 
       try {
@@ -459,6 +483,7 @@ function createListsStore() {
         set({
           lists: finalLists,
           activeListId: resolvedActiveListId,
+          deletedListIds: storedDeletedListIds,
           version: CURRENT_VERSION,
         });
 
@@ -479,6 +504,7 @@ function createListsStore() {
         set({
           lists: defaultLists,
           activeListId: defaultLists[0].id,
+          deletedListIds: storedDeletedListIds,
           version: CURRENT_VERSION,
         });
 
@@ -496,6 +522,7 @@ function createListsStore() {
       set({
         lists: fallbackLists,
         activeListId: fallbackLists[0].id,
+        deletedListIds: {},
         version: CURRENT_VERSION,
       });
     }
@@ -536,6 +563,12 @@ function createListsStore() {
         state.activeListId || "",
       );
       localStorage.setItem(STORAGE_KEYS.LISTS_VERSION, String(state.version));
+      if (state.deletedListIds) {
+        localStorage.setItem(
+          STORAGE_KEYS.DELETED_LIST_IDS,
+          JSON.stringify(pruneStaleTombstones(state.deletedListIds)),
+        );
+      }
 
       // Every write lands here, so this is the one place that knows the user
       // has data worth keeping. Fire-and-forget, at most once per browser —
@@ -696,9 +729,15 @@ function createListsStore() {
         activeListId = newLists[0].id;
       }
 
+      const nextDeleted = {
+        ...(state.deletedListIds || {}),
+        [listId]: Date.now(),
+      };
+
       return {
         ...state,
         lists: newLists,
+        deletedListIds: pruneStaleTombstones(nextDeleted),
         activeListId,
       };
     });
@@ -767,6 +806,7 @@ function createListsStore() {
               addedCount: 1,
               message: getLongListNudge(list.items.length, nextCount),
             });
+            const nowTime = Date.now();
             return {
               ...list,
               items: withCompletedLast([
@@ -775,11 +815,12 @@ function createListsStore() {
                   text: normalizedText,
                   checked: false,
                   tags,
-                  addedAt: Date.now(), // entry-date sort key
+                  addedAt: nowTime, // entry-date sort key
+                  updatedAt: nowTime,
                 },
                 ...list.items,
               ]),
-              updatedAt: new Date().toISOString(),
+              updatedAt: new Date(nowTime).toISOString(),
             };
           }
           return list;
@@ -845,6 +886,7 @@ function createListsStore() {
               tags: entry.tags ?? [],
               order: list.items.length + index, // Add order field to maintain sort order
               addedAt: stamp + index, // entry-date sort key (index keeps batch order)
+              updatedAt: stamp + index,
             }));
 
             if (newItems.length === 0) {
@@ -875,7 +917,7 @@ function createListsStore() {
             return {
               ...list,
               items: withCompletedLast([...newItems, ...list.items]),
-              updatedAt: new Date().toISOString(),
+              updatedAt: new Date(stamp + newItems.length).toISOString(),
             };
           }
           return list;
@@ -911,6 +953,7 @@ function createListsStore() {
                       checked: !item.checked,
                       // Add completedAt timestamp when checked, remove it when unchecked
                       completedAt: !item.checked ? now : undefined,
+                      updatedAt: Date.now(),
                     };
                   }
                   return item;
@@ -952,6 +995,7 @@ function createListsStore() {
                       // source of truth, so there's no second thing to keep in
                       // sync and no way for the two to disagree.
                       tags,
+                      updatedAt: Date.now(),
                     }
                   : item,
               ),
@@ -974,9 +1018,14 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
+            const nextDeleted = {
+              ...(list.deletedItemIds || {}),
+              [itemId]: Date.now(),
+            };
             return {
               ...list,
               items: list.items.filter((item) => item.id !== itemId),
+              deletedItemIds: pruneStaleTombstones(nextDeleted),
               updatedAt: new Date().toISOString(),
             };
           }
@@ -1027,22 +1076,32 @@ function createListsStore() {
 
       const nextLists = state.lists.map((list) => {
         if (list.id === fromListId) {
+          const nextDeleted = {
+            ...(list.deletedItemIds || {}),
+            [itemId]: Date.now(),
+          };
           return {
             ...list,
             items: list.items
               .filter((item) => item.id !== itemId)
               .map((item, index) => ({ ...item, order: index })),
+            deletedItemIds: pruneStaleTombstones(nextDeleted),
             updatedAt: timestamp,
           };
         }
 
         if (list.id === toListId) {
           const nextItems = [...list.items];
-          nextItems.splice(resolvedInsertIndex, 0, itemToMove);
+          const movedItem = { ...itemToMove, updatedAt: Date.now() };
+          nextItems.splice(resolvedInsertIndex, 0, movedItem);
+
+          const nextDeleted = { ...(list.deletedItemIds || {}) };
+          delete nextDeleted[itemId];
 
           return {
             ...list,
             items: nextItems.map((item, index) => ({ ...item, order: index })),
+            deletedItemIds: nextDeleted,
             updatedAt: timestamp,
           };
         }
@@ -1078,10 +1137,20 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
+            const now = Date.now();
+            const clearedTombstones = {};
+            for (const item of list.items) {
+              clearedTombstones[item.id] = now;
+            }
+            const nextDeleted = {
+              ...(list.deletedItemIds || {}),
+              ...clearedTombstones,
+            };
             return {
               ...list,
               items: [],
-              updatedAt: new Date().toISOString(),
+              deletedItemIds: pruneStaleTombstones(nextDeleted),
+              updatedAt: new Date(now).toISOString(),
             };
           }
           return list;
@@ -1202,6 +1271,122 @@ function createListsStore() {
     persistCriticalChange();
   }
 
+  // Export the full collection bundle, optionally encrypted into an AES-GCM envelope
+  async function exportCollectionBundle(
+    keyOrPassphrase = null,
+    optionalSalt = null,
+  ) {
+    const state = get({ subscribe });
+    const ownedLists = state.lists
+      .filter((l) => !l.id.startsWith("live_"))
+      .map((l) => ({
+        ...l,
+        deletedItemIds: pruneStaleTombstones(l.deletedItemIds || {}),
+      }));
+
+    let maxTimestamp = Date.now();
+    for (const l of ownedLists) {
+      const t = Date.parse(l.updatedAt || l.createdAt || 0) || 0;
+      if (t > maxTimestamp) maxTimestamp = t;
+    }
+
+    const bundle = {
+      version: 1,
+      schema: "ziplist_collection_bundle",
+      exportedAt: Date.now(),
+      lists: ownedLists,
+      deletedListIds: pruneStaleTombstones(state.deletedListIds || {}),
+    };
+
+    if (!keyOrPassphrase) {
+      return bundle;
+    }
+
+    const envelope = await encryptSyncEnvelope(
+      bundle,
+      keyOrPassphrase,
+      optionalSalt,
+    );
+    return {
+      type: "sync_envelope",
+      version: 1,
+      iv: envelope.iv,
+      ct: envelope.ct,
+      salt: envelope.salt,
+      updatedAt: maxTimestamp,
+    };
+  }
+
+  // Import a collection bundle (raw object or encrypted sync envelope) and two-way merge
+  async function importCollectionBundle(
+    payload,
+    keyOrPassphrase = null,
+    optionalSalt = null,
+  ) {
+    if (!payload) return { ok: false, error: "Empty payload" };
+
+    let bundle = payload;
+    if (payload.ct && payload.iv) {
+      if (!keyOrPassphrase) {
+        return {
+          ok: false,
+          error: "Missing decryption key for encrypted bundle",
+        };
+      }
+      try {
+        bundle = await decryptSyncEnvelope(
+          payload,
+          keyOrPassphrase,
+          optionalSalt,
+        );
+      } catch (err) {
+        console.error("[ListsStore] Failed to decrypt collection bundle:", err);
+        return { ok: false, error: "Decryption failed" };
+      }
+    }
+
+    if (!bundle || !Array.isArray(bundle.lists)) {
+      return { ok: false, error: "Invalid bundle structure" };
+    }
+
+    let mergeResult = null;
+    update((state) => {
+      const maxLists = getMaxListCount();
+      const reconciled = mergeCollections({
+        localLists: state.lists,
+        incomingLists: bundle.lists,
+        localDeletedListIds: state.deletedListIds || {},
+        incomingDeletedListIds: bundle.deletedListIds || {},
+        maxLists,
+      });
+
+      const normalizedLists = reconciled.lists.map((l, index) =>
+        normalizeListRecord(l, index),
+      );
+
+      let activeListId = state.activeListId;
+      if (!normalizedLists.some((l) => l.id === activeListId)) {
+        activeListId = normalizedLists[0]?.id || null;
+      }
+
+      mergeResult = {
+        ok: true,
+        listsCount: normalizedLists.length,
+        overflowCount: reconciled.overflowCount,
+      };
+
+      return {
+        ...state,
+        lists: normalizedLists,
+        deletedListIds: reconciled.deletedListIds,
+        activeListId,
+      };
+    });
+
+    persistCriticalChange();
+    return mergeResult;
+  }
+
   // Initialize when created
   initialize();
 
@@ -1224,6 +1409,8 @@ function createListsStore() {
     reorderItems,
     getAllTags,
     persistToStorage,
+    exportCollectionBundle,
+    importCollectionBundle,
   };
 }
 

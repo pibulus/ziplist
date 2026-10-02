@@ -51,6 +51,9 @@ export const STORAGE_KEYS = {
   LISTS: "ziplist-lists",
   ACTIVE_LIST_ID: "ziplist-active-list-id",
   LISTS_VERSION: "ziplist-lists-version",
+  DELETED_LIST_IDS: "ziplist-deleted-list-ids",
+  SYNC_PHRASE: "ziplist-sync-phrase",
+  SYNC_KEY: "ziplist-sync-key",
   // Remembers that we've already asked the browser for durable storage, so a
   // user who declined Firefox's prompt isn't asked again on every save.
   DURABLE_STORAGE_ASKED: "ziplist-durable-storage-asked",

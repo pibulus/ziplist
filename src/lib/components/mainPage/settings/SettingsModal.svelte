@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte";
-  import { goto } from "$app/navigation";
   import { theme, listFirstMode, applyTheme, isContributor } from "$lib";
   import { STORAGE_KEYS, THEMES } from "$lib/constants";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
@@ -12,8 +11,9 @@
     rerollAvatar,
   } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
-  import * as liveListsService from "$lib/services/realtime/liveListsService";
   import ModalCloseButton from "../modals/ModalCloseButton.svelte";
+  import { QrShareModal } from "../modals/index.js";
+  import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -105,32 +105,95 @@
   // lists at three, and an import that can fail on a limit is a worse feature
   // than one that always works.
 
-  // ── Device sync ────────────────────────────────────────────────────────
-  let joinPhrase = "";
-  let syncStatus = "";
+  // ── Sovereign Device Sync ────────────────────────────────────────────────
+  let showSyncQr = false;
+  let manualPhrase = "";
+  let manualKeyOrCode = "";
+  let manualSyncError = "";
+  let showManualInput = false;
+  let copyLinkFeedback = false;
+  let copyPhraseFeedback = false;
   let syncBusy = false;
 
-  async function handleJoinSync() {
-    if (!joinPhrase.trim()) return;
+  async function handleEnableSync() {
+    soundService.select();
     syncBusy = true;
-    syncStatus = "";
     try {
-      const result = await liveListsService.joinByPhrase(joinPhrase);
-      if (result.success) {
-        joinPhrase = "";
-        // Every door in should lead to the same live view — the one place
-        // with the "keep or leave" choice. Joining from Settings used to
-        // drop the list silently into the carousel with no way to keep it.
-        await goto(`/live/${result.roomId}`);
+      await deviceSyncStore.enableSync();
+    } finally {
+      syncBusy = false;
+    }
+  }
+
+  async function handleCopySyncLink() {
+    if (!$deviceSyncStore.shareUrl) return;
+    try {
+      await navigator.clipboard.writeText($deviceSyncStore.shareUrl);
+      copyLinkFeedback = true;
+      soundService.copySuccess({ force: true });
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: {
+            message: "Pairing link copied to clipboard! 📋",
+            type: "success",
+          },
+        }),
+      );
+      setTimeout(() => {
+        copyLinkFeedback = false;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy link:", err);
+    }
+  }
+
+  async function handleCopySyncPhrase() {
+    if (!$deviceSyncStore.phrase) return;
+    try {
+      await navigator.clipboard.writeText($deviceSyncStore.phrase);
+      copyPhraseFeedback = true;
+      soundService.copySuccess({ force: true });
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: {
+            message: "Pairing phrase copied! 🔑",
+            type: "success",
+          },
+        }),
+      );
+      setTimeout(() => {
+        copyPhraseFeedback = false;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy phrase:", err);
+    }
+  }
+
+  async function handleManualPairSubmit() {
+    if (!manualPhrase.trim()) return;
+    manualSyncError = "";
+    syncBusy = true;
+    try {
+      const result = await deviceSyncStore.pairManually(
+        manualPhrase,
+        manualKeyOrCode,
+      );
+      if (!result.ok) {
+        manualSyncError = result.error;
       } else {
-        syncStatus =
-          result.reason === "invalid"
-            ? "That should be four words, like quiet-satchel-sighs-midair."
-            : "No list waiting on those words. Check the spelling?";
+        soundService.select();
+        showManualInput = false;
+        manualPhrase = "";
+        manualKeyOrCode = "";
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              message: "Connected and synced with device! ⚡",
+              type: "success",
+            },
+          }),
+        );
       }
-    } catch (error) {
-      console.error("Sync join failed:", error);
-      syncStatus = "That did not connect. Try again in a moment.";
     } finally {
       syncBusy = false;
     }
@@ -317,46 +380,126 @@
         </div>
       </section>
 
-      <!-- Receiving is the one inbound action with no list to hang off — the
-           list isn't here yet. Sending lives on the list itself.
-
-           This said "Link a device / Sync with 4-word passphrase" and that was
-           a promise the app does not keep: joinByPhrase resolves to ONE room,
-           which is ONE list (liveListsService.js:217). Device-wide sync of
-           every list does not exist. The words bring a single list across, so
-           that is what it says now. The QR from the sending list opens the
-           same room — any phone camera reads it, so there is no scanner in
-           here to build. -->
-      <section class="zl-settings-section" aria-label="Bring a list in">
-        <div class="zl-setting-row zl-sync-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Bring a list in</span>
-            <p class="zl-setting-desc">
-              Four words from the device that has it. Its QR opens the same
-              room.
-            </p>
+      <!-- Sovereign Device Sync: all lists & unlocks synced with zero-knowledge encryption -->
+      <section class="zl-settings-section" aria-label="Device Sync">
+        <div class="zl-sync-card">
+          <div class="zl-sync-header">
+            <div>
+              <span class="zl-setting-name">Device Sync</span>
+              <p class="zl-setting-desc">
+                Sync all lists between phone & laptop. Encrypted on device.
+              </p>
+            </div>
+            {#if $deviceSyncStore.enabled}
+              <div
+                class="zl-sync-status-pill"
+                class:connected={$deviceSyncStore.status === "connected"}
+                class:syncing={$deviceSyncStore.status === "syncing"}
+              >
+                <span class="zl-sync-dot"></span>
+                <span>
+                  {#if $deviceSyncStore.status === "syncing"}
+                    Syncing...
+                  {:else if $deviceSyncStore.status === "connected"}
+                    {$deviceSyncStore.peerCount > 1
+                      ? `${$deviceSyncStore.peerCount} devices`
+                      : "Active"}
+                  {:else if $deviceSyncStore.status === "connecting"}
+                    Connecting...
+                  {:else}
+                    Offline
+                  {/if}
+                </span>
+              </div>
+            {/if}
           </div>
-          <div class="zl-sync-receive">
-            <input
-              class="zl-sync-input"
-              bind:value={joinPhrase}
-              placeholder="quiet-satchel-sighs-midair"
-              aria-label="Four-word phrase from the sending device"
-              on:keydown={(e) => e.key === "Enter" && handleJoinSync()}
-            />
+
+          {#if $deviceSyncStore.enabled}
+            <div class="zl-sync-active-box">
+              <div class="zl-sync-phrase-row">
+                <span class="zl-sync-phrase-label">Pairing phrase</span>
+                <button
+                  type="button"
+                  class="zl-sync-phrase-display"
+                  on:click={handleCopySyncPhrase}
+                  title="Click to copy phrase"
+                >
+                  <code>{$deviceSyncStore.phrase}</code>
+                  <span class="zl-copy-icon"
+                    >{copyPhraseFeedback ? "✓" : "📋"}</span
+                  >
+                </button>
+              </div>
+
+              <div class="zl-sync-actions">
+                <button
+                  type="button"
+                  class="zl-sync-btn zl-sync-btn-primary"
+                  on:click={() => (showSyncQr = true)}
+                >
+                  <span>📷</span> Show QR Code
+                </button>
+                <button
+                  type="button"
+                  class="zl-sync-btn"
+                  on:click={handleCopySyncLink}
+                >
+                  <span>{copyLinkFeedback ? "✓ Copied" : "🔗 Copy Link"}</span>
+                </button>
+              </div>
+            </div>
+          {:else}
+            <div class="zl-sync-setup-box">
+              <button
+                type="button"
+                class="zl-sync-btn zl-sync-btn-primary zl-sync-enable-btn"
+                disabled={syncBusy}
+                on:click={handleEnableSync}
+              >
+                <span>⚡</span> Turn On Device Sync
+              </button>
+            </div>
+          {/if}
+
+          <!-- Manual pairing toggle -->
+          <div class="zl-sync-manual-toggle">
             <button
               type="button"
-              class="zl-sync-copy"
-              disabled={syncBusy || !joinPhrase}
-              on:click={handleJoinSync}
+              class="zl-sync-link-btn"
+              on:click={() => (showManualInput = !showManualInput)}
             >
-              Go
+              {showManualInput
+                ? "▲ Hide manual pairing"
+                : "▼ Pair with another device's phrase"}
             </button>
           </div>
+
+          {#if showManualInput}
+            <div class="zl-sync-manual-box">
+              <input
+                class="zl-sync-input"
+                bind:value={manualPhrase}
+                placeholder="sneaky-lynx-preens-streetside"
+                aria-label="4-word phrase from other device"
+                on:keydown={(e) =>
+                  e.key === "Enter" && handleManualPairSubmit()}
+              />
+              <div class="zl-sync-manual-submit-row">
+                <button
+                  type="button"
+                  class="zl-sync-btn zl-sync-btn-primary"
+                  disabled={syncBusy || !manualPhrase.trim()}
+                  on:click={handleManualPairSubmit}
+                >
+                  {syncBusy ? "Connecting..." : "Pair Device"}
+                </button>
+              </div>
+              {#if manualSyncError}
+                <p class="zl-sync-error">{manualSyncError}</p>
+              {/if}
+            </div>
+          {/if}
         </div>
-        {#if syncStatus}
-          <p class="zl-sync-hint" role="status">{syncStatus}</p>
-        {/if}
       </section>
 
       <section
@@ -387,6 +530,16 @@
     tabindex="-1"
     on:click={handleModalClose}
   ></button>
+
+  {#if showSyncQr && $deviceSyncStore.shareUrl}
+    <QrShareModal
+      closeModal={() => (showSyncQr = false)}
+      shareUrl={$deviceSyncStore.shareUrl}
+      title="Pair Another Device"
+      subtitle="Scan with your phone camera to sync all lists"
+      syncPhrase={$deviceSyncStore.phrase}
+    />
+  {/if}
 </dialog>
 
 <style>
@@ -514,72 +667,217 @@
     outline-offset: 3px;
   }
 
-  .zl-sync-row {
-    align-items: flex-start;
+  .zl-sync-card {
+    background: #fffdf5;
+    border: 2px solid #1e1714;
+    border-radius: 16px;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    box-shadow: 2px 2px 0px #1e1714;
   }
 
-  .zl-sync-copy {
-    font-family: inherit;
-    font-size: 0.8rem;
+  .zl-sync-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .zl-sync-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    padding: 0.42rem 0.85rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1.5px solid #1e1714;
+    background: #f3f4f6;
+    color: #1e1714;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .zl-sync-status-pill.connected {
+    background: #dcfce7;
+  }
+
+  .zl-sync-status-pill.syncing {
+    background: #fef08a;
+  }
+
+  .zl-sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #9ca3af;
+  }
+
+  .zl-sync-status-pill.connected .zl-sync-dot {
+    background: #22c55e;
+  }
+
+  .zl-sync-status-pill.syncing .zl-sync-dot {
+    background: #eab308;
+  }
+
+  .zl-sync-active-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .zl-sync-phrase-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .zl-sync-phrase-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .zl-sync-phrase-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 2px solid #1e1714;
+    border-radius: 10px;
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    text-align: left;
+    transition:
+      transform 0.1s ease,
+      box-shadow 0.1s ease;
+  }
+
+  .zl-sync-phrase-display:hover {
+    transform: translateY(-1px);
+    box-shadow: 1px 1px 0px #1e1714;
+  }
+
+  .zl-sync-phrase-display code {
+    font-family: "Space Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1e1714;
+  }
+
+  .zl-copy-icon {
+    font-size: 0.85rem;
+    opacity: 0.75;
+  }
+
+  .zl-sync-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .zl-sync-btn {
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    padding: 0.45rem 0.75rem;
     border-radius: 999px;
     border: 2px solid #1e1714;
     background: #fffdf5;
     color: #1e1714;
     cursor: pointer;
-    white-space: nowrap;
-    box-shadow: 1px 1px 0px #1e1714;
+    box-shadow: 1.5px 1.5px 0px #1e1714;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
     transition:
       transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-      box-shadow 0.15s ease,
-      background-color 0.15s ease;
+      box-shadow 0.15s ease;
   }
 
-  .zl-sync-copy:hover:not(:disabled) {
-    background: #fdf2f8;
+  .zl-sync-btn:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 2px 2px 0px #1e1714;
+    box-shadow: 2.5px 2.5px 0px #1e1714;
   }
 
-  .zl-sync-copy:active:not(:disabled) {
+  .zl-sync-btn:active:not(:disabled) {
     transform: translateY(1px);
     box-shadow: 0px 0px 0px #1e1714;
   }
 
-  .zl-sync-copy:disabled {
+  .zl-sync-btn:disabled {
     opacity: 0.45;
     cursor: default;
-    box-shadow: none;
-    transform: none;
   }
 
-  .zl-sync-receive {
+  .zl-sync-btn-primary {
+    background: var(--zl-primary-color, #ffb000);
+  }
+
+  .zl-sync-enable-btn {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .zl-sync-manual-toggle {
     display: flex;
-    align-items: center;
+    justify-content: center;
+    margin-top: 0.2rem;
+  }
+
+  .zl-sync-link-btn {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1e1714;
+    opacity: 0.75;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .zl-sync-link-btn:hover {
+    opacity: 1;
+  }
+
+  .zl-sync-manual-box {
+    display: flex;
+    flex-direction: column;
     gap: 0.4rem;
-    min-width: 0;
-    flex: 1 1 55%;
+    padding-top: 0.3rem;
   }
 
   .zl-sync-input {
-    flex: 1;
-    min-width: 0;
+    width: 100%;
     font-family: "Space Mono", monospace;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 700;
-    padding: 0.5rem 0.65rem;
-    border-radius: 10px;
-    border: 2px solid rgba(30, 23, 20, 0.16);
-    background: rgba(30, 23, 20, 0.04);
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    border: 2px solid #1e1714;
+    background: #ffffff;
     color: #1e1714;
-    overflow-wrap: anywhere;
+    box-sizing: border-box;
   }
 
-  .zl-sync-hint {
-    font-size: 0.72rem;
-    opacity: 0.62;
-    margin: 0 0 0.35rem;
+  .zl-sync-manual-submit-row {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .zl-sync-error {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #b91c1c;
+    margin: 0;
   }
 
   /* ONE vertical rhythm: every row is 0.6rem from its neighbour, whether or
@@ -655,15 +953,13 @@
      instead: label gets the full width, control gets the full width under
      it. Every other row here is a short name plus a toggle and still reads
      fine across, so this is scoped to the two that don't fit. */
-  .zl-avatar-row,
-  .zl-sync-row {
+  .zl-avatar-row {
     flex-direction: column;
     align-items: stretch;
     gap: 0.55rem;
   }
 
-  .zl-avatar-row .zl-avatar-field-inline,
-  .zl-sync-row .zl-sync-receive {
+  .zl-avatar-row .zl-avatar-field-inline {
     flex: 1 1 auto;
     width: 100%;
   }
