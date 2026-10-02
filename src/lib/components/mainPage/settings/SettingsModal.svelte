@@ -100,29 +100,27 @@
     );
   }
 
-  // ── List as text ───────────────────────────────────────────────────────
-  // Appends into the ACTIVE list rather than making a new one: free tier caps
-  // lists at three, and an import that can fail on a limit is a worse feature
-  // than one that always works.
-
-  // ── Sovereign Device Sync ────────────────────────────────────────────────
+  // ── Device sync ────────────────────────────────────────────────────────
+  // The QR and the link carry the room phrase AND the random key, so they
+  // are the only ways in. A paste field stays because an installed PWA keeps
+  // its own storage: a QR scan opens the browser, not the home-screen app.
   let showSyncQr = false;
-  let manualPhrase = "";
-  let manualKeyOrCode = "";
-  let manualSyncError = "";
-  let showManualInput = false;
+  let showPaste = false;
+  let pasteValue = "";
+  let pasteError = "";
   let copyLinkFeedback = false;
-  let copyPhraseFeedback = false;
-  let syncBusy = false;
+
+  function syncToast(message) {
+    window.dispatchEvent(
+      new CustomEvent("ziplist:toast", {
+        detail: { message, type: "success" },
+      }),
+    );
+  }
 
   async function handleEnableSync() {
     soundService.select();
-    syncBusy = true;
-    try {
-      await deviceSyncStore.enableSync();
-    } finally {
-      syncBusy = false;
-    }
+    await deviceSyncStore.enableSync();
   }
 
   async function handleCopySyncLink() {
@@ -131,14 +129,6 @@
       await navigator.clipboard.writeText($deviceSyncStore.shareUrl);
       copyLinkFeedback = true;
       soundService.copySuccess({ force: true });
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: {
-            message: "Pairing link copied to clipboard! 📋",
-            type: "success",
-          },
-        }),
-      );
       setTimeout(() => {
         copyLinkFeedback = false;
       }, 2000);
@@ -147,56 +137,22 @@
     }
   }
 
-  async function handleCopySyncPhrase() {
-    if (!$deviceSyncStore.phrase) return;
-    try {
-      await navigator.clipboard.writeText($deviceSyncStore.phrase);
-      copyPhraseFeedback = true;
-      soundService.copySuccess({ force: true });
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: {
-            message: "Pairing phrase copied! 🔑",
-            type: "success",
-          },
-        }),
-      );
-      setTimeout(() => {
-        copyPhraseFeedback = false;
-      }, 2000);
-    } catch (err) {
-      console.error("Failed to copy phrase:", err);
+  function handlePastePair() {
+    const result = deviceSyncStore.pairWithLink(pasteValue);
+    if (!result.ok) {
+      pasteError = "That's not a full pairing link. It needs the part after #.";
+      return;
     }
+    soundService.select();
+    pasteValue = "";
+    pasteError = "";
+    showPaste = false;
+    syncToast("Devices linked");
   }
 
-  async function handleManualPairSubmit() {
-    if (!manualPhrase.trim()) return;
-    manualSyncError = "";
-    syncBusy = true;
-    try {
-      const result = await deviceSyncStore.pairManually(
-        manualPhrase,
-        manualKeyOrCode,
-      );
-      if (!result.ok) {
-        manualSyncError = result.error;
-      } else {
-        soundService.select();
-        showManualInput = false;
-        manualPhrase = "";
-        manualKeyOrCode = "";
-        window.dispatchEvent(
-          new CustomEvent("ziplist:toast", {
-            detail: {
-              message: "Connected and synced with device! ⚡",
-              type: "success",
-            },
-          }),
-        );
-      }
-    } finally {
-      syncBusy = false;
-    }
+  function handleDisableSync() {
+    deviceSyncStore.disableSync();
+    syncToast("Sync off on this device");
   }
 
   // Handle vibe change
@@ -380,125 +336,113 @@
         </div>
       </section>
 
-      <!-- Sovereign Device Sync: all lists & unlocks synced with zero-knowledge encryption -->
-      <section class="zl-settings-section" aria-label="Device Sync">
-        <div class="zl-sync-card">
-          <div class="zl-sync-header">
-            <div>
-              <span class="zl-setting-name">Device Sync</span>
+      <!-- Same row clothes as "Name in shared rooms": no new card and no new
+           shadow, because the chunky-mode shadow budget is already spent. -->
+      <section class="zl-settings-section" aria-label="Device sync">
+        <div class="zl-setting-row zl-sync-row">
+          <div class="zl-sync-head">
+            <div class="zl-setting-info">
+              <span class="zl-setting-name">Device sync</span>
               <p class="zl-setting-desc">
-                Sync all lists between phone & laptop. Encrypted on device.
+                Every list on every paired device. Encrypted before it leaves.
               </p>
             </div>
             {#if $deviceSyncStore.enabled}
-              <div
-                class="zl-sync-status-pill"
-                class:connected={$deviceSyncStore.status === "connected"}
-                class:syncing={$deviceSyncStore.status === "syncing"}
+              <span
+                class="zl-sync-pill"
+                class:on={["connected", "syncing"].includes(
+                  $deviceSyncStore.status,
+                )}
+                role="status"
               >
-                <span class="zl-sync-dot"></span>
-                <span>
-                  {#if $deviceSyncStore.status === "syncing"}
-                    Syncing...
-                  {:else if $deviceSyncStore.status === "connected"}
-                    {$deviceSyncStore.peerCount > 1
-                      ? `${$deviceSyncStore.peerCount} devices`
-                      : "Active"}
-                  {:else if $deviceSyncStore.status === "connecting"}
-                    Connecting...
-                  {:else}
-                    Offline
-                  {/if}
-                </span>
-              </div>
+                {#if ["connected", "syncing"].includes($deviceSyncStore.status)}
+                  {$deviceSyncStore.peerCount > 1
+                    ? `${$deviceSyncStore.peerCount} devices`
+                    : "On"}
+                {:else if $deviceSyncStore.status === "connecting"}
+                  Connecting
+                {:else if $deviceSyncStore.status === "mismatch"}
+                  Mismatch
+                {:else}
+                  Offline
+                {/if}
+              </span>
             {/if}
           </div>
 
           {#if $deviceSyncStore.enabled}
-            <div class="zl-sync-active-box">
-              <div class="zl-sync-phrase-row">
-                <span class="zl-sync-phrase-label">Pairing phrase</span>
-                <button
-                  type="button"
-                  class="zl-sync-phrase-display"
-                  on:click={handleCopySyncPhrase}
-                  title="Click to copy phrase"
-                >
-                  <code>{$deviceSyncStore.phrase}</code>
-                  <span class="zl-copy-icon"
-                    >{copyPhraseFeedback ? "✓" : "📋"}</span
-                  >
-                </button>
-              </div>
-
-              <div class="zl-sync-actions">
-                <button
-                  type="button"
-                  class="zl-sync-btn zl-sync-btn-primary"
-                  on:click={() => (showSyncQr = true)}
-                >
-                  <span>📷</span> Show QR Code
-                </button>
-                <button
-                  type="button"
-                  class="zl-sync-btn"
-                  on:click={handleCopySyncLink}
-                >
-                  <span>{copyLinkFeedback ? "✓ Copied" : "🔗 Copy Link"}</span>
-                </button>
-              </div>
-            </div>
-          {:else}
-            <div class="zl-sync-setup-box">
+            <div class="zl-sync-actions">
               <button
                 type="button"
-                class="zl-sync-btn zl-sync-btn-primary zl-sync-enable-btn"
-                disabled={syncBusy}
-                on:click={handleEnableSync}
+                class="zl-sync-btn zl-sync-btn-primary"
+                on:click={() => (showSyncQr = true)}
               >
-                <span>⚡</span> Turn On Device Sync
+                Show QR
+              </button>
+              <button
+                type="button"
+                class="zl-sync-btn"
+                on:click={handleCopySyncLink}
+              >
+                {copyLinkFeedback ? "Copied" : "Copy link"}
               </button>
             </div>
-          {/if}
-
-          <!-- Manual pairing toggle -->
-          <div class="zl-sync-manual-toggle">
+          {:else}
             <button
               type="button"
-              class="zl-sync-link-btn"
-              on:click={() => (showManualInput = !showManualInput)}
+              class="zl-sync-btn zl-sync-btn-primary"
+              on:click={handleEnableSync}
             >
-              {showManualInput
-                ? "▲ Hide manual pairing"
-                : "▼ Pair with another device's phrase"}
+              Turn on
             </button>
-          </div>
+          {/if}
 
-          {#if showManualInput}
-            <div class="zl-sync-manual-box">
+          {#if $deviceSyncStore.status === "mismatch" && $deviceSyncStore.error}
+            <p class="zl-sync-note" role="alert">{$deviceSyncStore.error}</p>
+          {/if}
+
+          {#if showPaste}
+            <div class="zl-sync-paste">
               <input
                 class="zl-sync-input"
-                bind:value={manualPhrase}
-                placeholder="sneaky-lynx-preens-streetside"
-                aria-label="4-word phrase from other device"
-                on:keydown={(e) =>
-                  e.key === "Enter" && handleManualPairSubmit()}
+                bind:value={pasteValue}
+                placeholder="ziplist.app/?sync=…#k=…"
+                aria-label="Pairing link from the other device"
+                on:keydown={(e) => e.key === "Enter" && handlePastePair()}
               />
-              <div class="zl-sync-manual-submit-row">
-                <button
-                  type="button"
-                  class="zl-sync-btn zl-sync-btn-primary"
-                  disabled={syncBusy || !manualPhrase.trim()}
-                  on:click={handleManualPairSubmit}
-                >
-                  {syncBusy ? "Connecting..." : "Pair Device"}
-                </button>
-              </div>
-              {#if manualSyncError}
-                <p class="zl-sync-error">{manualSyncError}</p>
-              {/if}
+              <button
+                type="button"
+                class="zl-sync-btn"
+                disabled={!pasteValue.trim()}
+                on:click={handlePastePair}
+              >
+                Pair
+              </button>
             </div>
+            {#if pasteError}
+              <p class="zl-sync-note" role="alert">{pasteError}</p>
+            {/if}
           {/if}
+
+          <div class="zl-sync-links">
+            <button
+              type="button"
+              class="zl-sync-link"
+              aria-expanded={showPaste}
+              on:click={() => (showPaste = !showPaste)}
+            >
+              Pair with a link
+            </button>
+            {#if $deviceSyncStore.enabled}
+              <button
+                type="button"
+                class="zl-sync-link"
+                on:click={handleDisableSync}
+              >
+                Stop syncing here
+              </button>
+            {/if}
+          </div>
         </div>
       </section>
 
@@ -535,9 +479,8 @@
     <QrShareModal
       closeModal={() => (showSyncQr = false)}
       shareUrl={$deviceSyncStore.shareUrl}
-      title="Pair Another Device"
-      subtitle="Scan with your phone camera to sync all lists"
-      syncPhrase={$deviceSyncStore.phrase}
+      title="Pair a device"
+      subtitle="Any phone camera reads it. Every list comes along."
     />
   {/if}
 </dialog>
@@ -667,112 +610,32 @@
     outline-offset: 3px;
   }
 
-  .zl-sync-card {
-    background: #fffdf5;
-    border: 2px solid #1e1714;
-    border-radius: 16px;
-    padding: 0.9rem;
-    display: flex;
+  .zl-sync-row {
     flex-direction: column;
-    gap: 0.65rem;
-    box-shadow: 2px 2px 0px #1e1714;
+    align-items: stretch;
+    gap: 0.55rem;
   }
 
-  .zl-sync-header {
+  .zl-sync-head {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .zl-sync-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
+  .zl-sync-pill {
+    flex-shrink: 0;
     font-size: 0.72rem;
     font-weight: 800;
-    padding: 0.2rem 0.55rem;
+    padding: 0.15rem 0.55rem;
     border-radius: 999px;
-    border: 1.5px solid #1e1714;
-    background: #f3f4f6;
-    color: #1e1714;
+    border: 1.5px solid var(--zl-item-border-color, rgba(30, 23, 20, 0.16));
+    color: var(--zl-text-color-primary, #1e1714);
     white-space: nowrap;
-    flex-shrink: 0;
   }
 
-  .zl-sync-status-pill.connected {
-    background: #dcfce7;
-  }
-
-  .zl-sync-status-pill.syncing {
-    background: #fef08a;
-  }
-
-  .zl-sync-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #9ca3af;
-  }
-
-  .zl-sync-status-pill.connected .zl-sync-dot {
-    background: #22c55e;
-  }
-
-  .zl-sync-status-pill.syncing .zl-sync-dot {
-    background: #eab308;
-  }
-
-  .zl-sync-active-box {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .zl-sync-phrase-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .zl-sync-phrase-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    opacity: 0.7;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .zl-sync-phrase-display {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ffffff;
-    border: 2px solid #1e1714;
-    border-radius: 10px;
-    padding: 0.45rem 0.75rem;
-    cursor: pointer;
-    text-align: left;
-    transition:
-      transform 0.1s ease,
-      box-shadow 0.1s ease;
-  }
-
-  .zl-sync-phrase-display:hover {
-    transform: translateY(-1px);
-    box-shadow: 1px 1px 0px #1e1714;
-  }
-
-  .zl-sync-phrase-display code {
-    font-family: "Space Mono", monospace;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #1e1714;
-  }
-
-  .zl-copy-icon {
-    font-size: 0.85rem;
-    opacity: 0.75;
+  .zl-sync-pill.on {
+    background: rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22);
+    border-color: var(--zl-cta-color, #ffb000);
   }
 
   .zl-sync-actions {
@@ -785,30 +648,21 @@
     font-family: inherit;
     font-size: 0.82rem;
     font-weight: 800;
-    padding: 0.45rem 0.75rem;
+    padding: 0.45rem 0.85rem;
     border-radius: 999px;
-    border: 2px solid #1e1714;
-    background: #fffdf5;
+    border: 2px solid rgba(30, 23, 20, 0.85);
+    background: transparent;
     color: #1e1714;
     cursor: pointer;
-    box-shadow: 1.5px 1.5px 0px #1e1714;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    transition:
-      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-      box-shadow 0.15s ease;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .zl-sync-btn:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 2.5px 2.5px 0px #1e1714;
   }
 
   .zl-sync-btn:active:not(:disabled) {
     transform: translateY(1px);
-    box-shadow: 0px 0px 0px #1e1714;
   }
 
   .zl-sync-btn:disabled {
@@ -817,66 +671,59 @@
   }
 
   .zl-sync-btn-primary {
-    background: var(--zl-primary-color, #ffb000);
+    background: var(--zl-cta-color, #ffb000);
   }
 
-  .zl-sync-enable-btn {
+  .zl-sync-row > .zl-sync-btn,
+  .zl-sync-actions > .zl-sync-btn {
     width: 100%;
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
   }
 
-  .zl-sync-manual-toggle {
+  .zl-sync-paste {
     display: flex;
-    justify-content: center;
-    margin-top: 0.2rem;
+    gap: 0.4rem;
   }
 
-  .zl-sync-link-btn {
+  .zl-sync-input {
+    flex: 1;
+    min-width: 0;
+    font-family: "Space Mono", monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.45rem 0.65rem;
+    border-radius: 10px;
+    border: 2px solid var(--zl-item-border-color, rgba(30, 23, 20, 0.16));
+    background: #fffef7;
+    color: #1e1714;
+  }
+
+  .zl-sync-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .zl-sync-link {
+    font-family: inherit;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #1e1714;
-    opacity: 0.75;
+    color: var(--zl-text-color-secondary, #5c524c);
     background: none;
     border: none;
+    padding: 0.15rem 0;
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;
   }
 
-  .zl-sync-link-btn:hover {
-    opacity: 1;
+  .zl-sync-link:hover {
+    color: var(--zl-text-color-primary, #1e1714);
   }
 
-  .zl-sync-manual-box {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    padding-top: 0.3rem;
-  }
-
-  .zl-sync-input {
-    width: 100%;
-    font-family: "Space Mono", monospace;
-    font-size: 0.8rem;
-    font-weight: 700;
-    padding: 0.45rem 0.65rem;
-    border-radius: 8px;
-    border: 2px solid #1e1714;
-    background: #ffffff;
-    color: #1e1714;
-    box-sizing: border-box;
-  }
-
-  .zl-sync-manual-submit-row {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .zl-sync-error {
+  .zl-sync-note {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #b91c1c;
+    color: #a3322b;
     margin: 0;
   }
 
@@ -946,13 +793,11 @@
     transition: all 0.2s;
   }
 
-  /* "Name in shared rooms" and "Link a device" both pair a two-line label
-     with a text input, and side by side on one row they were bidding against
-     each other for the same width — the label wrapped to three lines so the
-     input could keep 55%, and neither ended up readable. These two stack
-     instead: label gets the full width, control gets the full width under
-     it. Every other row here is a short name plus a toggle and still reads
-     fine across, so this is scoped to the two that don't fit. */
+  /* "Name in shared rooms" pairs a two-line label with a text input, and
+     side by side on one row they bid against each other for the same width —
+     the label wrapped to three lines so the input could keep 55%, and
+     neither was readable. It stacks instead, like the device sync row: label
+     gets the full width, control gets the full width under it. */
   .zl-avatar-row {
     flex-direction: column;
     align-items: stretch;

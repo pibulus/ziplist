@@ -5,6 +5,7 @@
   import Toast from "$lib/components/Toast.svelte";
   import PwaInstallCard from "$lib/components/PwaInstallCard.svelte";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
+  import { firstVisitService } from "$lib/services/first-visit/firstVisitService.js";
 
   let { children } = $props();
 
@@ -12,16 +13,20 @@
     onMount(async () => {
       const handled = deviceSyncStore.handleIncomingUrl();
       if (handled) {
+        // A paired device already knows ZipList from the other one. Child
+        // onMounts run first, so the intro's timer is already pending here.
+        firstVisitService.cancelPendingIntroModal();
+        firstVisitService.markIntroAsSeen();
         window.dispatchEvent(
           new CustomEvent("ziplist:toast", {
             detail: {
               type: "success",
-              message: "Linked with your other device! ⚡",
+              message: "Devices linked",
             },
           }),
         );
       } else {
-        // Connect to sync room if credentials already exist
+        // No-op unless this device was paired before.
         deviceSyncStore.connect();
       }
     });

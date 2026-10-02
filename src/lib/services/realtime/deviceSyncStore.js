@@ -22,15 +22,21 @@ import {
 } from "./syncPhrase.js";
 import { generateRandomSyncKey } from "./syncCrypto.js";
 import { STORAGE_KEYS } from "$lib/constants.js";
-import { listsStore } from "../lists/listsStore.js";
+import { listsStore, getMaxListCount } from "../lists/listsStore.js";
 import { getContributorTokenSnapshot, setContributorStatus } from "$lib";
 import { LIVE_MESSAGE_TYPES } from "./liveListProtocol.js";
+
+function toast(message) {
+  window.dispatchEvent(
+    new CustomEvent("ziplist:toast", { detail: { message } }),
+  );
+}
 
 function createDeviceSyncStore() {
   const { subscribe, set, update } = writable({
     phrase: "",
     key: "",
-    status: "disconnected", // "disconnected" | "connecting" | "connected" | "syncing" | "error"
+    status: "disconnected", // "disconnected" | "connecting" | "connected" | "mismatch" | "error"
     error: null,
     peerCount: 0,
     lastSyncAt: null,
@@ -42,7 +48,6 @@ function createDeviceSyncStore() {
   let debounceTimer = null;
   let isApplyingRemote = false;
   let listsUnsubscribe = null;
-  let lastReceivedEnvelopeTimestamp = 0;
 
   function buildShareUrl(phrase, key) {
     if (!browser || !phrase || !key) return "";
@@ -196,16 +201,10 @@ function createDeviceSyncStore() {
     const state = get({ subscribe });
     if (!state.key) return;
 
-    // Check envelope timestamp to avoid reprocessing older snapshots
-    if (
-      envelope.updatedAt &&
-      envelope.updatedAt <= lastReceivedEnvelopeTimestamp
-    ) {
-      return;
-    }
-
+    // No "newer than the last one" gate: the merge is idempotent, and a gate
+    // keyed on another device's clock skipped real edits whenever that
+    // clock ran behind.
     try {
-      update((s) => ({ ...s, status: "syncing" }));
       isApplyingRemote = true;
 
       const result = await listsStore.importCollectionBundle(
@@ -213,19 +212,34 @@ function createDeviceSyncStore() {
         state.key,
       );
       if (result.ok) {
-        lastReceivedEnvelopeTimestamp = envelope.updatedAt || Date.now();
-        const now = Date.now();
         update((s) => ({
           ...s,
           status: "connected",
-          lastSyncAt: now,
+          error: null,
+          lastSyncAt: Date.now(),
         }));
+        if (result.overflowCount > 0) {
+          toast(
+            `${result.overflowCount} more ${result.overflowCount === 1 ? "list" : "lists"} on the other device. This one keeps ${getMaxListCount()}.`,
+          );
+        }
       } else {
         console.warn(
           "[DeviceSync] Could not merge incoming bundle:",
           result.error,
         );
-        update((s) => ({ ...s, status: "connected" }));
+        // A live envelope (the relay tags those with a sender) that will not
+        // open means another device is in this room on a different key —
+        // say so rather than show "On" over a sync that moves nothing. A
+        // stored catch-up that will not open is just stale: this device's
+        // own push on connect replaces it.
+        if (envelope.sender) {
+          update((s) => ({
+            ...s,
+            status: "mismatch",
+            error: "Key mismatch. A fresh pairing link sorts it.",
+          }));
+        }
       }
     } catch (err) {
       console.error("[DeviceSync] Error merging remote envelope:", err);
@@ -238,11 +252,20 @@ function createDeviceSyncStore() {
     }
   }
 
+  function schedulePush() {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      void pushLocalEnvelope();
+    }, 500);
+  }
+
   /**
    * Push current collection as an encrypted envelope to the relay.
    */
   async function pushLocalEnvelope() {
-    if (!socket || socket.readyState !== PartySocket.OPEN || isApplyingRemote) {
+    if (!socket || socket.readyState !== PartySocket.OPEN) return;
+    if (isApplyingRemote) {
+      schedulePush();
       return;
     }
 
@@ -250,21 +273,14 @@ function createDeviceSyncStore() {
     if (!state.key) return;
 
     try {
-      update((s) => ({ ...s, status: "syncing" }));
       const envelope = await listsStore.exportCollectionBundle(state.key);
-      if (envelope && socket.readyState === PartySocket.OPEN) {
+      // socket can be swapped or dropped while the envelope encrypts.
+      if (envelope && socket?.readyState === PartySocket.OPEN) {
         socket.send(JSON.stringify(envelope));
-        update((s) => ({
-          ...s,
-          status: "connected",
-          lastSyncAt: Date.now(),
-        }));
-      } else {
-        update((s) => ({ ...s, status: "connected" }));
+        update((s) => ({ ...s, lastSyncAt: Date.now() }));
       }
     } catch (err) {
       console.error("[DeviceSync] Failed to push local envelope:", err);
-      update((s) => ({ ...s, status: "connected" }));
     }
   }
 
@@ -280,90 +296,69 @@ function createDeviceSyncStore() {
         initialSkip = false;
         return;
       }
-      if (isApplyingRemote) return;
-
-      const state = get({ subscribe });
-      if (!state.enabled || state.status !== "connected") return;
-
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        void pushLocalEnvelope();
-      }, 500);
+      if (isApplyingRemote || !get({ subscribe }).enabled) return;
+      schedulePush();
     });
   }
 
   /**
-   * Inspect current window URL for incoming pairing link (?sync=...#k=...&code=...).
+   * Pull phrase, key and supporter code out of a pairing link. Accepts the
+   * whole URL or any paste that contains `?sync=…#k=…`.
+   */
+  function parsePairingLink(text) {
+    const value = (text ?? "").toString().trim();
+    const queryAt = value.indexOf("?");
+    const hashAt = value.indexOf("#");
+    if (queryAt === -1 || hashAt === -1 || hashAt < queryAt) return null;
+
+    const query = new URLSearchParams(value.slice(queryAt + 1, hashAt));
+    const hash = new URLSearchParams(value.slice(hashAt + 1));
+    const phrase = normalizeSyncPhrase(query.get("sync"));
+    const key = hash.get("k") || "";
+    if (!isValidSyncPhrase(phrase) || key.length !== 43) return null;
+
+    return { phrase, key, code: hash.get("code") || "" };
+  }
+
+  function applyPairing({ phrase, key, code }) {
+    persistCredentials(phrase, key);
+    if (code) {
+      try {
+        setContributorStatus(true, code);
+      } catch (err) {
+        console.warn("[DeviceSync] Failed to apply supporter code:", err);
+      }
+    }
+    ensureCredentials(false);
+    void connect();
+  }
+
+  /**
+   * Cold boot from a scanned QR or opened link (?sync=...#k=...&code=...).
    */
   function handleIncomingUrl() {
     if (!browser) return false;
+    const pairing = parsePairingLink(window.location.href);
+    if (!pairing) return false;
 
+    // Clean the address bar so the key never lands in browsing history.
     const url = new URL(window.location.href);
-    const syncParam = url.searchParams.get("sync");
-    const hash = window.location.hash.slice(1);
-
-    if (!syncParam || !hash) return false;
-
-    const hashParams = new URLSearchParams(hash);
-    const keyParam = hashParams.get("k");
-    const codeParam = hashParams.get("code");
-
-    if (!syncParam || !keyParam) return false;
-
-    const normalizedPhrase = normalizeSyncPhrase(syncParam);
-    if (!isValidSyncPhrase(normalizedPhrase)) return false;
-
-    // Save credentials
-    persistCredentials(normalizedPhrase, keyParam);
-
-    // If supporter unlock code was bundled, unlock contributor mode
-    if (codeParam) {
-      try {
-        setContributorStatus(true, codeParam);
-      } catch (err) {
-        console.warn(
-          "[DeviceSync] Failed to apply supporter code from sync URL:",
-          err,
-        );
-      }
-    }
-
-    // Clean address bar so key and phrase don't leak into browsing history
     url.searchParams.delete("sync");
-    const cleanUrl = url.pathname + (url.search ? url.search : "");
-    window.history.replaceState({}, "", cleanUrl);
+    window.history.replaceState({}, "", url.pathname + url.search);
 
-    // Update store state and connect
-    ensureCredentials(false);
-    void connect();
-
+    applyPairing(pairing);
     return true;
   }
 
   /**
-   * Pair manually with a phrase and optional pass code / key.
+   * Pasted link — the way into an installed PWA, whose storage is separate
+   * from the browser a QR scan opens. Four typed words cannot work here: the
+   * key is random and lives only in the link (docs/DEVICE_SYNC_SPEC.md).
    */
-  async function pairManually(phraseInput, keyOrCodeInput = "") {
-    const phrase = normalizeSyncPhrase(phraseInput);
-    if (!isValidSyncPhrase(phrase)) {
-      return {
-        ok: false,
-        error:
-          "Please enter a valid 4-word phrase (e.g. sneaky-lynx-preens-streetside).",
-      };
-    }
-
-    let key = keyOrCodeInput.trim();
-    if (!key) {
-      // If no key was entered, generate a fallback key or check existing
-      const existing = getStoredCredentials();
-      key = existing.key || generateRandomSyncKey();
-    }
-
-    persistCredentials(phrase, key);
-    ensureCredentials(false);
-    await connect();
-
+  function pairWithLink(text) {
+    const pairing = parsePairingLink(text);
+    if (!pairing) return { ok: false };
+    applyPairing(pairing);
     return { ok: true };
   }
 
@@ -372,21 +367,6 @@ function createDeviceSyncStore() {
    */
   async function enableSync() {
     ensureCredentials(true);
-    await connect();
-  }
-
-  /**
-   * Generate a completely fresh sync phrase and encryption key.
-   */
-  async function rotateCredentials() {
-    if (socket) {
-      socket.close();
-      socket = null;
-    }
-    const phrase = generateSyncPhrase();
-    const key = generateRandomSyncKey();
-    persistCredentials(phrase, key);
-    ensureCredentials(false);
     await connect();
   }
 
@@ -424,11 +404,9 @@ function createDeviceSyncStore() {
     ensureCredentials,
     connect,
     handleIncomingUrl,
+    pairWithLink,
     enableSync,
-    rotateCredentials,
     disableSync,
-    pairManually,
-    pushLocalEnvelope,
   };
 }
 
