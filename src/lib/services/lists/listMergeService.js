@@ -74,6 +74,11 @@ export function mergeTombstones(
   return merged;
 }
 
+function getCheckTimestamp(item) {
+  if (typeof item.checkedAt === "number") return item.checkedAt;
+  return Date.parse(item.completedAt) || 0;
+}
+
 /**
  * Merge two single items with matching IDs using field-level LWW.
  * Checking off an item does NOT overwrite independent text edits made on another screen.
@@ -93,13 +98,11 @@ export function mergeSingleItem(localItem, incomingItem) {
     tags = incomingItem.tags;
   }
 
-  // Field 2: Checked & CompletedAt (independent timestamp comparison)
-  const localCompletedTime = localItem.completedAt
-    ? Date.parse(localItem.completedAt)
-    : 0;
-  const incomingCompletedTime = incomingItem.completedAt
-    ? Date.parse(incomingItem.completedAt)
-    : 0;
+  // Field 2: Checked & CompletedAt (independent timestamp comparison).
+  // checkedAt covers unchecks too; completedAt is the fallback for items
+  // toggled by builds that predate it.
+  const localCompletedTime = getCheckTimestamp(localItem);
+  const incomingCompletedTime = getCheckTimestamp(incomingItem);
 
   let checked = localItem.checked;
   let completedAt = localItem.completedAt;
@@ -121,6 +124,7 @@ export function mergeSingleItem(localItem, incomingItem) {
     tags,
     checked,
     completedAt,
+    checkedAt: Math.max(localCompletedTime, incomingCompletedTime) || undefined,
     updatedAt: Math.max(localTime, incomingTime),
   };
 }

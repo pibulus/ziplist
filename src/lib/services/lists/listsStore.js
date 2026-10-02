@@ -953,6 +953,10 @@ function createListsStore() {
                       checked: !item.checked,
                       // Add completedAt timestamp when checked, remove it when unchecked
                       completedAt: !item.checked ? now : undefined,
+                      // Stamped on BOTH directions: an uncheck clears
+                      // completedAt, so without this a synced uncheck has no
+                      // time and the other device's stale tick always wins.
+                      checkedAt: Date.now(),
                       updatedAt: Date.now(),
                     };
                   }

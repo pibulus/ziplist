@@ -231,4 +231,29 @@ console.log("▶ Testing listMergeService LWW-Element-Set merge engine...");
   );
 }
 
+// Test: An uncheck on one device beats an older tick on the other. toggleItem
+// clears completedAt on uncheck, so only checkedAt carries the time.
+{
+  const ticked = {
+    id: "i1",
+    text: "Oat Milk",
+    checked: true,
+    completedAt: new Date(3000).toISOString(),
+    checkedAt: 3000,
+    updatedAt: 3000,
+  };
+  const unticked = {
+    id: "i1",
+    text: "Oat Milk",
+    checked: false,
+    completedAt: undefined,
+    checkedAt: 4000,
+    updatedAt: 4000,
+  };
+  assert.equal(mergeSingleItem(ticked, unticked).checked, false);
+  assert.equal(mergeSingleItem(unticked, ticked).checked, false);
+  assert.equal(mergeSingleItem(ticked, unticked).checkedAt, 4000);
+  console.log("  ✓ Newer uncheck wins in both merge directions");
+}
+
 console.log("✅ All listMergeService tests passed successfully!");
