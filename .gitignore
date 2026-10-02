@@ -62,3 +62,6 @@ stubs/
 
 # Generated at build time by scripts/stamp-version.mjs
 static/version.json
+
+# Playwright MCP scratch output
+.playwright-mcp

@@ -49,7 +49,7 @@ Release baseline:
 What is shipped & live:
 
 - **RiffRap pastel waterfall gradient** with 12:1 WCAG AAA text contrast
-- **Sovereign Device Sync**: Zero-knowledge E2EE multi-list sync and continuous catch-up across mobile and desktop. 30-day tombstones permanently prevent zombie resurrections, 500ms debounced snapshot envelopes prevent echo storms, Cloudflare DO relay stores opaque envelopes for 30 days, and pairing via QR bundle `#k=<key>&code=<code>` brings full collection + Contributor unlock in one scan.
+- **Device sync**: every list on every paired device, AES-GCM sealed before it leaves (key rides in the link fragment, relay sees ciphertext only). Field-level merge with 30-day tombstones; pair by QR, opened link, or pasted link (`docs/DEVICE_SYNC_SPEC.md`). Two-browser pass done against a local relay 2026-10-02; real phone + laptop pass still owed.
 - **1-layer modular hierarchy**: `## Section` headers, movable divider bars (`##` / `---`), and `→ List Portals` with spring roulette flipping
 - **Tag engine & resampling**: `#tag` filtering + 1-tap `[ ✂️ Resample to new list ]`
 - **1-Tap 'Clear done' & 'Clear list'**: instant list cleanup with a 5.5s tactile Undo toast safety net
@@ -59,7 +59,7 @@ What is shipped & live:
 - **1-Tap magic link auto-unlock**: `?unlock=<code>` unlocks on device without manual typing
 - **Square AUD production checkout**: live Apple Pay / Google Pay / Card processing
 - **Bespoke Contributor Passport email hook**: auto-sends 4-word code + magic link via Resend
-- **Single-list live phrase sharing**: 4-word phrase (`/j/[phrase]`) joins a live checklist room with zero logins (Full collection device sync scoped in `docs/DEVICE_SYNC_SPEC.md` & audited in `_audits/fleet/SOVEREIGN-DEVICE-SYNC-AUDIT.md`)
+- **Single-list live phrase sharing**: 4-word phrase (`/j/[phrase]`) joins a live checklist room with zero logins
 - **Pull-down-to-add**: tug the top of a list, a ghost draft row grows under the finger, release past the detent to start typing
 
 Visual-pass decisions (2026-09-19), so they stop resurfacing:
