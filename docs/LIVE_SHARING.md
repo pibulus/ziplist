@@ -129,8 +129,9 @@ Product target:
   broken link
 - supporter rooms can be durable for a year or while supporter status remains
   active
-- supporter rooms may reserve a cute phrase/QR alias, hold multiple lists, use
-  passport/avatar identity, and be exportable/backed up to the Pi
+- supporter rooms may reserve a cute phrase/QR alias and use passport/avatar identity;
+  multi-list sync is handled separately via sovereign device sync (`docs/DEVICE_SYNC_SPEC.md`)
+  rather than overloading single checklist rooms.
 
 Possible room metadata:
 

@@ -58,7 +58,7 @@ What is shipped & live:
 - **1-Tap magic link auto-unlock**: `?unlock=<code>` unlocks on device without manual typing
 - **Square AUD production checkout**: live Apple Pay / Google Pay / Card processing
 - **Bespoke Contributor Passport email hook**: auto-sends 4-word code + magic link via Resend
-- **Sovereign device sync**: 4-word phrase (`/j/[phrase]`) over ephemeral memory pipes with zero logins
+- **Single-list live phrase sharing**: 4-word phrase (`/j/[phrase]`) joins a live checklist room with zero logins (Full collection device sync scoped in `docs/DEVICE_SYNC_SPEC.md` & audited in `_audits/fleet/SOVEREIGN-DEVICE-SYNC-AUDIT.md`)
 - **Pull-down-to-add**: tug the top of a list, a ghost draft row grows under the finger, release past the detent to start typing
 
 Visual-pass decisions (2026-09-19), so they stop resurfacing:

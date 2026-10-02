@@ -3,12 +3,14 @@
 > Move every list from one device to another by scanning a code. No account,
 > no plaintext on any server, nothing kept.
 
-Status: **spec only, nothing built.** Written 2026-09-23.
+Status: **Spec audited & approved as Phase 1.** Written 2026-09-23, audited 2026-10-02.  
+Forensic Audit: `_audits/fleet/SOVEREIGN-DEVICE-SYNC-AUDIT.md`  
+Fleet Canon: `~/Documents/reference/STACK-sovereign-device-sync.md`
 
 This is the build that `_audits/fleet/ACCOUNTS-AND-SYNC-EXPLAINED.md` parked on
 2026-07-18 with the words _"a passphrase-derived key, encrypted blobs synced
 through a dumb relay… Parked as a genuine future build — flag it if you want it
-scoped."_ It is now flagged.
+scoped."_ It is now flagged, audited, and confirmed as Phase 1 of the fleet sync roadmap.
 
 ---
 
