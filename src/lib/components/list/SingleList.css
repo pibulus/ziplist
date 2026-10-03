@@ -152,51 +152,8 @@
   animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* ==========================================================================
-   PERF: 0% CPU GPU-Composited Living Card Shimmer
-   ========================================================================== */
-.zl-card-shimmer {
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  z-index: 0;
-  pointer-events: none;
-
-  /* Beautiful soft paper warmth / tactile shimmer (Subtle peach/cream variation) */
-  background:
-    radial-gradient(
-      ellipse at 35% 35%,
-      rgba(255, 240, 220, 0.65) 0%,
-      rgba(255, 249, 240, 0) 55%
-    ),
-    radial-gradient(
-      ellipse at 75% 75%,
-      rgba(255, 230, 200, 0.45) 0%,
-      rgba(255, 249, 240, 0) 60%
-    );
-
-  /* Force hardware compositor layer — zero main-thread repaints */
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  animation: gpu-ambient-shimmer 24s ease-in-out infinite alternate;
-}
-
-@keyframes gpu-ambient-shimmer {
-  0% {
-    transform: translate3d(-10%, -10%, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(5%, 8%, 0) scale(1.08);
-  }
-  100% {
-    transform: translate3d(-8%, 6%, 0) scale(1.02);
-  }
-}
-
 /**
- * Card styling with GPU-isolated surface.
+ * Card styling.
  */
 .zl-card {
   /* Core shape and structure */
@@ -230,12 +187,9 @@
     inset 0 10px 0 0 var(--list-primary, transparent),
     var(--zl-card-box-shadow);
 
-  /* Solid warm cream paper base - painted ONCE, zero layout invalidation */
+  /* Flat warm cream paper, painted once. (The old animated gradient had
+     identical stops in every theme, so it repainted a flat colour forever.) */
   background-color: var(--zl-card-bg-gradient-color-start, #fff9f0);
-
-  /* Containment keeps card paint isolated from page layout */
-  contain: layout style;
-  isolation: isolate;
 }
 
 @media (max-width: 480px) {
@@ -467,8 +421,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .zl-title-caret,
-  .zl-card-shimmer {
+  .zl-title-caret {
     animation: none;
     opacity: 0.75;
   }

@@ -287,17 +287,11 @@
 
     will-change: transform, opacity;
     transform: translate3d(0, 0, 0);
-  }
 
-  /* Idle aura: fires ONCE on entry as an invitation cue, then sleeps */
-  .mascot.has-aura:not(.is-active):not(.is-thinking)::after {
-    animation: mascot-aura-cue 3.2s ease-out 1;
-    animation-delay: 1.2s;
-  }
-
-  /* Active / Thinking aura: continuous engagement loop */
-  .mascot.is-active.has-aura::after {
-    animation: mascot-aura 1.5s ease-in-out infinite;
+    /* Idle: fires ONCE as an invitation cue, then sleeps. Kept at this
+       specificity so the reduced-motion block below can still switch it off;
+       .is-active / .is-thinking override it with their own loops. */
+    animation: mascot-aura-cue 3.2s ease-out 1.2s 1;
   }
 
   .mascot.is-thinking.has-aura::after {
@@ -586,7 +580,9 @@
     .mascot-eyes-group,
     .mascot-svg,
     .mascot-base,
-    .mascot.has-aura::after {
+    .mascot.has-aura::after,
+    .mascot.is-active.has-aura::after,
+    .mascot.is-thinking.has-aura::after {
       animation: none;
     }
   }

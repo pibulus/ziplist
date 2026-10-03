@@ -567,11 +567,11 @@
 
   /* Perf: a slide parked at |sx| >= 100 is fully off-screen (translate one
      full width + the 0.95 scale pulls its near edge past the viewport).
-     visibility: hidden and content-visibility: hidden let the compositor
-     skip painting and layout entirely, keeping inactive slides cold. */
+     visibility: hidden lets the compositor skip painting it entirely.
+     (Not content-visibility: its size containment drops parked slides out of
+     the deck's shared grid cell, so the page height jumps on every swipe.) */
   .list-slide.parked {
     visibility: hidden;
-    content-visibility: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {

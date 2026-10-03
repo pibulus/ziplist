@@ -172,6 +172,7 @@ export class TypewriterSoundService {
       this.audioBuffer = audioBuffer;
       this.loadedPack = packName;
       this.pack = packName;
+      this.scheduleIdleSuspend();
       return true;
     } catch {
       return false;
@@ -269,7 +270,20 @@ export class TypewriterSoundService {
     if (!context) return false;
 
     this.markPlayed();
+    this.scheduleIdleSuspend();
     return this.playSound(context, soundData[0], soundData[1]);
+  }
+
+  // A running AudioContext keeps the audio hardware awake even when silent.
+  // Priming on focus starts one, so sleep it after a quiet spell; play()
+  // already resumes a suspended context. (Same rule as weightless.js.)
+  scheduleIdleSuspend() {
+    clearTimeout(this.idleSuspendTimer);
+    this.idleSuspendTimer = setTimeout(() => {
+      if (this.context?.state === "running") {
+        this.context.suspend?.().catch?.(() => {});
+      }
+    }, 4000);
   }
 
   playSound(context, startMs, durationMs) {

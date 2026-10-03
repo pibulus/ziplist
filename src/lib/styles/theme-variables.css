@@ -55,8 +55,6 @@
   --zl-caution-ink: #8f3a28;
 
   /* Card gradient defaults */
-  --zl-card-bg-gradient-animation-duration: 30s;
-  --zl-card-bg-gradient-size: 300% 300%;
   --zl-card-border-radius: 32px;
   --zl-card-border-width: 4px;
   --zl-card-inner-border-gradient: linear-gradient(
@@ -70,7 +68,6 @@
      declared, so every theme silently wore the same hardcoded teal checkbox
      shadow and white veil. Declared once here and derived from the active
      vibe's own RGB, so they follow the theme without needing a copy per vibe. */
-  --zl-card-veil: rgba(255, 255, 255, 0.3);
   --zl-checkbox-shadow: 0 3px 7px rgba(var(--zl-primary-color-rgb), 0.18);
   --zl-checkbox-hover-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb), 0.28);
 
@@ -206,12 +203,8 @@ html[data-theme="highlighter"] {
   --zl-mascot-gradient-end: #ff6ac2;
 
   /* Card gradient */
-  --zl-card-bg-gradient-angle: 180deg;
   --zl-card-bg-gradient-color-start: #fff9f0;
   --zl-card-bg-gradient-color-second: #fff9f0;
-  --zl-card-bg-gradient-color-mid: #fff9f0;
-  --zl-card-bg-gradient-color-fourth: #fff9f0;
-  --zl-card-bg-gradient-color-end: #fff9f0;
 
   /* Base theme colors */
   /* These two used to fall through to :root, which is violet — so the one
@@ -339,12 +332,8 @@ html[data-theme="sticky-note"] {
   --zl-mascot-gradient-end: #ffd633;
 
   /* Card — flat warm cream, same ground as Highlighter (no gradient) */
-  --zl-card-bg-gradient-angle: 180deg;
   --zl-card-bg-gradient-color-start: #fff9f0;
   --zl-card-bg-gradient-color-second: #fff9f0;
-  --zl-card-bg-gradient-color-mid: #fff9f0;
-  --zl-card-bg-gradient-color-fourth: #fff9f0;
-  --zl-card-bg-gradient-color-end: #fff9f0;
   --zl-card-border-color: #1e1714;
   --zl-card-box-shadow: 0 12px 30px rgba(30, 23, 20, 0.12);
   --zl-card-inner-border-gradient: linear-gradient(
@@ -463,12 +452,8 @@ html[data-theme="gel-pen"] {
   --zl-mascot-gradient-end: #f5157f;
 
   /* Card — flat warm cream, same ground as Highlighter (no gradient) */
-  --zl-card-bg-gradient-angle: 180deg;
   --zl-card-bg-gradient-color-start: #fff9f0;
   --zl-card-bg-gradient-color-second: #fff9f0;
-  --zl-card-bg-gradient-color-mid: #fff9f0;
-  --zl-card-bg-gradient-color-fourth: #fff9f0;
-  --zl-card-bg-gradient-color-end: #fff9f0;
   --zl-card-border-color: #1e1714;
   --zl-card-box-shadow: 0 12px 30px rgba(30, 23, 20, 0.12);
   --zl-card-inner-border-gradient: linear-gradient(
@@ -587,12 +572,8 @@ html[data-theme="legal-pad"] {
   --zl-mascot-gradient-end: #85c203;
 
   /* Card — flat warm cream, same ground as Highlighter (no gradient) */
-  --zl-card-bg-gradient-angle: 180deg;
   --zl-card-bg-gradient-color-start: #fff9f0;
   --zl-card-bg-gradient-color-second: #fff9f0;
-  --zl-card-bg-gradient-color-mid: #fff9f0;
-  --zl-card-bg-gradient-color-fourth: #fff9f0;
-  --zl-card-bg-gradient-color-end: #fff9f0;
   --zl-card-border-color: #1e1714;
   --zl-card-box-shadow: 0 12px 30px rgba(30, 23, 20, 0.12);
   --zl-card-inner-border-gradient: linear-gradient(

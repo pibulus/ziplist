@@ -3,4 +3,3 @@ export { StorageUtils } from "./storageUtils";
 export { hapticService } from "./hapticService";
 export { soundService } from "./soundService";
 export { waveformData } from "./stores";
-export { appActive, shouldAnimateStore } from "./animationState";
