@@ -267,40 +267,68 @@
     outline: none;
   }
 
-  /* Idle pulse ring — hints it's tappable, after entrance settles. */
+  /* Pre-feathered radial gradient, opacity/transform only - zero filter: blur() overhead */
   .mascot.has-aura::after {
     content: "";
     position: absolute;
-    inset: -10px;
-    border-radius: 28px;
+    inset: -14px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0;
+
     background: radial-gradient(
-      circle at 50% 54%,
-      var(--mascot-aura-color-1) 0%,
-      var(--mascot-aura-color-2) 42%,
-      var(--mascot-aura-color-3) 58%,
+      circle at 50% 50%,
+      var(--mascot-aura-color-1, rgba(255, 204, 51, 0.35)) 0%,
+      var(--mascot-aura-color-2, rgba(255, 106, 194, 0.18)) 42%,
+      var(--mascot-aura-color-3, rgba(113, 201, 206, 0.08)) 60%,
       transparent 74%
     );
-    filter: blur(1px);
-    animation: mascot-aura 3.4s ease-in-out infinite;
-    animation-delay: 2.2s;
-    opacity: 0;
-    pointer-events: none;
+
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
   }
 
-  @keyframes mascot-aura {
+  /* Idle aura: fires ONCE on entry as an invitation cue, then sleeps */
+  .mascot.has-aura:not(.is-active):not(.is-thinking)::after {
+    animation: mascot-aura-cue 3.2s ease-out 1;
+    animation-delay: 1.2s;
+  }
+
+  /* Active / Thinking aura: continuous engagement loop */
+  .mascot.is-active.has-aura::after {
+    animation: mascot-aura 1.5s ease-in-out infinite;
+  }
+
+  .mascot.is-thinking.has-aura::after {
+    animation: mascot-aura 1.05s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  @keyframes mascot-aura-cue {
     0% {
       opacity: 0;
-      transform: scale(0.9);
+      transform: scale3d(0.88, 0.88, 1);
     }
-    36% {
-      opacity: 0.72;
-    }
-    72% {
-      opacity: 0.38;
+    40% {
+      opacity: 0.75;
+      transform: scale3d(1.02, 1.02, 1);
     }
     100% {
       opacity: 0;
-      transform: scale(1.06);
+      transform: scale3d(1.08, 1.08, 1);
+    }
+  }
+
+  @keyframes mascot-aura {
+    0%,
+    100% {
+      opacity: 0.15;
+      transform: scale3d(0.94, 0.94, 1);
+    }
+    50% {
+      opacity: 0.75;
+      transform: scale3d(1.05, 1.05, 1);
     }
   }
 
@@ -429,11 +457,6 @@
     animation: mascot-think-sway 1.25s ease-in-out infinite;
   }
 
-  .mascot.is-thinking.has-aura::after {
-    animation: mascot-aura 1.05s ease-in-out infinite;
-    opacity: 0.6;
-  }
-
   /* Slow, volume-preserving breath: wide-and-short, then narrow-and-tall. */
   @keyframes mascot-breathe {
     0%,
@@ -513,10 +536,10 @@
   @keyframes mascot-float {
     0%,
     100% {
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
     }
     50% {
-      transform: translateY(-15px);
+      transform: translate3d(0, -15px, 0);
     }
   }
 

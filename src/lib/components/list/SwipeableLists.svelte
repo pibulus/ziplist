@@ -558,28 +558,20 @@
     pointer-events: auto;
   }
 
-  /* Perf: every mounted card runs an infinite animated background gradient,
-     which repaints the full card every frame. Only the card you're looking
-     at earns that — the rest freeze mid-shift. */
-  .list-slide:not(.active) :global(.zl-card) {
-    animation-play-state: paused;
+  /* Inactive slides freeze ALL child animations (including ::before/::after pulses & badges) */
+  .list-slide:not(.active) :global(*),
+  .list-slide:not(.active) :global(*::before),
+  .list-slide:not(.active) :global(*::after) {
+    animation-play-state: paused !important;
   }
 
   /* Perf: a slide parked at |sx| >= 100 is fully off-screen (translate one
      full width + the 0.95 scale pulls its near edge past the viewport).
-     visibility: hidden lets the compositor skip painting it entirely, so a
-     spin only ever paints the two-or-three slides actually streaming past. */
+     visibility: hidden and content-visibility: hidden let the compositor
+     skip painting and layout entirely, keeping inactive slides cold. */
   .list-slide.parked {
     visibility: hidden;
-  }
-
-  /* The card's ambient gradient animates background-position, which the
-     compositor can't take — it repaints on the main thread every frame. It
-     was running on all three slides at once, two of them invisible, which is
-     most of why the app heats up and stops feeling snappy. Only the card you
-     can actually see gets to shimmer. */
-  .list-slide:not(.active) :global(.zl-card) {
-    animation-play-state: paused;
+    content-visibility: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {

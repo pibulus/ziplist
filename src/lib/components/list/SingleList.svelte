@@ -2600,6 +2600,7 @@
   <span id="list-title-{list.id || 'active'}" class="zl-visually-hidden">
     {accessibleListName}
   </span>
+  <div class="zl-card-shimmer" aria-hidden="true"></div>
   <div class="card-content">
     {#if celebrationBurst}
       <!-- Full-clear confetti — bursts from the top of the card, palette

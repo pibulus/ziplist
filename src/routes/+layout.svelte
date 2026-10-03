@@ -6,6 +6,7 @@
   import PwaInstallCard from "$lib/components/PwaInstallCard.svelte";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
   import { firstVisitService } from "$lib/services/first-visit/firstVisitService.js";
+  import "$lib/services/infrastructure/animationState.js";
 
   let { children } = $props();
 

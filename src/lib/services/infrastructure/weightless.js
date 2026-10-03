@@ -205,6 +205,19 @@ export class Weightless {
       1318.51,
     ];
     this.lastPlayed = new Map();
+    this.idleSuspendTimer = null;
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", () => {
+        if (
+          document.visibilityState === "hidden" &&
+          this.context &&
+          this.context.state === "running"
+        ) {
+          this.context.suspend().catch(() => {});
+        }
+      });
+    }
 
     return new Proxy(this, {
       get: (target, prop) => {
@@ -284,9 +297,21 @@ export class Weightless {
     return true;
   }
 
+  scheduleIdleSuspend() {
+    if (this.idleSuspendTimer) {
+      clearTimeout(this.idleSuspendTimer);
+    }
+    this.idleSuspendTimer = setTimeout(() => {
+      if (this.context && this.context.state === "running") {
+        this.context.suspend().catch(() => {});
+      }
+    }, 4000); // 4 seconds of silence puts audio hardware/mediaserverd to sleep
+  }
+
   async _executePlay(cue, options = {}) {
     const context = await this.getContext();
     if (!context) return;
+    this.scheduleIdleSuspend();
 
     const masterNode = this.ensureMasterChain(context);
     const variants = cue.variants || [];

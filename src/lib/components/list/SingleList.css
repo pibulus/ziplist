@@ -152,30 +152,52 @@
   animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/**
-   * Keyframes for the `gradient-shift` animation.
-   */
-@keyframes gradient-shift {
+/* ==========================================================================
+   PERF: 0% CPU GPU-Composited Living Card Shimmer
+   ========================================================================== */
+.zl-card-shimmer {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Beautiful soft paper warmth / tactile shimmer (Subtle peach/cream variation) */
+  background:
+    radial-gradient(
+      ellipse at 35% 35%,
+      rgba(255, 240, 220, 0.65) 0%,
+      rgba(255, 249, 240, 0) 55%
+    ),
+    radial-gradient(
+      ellipse at 75% 75%,
+      rgba(255, 230, 200, 0.45) 0%,
+      rgba(255, 249, 240, 0) 60%
+    );
+
+  /* Force hardware compositor layer — zero main-thread repaints */
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  animation: gpu-ambient-shimmer 24s ease-in-out infinite alternate;
+}
+
+@keyframes gpu-ambient-shimmer {
   0% {
-    background-position: 0% 0%;
-  }
-  25% {
-    background-position: 50% 50%;
+    transform: translate3d(-10%, -10%, 0) scale(1);
   }
   50% {
-    background-position: 100% 100%;
-  }
-  75% {
-    background-position: 50% 50%;
+    transform: translate3d(5%, 8%, 0) scale(1.08);
   }
   100% {
-    background-position: 0% 0%;
+    transform: translate3d(-8%, 6%, 0) scale(1.02);
   }
 }
 
 /**
-   * Card styling with animated gradient background.
-   */
+ * Card styling with GPU-isolated surface.
+ */
 .zl-card {
   /* Core shape and structure */
   border-radius: var(--zl-card-border-radius); /* Pillowy, rounded corners */
@@ -208,25 +230,12 @@
     inset 0 10px 0 0 var(--list-primary, transparent),
     var(--zl-card-box-shadow);
 
-  /* Card surface remains warm cream paper (#fffdf5) so colorful item cards pop */
-  background:
-    linear-gradient(
-      var(--zl-card-veil, rgba(255, 255, 255, 0.4)),
-      var(--zl-card-veil, rgba(255, 255, 255, 0.4))
-    ),
-    linear-gradient(
-      var(--zl-card-bg-gradient-angle, 180deg),
-      var(--zl-card-bg-gradient-color-start, #fff9f0),
-      var(--zl-card-bg-gradient-color-second, #fff9f0),
-      var(--zl-card-bg-gradient-color-mid, #fff9f0),
-      var(--zl-card-bg-gradient-color-fourth, #fff9f0),
-      var(--zl-card-bg-gradient-color-end, #fff9f0)
-    );
-  background-size:
-    100% 100%,
-    var(--zl-card-bg-gradient-size);
-  animation: gradient-shift var(--zl-card-bg-gradient-animation-duration) ease
-    infinite;
+  /* Solid warm cream paper base - painted ONCE, zero layout invalidation */
+  background-color: var(--zl-card-bg-gradient-color-start, #fff9f0);
+
+  /* Containment keeps card paint isolated from page layout */
+  contain: layout style;
+  isolation: isolate;
 }
 
 @media (max-width: 480px) {
@@ -275,7 +284,7 @@
   opacity: 0.7;
 }
 
-/* Subtle light effect in the corner */
+/* Subtle light effect in the corner - static lighting, zero ticker overhead */
 .zl-card::after {
   content: "";
   position: absolute;
@@ -291,7 +300,6 @@
   border-radius: 50%;
   opacity: 0.5;
   pointer-events: none;
-  animation: soft-pulse 8s infinite alternate ease-in-out;
 }
 
 /* Card content container */
@@ -459,7 +467,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .zl-title-caret {
+  .zl-title-caret,
+  .zl-card-shimmer {
     animation: none;
     opacity: 0.75;
   }

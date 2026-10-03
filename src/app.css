@@ -489,3 +489,10 @@ dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Pause all CSS animations, transitions, and tickers when the tab is sleeping */
+html.animations-paused *,
+html.animations-paused *::before,
+html.animations-paused *::after {
+  animation-play-state: paused !important;
+}
