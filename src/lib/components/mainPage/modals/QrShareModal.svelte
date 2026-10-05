@@ -116,9 +116,7 @@
   aria-labelledby="qr_modal_title"
   aria-modal="true"
 >
-  <div
-    class="modal-box max-h-[85vh] max-w-sm overflow-y-auto rounded-3xl border-2 border-[#1e1714]/15 bg-gradient-to-br from-[#fffaef] to-[#fff6e6] p-6 text-center shadow-2xl"
-  >
+  <div class="zl-modal-sm modal-box relative text-center">
     <form method="dialog">
       <ModalCloseButton
         {closeModal}

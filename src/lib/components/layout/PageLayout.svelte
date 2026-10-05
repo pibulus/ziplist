@@ -96,7 +96,7 @@
 <a class="skip-link" href="#main-content">Skip to lists</a>
 
 <div
-  class="bg-gradient-mesh main center page-shell hero grid min-h-[100dvh] gap-8 px-4 py-6 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10"
+  class="bg-gradient-mesh main center page-shell hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-16 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10 lg:pb-16"
   class:list-first-shell={listFirst}
 >
   {#if listFirst}
@@ -109,7 +109,7 @@
 
   <main
     id="main-content"
-    class="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg md:max-w-2xl lg:max-w-3xl"
+    class="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg md:max-w-2xl"
   >
     <slot />
   </main>
@@ -117,7 +117,7 @@
   <!-- Footer section with attribution and Chrome extension info -->
   <footer
     bind:this={footerEl}
-    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t px-4 pb-2 pt-3 text-center text-xs sm:px-6 sm:pb-4 sm:pt-6 md:px-8"
+    class="footer-component zl-app-footer fixed bottom-0 left-0 right-0 z-10 box-border border-t px-4 py-3 text-center text-xs sm:px-6 sm:py-4 md:px-8"
   >
     <div
       class="footer-row mx-auto flex w-full flex-row items-center justify-between gap-2 sm:gap-3"
@@ -285,11 +285,6 @@
     .copyright :global(.footer-charm) {
       padding: 0.3rem 0.45rem;
     }
-
-    .footer-row {
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
   }
 
   /* No backdrop-filter support (or it's disabled): go nearly opaque
@@ -345,8 +340,8 @@
         clamp(4rem, 10svh, 5.5rem)
       ) !important;
       padding-bottom: max(
-        4.75rem,
-        calc(env(safe-area-inset-bottom) + 4.25rem)
+        6rem,
+        calc(env(safe-area-inset-bottom) + 5.5rem)
       ) !important;
       min-height: 100dvh;
       display: flex;
@@ -363,30 +358,12 @@
     }
 
     footer {
-      /* Blur stays ON here. This used to force backdrop-filter:none on
-         mobile, which is where the footer looked worst — a 0.9-alpha
-         panel with list text legible straight through it. A blur on one
-         small fixed bar is cheap on any phone that ships a modern
-         browser; the frosted surface is worth it. */
-      /* padding-bottom MUST keep the safe-area term. A flat 0.5rem here
-         silently overrode the base rule's
-         max(1rem, env(safe-area-inset-bottom)) on phones — the one place
-         the inset actually exists — so on a notched iPhone the footer row
-         sat under the home indicator. */
-      /* Mobile-only trim (2026-09-19). The frozen desktop values above are
-         untouched — four apps still wear the same bar at sm and up.
-         Most of this bar's height on a phone is not padding and cannot be
-         reclaimed: 44px is the tap-target floor on the nav buttons, and
-         env(safe-area-inset-bottom) is ~34px of home-indicator clearance on
-         a notched iPhone. Between them they account for nearly all of it.
-         What was actually discretionary was the top padding and the row
-         gap, so that is what came off. */
       padding-top: 0.5rem;
       padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
     }
 
     footer .footer-row {
-      gap: 0.375rem;
+      gap: 0.75rem;
     }
   }
 
@@ -398,7 +375,7 @@
       justify-content: flex-start;
       /* HERO-SPEC.md: family-standard desktop top padding (talktype gold) */
       padding-top: 15vh !important;
-      padding-bottom: 7rem !important;
+      padding-bottom: 10vh !important;
     }
 
     .page-shell.list-first-shell {

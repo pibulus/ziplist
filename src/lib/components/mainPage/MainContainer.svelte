@@ -961,24 +961,28 @@
     />
   {/if}
 
-  <!-- RecordButtonWithTimer above the List with reduced spacing -->
+  <!-- RecordButtonWithTimer above the List with TalkType canon button-section spacing -->
   <div
-    class="mb-4 mt-1 flex justify-center sm:my-3"
+    class="button-section relative flex w-full flex-col items-center justify-center pb-4 pt-2"
     class:list-first-record-button={$listFirstMode === "true"}
   >
-    <RecordButtonWithTimer
-      compact={$listFirstMode === "true"}
-      recording={$isRecording}
-      transcribing={$isTranscribing}
-      disabled={recordButtonDisabled}
-      clipboardSuccess={$uiState.clipboardSuccess}
-      recordingDuration={$recordingDuration}
-      progress={$transcriptionProgress}
-      on:click={handleToggleRecording}
-      on:holdstart={handleHoldStart}
-      on:holdend={handleHoldEnd}
-      on:preload={preloadSpeechModel}
-    />
+    <div
+      class="button-container mx-auto flex w-full max-w-[500px] justify-center"
+    >
+      <RecordButtonWithTimer
+        compact={$listFirstMode === "true"}
+        recording={$isRecording}
+        transcribing={$isTranscribing}
+        disabled={recordButtonDisabled}
+        clipboardSuccess={$uiState.clipboardSuccess}
+        recordingDuration={$recordingDuration}
+        progress={$transcriptionProgress}
+        on:click={handleToggleRecording}
+        on:holdstart={handleHoldStart}
+        on:holdend={handleHoldEnd}
+        on:preload={preloadSpeechModel}
+      />
+    </div>
   </div>
 
   {#if $uiState.showPermissionError || $audioState.state === AudioStates.PERMISSION_DENIED}

@@ -194,7 +194,7 @@
 
   $: baseButtonClasses = compact
     ? "record-button record-button-compact duration-400 rounded-full transition-all ease-out flex items-center justify-center font-bold shadow-md text-black select-none touch-manipulation"
-    : "record-button duration-400 w-[75%] rounded-full transition-all ease-out sm:w-[85%] mx-auto max-w-[380px] px-6 py-4 flex items-center justify-center text-xl font-bold shadow-md sm:px-8 sm:py-5 sm:text-xl md:text-2xl text-black select-none touch-manipulation";
+    : "record-button duration-400 w-[90%] rounded-full transition-all ease-out sm:w-[85%] mx-auto h-[64px] min-w-[280px] max-w-[420px] px-6 flex items-center justify-center text-center text-xl font-bold shadow-md sm:px-8 sm:text-xl md:text-2xl text-black select-none touch-manipulation";
 
   // ── Push-to-talk (hybrid) ─────────────────────────────────────────────
   // Quick tap keeps the classic toggle. Press-and-hold past HOLD_MS turns

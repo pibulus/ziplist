@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from "svelte";
+  import { tick } from "svelte";
   import { browser } from "$app/environment";
   import { isContributor, setContributorStatus } from "$lib";
   import {
@@ -7,27 +7,17 @@
     CONTRIBUTOR_COPY,
   } from "$lib/config/pricing.js";
   import ModalCloseButton from "./ModalCloseButton.svelte";
+  import { Mascot } from "$lib/components/ui";
+  import { soundService } from "$lib/services/infrastructure/soundService";
+
   export let closeModal = () => {};
-
-  const dispatch = createEventDispatcher();
-
-  onMount(() => {
-    const dialog = document.getElementById("contributor_modal");
-    function onDialogClose() {
-      closeModal();
-    }
-    if (dialog) dialog.addEventListener("close", onDialogClose);
-    return () => {
-      if (dialog) dialog.removeEventListener("close", onDialogClose);
-    };
-  });
 
   let code = "";
   let errorMessage = "";
-  let successMessage = "";
   let isSubmitting = false;
   let isStartingCheckout = false;
-  let codePanelOpen = false;
+  let view = "pitch"; // 'pitch' or 'redeem'
+  let codeInput;
 
   function claimStorageKey(checkoutId) {
     return `ziplist_checkout_claim_${checkoutId}`;
@@ -35,7 +25,34 @@
 
   function setCheckoutClaim(checkoutId, claimToken) {
     if (!browser || !checkoutId || !claimToken) return;
-    sessionStorage.setItem(claimStorageKey(checkoutId), claimToken);
+    try {
+      sessionStorage.setItem(claimStorageKey(checkoutId), claimToken);
+    } catch (error) {
+      console.warn("Failed to store checkout claim:", error);
+    }
+  }
+
+  async function showRedeem() {
+    errorMessage = "";
+    view = "redeem";
+    await tick();
+    codeInput?.focus();
+  }
+
+  function showPitch() {
+    errorMessage = "";
+    view = "pitch";
+  }
+
+  function handleClose() {
+    closeModal();
+  }
+
+  function handleDialogClose() {
+    setTimeout(() => {
+      view = "pitch";
+      errorMessage = "";
+    }, 150);
   }
 
   async function handleCheckout() {
@@ -43,7 +60,6 @@
 
     isStartingCheckout = true;
     errorMessage = "";
-    successMessage = "";
 
     try {
       const response = await fetch("/api/contributor/checkout", {
@@ -71,7 +87,6 @@
 
     isSubmitting = true;
     errorMessage = "";
-    successMessage = "";
 
     try {
       const response = await fetch("/api/contributor/redeem", {
@@ -79,7 +94,7 @@
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code: code.trim() }),
       });
       const payload = await response.json().catch(() => ({}));
 
@@ -90,7 +105,8 @@
       }
 
       setContributorStatus(true, payload.token || null);
-      successMessage = "Unlocked on this device ★";
+      soundService.success?.({ force: true });
+      view = "pitch";
       code = "";
 
       window.dispatchEvent(
@@ -101,35 +117,24 @@
           },
         }),
       );
-
-      window.dispatchEvent(
-        new CustomEvent("ziplist-setting-changed", {
-          detail: { setting: "contributor", value: true },
-        }),
-      );
-
-      dispatch("unlocked");
     } catch (error) {
-      console.error("Failed to validate contributor code:", error);
-      errorMessage = "Code check needs one more try in a moment.";
+      console.error("Failed to redeem code:", error);
+      errorMessage = "Redeem needs one more try in a moment.";
     } finally {
       isSubmitting = false;
     }
-  }
-
-  function handleClose() {
-    closeModal();
   }
 </script>
 
 <dialog
   id="contributor_modal"
-  class="zl-contributor-dialog"
+  class="modal"
   aria-labelledby="contributor_modal_title"
   aria-describedby="contributor_modal_description"
   aria-modal="true"
+  on:close={handleDialogClose}
 >
-  <div class="zl-contributor-card zl-scroll">
+  <div class="zl-modal-md modal-box relative">
     <form method="dialog">
       <ModalCloseButton
         closeModal={handleClose}
@@ -138,429 +143,188 @@
       />
     </form>
 
-    <div class="zl-contributor-content">
-      <div class="zl-contributor-heading">
-        <p class="zl-contributor-eyebrow">Extra Lists</p>
-        <h3 id="contributor_modal_title">More lists, more chops.</h3>
+    <!-- Built from TalkType pitch kit canon -->
+    <div class="space-y-4 sm:space-y-5">
+      <div class="flex justify-center pt-1">
+        <div
+          class="animate-zl-pulse-slow zl-pitch-hero h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
+        >
+          <Mascot interactive={false} aura={false} />
+        </div>
       </div>
 
-      <ul id="contributor_modal_description" class="zl-benefit-list">
-        {#each CONTRIBUTOR_BENEFITS as benefit}
-          <li>
-            <span class="zl-benefit-check" aria-hidden="true">✓</span>
-            <span>{benefit}</span>
-          </li>
-        {/each}
-      </ul>
-
       {#if $isContributor}
-        <div class="zl-contributor-note success" role="status">
-          Unlocked on this device ★
+        <!-- Unlocked State -->
+        <div class="space-y-1.5 text-center">
+          <h3
+            id="contributor_modal_title"
+            class="text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
+          >
+            Extras are <span class="zl-marker">Unlocked ★</span>
+          </h3>
+          <p
+            id="contributor_modal_description"
+            class="text-sm font-bold text-pink-600"
+          >
+            All perks are active on this device.
+          </p>
         </div>
-      {:else}
-        <button
-          type="button"
-          class="zl-contributor-primary"
-          on:click={handleCheckout}
-          disabled={isStartingCheckout}
-        >
-          {isStartingCheckout ? "Opening checkout..." : "Dig in"}
-        </button>
-        <p class="zl-contributor-price">
-          {CONTRIBUTOR_COPY.priceLine}
-        </p>
-      {/if}
 
-      {#if errorMessage}
-        <p class="zl-contributor-note error" role="alert">{errorMessage}</p>
-      {/if}
+        <div class="zl-pitch-copy">
+          <ul class="zl-pitch-list">
+            <li>Up to 12 active checklists.</li>
+            <li>Real-time collaborative live rooms.</li>
+            <li>Instant 4-word phrase device sync.</li>
+          </ul>
+        </div>
 
-      {#if successMessage}
-        <p class="zl-contributor-note success" role="status">
-          {successMessage}
-        </p>
-      {/if}
+        <div class="space-y-2 pt-1">
+          <button type="button" class="zl-pitch-cta" on:click={handleClose}>
+            Nice, let's make lists
+          </button>
+        </div>
+      {:else if view === "redeem"}
+        <!-- Redeem Code View -->
+        <div class="space-y-1.5 text-center">
+          <h3
+            id="contributor_modal_title"
+            class="text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
+          >
+            Redeem an <span class="zl-marker">Unlock Code</span>
+          </h3>
+          <p
+            id="contributor_modal_description"
+            class="text-sm font-bold leading-snug text-pink-600"
+          >
+            Codes work for gifts and extra devices.
+          </p>
+        </div>
 
-      <details bind:open={codePanelOpen} class="zl-code-panel">
-        <summary>
-          <span>Got an unlock code?</span>
-          <strong>{codePanelOpen ? "Close" : "Open"}</strong>
-        </summary>
-
-        <div class="zl-code-form">
-          <label for="contributor-code" class="sr-only">Unlock code</label>
+        <form class="space-y-3" on:submit|preventDefault={handleUnlock}>
+          <label for="contributor-code-input" class="sr-only">Unlock code</label
+          >
           <input
-            id="contributor-code"
+            id="contributor-code-input"
+            bind:this={codeInput}
             bind:value={code}
             type="text"
-            placeholder="Enter code"
-            autocomplete="one-time-code"
-            autocapitalize="none"
-            autocorrect="off"
+            placeholder="ZL-XXXX-XXXX"
+            class="w-full rounded-2xl border-2 border-gray-900 bg-white px-4 py-3 text-center font-mono font-black uppercase tracking-wider text-gray-900 placeholder:text-gray-300 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-400"
+            autocomplete="off"
+            autocapitalize="characters"
             spellcheck="false"
           />
+
+          {#if errorMessage}
+            <p
+              class="rounded-xl border-2 border-amber-300 bg-amber-50 p-2.5 text-xs font-bold text-amber-900"
+              role="alert"
+            >
+              {errorMessage}
+            </p>
+          {/if}
+
           <button
-            type="button"
-            class="zl-contributor-primary zl-contributor-secondary"
-            on:click={handleUnlock}
+            type="submit"
+            class="zl-pitch-cta"
             disabled={isSubmitting || !code.trim()}
           >
             {isSubmitting ? "Checking code..." : "Unlock with code"}
           </button>
-          <p>Codes work for gifts and extra devices.</p>
-        </div>
-      </details>
+        </form>
 
-      <button type="button" class="zl-contributor-later" on:click={handleClose}>
-        Maybe later
-      </button>
+        <button
+          type="button"
+          class="mx-auto flex min-h-9 items-center gap-1 rounded-full px-3 text-xs font-bold text-gray-500 transition hover:text-gray-900"
+          on:click={showPitch}
+        >
+          <span aria-hidden="true">←</span>
+          <span>Back to perks</span>
+        </button>
+      {:else}
+        <!-- Pitch View -->
+        <div class="space-y-1.5 text-center">
+          <h3
+            id="contributor_modal_title"
+            class="text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
+          >
+            More lists, <span class="zl-marker">more chops.</span>
+          </h3>
+          <p
+            id="contributor_modal_description"
+            class="text-sm font-bold tracking-tight text-pink-600 sm:text-base"
+          >
+            12 lists · live rooms · every device
+          </p>
+        </div>
+
+        <div class="zl-pitch-copy">
+          <ul class="zl-pitch-list">
+            {#each CONTRIBUTOR_BENEFITS as benefit}
+              <li>{benefit}</li>
+            {/each}
+          </ul>
+        </div>
+
+        {#if errorMessage}
+          <p
+            class="rounded-xl border-2 border-amber-300 bg-amber-50 p-2.5 text-xs font-bold text-amber-900"
+            role="alert"
+          >
+            {errorMessage}
+          </p>
+        {/if}
+
+        <div class="space-y-2 pt-1">
+          <button
+            type="button"
+            class="zl-pitch-cta"
+            on:click={handleCheckout}
+            disabled={isStartingCheckout}
+          >
+            <span aria-hidden="true">✦</span>
+            <span>{isStartingCheckout ? "Opening checkout..." : "Dig in"}</span>
+          </button>
+
+          <p
+            class="whitespace-nowrap px-1 text-center text-xs font-semibold text-gray-500"
+          >
+            {CONTRIBUTOR_COPY.priceLine}
+          </p>
+
+          <button
+            type="button"
+            class="zl-pitch-secondary"
+            on:click={showRedeem}
+          >
+            Got an unlock code?
+          </button>
+        </div>
+      {/if}
+
+      <p class="text-center text-xs font-semibold text-gray-500">
+        © 2026 ZipList • Made by <span class="font-black text-gray-900"
+          >Pablo</span
+        > in Melbourne
+      </p>
     </div>
   </div>
-
   <button
     type="button"
-    class="zl-contributor-backdrop"
-    aria-label="Close contributor modal"
-    tabindex="-1"
+    class="modal-backdrop"
+    aria-label="Close extras modal"
     on:click={handleClose}
   ></button>
 </dialog>
 
 <style>
-  :global(dialog.zl-contributor-dialog) {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: max(12px, env(safe-area-inset-top))
-      max(12px, env(safe-area-inset-right))
-      max(16px, env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
-    margin: 0;
-    /* inset stretches the dialog; 100vw included the desktop scrollbar and
-       biased the flex-center a few px right (same fix as the settings dialog). */
-    width: auto;
-    height: auto;
-    max-width: none;
-    max-height: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    box-sizing: border-box;
-  }
-
-  :global(dialog.zl-contributor-dialog[open]) {
-    display: flex;
-  }
-
-  /* One family voice with the settings modal: same cream card surface, same
-     sans-black chrome (Space Mono survives only in the code input, where
-     typed text matches the list's typewriter identity). */
-  .zl-contributor-card {
-    position: relative;
-    z-index: 1;
-    width: min(92vw, 30rem);
-    max-height: min(88dvh, 42rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    border: var(--zl-card-border-width, 4px) solid
-      var(--zl-card-border-color, #1e1714);
-    border-radius: var(--zl-card-border-radius, 28px);
-    background: var(--zl-card-bg-gradient-color-start, #fff9f0);
-    box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(30, 23, 20, 0.12));
-    padding: 1.5rem;
-  }
-
-  .zl-contributor-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    padding-top: 0.9rem;
-  }
-
-  .zl-contributor-heading {
-    padding-right: 1.5rem;
-  }
-
-  .zl-contributor-eyebrow {
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0.14em;
-    margin: 0 0 0.35rem;
-    opacity: 0.75;
-    text-transform: uppercase;
-  }
-
-  .zl-contributor-heading h3 {
-    color: var(--zl-text-color-primary, #1e1714);
-    font-size: clamp(1.65rem, 8vw, 2.25rem);
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    line-height: 1;
-    margin: 0;
-  }
-
-  .zl-contributor-heading p {
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    font-size: 0.92rem;
-    line-height: 1.55;
-    margin: 0.75rem 0 0;
-  }
-
-  /* Price and benefits wear the settings modal's row anatomy: soft white
-     over cream, 2px quiet border, 16px corners. */
-  .zl-benefit-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    list-style: none;
-    margin: 0.25rem 0 0.5rem;
-    padding: 0;
-    text-align: left;
-  }
-
-  .zl-benefit-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    color: var(--zl-text-color-primary, #1e1714);
-    font-size: 0.88rem;
-    font-weight: 800;
-    line-height: 1.35;
-  }
-
-  .zl-benefit-check {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #ffb000;
-    color: #1e1714;
-    border: 2px solid #1e1714;
-    font-size: 0.72rem;
-    font-weight: 900;
-    flex-shrink: 0;
-  }
-
-  .zl-contributor-primary {
-    border-radius: 999px;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.98rem;
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    min-height: 52px;
-    transition: var(--zl-transition-fast, all 0.2s ease);
-    width: 100%;
-  }
-
-  .zl-contributor-later {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    color: var(--zl-text-color-secondary, #6b5f54);
-    font-size: 0.82rem;
-    font-weight: 800;
-    min-height: 36px;
-    padding: 0.4rem;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    transition: color 0.15s ease;
-  }
-
-  .zl-contributor-later:hover,
-  .zl-contributor-later:focus-visible {
-    color: var(--zl-text-color-primary, #1e1714);
-    background: transparent;
-    outline: none;
-  }
-
-  /* Programmatic focus target for a11y — no UA ring on a container */
-  .zl-contributor-card:focus,
-  .zl-contributor-card:focus-visible {
-    outline: none;
-  }
-
-  /* Pink, not the brand yellow: this is the Pass language (the footer pill,
-     the unlocked badge), and the yellow belongs to the record button. The
-     benefit ticks stay yellow so the card still carries both. */
-  .zl-contributor-primary {
-    background: var(--zl-pass-color, #ff6ac2);
-    border: 0;
-    box-shadow: 0 3px 8px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.3);
-    color: #1e1714;
-  }
-
-  .zl-contributor-primary:hover:not(:disabled),
-  .zl-contributor-primary:focus-visible:not(:disabled) {
-    box-shadow: 0 5px 14px rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.4);
-    filter: saturate(1.08) brightness(1.04);
-    outline: none;
-    transform: translateY(-1px);
-  }
-
-  /* Chunky mode keeps its hard-edge identity — gated, not leaked */
-  :global(html.mode-neo-brutalist) .zl-contributor-primary {
-    border: 3px solid var(--zl-card-border-color, #1e1714);
-    box-shadow: 5px 5px 0 var(--zl-card-border-color, #1e1714);
-  }
-
-  :global(html.mode-neo-brutalist) .zl-contributor-primary:hover:not(:disabled),
-  :global(html.mode-neo-brutalist)
-    .zl-contributor-primary:focus-visible:not(:disabled) {
-    box-shadow: 7px 7px 0 var(--zl-card-border-color, #1e1714);
-    filter: none;
-    transform: translate(-1px, -1px);
-  }
-
-  .zl-contributor-primary:disabled {
-    cursor: not-allowed;
-    opacity: 0.62;
-  }
-
-  /* One pink CTA per card. Redeeming a code is the other road to the same
-     place, not a second offer, so it takes the cream-and-ink weight. */
-  .zl-contributor-secondary {
-    background: rgba(255, 255, 255, 0.6);
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(30, 23, 20, 0.18));
-    box-shadow: none;
-    color: var(--zl-text-color-primary, #1e1714);
-    min-height: 46px;
-  }
-
-  .zl-contributor-secondary:hover:not(:disabled),
-  .zl-contributor-secondary:focus-visible:not(:disabled) {
-    background: #fffef7;
-    border-color: var(--zl-pass-color, #ff6ac2);
-    box-shadow: none;
-    filter: none;
-  }
-
-  .zl-contributor-price {
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: -0.005em;
-    margin: -0.35rem 0 0;
-    opacity: 0.8;
-    text-align: center;
-  }
-
-  .zl-contributor-note {
-    border-radius: 16px;
-    font-size: 0.82rem;
-    font-weight: 800;
-    line-height: 1.4;
-    margin: 0;
-    padding: 0.75rem 0.85rem;
-  }
-
-  .zl-contributor-note.error {
-    background: #fff7d6;
-    border: 2px solid #f2bf3a;
-    color: #6b4b00;
-  }
-
-  .zl-contributor-note.success {
-    background: #e8fff8;
-    border: 2px solid #79d8c6;
-    color: #126052;
-  }
-
-  /* A line, not a panel. Closed, this is a secondary path most people never
-     take — as a bordered box with a 44px row it read as a second offer
-     competing with the button above it, and cost more vertical space than
-     the benefits did. It grows its box only once opened. */
-  .zl-code-panel {
-    background: transparent;
-    border: 0;
-    border-radius: 16px;
-    padding: 0;
-  }
-
-  .zl-code-panel[open] {
-    background: rgba(255, 255, 255, 0.5);
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    padding: 0.85rem;
-  }
-
-  .zl-code-panel summary {
-    align-items: center;
-    cursor: pointer;
-    display: flex;
-    font-size: 0.78rem;
-    font-weight: 800;
-    gap: 0.4rem;
-    justify-content: center;
-    list-style: none;
-    min-height: 32px;
-    opacity: 0.75;
-  }
-
-  .zl-code-panel summary:hover {
-    opacity: 1;
-  }
-
-  .zl-code-panel summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .zl-code-panel summary strong {
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    font-size: 0.78rem;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .zl-code-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
-  }
-
-  .zl-code-form input {
-    background: rgba(255, 255, 255, 0.8);
-    border: 2px solid rgba(30, 23, 20, 0.18);
-    border-radius: 12px;
-    color: var(--zl-text-color-primary, #1e1714);
-    font-family: "Space Mono", monospace;
-    font-size: 0.92rem;
-    font-weight: 700;
-    min-height: 48px;
-    padding: 0.75rem 0.9rem;
-  }
-
-  .zl-code-form input:focus {
-    border-color: var(--zl-primary-color, #ffb000);
-    box-shadow: 0 0 0 3px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.18);
-    outline: none;
-  }
-
-  .zl-code-form p {
-    color: var(--zl-text-color-secondary, #3a2f2a);
-    font-size: 0.72rem;
-    font-weight: 700;
-    margin: 0;
-    opacity: 0.75;
-  }
-
-  @media (max-width: 420px) {
-    .zl-contributor-card {
-      border-radius: 24px;
-      padding: 1rem;
-      width: min(94vw, 28rem);
-    }
-
-    .zl-contributor-heading {
-      padding-right: 1.75rem;
-    }
+  /* Mascot slot sizing inside pitch hero */
+  .zl-pitch-hero :global(.mascot) {
+    --mascot-size-mobile: 64px;
+    --mascot-size-sm: 72px;
+    --mascot-size-md: 72px;
+    --mascot-size-lg: 72px;
+    --mascot-ink-pad: 0%;
+    margin-bottom: 0;
   }
 </style>

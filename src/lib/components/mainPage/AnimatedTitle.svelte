@@ -117,7 +117,7 @@
             color="#FFB000"
             size="35%"
             offsetX="-0.6em"
-            offsetY="8px"
+            offsetY="0px"
             position="bottom-right"
             customClass="title-suffix"
           />
@@ -139,8 +139,9 @@
 <style>
   /* Mascot styling lives in the shared Mascot component (ui/Mascot.svelte). */
 
-  /* Staggered text animation for title - more reliable approach */
+  /* Staggered text animation for title - TalkType canon (1.1 line-height) */
   .staggered-text {
+    line-height: 1.1;
     opacity: 1;
     font-feature-settings: "kern" 1;
     font-kerning: normal;
@@ -181,7 +182,7 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "kern" 1;
     font-kerning: normal;
-    max-inline-size: 40ch;
+    max-inline-size: 52ch;
     text-wrap: balance;
     line-height: 1.4;
   }

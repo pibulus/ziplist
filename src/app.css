@@ -32,6 +32,11 @@
   --zl-modal-close-ms: 150ms;
   --zl-modal-open-ease: cubic-bezier(0.34, 1.4, 0.64, 1);
   --zl-modal-close-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --color-modal-backdrop: rgba(43, 38, 32, 0.46);
+  --modal-padding: 1rem;
+  --modal-border-radius: 1.5rem;
+  --modal-max-height: 85vh;
+  --zl-modal-panel-width: min(92vw, 32rem);
 }
 
 /* Any inner panel that scrolls wears the app's bar, not the OS one. html and
@@ -299,6 +304,10 @@ dialog.zl-contributor-dialog[open] {
   display: grid !important;
   place-items: center !important;
   padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
+  padding-bottom: max(
+    clamp(0.75rem, 2.5vw, 1.5rem),
+    calc(env(safe-area-inset-bottom, 0px) + 1.25rem)
+  ) !important;
 }
 
 dialog.modal::backdrop,
@@ -307,35 +316,238 @@ dialog.zl-contributor-dialog::backdrop {
   background: transparent;
 }
 
-/* Warm-dark blurred backdrop (skeleton: ~46% warm-dark + 2px blur, tap-to-close) */
+/* Modal backdrop — TalkType canon: warm-dark + 4px blur, tap-to-close */
 .modal > .modal-backdrop,
 .modal .modal-backdrop,
 .zl-modal-backdrop,
 .zl-contributor-backdrop {
+  grid-area: modal;
   position: fixed;
   inset: 0;
   z-index: 0;
   border: 0;
   cursor: pointer;
-  background-color: rgba(43, 38, 32, 0.46);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-  animation: zl-modal-backdrop-in var(--zl-modal-close-ms, 180ms) ease-out both;
+  background-color: var(--color-modal-backdrop, rgba(43, 38, 32, 0.46));
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: zl-modal-backdrop-in var(--zl-modal-close-ms, 150ms) ease-out both;
 }
 
-/* Custom modal styling — ONE modal frame family-wide: 30rem max-width,
-   card-radius token (follows chunky mode), fluid padding. */
+/* Modal box styling — TalkType canon */
 .modal-box {
-  max-height: 85vh !important;
-  overflow-y: auto !important;
-  margin: 0 !important;
-  width: min(92vw, 30rem) !important;
-  max-width: 30rem !important;
-  padding: clamp(1.25rem, 4vw, 2rem) !important;
-  border-radius: var(--zl-card-border-radius, 28px) !important;
+  grid-area: modal;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: var(--zl-modal-panel-width, min(92vw, 32rem));
+  max-height: min(
+    84dvh,
+    calc(100dvh - 3.5rem - env(safe-area-inset-bottom, 0px))
+  );
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 auto;
+  padding: clamp(1rem, 2.6vw, 1.5rem);
+  border: 2px solid #1e1714;
+  border-radius: var(--modal-border-radius, 1.5rem);
+  background: linear-gradient(145deg, #fffcf5, #fff6e6);
+  background-color: #fffdf7;
+  box-shadow:
+    0px 10px 0px rgba(0, 0, 0, 0.12),
+    0px 20px 25px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
   transform-origin: center;
+  scrollbar-width: thin;
+  scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
+}
+
+.modal-box.zl-modal-sm,
+.modal-box.tt-modal-sm {
+  --zl-modal-panel-width: min(92vw, 24rem);
+}
+
+.modal-box.zl-modal-md,
+.modal-box.tt-modal-md {
+  --zl-modal-panel-width: min(92vw, 30rem);
+}
+
+.modal-box.zl-modal-lg,
+.modal-box.tt-modal-lg {
+  --zl-modal-panel-width: min(95vw, 48rem);
+}
+
+/* Pitch modals — TalkType canon kit (About, Contributor/Supporter, Intro) */
+.zl-pitch-hero,
+.tt-pitch-ghost {
   position: relative;
   z-index: 1;
+}
+
+.zl-pitch-hero button.mascot,
+.zl-pitch-hero .mascot {
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.animate-zl-pulse-slow {
+  animation: zl-pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes zl-pulse-slow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.zl-marker,
+.tt-marker {
+  background-image: linear-gradient(
+    to top,
+    rgba(255, 106, 194, 0.55) 0%,
+    rgba(255, 106, 194, 0.55) 38%,
+    transparent 38%
+  );
+  border-radius: 2px;
+  padding: 0 0.08em;
+}
+
+.zl-pitch-copy,
+.tt-pitch-copy {
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.375;
+  color: #374151;
+}
+
+.zl-pitch-copy > * + *,
+.tt-pitch-copy > * + * {
+  margin-top: 0.625rem;
+}
+
+.zl-pitch-list > li,
+.tt-pitch-list > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.zl-pitch-list > li + li,
+.tt-pitch-list > li + li {
+  margin-top: 0.625rem;
+}
+
+.zl-pitch-list > li::before,
+.tt-pitch-list > li::before {
+  content: "✓";
+  content: "✓" / "";
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--zl-pass-color, #ff6ac2);
+}
+
+@media (min-width: 640px) {
+  .zl-pitch-copy,
+  .tt-pitch-copy {
+    font-size: 0.9375rem;
+  }
+}
+
+.zl-pitch-cta,
+.tt-pitch-cta,
+.zl-pitch-secondary,
+.tt-pitch-secondary {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 1rem;
+  border: 2px solid #1e1714;
+  border-radius: 1rem;
+  font-weight: 900;
+  text-align: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.zl-pitch-cta,
+.tt-pitch-cta {
+  min-height: 3rem;
+  background-color: var(--zl-pass-color, #ff5ca8);
+  color: #ffffff;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  box-shadow: 2px 2px 0 #1e1714;
+}
+
+.zl-pitch-cta:hover:not(:disabled),
+.tt-pitch-cta:hover:not(:disabled) {
+  background-color: var(--zl-footer-pass-hover-bg, #ff6eb3);
+  transform: translateY(-1px);
+}
+
+.zl-pitch-cta:active:not(:disabled),
+.tt-pitch-cta:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.zl-pitch-cta:disabled,
+.tt-pitch-cta:disabled {
+  border-color: #d6d3d1;
+  background-color: #e7e5e4;
+  color: #a8a29e;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+@media (min-width: 640px) {
+  .zl-pitch-cta,
+  .tt-pitch-cta {
+    font-size: 1.125rem;
+  }
+}
+
+.zl-pitch-secondary,
+.tt-pitch-secondary {
+  min-height: 2.75rem;
+  background-color: #ffffff;
+  color: #1e1714;
+  font-size: 0.875rem;
+  box-shadow: 2px 2px 0 #1e1714;
+}
+
+.zl-pitch-secondary:hover,
+.tt-pitch-secondary:hover {
+  background-color: #fafaf9;
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0 #1e1714;
+}
+
+.zl-pitch-secondary:active,
+.tt-pitch-secondary:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.zl-pitch-cta:focus-visible,
+.tt-pitch-cta:focus-visible,
+.zl-pitch-secondary:focus-visible,
+.tt-pitch-secondary:focus-visible {
+  outline: 2px solid var(--zl-pass-color, #ff6ac2);
+  outline-offset: 3px;
 }
 
 /* Every modal wraps its close button in a bare `<form method="dialog">`. Make
@@ -354,31 +566,50 @@ dialog.zl-contributor-dialog::backdrop {
 .modal-box > form:has(> .modal-close-btn)::before {
   content: "";
   position: absolute;
-  top: calc(-1 * clamp(1.25rem, 4vw, 2rem));
-  right: calc(-1 * clamp(1.25rem, 4vw, 2rem));
+  top: calc(-1 * clamp(1rem, 2.6vw, 1.5rem));
+  right: calc(-1 * clamp(1rem, 2.6vw, 1.5rem));
   width: 6.5rem;
   height: 4rem;
   z-index: -1;
   pointer-events: none;
   background: radial-gradient(
     ellipse at top right,
-    rgba(255, 250, 239, 0.88) 0%,
-    rgba(255, 250, 239, 0.55) 50%,
-    rgba(255, 250, 239, 0) 78%
+    rgba(255, 252, 245, 0.88) 0%,
+    rgba(255, 252, 245, 0.55) 50%,
+    transparent 78%
   );
-  border-radius: 0 var(--zl-card-border-radius, 28px) 0 0;
+  border-radius: 0 var(--modal-border-radius, 1.5rem) 0 0;
+}
+
+/* Mobile modal adjustments */
+@media (max-width: 639px) {
+  .modal-box {
+    max-height: calc(100dvh - 4rem);
+    width: var(--zl-modal-panel-width, min(92vw, 32rem));
+    padding: 1rem;
+    border-radius: 1.25rem;
+  }
+}
+
+/* Short viewports (SE-class phones, landscape) buy back panel height by
+   tightening the panel's own padding. Ordered after the max-width block on
+   purpose: an SE matches both, and the last matching rule wins. */
+@media (max-height: 700px) {
+  .modal-box {
+    padding: 0.75rem;
+  }
 }
 
 /* ===================================================================
-   MODAL OPEN / CLOSE ANIMATIONS — All Modals & Settings
+   MODAL OPEN / CLOSE ANIMATIONS — TalkType spring curves
    =================================================================== */
 /* OPEN animation — playful pop-in with tactile settle */
 dialog.modal[open]:not(.zl-modal-closing) > .modal-box,
 dialog.zl-settings-dialog[open]:not(.zl-modal-closing) > .zl-settings-card,
 dialog.zl-contributor-dialog[open]:not(.zl-modal-closing)
   > .zl-contributor-card {
-  animation: zl-modal-pop-in var(--zl-modal-open-ms, 280ms)
-    var(--zl-modal-open-ease, cubic-bezier(0.16, 0.84, 0.24, 1.06)) both;
+  animation: zl-modal-pop-in var(--zl-modal-open-ms, 240ms)
+    var(--zl-modal-open-ease, cubic-bezier(0.34, 1.4, 0.64, 1)) both;
 }
 
 /* CLOSE animation — responsive pop-out */
@@ -391,8 +622,8 @@ dialog.zl-contributor-dialog.zl-modal-closing {
 dialog.modal.zl-modal-closing > .modal-box,
 dialog.zl-settings-dialog.zl-modal-closing > .zl-settings-card,
 dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-card {
-  animation: zl-modal-pop-out var(--zl-modal-close-ms, 180ms)
-    var(--zl-modal-close-ease, cubic-bezier(0.4, 0, 0.24, 1)) both;
+  animation: zl-modal-pop-out var(--zl-modal-close-ms, 150ms)
+    var(--zl-modal-close-ease, cubic-bezier(0.4, 0, 0.2, 1)) both;
 }
 
 dialog.modal.zl-modal-closing > .modal-backdrop,
@@ -401,7 +632,7 @@ dialog.zl-settings-dialog.zl-modal-closing > .zl-modal-backdrop,
 dialog.zl-settings-dialog.zl-modal-closing .zl-modal-backdrop,
 dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-backdrop,
 dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
-  animation: zl-modal-backdrop-out var(--zl-modal-close-ms, 180ms) ease-out both;
+  animation: zl-modal-backdrop-out var(--zl-modal-close-ms, 150ms) ease-out both;
 }
 
 /* Custom classes for Lukens-style UI */
@@ -421,15 +652,11 @@ dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
   }
 }
 
-/* Rises and settles with one small overshoot. No rotation — tactile and clean. */
+/* Rises and settles with TalkType spring */
 @keyframes zl-modal-pop-in {
   0% {
     opacity: 0;
-    transform: translateY(12px) scale(0.96);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(-2px) scale(1.015);
+    transform: translateY(16px) scale(0.92);
   }
   100% {
     opacity: 1;
@@ -444,7 +671,7 @@ dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
   }
   to {
     opacity: 0;
-    transform: translateY(8px) scale(0.97);
+    transform: translateY(8px) scale(0.94);
   }
 }
 
@@ -474,7 +701,10 @@ dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
     > .zl-contributor-card,
   dialog.modal.zl-modal-closing > .modal-box,
   dialog.zl-settings-dialog.zl-modal-closing > .zl-settings-card,
-  dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-card,
+  dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-card {
+    animation-duration: 1ms !important;
+    animation-timing-function: linear !important;
+  }
   .modal > .modal-backdrop,
   .modal .modal-backdrop,
   .zl-modal-backdrop,
@@ -485,7 +715,6 @@ dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
   dialog.zl-settings-dialog.zl-modal-closing .zl-modal-backdrop,
   dialog.zl-contributor-dialog.zl-modal-closing > .zl-contributor-backdrop,
   dialog.zl-contributor-dialog.zl-modal-closing .zl-contributor-backdrop {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    animation-duration: 1ms !important;
   }
 }

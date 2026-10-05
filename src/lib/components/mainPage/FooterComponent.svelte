@@ -4,14 +4,9 @@
   import { isContributor } from "$lib";
 
   const dispatch = createEventDispatcher();
-  /* 38px on phones, the frozen 44 from sm up. 44 is Apple's *recommendation*
-     for primary targets; WCAG 2.2 AA asks 24. These are tertiary links in a
-     bar that is on screen permanently, and on a notched iPhone that bar was
-     spending ~90px of a small screen to hold three things nobody taps often.
-     38 is still a comfortable thumb target and buys back real estate the
-     list actually uses. */
+  /* Standardized 44px tap targets across all breakpoints (TalkType canon) */
   const footerButtonClass =
-    "footer-nav-button btn btn-ghost btn-sm !h-[38px] !min-h-[38px] min-w-11 px-1.5 py-1.5 text-xs text-gray-600 shadow-none transition-colors duration-150 focus-visible:ring-0 sm:!h-[44px] sm:!min-h-[44px] sm:px-3 sm:py-2 sm:text-base";
+    "footer-nav-button inline-flex items-center justify-center h-[44px] min-h-[44px] min-w-11 px-2 py-2 text-xs font-semibold text-gray-600 transition-colors duration-150 hover:text-gray-900 focus:outline-none sm:px-3 sm:text-base";
   let shareStatus = "";
   let shareStatusTimer = null;
 
@@ -97,7 +92,7 @@
 </script>
 
 <nav
-  class="flex items-center space-x-1 sm:space-x-2"
+  class="zl-footer-nav flex max-w-full items-center justify-center space-x-1 sm:space-x-2"
   aria-label="ZipList footer"
 >
   <button
@@ -142,14 +137,14 @@
 </nav>
 
 <style>
-  nav {
+  .zl-footer-nav {
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
   }
 
-  nav::-webkit-scrollbar {
+  .zl-footer-nav::-webkit-scrollbar {
     display: none;
   }
 
@@ -161,15 +156,15 @@
   }
 
   .footer-nav-button:hover {
-    background-color: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.12);
-    color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
+    background-color: var(--footer-button-hover-bg, rgba(30, 23, 20, 0.05));
+    color: var(--footer-button-hover-color, #1e1714);
   }
 
   .footer-nav-button:focus-visible {
-    outline: 2px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.58);
+    outline: 2px solid var(--footer-focus-ring, rgba(30, 23, 20, 0.3));
     outline-offset: 2px;
-    background-color: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.14);
-    color: var(--zl-text-hover-color, var(--zl-accent-color, #ff6ac2));
+    background-color: var(--footer-button-hover-bg, rgba(30, 23, 20, 0.05));
+    color: var(--footer-button-hover-color, #1e1714);
   }
 
   /* Vibe-reactive Extras action pill: adapts to chosen vibe (matches TalkType Caboodle pill) */
@@ -196,11 +191,11 @@
   .zl-footer-pass:hover,
   .zl-footer-pass:focus-visible {
     color: var(--zl-footer-pass-ink, #1e1714);
-    background: var(--zl-footer-pass-hover-bg, var(--zl-pass-color, #ff6ac2));
+    background: var(--zl-footer-pass-hover-bg, var(--zl-pass-color, #ff7ecd));
     box-shadow: 0 4px 12px
       var(
         --zl-footer-pass-glow-hover,
-        rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.5)
+        rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.55)
       );
   }
 
