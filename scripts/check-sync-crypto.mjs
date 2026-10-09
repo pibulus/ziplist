@@ -87,4 +87,36 @@ console.log("▶ Testing syncCrypto Web Crypto implementation...");
   console.log("  ✓ Wrong passphrase rejection");
 }
 
+// Test 4: deriveSyncRoom, sealData, and openData (SoftStack sync canon)
+{
+  const { deriveSyncRoom, sealData, openData } = await import(
+    "../src/lib/services/realtime/syncCrypto.js"
+  );
+  const secret = "ZL-TEST-PASSPORT";
+  const { roomId, key } = await deriveSyncRoom(secret, "zl_p");
+
+  assert.ok(roomId.startsWith("zl_p"), "Room ID must have zl_p prefix");
+  assert.equal(roomId.length, 4 + 32, "Room ID must be zl_p + 32 hex chars");
+  assert.ok(key instanceof CryptoKey, "Key must be a CryptoKey");
+
+  // Derive again: must be deterministic
+  const again = await deriveSyncRoom(secret, "zl_p");
+  assert.equal(again.roomId, roomId, "Room ID must be deterministic");
+
+  const samplePayload = { lists: [{ id: "l1", name: "Groceries" }] };
+  const sealed = await sealData(key, samplePayload);
+  assert.ok(sealed.iv && sealed.ct, "Sealed payload must have iv and ct");
+
+  const opened = await openData(again.key, sealed);
+  assert.deepEqual(opened, samplePayload, "Opened data must match original payload");
+
+  // Other secret fails
+  const other = await deriveSyncRoom("ZL-DIFFERENT-PASSPORT", "zl_p");
+  await assert.rejects(
+    async () => openData(other.key, sealed),
+    "Opening with different secret must throw",
+  );
+  console.log("  ✓ deriveSyncRoom, sealData, and openData deterministic round-trip");
+}
+
 console.log("✅ All syncCrypto tests passed successfully!");

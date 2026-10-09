@@ -7,6 +7,7 @@ import {
   parseContributorCodes,
 } from "$lib/server/contributorCodes.js";
 import {
+  createVoucherLicense,
   issueManualContributorToken,
   issueTokenForLicense,
   redeemStoredLicense,
@@ -40,6 +41,7 @@ export async function POST(event) {
         valid: true,
         token: issueTokenForLicense(license),
         license,
+        code: normalizedCode,
       });
     }
 
@@ -65,14 +67,12 @@ export async function POST(event) {
       );
     }
 
+    const voucher = await createVoucherLicense(normalizedCode);
     return json({
       valid: true,
-      token: issueManualContributorToken(),
-      license: {
-        id: "manual-contributor-code",
-        tier: "contributor",
-        source: "manual-code",
-      },
+      token: issueTokenForLicense(voucher.license),
+      license: voucher.license,
+      code: voucher.code,
     });
   } catch (error) {
     console.error(

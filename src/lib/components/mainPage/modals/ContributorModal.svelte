@@ -1,5 +1,5 @@
 <script>
-  import { tick } from "svelte";
+  import { tick, onMount } from "svelte";
   import { browser } from "$app/environment";
   import { isContributor, setContributorStatus } from "$lib";
   import {
@@ -9,6 +9,15 @@
   import ModalCloseButton from "./ModalCloseButton.svelte";
   import { Mascot } from "$lib/components/ui";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import { hapticService } from "$lib/services/infrastructure";
+  import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
+  import Confetti from "$lib/components/ui/effects/Confetti.svelte";
+  import {
+    readStoredSupporterCode,
+    saveStoredSupporterCode,
+    getVaultHash,
+  } from "$lib/services/vaultHashStorage.js";
+  import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";
 
   export let closeModal = () => {};
 
@@ -18,6 +27,18 @@
   let isStartingCheckout = false;
   let view = "pitch"; // 'pitch' or 'redeem'
   let codeInput;
+  let showConfetti = false;
+  let passportCode = "";
+  let vaultHash = "";
+  let linkCopied = false;
+  let codeCopied = false;
+
+  $: passportCode = readStoredSupporterCode() || "";
+  $: if (passportCode && !vaultHash) {
+    getVaultHash(passportCode)
+      .then((h) => (vaultHash = h))
+      .catch(() => {});
+  }
 
   function claimStorageKey(checkoutId) {
     return `ziplist_checkout_claim_${checkoutId}`;
@@ -53,6 +74,45 @@
       view = "pitch";
       errorMessage = "";
     }, 150);
+  }
+
+  async function copySyncLink() {
+    const targetCode = passportCode || readStoredSupporterCode();
+    if (!targetCode) return;
+    const syncUrl = buildDeviceSyncUrl({ code: targetCode });
+    try {
+      await navigator.clipboard.writeText(syncUrl);
+      linkCopied = true;
+      soundService?.play?.("bloom") || soundService?.copySuccess?.();
+      hapticService?.impact?.("light");
+      setTimeout(() => (linkCopied = false), 2200);
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: { message: "Sync link copied! 🔗", type: "success" },
+        }),
+      );
+    } catch (err) {
+      console.warn("Copy link failed:", err);
+    }
+  }
+
+  async function copyPassCode() {
+    const targetCode = passportCode || readStoredSupporterCode();
+    if (!targetCode) return;
+    try {
+      await navigator.clipboard.writeText(targetCode);
+      codeCopied = true;
+      soundService?.play?.("bloom") || soundService?.copySuccess?.();
+      hapticService?.impact?.("light");
+      setTimeout(() => (codeCopied = false), 2200);
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: { message: "Pass code copied! 📋", type: "success" },
+        }),
+      );
+    } catch (err) {
+      console.warn("Copy code failed:", err);
+    }
   }
 
   async function handleCheckout() {
@@ -104,8 +164,14 @@
         return;
       }
 
+      const personalCode = payload.code || code.trim();
+      saveStoredSupporterCode(personalCode);
       setContributorStatus(true, payload.token || null);
-      soundService.success?.({ force: true });
+      passportCode = personalCode;
+      vaultHash = await getVaultHash(personalCode);
+      showConfetti = true;
+      soundService?.play?.("bloom") || soundService?.success?.({ force: true });
+      hapticService?.notification?.("success");
       view = "pitch";
       code = "";
 
@@ -154,7 +220,7 @@
       </div>
 
       {#if $isContributor}
-        <!-- Unlocked State -->
+        <!-- Unlocked State with MembershipCard -->
         <div class="space-y-1.5 text-center">
           <h3
             id="contributor_modal_title"
@@ -166,19 +232,36 @@
             id="contributor_modal_description"
             class="text-sm font-bold text-pink-600"
           >
-            All perks are active on this device.
+            All perks & sovereign device sync are active.
           </p>
         </div>
 
-        <div class="zl-pitch-copy">
-          <ul class="zl-pitch-list">
-            <li>Up to 12 active checklists.</li>
-            <li>Real-time collaborative live rooms.</li>
-            <li>Instant 4-word phrase device sync.</li>
-          </ul>
+        {#if vaultHash}
+          <div class="flex justify-center py-1">
+            <MembershipCard {vaultHash} {passportCode} />
+          </div>
+        {/if}
+
+        <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+          <button
+            type="button"
+            on:click={copyPassCode}
+            class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-amber-300 px-3.5 py-1.5 text-xs font-black text-stone-900 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-amber-200 active:scale-95"
+          >
+            <span>📋</span>
+            <span>{codeCopied ? "✨ Code copied!" : "Copy code"}</span>
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-white px-3.5 py-1.5 text-xs font-black text-stone-800 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-stone-50 active:scale-95"
+            on:click={copySyncLink}
+          >
+            <span>🔗</span>
+            <span>{linkCopied ? "✨ Link copied!" : "Copy sync link"}</span>
+          </button>
         </div>
 
-        <div class="space-y-2 pt-1">
+        <div class="space-y-2 pt-2">
           <button type="button" class="zl-pitch-cta" on:click={handleClose}>
             Nice, let's make lists
           </button>
@@ -238,8 +321,8 @@
           class="mx-auto flex min-h-9 items-center gap-1 rounded-full px-3 text-xs font-bold text-gray-500 transition hover:text-gray-900"
           on:click={showPitch}
         >
-          <span aria-hidden="true">←</span>
-          <span>Back to perks</span>
+          <span>←</span>
+          <span>Back to supporter pass</span>
         </button>
       {:else}
         <!-- Pitch View -->
@@ -248,13 +331,13 @@
             id="contributor_modal_title"
             class="text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
           >
-            More lists, <span class="zl-marker">more chops.</span>
+            Unlock <span class="zl-marker">More Lists</span>
           </h3>
           <p
             id="contributor_modal_description"
-            class="text-sm font-bold tracking-tight text-pink-600 sm:text-base"
+            class="text-sm font-bold leading-snug text-pink-600"
           >
-            12 lists · live rooms · every device
+            {CONTRIBUTOR_COPY.tagline}
           </p>
         </div>
 
@@ -279,52 +362,39 @@
           <button
             type="button"
             class="zl-pitch-cta"
-            on:click={handleCheckout}
             disabled={isStartingCheckout}
+            on:click={handleCheckout}
           >
-            <span aria-hidden="true">✦</span>
-            <span>{isStartingCheckout ? "Opening checkout..." : "Dig in"}</span>
+            {isStartingCheckout
+              ? "Starting checkout..."
+              : CONTRIBUTOR_COPY.ctaButton}
           </button>
-
-          <p
-            class="whitespace-nowrap px-1 text-center text-xs font-semibold text-gray-500"
-          >
-            {CONTRIBUTOR_COPY.priceLine}
-          </p>
 
           <button
             type="button"
             class="zl-pitch-secondary"
             on:click={showRedeem}
           >
-            Got an unlock code?
+            {CONTRIBUTOR_COPY.redeemButton}
           </button>
         </div>
-      {/if}
 
-      <p class="text-center text-xs font-semibold text-gray-500">
-        © 2026 ZipList • Made by <span class="font-black text-gray-900"
-          >Pablo</span
-        > in Melbourne
-      </p>
+        <p class="text-center text-xs font-bold text-gray-400">
+          {CONTRIBUTOR_COPY.finePrint}
+        </p>
+      {/if}
     </div>
   </div>
+
   <button
     type="button"
     class="modal-backdrop"
     aria-label="Close extras modal"
+    tabindex="-1"
     on:click={handleClose}
   ></button>
 </dialog>
 
-<style>
-  /* Mascot slot sizing inside pitch hero */
-  .zl-pitch-hero :global(.mascot) {
-    --mascot-size-mobile: 64px;
-    --mascot-size-sm: 72px;
-    --mascot-size-md: 72px;
-    --mascot-size-lg: 72px;
-    --mascot-ink-pad: 0%;
-    margin-bottom: 0;
-  }
-</style>
+{#if showConfetti}
+  <Confetti duration={2000} on:complete={() => (showConfetti = false)} />
+{/if}

@@ -1416,6 +1416,7 @@ function createListsStore() {
         ok: true,
         listsCount: normalizedLists.length,
         overflowCount: reconciled.overflowCount,
+        hasLocalDifferences: Boolean(reconciled.hasLocalDifferences),
       };
 
       return {

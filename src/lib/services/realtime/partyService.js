@@ -12,7 +12,9 @@ import { LIVE_MESSAGE_TYPES } from "./liveListProtocol.js";
 const PARTYKIT_PLACEHOLDER_HOST = "ziplist.your-username.partykit.dev";
 
 function getConfiguredPartyKitHost() {
-  const host = import.meta.env.VITE_PARTYKIT_HOST?.trim();
+  const host =
+    import.meta.env.PUBLIC_PARTYKIT_HOST?.trim() ||
+    import.meta.env.VITE_PARTYKIT_HOST?.trim();
   if (!host || host === PARTYKIT_PLACEHOLDER_HOST) {
     return "";
   }

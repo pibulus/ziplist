@@ -1,9 +1,11 @@
 <script>
   import { onMount } from "svelte";
+  import { slide } from "svelte/transition";
   import { theme, listFirstMode, applyTheme, isContributor } from "$lib";
   import { STORAGE_KEYS, THEMES } from "$lib/constants";
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import { hapticService } from "$lib/services/infrastructure/hapticService";
   import {
     getOrCreateAvatar,
     setAvatarName,
@@ -12,8 +14,13 @@
   } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
   import ModalCloseButton from "../modals/ModalCloseButton.svelte";
-  import { QrShareModal } from "../modals/index.js";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
+  import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
+  import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";
+  import {
+    readStoredSupporterCode,
+    getVaultHash,
+  } from "$lib/services/vaultHashStorage.js";
 
   // Props for the modal
   export let closeModal = () => {};
@@ -100,59 +107,90 @@
     );
   }
 
-  // ── Device sync ────────────────────────────────────────────────────────
-  // The QR and the link carry the room phrase AND the random key, so they
-  // are the only ways in. A paste field stays because an installed PWA keeps
-  // its own storage: a QR scan opens the browser, not the home-screen app.
-  let showSyncQr = false;
-  let showPaste = false;
-  let pasteValue = "";
-  let pasteError = "";
-  let copyLinkFeedback = false;
+  // ── Passport & Device Sync ──────────────────────────────────────────────
+  let passportCode = "";
+  let vaultHash = "";
+  let isPassportExpanded = false;
+  let codeCopied = false;
+  let linkCopied = false;
+  let syncNote = "";
 
-  function syncToast(message) {
-    window.dispatchEvent(
-      new CustomEvent("ziplist:toast", {
-        detail: { message, type: "success" },
-      }),
-    );
+  $: passportCode = readStoredSupporterCode() || "";
+  $: if (passportCode && !vaultHash) {
+    getVaultHash(passportCode)
+      .then((hash) => (vaultHash = hash))
+      .catch(() => {});
   }
 
-  async function handleEnableSync() {
-    soundService.select();
-    await deviceSyncStore.enableSync();
+  function deviceSyncUrl() {
+    return buildDeviceSyncUrl({ code: readStoredSupporterCode() });
   }
 
-  async function handleCopySyncLink() {
-    if (!$deviceSyncStore.shareUrl) return;
+  $: syncHeadline =
+    $deviceSyncStore.status === "connected"
+      ? $deviceSyncStore.peers > 1
+        ? `${$deviceSyncStore.peers} devices online`
+        : "Only this device is online"
+      : $deviceSyncStore.status === "connecting"
+        ? "Finding your devices…"
+        : $deviceSyncStore.status === "unavailable"
+          ? "Sync unavailable"
+          : passportCode
+            ? "Instant sync ready"
+            : "Add pass code to link devices";
+
+  async function copyPassCode() {
+    const c = passportCode || readStoredSupporterCode();
+    if (!c) return;
     try {
-      await navigator.clipboard.writeText($deviceSyncStore.shareUrl);
-      copyLinkFeedback = true;
-      soundService.copySuccess({ force: true });
-      setTimeout(() => {
-        copyLinkFeedback = false;
-      }, 2000);
+      await navigator.clipboard.writeText(c);
+      codeCopied = true;
+      soundService?.play?.("bloom") ||
+        soundService?.copySuccess?.({ force: true });
+      hapticService?.impact?.("light") || hapticService?.selection?.();
+      setTimeout(() => (codeCopied = false), 2500);
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: { message: "Pass code copied! 📋", type: "success" },
+        }),
+      );
     } catch (err) {
-      console.error("Failed to copy link:", err);
+      console.warn("Failed to copy pass code:", err);
     }
   }
 
-  function handlePastePair() {
-    const result = deviceSyncStore.pairWithLink(pasteValue);
-    if (!result.ok) {
-      pasteError = "That's not a full pairing link. It needs the part after #.";
-      return;
+  async function copySyncLink() {
+    try {
+      const syncUrl = deviceSyncUrl();
+      if (!syncUrl) throw new Error("No sync url");
+      await navigator.clipboard.writeText(syncUrl);
+      linkCopied = true;
+      soundService?.play?.("bloom") ||
+        soundService?.copySuccess?.({ force: true });
+      hapticService?.impact?.("light") || hapticService?.selection?.();
+      setTimeout(() => (linkCopied = false), 2500);
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: { message: "Sync link copied! 🔗", type: "success" },
+        }),
+      );
+    } catch {
+      syncNote = "Copy failed";
+      setTimeout(() => (syncNote = ""), 2500);
     }
-    soundService.select();
-    pasteValue = "";
-    pasteError = "";
-    showPaste = false;
-    syncToast("Devices linked");
+  }
+
+  function togglePassport() {
+    isPassportExpanded = !isPassportExpanded;
+    soundService?.play?.("tap") || soundService?.select?.();
+    hapticService?.impact?.("light") || hapticService?.selection?.();
   }
 
   function handleDisableSync() {
     deviceSyncStore.disableSync();
-    syncToast("Sync off on this device");
+    passportCode = "";
+    vaultHash = "";
+    isPassportExpanded = false;
   }
 
   // Handle vibe change
@@ -336,134 +374,143 @@
         </div>
       </section>
 
-      <!-- Same row clothes as "Name in shared rooms": no new card and no new
-           shadow, because the chunky-mode shadow budget is already spent. -->
-      <section class="zl-settings-section" aria-label="Device sync">
-        <div class="zl-setting-row zl-sync-row">
-          <div class="zl-sync-head">
-            <div class="zl-setting-info">
-              <span class="zl-setting-name">Device sync</span>
-              <p class="zl-setting-desc">
-                Every list on every paired device. Encrypted before it leaves.
-              </p>
-            </div>
-            {#if $deviceSyncStore.enabled}
-              <span
-                class="zl-sync-pill"
-                class:on={["connected", "syncing"].includes(
-                  $deviceSyncStore.status,
-                )}
-                role="status"
-              >
-                {#if ["connected", "syncing"].includes($deviceSyncStore.status)}
-                  {$deviceSyncStore.peerCount > 1
-                    ? `${$deviceSyncStore.peerCount} devices`
-                    : "On"}
-                {:else if $deviceSyncStore.status === "connecting"}
-                  Connecting
-                {:else if $deviceSyncStore.status === "mismatch"}
-                  Mismatch
-                {:else}
-                  Offline
-                {/if}
-              </span>
-            {/if}
-          </div>
-
-          {#if $deviceSyncStore.enabled}
-            <div class="zl-sync-actions">
-              <button
-                type="button"
-                class="zl-sync-btn zl-sync-btn-primary"
-                on:click={() => (showSyncQr = true)}
-              >
-                Show QR
-              </button>
-              <button
-                type="button"
-                class="zl-sync-btn"
-                on:click={handleCopySyncLink}
-              >
-                {copyLinkFeedback ? "Copied" : "Copy link"}
-              </button>
-            </div>
-          {:else}
-            <button
-              type="button"
-              class="zl-sync-btn zl-sync-btn-primary"
-              on:click={handleEnableSync}
-            >
-              Turn on
-            </button>
-          {/if}
-
-          {#if $deviceSyncStore.status === "mismatch" && $deviceSyncStore.error}
-            <p class="zl-sync-note" role="alert">{$deviceSyncStore.error}</p>
-          {/if}
-
-          {#if showPaste}
-            <div class="zl-sync-paste">
-              <input
-                class="zl-sync-input"
-                bind:value={pasteValue}
-                placeholder="ziplist.app/?sync=…#k=…"
-                aria-label="Pairing link from the other device"
-                on:keydown={(e) => e.key === "Enter" && handlePastePair()}
-              />
-              <button
-                type="button"
-                class="zl-sync-btn"
-                disabled={!pasteValue.trim()}
-                on:click={handlePastePair}
-              >
-                Pair
-              </button>
-            </div>
-            {#if pasteError}
-              <p class="zl-sync-note" role="alert">{pasteError}</p>
-            {/if}
-          {/if}
-
-          <div class="zl-sync-links">
-            <button
-              type="button"
-              class="zl-sync-link"
-              aria-expanded={showPaste}
-              on:click={() => (showPaste = !showPaste)}
-            >
-              Pair with a link
-            </button>
-            {#if $deviceSyncStore.enabled}
-              <button
-                type="button"
-                class="zl-sync-link"
-                on:click={handleDisableSync}
-              >
-                Stop syncing here
-              </button>
-            {/if}
-          </div>
-        </div>
-      </section>
-
-      <section
-        class="zl-settings-section zl-settings-footer"
-        aria-label="Support ZipList"
-      >
-        <button
-          type="button"
-          class="zl-contributor-cta"
-          title="More lists, and more of them live at once"
-          on:click={openContributorModal}
+      <!-- Passport & Device Sync -->
+      {#if !contributorUnlocked}
+        <section
+          class="zl-settings-section"
+          aria-label="Passport & Device Sync"
         >
-          <span aria-hidden="true">✦</span>
-          <span
-            >{contributorUnlocked
-              ? "Unlocked ★ (12 lists)"
-              : "Get more lists (12 max)"}</span
+          <div
+            class="zl-setting-row flex w-full items-center justify-between gap-4"
           >
-        </button>
-      </section>
+            <div class="zl-setting-info min-w-0 pr-2">
+              <span class="zl-setting-name">Passport & Sync</span>
+              <p class="zl-setting-desc">Phone + laptop link & perks.</p>
+            </div>
+            <button
+              type="button"
+              class="zl-sync-btn zl-sync-btn-primary flex shrink-0 items-center gap-1.5 whitespace-nowrap !px-3.5 !py-1.5 text-xs font-black"
+              on:click={openContributorModal}
+            >
+              <span aria-hidden="true">★</span>
+              <span>Unlock</span>
+            </button>
+          </div>
+        </section>
+
+        <section
+          class="zl-settings-section zl-settings-footer"
+          aria-label="Support ZipList"
+        >
+          <button
+            type="button"
+            class="zl-contributor-cta"
+            title="More lists, and more of them live at once"
+            on:click={openContributorModal}
+          >
+            <span aria-hidden="true">✦</span>
+            <span>Get more lists (12 max)</span>
+          </button>
+        </section>
+      {:else}
+        <section
+          class="zl-settings-section"
+          aria-label="Passport & Device Sync"
+        >
+          <div class="zl-passport-sync-card">
+            <div
+              class="flex cursor-pointer select-none items-center justify-between gap-3"
+              on:click={togglePassport}
+            >
+              <div class="zl-setting-info min-w-0">
+                <p
+                  class="flex items-center gap-2 text-sm font-black leading-tight text-neutral-900 dark:text-neutral-100"
+                >
+                  <span
+                    class="h-2.5 w-2.5 shrink-0 rounded-full {$deviceSyncStore.status ===
+                    'connected'
+                      ? 'animate-pulse bg-emerald-500'
+                      : $deviceSyncStore.status === 'connecting'
+                        ? 'animate-pulse bg-amber-400'
+                        : 'bg-emerald-400'}"
+                    aria-hidden="true"
+                  ></span>
+                  <span>{syncHeadline}</span>
+                </p>
+                <p class="zl-setting-desc mt-1">
+                  Instant sync between your phone & laptop.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="zl-passport-toggle-btn inline-flex shrink-0 items-center gap-1.5 rounded-full border-2 border-stone-800 bg-amber-300 px-3.5 py-1.5 text-xs font-black text-stone-900 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-amber-200 active:scale-95"
+                on:click|stopPropagation={togglePassport}
+                aria-expanded={isPassportExpanded}
+                aria-label="{isPassportExpanded
+                  ? 'Hide'
+                  : 'Show'} collectible passport"
+              >
+                <span>🪪</span>
+                <span>{isPassportExpanded ? "Hide" : "Passport"}</span>
+                <span class="text-[10px] leading-none"
+                  >{isPassportExpanded ? "▲" : "▼"}</span
+                >
+              </button>
+            </div>
+
+            {#if isPassportExpanded}
+              <div
+                transition:slide={{ duration: 240 }}
+                class="mt-3.5 space-y-3 pt-1"
+              >
+                {#if vaultHash}
+                  <div class="flex justify-center py-1">
+                    <MembershipCard {vaultHash} {passportCode} />
+                  </div>
+                {/if}
+
+                <div
+                  class="flex flex-wrap items-center justify-center gap-2 pt-1"
+                >
+                  <button
+                    type="button"
+                    on:click={copyPassCode}
+                    class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-amber-300 px-3.5 py-1.5 text-xs font-black text-stone-900 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-amber-200 active:scale-95"
+                  >
+                    <span>📋</span>
+                    <span>{codeCopied ? "✨ Code copied!" : "Copy code"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-white px-3.5 py-1.5 text-xs font-black text-stone-800 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-stone-50 active:scale-95"
+                    on:click={copySyncLink}
+                  >
+                    <span>🔗</span>
+                    <span
+                      >{linkCopied ? "✨ Link copied!" : "Copy sync link"}</span
+                    >
+                  </button>
+                </div>
+
+                <div class="flex justify-center gap-3 pt-1 text-[11px]">
+                  <button
+                    type="button"
+                    class="zl-sync-link text-stone-500 hover:text-stone-900"
+                    on:click={handleDisableSync}
+                  >
+                    Stop syncing on this device
+                  </button>
+                </div>
+              </div>
+            {/if}
+          </div>
+
+          {#if syncNote}
+            <p class="px-0.5 text-xs font-bold text-gray-500">{syncNote}</p>
+          {/if}
+        </section>
+      {/if}
     </div>
   </div>
 
@@ -474,15 +521,6 @@
     tabindex="-1"
     on:click={handleModalClose}
   ></button>
-
-  {#if showSyncQr && $deviceSyncStore.shareUrl}
-    <QrShareModal
-      closeModal={() => (showSyncQr = false)}
-      shareUrl={$deviceSyncStore.shareUrl}
-      title="Pair a device"
-      subtitle="Any phone camera reads it. Every list comes along."
-    />
-  {/if}
 </dialog>
 
 <style>
@@ -610,38 +648,36 @@
     outline-offset: 3px;
   }
 
-  .zl-sync-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.55rem;
+  .zl-passport-sync-card {
+    background: #fffdf5;
+    border: var(--zl-item-border-width, 2px) solid
+      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 16px;
+    padding: 0.85rem;
+    box-shadow: 2px 2px 0px rgba(30, 23, 20, 0.06);
+    transition: all 0.2s;
   }
 
-  .zl-sync-head {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .zl-passport-sync-card:hover {
+    border-color: var(--zl-primary-color);
   }
 
-  .zl-sync-pill {
-    flex-shrink: 0;
-    font-size: 0.72rem;
-    font-weight: 800;
-    padding: 0.15rem 0.55rem;
-    border-radius: 999px;
-    border: 1.5px solid var(--zl-item-border-color, rgba(30, 23, 20, 0.16));
-    color: var(--zl-text-color-primary, #1e1714);
-    white-space: nowrap;
+  .zl-passport-toggle-btn {
+    box-shadow: 1.5px 1.5px 0px #1e1714;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 0.15s ease;
   }
 
-  .zl-sync-pill.on {
-    background: rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22);
-    border-color: var(--zl-cta-color, #ffb000);
+  .zl-passport-toggle-btn:hover {
+    background-color: #fde047;
   }
 
-  .zl-sync-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+  .zl-passport-toggle-btn:active {
+    transform: scale(0.95);
   }
 
   .zl-sync-btn {
@@ -672,29 +708,6 @@
 
   .zl-sync-btn-primary {
     background: var(--zl-cta-color, #ffb000);
-  }
-
-  .zl-sync-row > .zl-sync-btn,
-  .zl-sync-actions > .zl-sync-btn {
-    width: 100%;
-  }
-
-  .zl-sync-paste {
-    display: flex;
-    gap: 0.4rem;
-  }
-
-  .zl-sync-input {
-    flex: 1;
-    min-width: 0;
-    font-family: "Space Mono", monospace;
-    font-size: 0.78rem;
-    font-weight: 700;
-    padding: 0.45rem 0.65rem;
-    border-radius: 10px;
-    border: 2px solid var(--zl-item-border-color, rgba(30, 23, 20, 0.16));
-    background: #fffef7;
-    color: #1e1714;
   }
 
   .zl-sync-links {
@@ -1019,6 +1032,7 @@
      visibly chonks the very modal you're standing in. */
   :global(html.mode-neo-brutalist) .zl-setting-row,
   :global(html.mode-neo-brutalist) .zl-setting-group,
+  :global(html.mode-neo-brutalist) .zl-passport-sync-card,
   :global(html.mode-neo-brutalist) .zl-vibe-option {
     border-radius: 10px;
     box-shadow: 3px 3px 0 0 var(--zl-chunky-ink, #1e1714);

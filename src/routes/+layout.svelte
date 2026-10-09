@@ -11,23 +11,13 @@
 
   if (browser) {
     onMount(async () => {
+      deviceSyncStore.init();
       const handled = deviceSyncStore.handleIncomingUrl();
       if (handled) {
         // A paired device already knows ZipList from the other one. Child
         // onMounts run first, so the intro's timer is already pending here.
         firstVisitService.cancelPendingIntroModal();
         firstVisitService.markIntroAsSeen();
-        window.dispatchEvent(
-          new CustomEvent("ziplist:toast", {
-            detail: {
-              type: "success",
-              message: "Devices linked",
-            },
-          }),
-        );
-      } else {
-        // No-op unless this device was paired before.
-        deviceSyncStore.connect();
       }
     });
   }

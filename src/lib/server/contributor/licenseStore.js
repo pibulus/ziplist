@@ -108,6 +108,23 @@ export function issueTokenForLicense(license) {
   });
 }
 
+export async function createVoucherLicense(manualCode = "") {
+  const id = manualCode
+    ? `voucher_${crypto
+        .createHash("sha256")
+        .update(manualCode.trim().toLowerCase())
+        .digest("hex")
+        .slice(0, 16)}`
+    : `voucher_${crypto.randomUUID()}`;
+  const code = generateLicenseCode(id);
+  const codeHash = hashContributorCode(code);
+  return createLicenseForCheckout({
+    id,
+    codeHash,
+    provider: "voucher",
+  });
+}
+
 export function issueManualContributorToken() {
   return issueContributorToken({
     sub: "manual-contributor-code",

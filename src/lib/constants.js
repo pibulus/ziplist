@@ -37,6 +37,8 @@ export const STORAGE_KEYS = {
   CONTRIBUTOR: "ziplist-contributor",
   CONTRIBUTOR_TOKEN: "ziplist-contributor-token",
   CONTRIBUTOR_EXPIRES: "ziplist-contributor-expires",
+  SUPPORTER_PASSPORT_CODE: "ziplist-supporter-passport-code",
+  SYNC_PRIVATE_PHRASE: "ziplist-sync-private-phrase",
 
   // PWA Related
   TRANSCRIPTION_COUNT: "ziplist-transcription-count",

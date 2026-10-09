@@ -214,6 +214,16 @@ export function mergeCollections({
     incomingMap.set(list.id, list);
   }
 
+  let hasLocalDifferences = false;
+
+  // Check if local had deleted list tombstones newer than incoming
+  for (const [id, localTime] of Object.entries(localDeletedListIds || {})) {
+    if (localTime > (incomingDeletedListIds?.[id] || 0)) {
+      hasLocalDifferences = true;
+      break;
+    }
+  }
+
   const allListIds = new Set([...localMap.keys(), ...incomingMap.keys()]);
   const reconciledLists = [];
 
@@ -236,6 +246,10 @@ export function mergeCollections({
       const localTime = getListTimestamp(local);
       const incomingTime = getListTimestamp(incoming);
 
+      if (localTime > incomingTime) {
+        hasLocalDifferences = true;
+      }
+
       // Metadata (name, color) follows higher timestamp
       const metadataSource = incomingTime > localTime ? incoming : local;
 
@@ -246,11 +260,44 @@ export function mergeCollections({
         now,
       );
 
+      // Check if local had newer item tombstones
+      if (!hasLocalDifferences && local.deletedItemIds) {
+        for (const [itemId, t] of Object.entries(local.deletedItemIds)) {
+          if (t > (incoming.deletedItemIds?.[itemId] || 0)) {
+            hasLocalDifferences = true;
+            break;
+          }
+        }
+      }
+
       const mergedItems = mergeListItems(
         local.items,
         incoming.items,
         mergedDeletedItems,
       );
+
+      // Check if local had items or edits newer than incoming
+      if (!hasLocalDifferences && Array.isArray(local.items)) {
+        const incomingItemMap = new Map(
+          (incoming.items || []).map((i) => [i.id, i]),
+        );
+        for (const localItem of local.items) {
+          const incItem = incomingItemMap.get(localItem.id);
+          if (!incItem) {
+            if (!mergedDeletedItems[localItem.id]) {
+              hasLocalDifferences = true;
+              break;
+            }
+          } else {
+            const lTime = new Date(localItem.updatedAt || 0).getTime();
+            const iTime = new Date(incItem.updatedAt || 0).getTime();
+            if (lTime > iTime) {
+              hasLocalDifferences = true;
+              break;
+            }
+          }
+        }
+      }
 
       reconciledLists.push({
         ...local,
@@ -260,6 +307,7 @@ export function mergeCollections({
         updatedAt: new Date(Math.max(localTime, incomingTime)).toISOString(),
       });
     } else if (local) {
+      hasLocalDifferences = true;
       reconciledLists.push({
         ...local,
         deletedItemIds: pruneStaleTombstones(local.deletedItemIds, now),
@@ -295,6 +343,7 @@ export function mergeCollections({
     lists: finalLists,
     deletedListIds: mergedDeletedListIds,
     overflowCount,
+    hasLocalDifferences,
   };
 }
 
