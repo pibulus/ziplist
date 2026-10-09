@@ -132,7 +132,8 @@
     return {
       id,
       color: colors[id % colors.length],
-      emoji: EMOJI[kind]?.[Math.floor(Math.random() * EMOJI[kind].length)] || "",
+      emoji:
+        EMOJI[kind]?.[Math.floor(Math.random() * EMOJI[kind].length)] || "",
       shape,
       width,
       height,

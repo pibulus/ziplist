@@ -1,5 +1,5 @@
 <script>
-  import { tick, onMount } from "svelte";
+  import { tick } from "svelte";
   import { browser } from "$app/environment";
   import { isContributor, setContributorStatus } from "$lib";
   import {
@@ -31,7 +31,6 @@
   let passportCode = "";
   let vaultHash = "";
   let linkCopied = false;
-  let codeCopied = false;
 
   $: passportCode = readStoredSupporterCode() || "";
   $: if (passportCode && !vaultHash) {
@@ -93,25 +92,6 @@
       );
     } catch (err) {
       console.warn("Copy link failed:", err);
-    }
-  }
-
-  async function copyPassCode() {
-    const targetCode = passportCode || readStoredSupporterCode();
-    if (!targetCode) return;
-    try {
-      await navigator.clipboard.writeText(targetCode);
-      codeCopied = true;
-      soundService?.play?.("bloom") || soundService?.copySuccess?.();
-      hapticService?.impact?.("light");
-      setTimeout(() => (codeCopied = false), 2200);
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: { message: "Pass code copied! 📋", type: "success" },
-        }),
-      );
-    } catch (err) {
-      console.warn("Copy code failed:", err);
     }
   }
 
@@ -220,19 +200,19 @@
       </div>
 
       {#if $isContributor}
-        <!-- Unlocked State with MembershipCard -->
+        <!-- Unlocked State with MembershipCard (TalkType canon) -->
         <div class="space-y-1.5 text-center">
           <h3
             id="contributor_modal_title"
             class="text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
           >
-            Extras are <span class="zl-marker">Unlocked ★</span>
+            Your Passport is <span class="zl-marker">Ready</span>
           </h3>
           <p
             id="contributor_modal_description"
             class="text-sm font-bold text-pink-600"
           >
-            All perks & sovereign device sync are active.
+            Full extras unlocked on this device.
           </p>
         </div>
 
@@ -242,28 +222,17 @@
           </div>
         {/if}
 
-        <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+        <div class="space-y-2.5 pt-2 text-center">
+          <p class="px-2 text-xs font-bold leading-relaxed text-stone-600">
+            Point your camera at your passport for instant sync across devices —
+            it's magic! Or tap your passport to open the link on your device.
+          </p>
           <button
             type="button"
-            on:click={copyPassCode}
-            class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-amber-300 px-3.5 py-1.5 text-xs font-black text-stone-900 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-amber-200 active:scale-95"
-          >
-            <span>📋</span>
-            <span>{codeCopied ? "✨ Code copied!" : "Copy code"}</span>
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-white px-3.5 py-1.5 text-xs font-black text-stone-800 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-stone-50 active:scale-95"
+            class="zl-pitch-secondary"
             on:click={copySyncLink}
           >
-            <span>🔗</span>
-            <span>{linkCopied ? "✨ Link copied!" : "Copy sync link"}</span>
-          </button>
-        </div>
-
-        <div class="space-y-2 pt-2">
-          <button type="button" class="zl-pitch-cta" on:click={handleClose}>
-            Nice, let's make lists
+            {linkCopied ? "✨ Sync link copied!" : "🔗 Copy 1-click sync link"}
           </button>
         </div>
       {:else if view === "redeem"}
@@ -398,3 +367,23 @@
 {#if showConfetti}
   <Confetti duration={2000} on:complete={() => (showConfetti = false)} />
 {/if}
+
+<style>
+  /* Mascot slot sizing inside pitch hero (matches TalkType canon) */
+  .zl-pitch-hero :global(.mascot) {
+    --mascot-size-mobile: 64px;
+    --mascot-size-sm: 72px;
+    --mascot-size-md: 72px;
+    --mascot-size-lg: 72px;
+    --mascot-ink-pad: 0%;
+    width: var(--mascot-size-mobile);
+    height: var(--mascot-size-mobile);
+  }
+
+  @media (min-width: 640px) {
+    .zl-pitch-hero :global(.mascot) {
+      width: var(--mascot-size-sm);
+      height: var(--mascot-size-sm);
+    }
+  }
+</style>

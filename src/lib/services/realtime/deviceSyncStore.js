@@ -48,7 +48,7 @@ function readPrivatePhrase() {
 }
 
 function createDeviceSyncStore() {
-  const { subscribe, set, update } = writable({
+  const { subscribe, update } = writable({
     code: "",
     privatePhrase: readPrivatePhrase(),
     vaultHash: "",
@@ -453,9 +453,6 @@ function createDeviceSyncStore() {
       "";
     const privatePhrase =
       hashParams.get("sync") || queryParams.get("sync") || "";
-
-    // Legacy random key in hash?
-    const legacyKey = hashParams.get("k") || "";
 
     if (code) {
       return {

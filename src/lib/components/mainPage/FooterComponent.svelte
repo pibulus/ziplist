@@ -120,19 +120,27 @@
   >
     Share
   </button>
-  <button
-    type="button"
-    class="{footerButtonClass} zl-footer-pass"
-    on:click={showContributor}
-    title={$isContributor
-      ? "Extras unlocked ★"
-      : "Extras · 12 lists, live rooms, every device"}
-    aria-label={$isContributor
-      ? "Extras, unlocked"
-      : "Extras — more lists and live rooms"}
-  >
-    {$isContributor ? "Extras ★" : "Extras"}
-  </button>
+  {#if $isContributor}
+    <button
+      type="button"
+      class="{footerButtonClass} zl-footer-pass is-unlocked"
+      on:click={showContributor}
+      title="View ZipList Passport"
+      aria-label="View ZipList Passport"
+    >
+      Passport
+    </button>
+  {:else}
+    <button
+      type="button"
+      class="{footerButtonClass} zl-footer-pass"
+      on:click={showContributor}
+      title="Extras · 12 lists, live rooms, every device"
+      aria-label="Extras — more lists and live rooms"
+    >
+      Extras
+    </button>
+  {/if}
   <span class="sr-only" role="status" aria-live="polite">{shareStatus}</span>
 </nav>
 

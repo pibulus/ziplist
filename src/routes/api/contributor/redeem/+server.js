@@ -8,7 +8,6 @@ import {
 } from "$lib/server/contributorCodes.js";
 import {
   createVoucherLicense,
-  issueManualContributorToken,
   issueTokenForLicense,
   redeemStoredLicense,
 } from "$lib/server/contributor/licenseStore.js";

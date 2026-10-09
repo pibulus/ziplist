@@ -385,10 +385,28 @@ dialog.zl-contributor-dialog::backdrop {
 }
 
 .zl-pitch-hero button.mascot,
-.zl-pitch-hero .mascot {
+.zl-pitch-hero .mascot,
+.zl-pitch-hero :global(.mascot) {
+  --mascot-size-mobile: 64px;
+  --mascot-size-sm: 72px;
+  --mascot-size-md: 72px;
+  --mascot-size-lg: 72px;
+  --mascot-ink-pad: 0%;
+  width: var(--mascot-size-mobile) !important;
+  height: var(--mascot-size-mobile) !important;
+  margin-bottom: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   filter: none !important;
+}
+
+@media (min-width: 640px) {
+  .zl-pitch-hero button.mascot,
+  .zl-pitch-hero .mascot,
+  .zl-pitch-hero :global(.mascot) {
+    width: var(--mascot-size-sm) !important;
+    height: var(--mascot-size-sm) !important;
+  }
 }
 
 .animate-zl-pulse-slow {

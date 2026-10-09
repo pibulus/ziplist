@@ -1,11 +1,9 @@
 <script>
-  import { onMount } from "svelte";
-  import { slide } from "svelte/transition";
-  import { theme, listFirstMode, applyTheme, isContributor } from "$lib";
-  import { STORAGE_KEYS, THEMES } from "$lib/constants";
-  import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
+  import { onMount, onDestroy } from "svelte";
+  import { browser } from "$app/environment";
+  import { theme, listFirstMode, applyTheme } from "$lib";
+  import { THEMES } from "$lib/constants";
   import { soundService } from "$lib/services/infrastructure/soundService";
-  import { hapticService } from "$lib/services/infrastructure/hapticService";
   import {
     getOrCreateAvatar,
     setAvatarName,
@@ -14,26 +12,14 @@
   } from "$lib/services/realtime/avatarService";
   import ThemeMascot from "./ThemeMascot.svelte";
   import ModalCloseButton from "../modals/ModalCloseButton.svelte";
-  import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
-  import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
-  import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";
-  import {
-    readStoredSupporterCode,
-    getVaultHash,
-  } from "$lib/services/vaultHashStorage.js";
 
-  // Props for the modal
   export let closeModal = () => {};
 
-  // Theme/vibe selection
   let selectedVibe;
   let avatarName = "";
   let listFirstModeValue = false;
-  let chunkyModeValue = false;
-  let contributorUnlocked = false;
   let avatarRerolling = false;
 
-  // Subscribe to theme store
   const unsubscribeTheme = theme.subscribe((value) => {
     selectedVibe = value;
   });
@@ -42,12 +28,6 @@
     listFirstModeValue = value === "true";
   });
 
-  const unsubscribeContributor = isContributor.subscribe((value) => {
-    contributorUnlocked = value;
-  });
-
-  // Theme options — "The Desk Drawer": four office-supply fluro themes,
-  // one collective concept. Curated down from 8 (2026-07-20).
   const vibeOptions = [
     { id: THEMES.HIGHLIGHTER, name: "Highlighter" },
     { id: THEMES.STICKY_NOTE, name: "Sticky Note" },
@@ -58,155 +38,38 @@
   onMount(() => {
     avatarName = getOrCreateAvatar();
 
-    // Check for chunky mode
-    if (typeof document !== "undefined") {
-      chunkyModeValue =
-        document.documentElement.classList.contains("mode-neo-brutalist");
-    }
-
-    // Handle native dialog close (Escape key, form method="dialog")
     const dialog = document.getElementById("settings_modal");
     function onDialogClose() {
       closeModal();
-      // Reset scroll so the next open starts at the top, not wherever the
-      // last visit left off (the dialog stays mounted between opens).
-      const content = dialog?.querySelector(".zl-settings-content");
-      if (content) content.scrollTop = 0;
     }
     if (dialog) {
       dialog.addEventListener("close", onDialogClose);
     }
 
     return () => {
-      unsubscribeTheme();
-      unsubscribeListFirstMode();
-      unsubscribeContributor();
       if (dialog) {
         dialog.removeEventListener("close", onDialogClose);
       }
     };
   });
 
-  // Handle chunky mode toggle
-  function toggleChunkyMode() {
-    chunkyModeValue = !chunkyModeValue;
-    soundService.select();
+  onDestroy(() => {
+    unsubscribeTheme();
+    unsubscribeListFirstMode();
+  });
 
-    if (chunkyModeValue) {
-      document.documentElement.classList.add("mode-neo-brutalist");
-      StorageUtils.setItem(STORAGE_KEYS.CHUNKY_MODE, "true");
-    } else {
-      document.documentElement.classList.remove("mode-neo-brutalist");
-      StorageUtils.setItem(STORAGE_KEYS.CHUNKY_MODE, "false");
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("ziplist-setting-changed", {
-        detail: { setting: "chunkyMode", value: chunkyModeValue },
-      }),
-    );
-  }
-
-  // ── Passport & Device Sync ──────────────────────────────────────────────
-  let passportCode = "";
-  let vaultHash = "";
-  let isPassportExpanded = false;
-  let codeCopied = false;
-  let linkCopied = false;
-  let syncNote = "";
-
-  $: passportCode = readStoredSupporterCode() || "";
-  $: if (passportCode && !vaultHash) {
-    getVaultHash(passportCode)
-      .then((hash) => (vaultHash = hash))
-      .catch(() => {});
-  }
-
-  function deviceSyncUrl() {
-    return buildDeviceSyncUrl({ code: readStoredSupporterCode() });
-  }
-
-  $: syncHeadline =
-    $deviceSyncStore.status === "connected"
-      ? $deviceSyncStore.peers > 1
-        ? `${$deviceSyncStore.peers} devices online`
-        : "Only this device is online"
-      : $deviceSyncStore.status === "connecting"
-        ? "Finding your devices…"
-        : $deviceSyncStore.status === "unavailable"
-          ? "Sync unavailable"
-          : passportCode
-            ? "Instant sync ready"
-            : "Add pass code to link devices";
-
-  async function copyPassCode() {
-    const c = passportCode || readStoredSupporterCode();
-    if (!c) return;
-    try {
-      await navigator.clipboard.writeText(c);
-      codeCopied = true;
-      soundService?.play?.("bloom") ||
-        soundService?.copySuccess?.({ force: true });
-      hapticService?.impact?.("light") || hapticService?.selection?.();
-      setTimeout(() => (codeCopied = false), 2500);
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: { message: "Pass code copied! 📋", type: "success" },
-        }),
-      );
-    } catch (err) {
-      console.warn("Failed to copy pass code:", err);
-    }
-  }
-
-  async function copySyncLink() {
-    try {
-      const syncUrl = deviceSyncUrl();
-      if (!syncUrl) throw new Error("No sync url");
-      await navigator.clipboard.writeText(syncUrl);
-      linkCopied = true;
-      soundService?.play?.("bloom") ||
-        soundService?.copySuccess?.({ force: true });
-      hapticService?.impact?.("light") || hapticService?.selection?.();
-      setTimeout(() => (linkCopied = false), 2500);
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: { message: "Sync link copied! 🔗", type: "success" },
-        }),
-      );
-    } catch {
-      syncNote = "Copy failed";
-      setTimeout(() => (syncNote = ""), 2500);
-    }
-  }
-
-  function togglePassport() {
-    isPassportExpanded = !isPassportExpanded;
-    soundService?.play?.("tap") || soundService?.select?.();
-    hapticService?.impact?.("light") || hapticService?.selection?.();
-  }
-
-  function handleDisableSync() {
-    deviceSyncStore.disableSync();
-    passportCode = "";
-    vaultHash = "";
-    isPassportExpanded = false;
-  }
-
-  // Handle vibe change
   function changeVibe(vibeId) {
-    if (!vibeOptions.some((vibe) => vibe.id === vibeId)) return;
-
     selectedVibe = vibeId;
     soundService.select();
     applyTheme(vibeId);
 
-    // Dispatch a custom event that other components can listen for
-    window.dispatchEvent(
-      new CustomEvent("ziplist-setting-changed", {
-        detail: { setting: "theme", value: vibeId },
-      }),
-    );
+    if (browser) {
+      window.dispatchEvent(
+        new CustomEvent("ziplist-setting-changed", {
+          detail: { setting: "theme", value: vibeId },
+        }),
+      );
+    }
   }
 
   function toggleListFirstMode() {
@@ -214,19 +77,17 @@
     soundService.select();
     listFirstMode.set(listFirstModeValue.toString());
 
-    window.dispatchEvent(
-      new CustomEvent("ziplist-setting-changed", {
-        detail: { setting: "listFirstMode", value: listFirstModeValue },
-      }),
-    );
+    if (browser) {
+      window.dispatchEvent(
+        new CustomEvent("ziplist-setting-changed", {
+          detail: { setting: "listFirstMode", value: listFirstModeValue },
+        }),
+      );
+    }
   }
 
   function handleModalClose() {
     closeModal();
-  }
-
-  function openContributorModal() {
-    window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
   }
 
   function saveAvatarName(event) {
@@ -235,8 +96,6 @@
     soundService.select();
   }
 
-  // Click your face, get a new one — the "call me Mum" input above still
-  // lets you type your own, this is just the quick shuffle.
   function rerollAvatarFace() {
     avatarName = rerollAvatar(avatarName);
     soundService.select();
@@ -249,122 +108,147 @@
 
 <dialog
   id="settings_modal"
-  class="zl-settings-dialog"
+  class="modal"
   aria-labelledby="settings_modal_title"
   aria-describedby="settings_modal_description"
   aria-modal="true"
 >
-  <div class="zl-settings-card">
-    <div class="zl-settings-content zl-scroll">
-      <!-- No visible "Options" header — the footer link you just tapped
-           already said it (Pablo's call 2026-08-07). The title survives for
-           screen readers; the X floats in the corner and shares its line
-           with the VIBE eyebrow. -->
-      <h3 id="settings_modal_title" class="sr-only">Options</h3>
-      <p id="settings_modal_description" class="sr-only">
-        Adjust startup, sound, contributor, and theme settings.
-      </p>
-      <form method="dialog">
-        <ModalCloseButton
-          closeModal={handleModalClose}
-          label="Close options"
-          modalId="settings_modal"
-        />
-      </form>
+  <div class="zl-modal-md modal-box relative">
+    <form method="dialog">
+      <ModalCloseButton
+        closeModal={handleModalClose}
+        label="Close options"
+        position="right-3 top-3"
+        modalId="settings_modal"
+      />
+    </form>
 
-      <!-- Vibe picker sits in the open (Pablo's call 2026-07-22): the old
-           fold existed because the 2×2 grid ate ~40% of the modal, but as a
-           single row of four tiles the whole thing costs one slim strip —
-           themes are the app's outfit, they deserve to be seen. -->
-      <section
-        class="zl-settings-section zl-vibe-section"
-        aria-labelledby="settings_vibe_title"
-      >
-        <h4 id="settings_vibe_title" class="sr-only">Vibe</h4>
+    <div class="space-y-4 pb-1">
+      <!-- Header (TalkType canon: small mascot circle + Options title) -->
+      <div class="mb-1 flex items-center gap-2">
+        <div
+          class="flex h-8 w-8 items-center justify-center rounded-full border border-pink-200/60 bg-gradient-to-br from-white to-pink-50 shadow-sm"
+        >
+          <ThemeMascot theme={selectedVibe} size="22px" />
+        </div>
+        <h3
+          id="settings_modal_title"
+          class="text-xl font-black tracking-tight text-gray-800"
+        >
+          Options
+        </h3>
+        <p id="settings_modal_description" class="sr-only">
+          Adjust vibe, preferences, and identity in shared rooms.
+        </p>
+      </div>
 
-        <div class="zl-vibe-grid">
+      <!-- Vibe Section -->
+      <section class="space-y-2" aria-labelledby="settings_vibe_title">
+        <h4 id="settings_vibe_title" class="settings-section-title">Vibe</h4>
+        <div class="grid grid-cols-4 gap-2" role="group" aria-label="Vibe">
           {#each vibeOptions as vibe}
             <button
               type="button"
-              class="zl-vibe-option"
-              class:active={selectedVibe === vibe.id}
+              class="vibe-option relative flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-pink-100 bg-[#fffdf5] p-2 shadow-sm transition-all duration-200 hover:border-pink-200 hover:shadow-md {selectedVibe ===
+              vibe.id
+                ? 'selected-vibe border-pink-300 ring-2 ring-pink-200 ring-opacity-60'
+                : ''}"
               on:click={() => changeVibe(vibe.id)}
               aria-label={`Use ${vibe.name} vibe`}
               aria-pressed={selectedVibe === vibe.id}
             >
-              <span class="zl-vibe-art" aria-hidden="true">
-                <ThemeMascot theme={vibe.id} size="26px" />
+              <span class="preview-mascot mb-1">
+                <ThemeMascot theme={vibe.id} size="28px" />
               </span>
-              <span>{vibe.name}</span>
+              <span class="tile-label text-[11px] font-bold text-gray-700">
+                {vibe.name}
+              </span>
               {#if selectedVibe === vibe.id}
-                <span class="zl-vibe-check" aria-hidden="true">✓</span>
+                <div
+                  class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-[10px] font-black text-white shadow-sm"
+                  aria-hidden="true"
+                >
+                  ✓
+                </div>
               {/if}
             </button>
           {/each}
         </div>
       </section>
 
-      <!-- App Toggles: Chunky Mode & Straight to the list grouped in one container -->
-      <section class="zl-settings-section" aria-label="Preferences">
-        <div class="zl-setting-group">
-          <div class="zl-setting-subrow">
-            <div class="zl-setting-info">
-              <span class="zl-setting-name">Chunky Mode</span>
-            </div>
-            <label class="zl-toggle">
-              <input
-                type="checkbox"
-                checked={chunkyModeValue}
-                on:change={toggleChunkyMode}
-                aria-label="Chunky Mode"
-              />
-              <span class="zl-toggle-slider"></span>
-            </label>
-          </div>
+      <!-- Preferences Section -->
+      <section class="space-y-2.5 pt-1" aria-label="Preferences">
+        <h4 class="settings-section-title">Preferences</h4>
 
-          <div class="zl-setting-subrow">
-            <div class="zl-setting-info">
-              <span class="zl-setting-name">Straight to the list</span>
-            </div>
-            <label class="zl-toggle">
-              <input
-                type="checkbox"
-                checked={listFirstModeValue}
-                on:change={toggleListFirstMode}
-                aria-label="Open straight to the list"
-              />
-              <span class="zl-toggle-slider"></span>
-            </label>
+        <!-- Straight to the list toggle -->
+        <button
+          type="button"
+          class={`setting-row flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left shadow-sm transition-all duration-200 ${
+            listFirstModeValue
+              ? "border-pink-300 bg-pink-50 text-gray-900 ring-2 ring-pink-100"
+              : "border-pink-100 bg-[#fffdf5] text-gray-700 hover:border-pink-200 hover:bg-pink-50/70"
+          }`}
+          aria-pressed={listFirstModeValue}
+          on:click={toggleListFirstMode}
+        >
+          <div class="min-w-0 pr-2">
+            <span class="block text-sm font-black leading-tight text-gray-900">
+              Straight to the list
+            </span>
+            <span
+              class="mt-0.5 block text-[11px] font-bold leading-tight text-gray-500"
+            >
+              Skip the microphone screen on startup
+            </span>
           </div>
-        </div>
+          <span
+            class="auto-start-glyph {listFirstModeValue ? 'is-on' : ''}"
+            aria-hidden="true"
+          >
+            <span></span>
+          </span>
+        </button>
 
-        <!-- Face wears the glyph seat on the right; title + hint on left, input + face on right -->
-        <div class="zl-setting-row zl-avatar-row">
-          <div class="zl-setting-info">
-            <span class="zl-setting-name">Name in shared rooms</span>
-            <p class="zl-setting-desc">Tap avatar to re-roll</p>
-          </div>
-          <div class="zl-avatar-field-inline">
+        <!-- Name in shared rooms (streamlined compact row) -->
+        <div
+          class="setting-row flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-pink-100 bg-[#fffdf5] px-3.5 py-2.5 shadow-sm transition-all duration-200 hover:border-pink-200"
+        >
+          <div class="flex min-w-0 items-center gap-2.5">
             {#if avatarName}
               <button
                 type="button"
-                class="zl-avatar-face-btn"
+                class="avatar-face-btn shadow-xs relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-pink-200/70 bg-gradient-to-br from-white to-pink-50 transition-transform active:scale-90"
                 class:rerolling={avatarRerolling}
                 on:click={rerollAvatarFace}
                 title="Tap for a new face"
                 aria-label="Re-roll avatar face"
               >
                 <img
-                  class="zl-avatar-face"
+                  class="h-7 w-7 rounded-full object-cover"
                   src={getAvatarImage(avatarName)}
                   alt=""
                   aria-hidden="true"
                 />
               </button>
             {/if}
+            <div class="min-w-0">
+              <span
+                class="block text-sm font-black leading-tight text-gray-900"
+              >
+                Name in shared rooms
+              </span>
+              <span
+                class="mt-0.5 block text-[11px] font-bold leading-tight text-gray-500"
+              >
+                Tap avatar to re-roll
+              </span>
+            </div>
+          </div>
+
+          <div class="w-32 shrink-0 sm:w-44">
             <input
               type="text"
-              class="zl-avatar-input"
+              class="w-full rounded-lg border border-pink-200 bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-gray-800 transition-colors focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-200"
               value={avatarName}
               maxlength="48"
               on:change={saveAvatarName}
@@ -373,539 +257,91 @@
           </div>
         </div>
       </section>
-
-      <!-- Passport & Device Sync -->
-      {#if !contributorUnlocked}
-        <section
-          class="zl-settings-section"
-          aria-label="Passport & Device Sync"
-        >
-          <div
-            class="zl-setting-row flex w-full items-center justify-between gap-4"
-          >
-            <div class="zl-setting-info min-w-0 pr-2">
-              <span class="zl-setting-name">Passport & Sync</span>
-              <p class="zl-setting-desc">Phone + laptop link & perks.</p>
-            </div>
-            <button
-              type="button"
-              class="zl-sync-btn zl-sync-btn-primary flex shrink-0 items-center gap-1.5 whitespace-nowrap !px-3.5 !py-1.5 text-xs font-black"
-              on:click={openContributorModal}
-            >
-              <span aria-hidden="true">★</span>
-              <span>Unlock</span>
-            </button>
-          </div>
-        </section>
-
-        <section
-          class="zl-settings-section zl-settings-footer"
-          aria-label="Support ZipList"
-        >
-          <button
-            type="button"
-            class="zl-contributor-cta"
-            title="More lists, and more of them live at once"
-            on:click={openContributorModal}
-          >
-            <span aria-hidden="true">✦</span>
-            <span>Get more lists (12 max)</span>
-          </button>
-        </section>
-      {:else}
-        <section
-          class="zl-settings-section"
-          aria-label="Passport & Device Sync"
-        >
-          <div class="zl-passport-sync-card">
-            <div
-              class="flex cursor-pointer select-none items-center justify-between gap-3"
-              on:click={togglePassport}
-            >
-              <div class="zl-setting-info min-w-0">
-                <p
-                  class="flex items-center gap-2 text-sm font-black leading-tight text-neutral-900 dark:text-neutral-100"
-                >
-                  <span
-                    class="h-2.5 w-2.5 shrink-0 rounded-full {$deviceSyncStore.status ===
-                    'connected'
-                      ? 'animate-pulse bg-emerald-500'
-                      : $deviceSyncStore.status === 'connecting'
-                        ? 'animate-pulse bg-amber-400'
-                        : 'bg-emerald-400'}"
-                    aria-hidden="true"
-                  ></span>
-                  <span>{syncHeadline}</span>
-                </p>
-                <p class="zl-setting-desc mt-1">
-                  Instant sync between your phone & laptop.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                class="zl-passport-toggle-btn inline-flex shrink-0 items-center gap-1.5 rounded-full border-2 border-stone-800 bg-amber-300 px-3.5 py-1.5 text-xs font-black text-stone-900 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-amber-200 active:scale-95"
-                on:click|stopPropagation={togglePassport}
-                aria-expanded={isPassportExpanded}
-                aria-label="{isPassportExpanded
-                  ? 'Hide'
-                  : 'Show'} collectible passport"
-              >
-                <span>🪪</span>
-                <span>{isPassportExpanded ? "Hide" : "Passport"}</span>
-                <span class="text-[10px] leading-none"
-                  >{isPassportExpanded ? "▲" : "▼"}</span
-                >
-              </button>
-            </div>
-
-            {#if isPassportExpanded}
-              <div
-                transition:slide={{ duration: 240 }}
-                class="mt-3.5 space-y-3 pt-1"
-              >
-                {#if vaultHash}
-                  <div class="flex justify-center py-1">
-                    <MembershipCard {vaultHash} {passportCode} />
-                  </div>
-                {/if}
-
-                <div
-                  class="flex flex-wrap items-center justify-center gap-2 pt-1"
-                >
-                  <button
-                    type="button"
-                    on:click={copyPassCode}
-                    class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-amber-300 px-3.5 py-1.5 text-xs font-black text-stone-900 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-amber-200 active:scale-95"
-                  >
-                    <span>📋</span>
-                    <span>{codeCopied ? "✨ Code copied!" : "Copy code"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full border-2 border-stone-800 bg-white px-3.5 py-1.5 text-xs font-black text-stone-800 shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-stone-50 active:scale-95"
-                    on:click={copySyncLink}
-                  >
-                    <span>🔗</span>
-                    <span
-                      >{linkCopied ? "✨ Link copied!" : "Copy sync link"}</span
-                    >
-                  </button>
-                </div>
-
-                <div class="flex justify-center gap-3 pt-1 text-[11px]">
-                  <button
-                    type="button"
-                    class="zl-sync-link text-stone-500 hover:text-stone-900"
-                    on:click={handleDisableSync}
-                  >
-                    Stop syncing on this device
-                  </button>
-                </div>
-              </div>
-            {/if}
-          </div>
-
-          {#if syncNote}
-            <p class="px-0.5 text-xs font-bold text-gray-500">{syncNote}</p>
-          {/if}
-        </section>
-      {/if}
     </div>
   </div>
 
   <button
     type="button"
-    class="zl-modal-backdrop"
-    aria-label="Close settings modal"
+    class="modal-backdrop"
+    aria-label="Close options modal"
     tabindex="-1"
     on:click={handleModalClose}
   ></button>
 </dialog>
 
 <style>
-  /* One yummy button, same family curve as the app's other squishy controls.
-     Was a quiet label with a small amber pill; it now says what you get. */
-  .zl-contributor-cta {
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    padding: 0.85rem 1.25rem;
-    border: 2px solid #1e1714;
-    border-radius: 999px;
-    background: var(--zl-cta-color, #ffb000);
-    color: #1e1714;
-    font-weight: 900;
-    font-size: 0.98rem;
-    letter-spacing: -0.01em;
-    cursor: pointer;
-    box-shadow: 2px 3px 0px #1e1714;
-    transition:
-      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-      box-shadow 0.15s ease,
-      filter 0.15s ease;
-  }
-  .zl-contributor-cta::before {
-    content: "";
-    position: absolute;
-    inset: 2px 4px;
-    z-index: 1;
-    border-radius: inherit;
-    pointer-events: none;
-    background: radial-gradient(
-      circle at 50% 20%,
-      rgba(255, 255, 255, 0.45),
-      transparent 65%
-    );
-    opacity: 0.8;
-  }
-  .zl-contributor-cta:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 3px 5px 0px #1e1714;
-    filter: brightness(1.03);
-  }
-  .zl-contributor-cta:active {
-    transform: translateY(1px) scale(0.98);
-    box-shadow: 1px 1px 0px #1e1714;
+  .selected-vibe {
+    box-shadow:
+      0 0 0 2px rgba(249, 168, 212, 0.4),
+      0 4px 8px rgba(249, 168, 212, 0.2);
   }
 
-  :global(dialog.zl-settings-dialog) {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: max(12px, env(safe-area-inset-top))
-      max(12px, env(safe-area-inset-right))
-      max(16px, env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
-    margin: 0;
-    /* inset stretches the dialog; 100vw included the desktop scrollbar and
-       biased the flex-center a few px right. */
-    width: auto;
-    height: auto;
-    max-width: none;
-    max-height: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    box-sizing: border-box;
-  }
-
-  :global(dialog.zl-settings-dialog[open]) {
-    display: flex;
-  }
-
-  :global(dialog.zl-settings-dialog:focus),
-  .zl-settings-card:focus,
-  .zl-settings-content:focus {
-    outline: none;
-  }
-
-  .zl-settings-card {
-    position: relative;
-    z-index: 1;
-    /* Chunky's hard 12px shadow hangs right+down; these margins make the
-       flex-center split that extra mass so the card+shadow unit sits
-       optically centered instead of leaning right. 0 in soft modes. */
-    margin: 0 var(--zl-card-shadow-x, 0px) var(--zl-card-shadow-y, 0px) 0;
-    width: min(92vw, 30rem);
-    max-height: min(92dvh, 58rem);
-    background: var(--zl-card-bg-gradient-color-start, #fff);
-    border: var(--zl-card-border-width, 4px) solid
-      var(--zl-card-border-color, #000);
-    border-radius: var(--zl-card-border-radius, 28px);
-    box-shadow: var(--zl-card-box-shadow, 0 12px 30px rgba(0, 0, 0, 0.1));
-    padding: 1.5rem;
-    overflow: hidden;
-  }
-
-  .zl-settings-content {
-    max-height: calc(min(92dvh, 58rem) - 3rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-right: 0.125rem;
-    /* Clears the corner X — the tiles used to run straight under it.
-       Sized against the MOBILE card (1rem padding): X bottom sits at
-       0.5rem + 28px from the card edge, so content starts just below. */
-    padding-top: 1.4rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-  }
-
-  /* The modal chrome speaks the sans-black voice (TalkType's recipe —
-     Pablo's call 2026-08-07: Space Mono everywhere read "squeezed/skinny"
-     in a settings context). The mono survives only in the name input,
-     where typed text matches the list items' typewriter identity. */
-
-  .zl-vibe-option:focus-visible {
-    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
-    outline-offset: 3px;
-  }
-
-  .zl-passport-sync-card {
-    background: #fffdf5;
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
-    padding: 0.85rem;
-    box-shadow: 2px 2px 0px rgba(30, 23, 20, 0.06);
-    transition: all 0.2s;
-  }
-
-  .zl-passport-sync-card:hover {
-    border-color: var(--zl-primary-color);
-  }
-
-  .zl-passport-toggle-btn {
-    box-shadow: 1.5px 1.5px 0px #1e1714;
-    cursor: pointer;
-    touch-action: manipulation;
+  .vibe-option {
     -webkit-tap-highlight-color: transparent;
-    transition:
-      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-      background-color 0.15s ease;
   }
 
-  .zl-passport-toggle-btn:hover {
-    background-color: #fde047;
+  .vibe-option:active {
+    box-shadow: none !important;
   }
 
-  .zl-passport-toggle-btn:active {
-    transform: scale(0.95);
-  }
-
-  .zl-sync-btn {
-    font-family: inherit;
-    font-size: 0.82rem;
-    font-weight: 800;
-    padding: 0.45rem 0.85rem;
-    border-radius: 999px;
-    border: 2px solid rgba(30, 23, 20, 0.85);
-    background: transparent;
-    color: #1e1714;
-    cursor: pointer;
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .zl-sync-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-  }
-
-  .zl-sync-btn:active:not(:disabled) {
-    transform: translateY(1px);
-  }
-
-  .zl-sync-btn:disabled {
-    opacity: 0.45;
-    cursor: default;
-  }
-
-  .zl-sync-btn-primary {
-    background: var(--zl-cta-color, #ffb000);
-  }
-
-  .zl-sync-links {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .zl-sync-link {
-    font-family: inherit;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--zl-text-color-secondary, #5c524c);
-    background: none;
-    border: none;
-    padding: 0.15rem 0;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  .zl-sync-link:hover {
-    color: var(--zl-text-color-primary, #1e1714);
-  }
-
-  .zl-sync-note {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #a3322b;
-    margin: 0;
-  }
-
-  /* ONE vertical rhythm: every row is 0.6rem from its neighbour, whether or
-     not a <section> boundary sits between them. Sections used to add their
-     own 1.1rem on top of the last row's 0.6rem, so the Chunky→Straight gap
-     was almost 3× the Straight→avatar gap (Pablo clocked it 2026-08-17). */
-  .zl-settings-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0;
-  }
-
-  .zl-settings-section:last-child {
-    margin-bottom: 0;
-  }
-
-  /* Contributor sits apart from the everyday settings — a quiet divider
-     instead of another shouting section label. */
-  .zl-settings-footer {
-    border-top: 2px dashed var(--zl-item-border-color, rgba(0, 0, 0, 0.12));
-    padding-top: 0.7rem;
-  }
-
-  .zl-setting-group {
-    display: flex;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.5);
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
-    margin-bottom: 0;
-    overflow: hidden;
-    transition: all 0.2s;
-  }
-
-  .zl-setting-group:hover {
-    border-color: var(--zl-primary-color);
-    background: #fffef7;
-  }
-
-  .zl-setting-subrow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.85rem;
-    transition: all 0.15s ease;
-  }
-
-  .zl-setting-subrow + .zl-setting-subrow {
-    border-top: 1.5px dashed var(--zl-item-border-color, rgba(30, 23, 20, 0.12));
-  }
-
-  .zl-setting-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.85rem;
-    background: rgba(255, 255, 255, 0.5);
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 16px;
-    margin-bottom: 0;
-    transition: all 0.2s;
-  }
-
-  /* "Name in shared rooms" pairs a two-line label with a text input, and
-     side by side on one row they bid against each other for the same width —
-     the label wrapped to three lines so the input could keep 55%, and
-     neither was readable. It stacks instead, like the device sync row: label
-     gets the full width, control gets the full width under it. */
-  .zl-avatar-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.55rem;
-  }
-
-  .zl-avatar-row .zl-avatar-field-inline {
-    flex: 1 1 auto;
-    width: 100%;
-  }
-
-  .zl-setting-row:hover {
-    border-color: var(--zl-primary-color);
-    background: #fffef7;
-  }
-
-  /* Info block always stretches — keeps it hugging a leading glyph (the
-     avatar face) instead of floating to the row's center, and pushes the
-     control to the right edge. */
-  .zl-setting-info {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  /* ONE title scale for every row — "Chunky Mode", "List First", and
-     "Name in shared rooms" used to arrive at three sizes via two container
-     variants (Pablo clocked it 2026-08-07). */
-  .zl-setting-name {
-    font-size: 0.92rem;
-    font-weight: 900;
-    line-height: 1.25;
-    letter-spacing: -0.01em;
-    color: var(--zl-text-color-primary, #1e1714);
-    display: block;
-  }
-
-  .zl-setting-desc {
-    font-size: 0.72rem;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--zl-text-color-secondary, #666);
-    margin: 0.2rem 0 0 0;
-  }
-
-  .zl-avatar-field-inline {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 0 1 auto;
-    min-width: 0;
-  }
-
-  /* 44px tap target wraps the 30px face — bestie, no acrylic-defeating
-     targets in this house. Squish-then-spin on click/tap, satisfying
-     without being disruptive. */
-  .zl-avatar-face-btn {
+  /* Soft pill toggle switch (TalkType canon) */
+  .auto-start-glyph {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    background: none;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
+    justify-content: flex-start;
     flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.15s ease;
+    width: 2rem;
+    height: 1.15rem;
+    border-radius: 9999px;
+    background: #e5e7eb;
+    padding: 0.16rem;
+    border: none;
+    box-shadow: none;
+    transition:
+      background 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
-  .zl-avatar-face-btn:hover {
-    transform: scale(1.08);
+  .auto-start-glyph span {
+    display: block;
+    width: 0.82rem;
+    height: 0.82rem;
+    border-radius: 9999px;
+    background: #fffef7;
+    border: none;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+    transition: transform 0.2s ease;
   }
 
-  .zl-avatar-face-btn:active {
-    transform: scale(0.9);
+  .auto-start-glyph.is-on {
+    background: #f9a8d4;
+    box-shadow: 0 0 0 0.22rem rgba(249, 168, 212, 0.18);
   }
 
-  .zl-avatar-face-btn:focus-visible {
-    outline: 3px solid rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.45);
-    outline-offset: 2px;
+  .auto-start-glyph.is-on span {
+    transform: translateX(0.82rem);
   }
 
-  .zl-avatar-face-btn.rerolling .zl-avatar-face {
-    animation: avatar-reroll-spin 0.42s
-      var(--zl-transition-easing-bounce, cubic-bezier(0.34, 1.56, 0.64, 1));
+  .settings-section-title {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    color: #be185d;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
-  @keyframes avatar-reroll-spin {
+  .avatar-face-btn.rerolling img {
+    animation: avatar-spin 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes avatar-spin {
     0% {
-      transform: scale(1) rotate(0deg);
+      transform: scale(0.9) rotate(0deg);
     }
-    40% {
-      transform: scale(0.72) rotate(160deg);
+    50% {
+      transform: scale(1.15) rotate(180deg);
     }
     100% {
       transform: scale(1) rotate(360deg);
@@ -913,295 +349,12 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .zl-avatar-face-btn,
-    .zl-avatar-face-btn:hover,
-    .zl-avatar-face-btn:active {
-      transition: none;
-      transform: none;
+    .auto-start-glyph,
+    .auto-start-glyph span,
+    .avatar-face-btn.rerolling img {
+      transition: none !important;
+      transform: none !important;
+      animation: none !important;
     }
-    .zl-avatar-face-btn.rerolling .zl-avatar-face {
-      animation: none;
-    }
-  }
-
-  .zl-avatar-face {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-    background: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.25);
-    flex-shrink: 0;
-  }
-
-  .zl-avatar-input {
-    width: 7.5rem;
-    min-width: 5.5rem;
-    height: 38px;
-    min-height: 38px;
-    padding: 0.25rem 0.55rem;
-    border: 2px solid var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.8);
-    font-family: "Space Mono", monospace;
-    font-size: var(--font-size-xs, 0.8rem);
-    font-weight: 700;
-    color: var(--zl-text-color-primary, #444);
-    outline: none;
-    transition: var(--zl-transition-fast, all 0.2s ease);
-  }
-
-  .zl-avatar-input:focus-visible {
-    border-color: var(--zl-primary-color, #ffb000);
-    outline: none;
-  }
-
-  /* Toggle Switch with Toybrut physics and cubic-bezier spring (TalkType parity) */
-  .zl-toggle {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    width: 54px;
-    min-width: 54px;
-    height: 44px;
-    flex-shrink: 0;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .zl-toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .zl-toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 50%;
-    left: 0;
-    width: 52px;
-    height: 30px;
-    background-color: #e5e7eb;
-    border: 2px solid #1e1714;
-    border-radius: 9999px;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-    transform: translateY(-50%);
-    transition: background-color 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .zl-toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 3px;
-    bottom: 2px;
-    background-color: #ffffff;
-    border: 1.5px solid #1e1714;
-    box-shadow: 1px 1px 0px #1e1714;
-    border-radius: 50%;
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  input:checked + .zl-toggle-slider {
-    background-color: var(--zl-primary-color, #ffcc33);
-  }
-
-  input:checked + .zl-toggle-slider:before {
-    transform: translateX(20px);
-  }
-
-  .zl-toggle:active .zl-toggle-slider:before {
-    transform: scale(0.9) translateX(0);
-  }
-
-  .zl-toggle:active input:checked + .zl-toggle-slider:before {
-    transform: scale(0.9) translateX(20px);
-  }
-
-  .zl-toggle input:focus-visible + .zl-toggle-slider {
-    outline: 2px solid #1e1714;
-    outline-offset: 2px;
-  }
-
-  /* Chunky mode gets its hard-shadow identity back — gated, not leaked.
-     Warm ink per the house law, never absolute black. The rows and tiles
-     pick up their thicker borders automatically via --zl-item-border-width;
-     these rules add the hard-shadow half of the look so flipping the toggle
-     visibly chonks the very modal you're standing in. */
-  :global(html.mode-neo-brutalist) .zl-setting-row,
-  :global(html.mode-neo-brutalist) .zl-setting-group,
-  :global(html.mode-neo-brutalist) .zl-passport-sync-card,
-  :global(html.mode-neo-brutalist) .zl-vibe-option {
-    border-radius: 10px;
-    box-shadow: 3px 3px 0 0 var(--zl-chunky-ink, #1e1714);
-  }
-
-  :global(html.mode-neo-brutalist) .zl-vibe-option:hover {
-    box-shadow: 4px 4px 0 0 var(--zl-chunky-ink, #1e1714);
-  }
-
-  :global(html.mode-neo-brutalist) .zl-toggle-slider {
-    border-color: var(--zl-chunky-ink, #1e1714);
-  }
-
-  :global(html.mode-neo-brutalist) .zl-contributor-cta {
-    border: 3px solid var(--zl-chunky-ink, #1e1714);
-    border-radius: 14px;
-    box-shadow: 5px 5px 0 var(--zl-chunky-ink, #1e1714);
-  }
-
-  :global(html.mode-neo-brutalist) .zl-contributor-cta:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 6px 6px 0 var(--zl-chunky-ink, #1e1714);
-  }
-
-  /* Vibe Grid — one row of 4 (The Desk Drawer roster, Pablo's call
-     2026-07-22): the four vibes read as a single palette strip. Tiles
-     slim down so the row fits a 390px phone. */
-  .zl-vibe-grid {
-    display: grid;
-    /* minmax(0, 1fr): plain 1fr won't shrink below "Highlighter"'s
-       min-content width, which made the four columns uneven. */
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.45rem;
-  }
-
-  .zl-vibe-option > :global(span),
-  .zl-vibe-option {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .zl-vibe-option {
-    position: relative;
-    padding: 0.38rem 0.15rem;
-    min-height: 40px;
-    background: #fffef7;
-    border: var(--zl-item-border-width, 2px) solid
-      var(--zl-item-border-color, rgba(0, 0, 0, 0.1));
-    border-radius: 14px;
-    cursor: pointer;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    /* fits "Highlighter" in a 4-up tile on a 390px phone */
-    font-size: clamp(0.6rem, 2.5vw, 0.74rem);
-    display: flex;
-    flex-direction: column;
-    gap: 0.18rem;
-    align-items: center;
-    justify-content: center;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition:
-      transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-
-  .zl-vibe-art {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .zl-vibe-option:hover {
-    border-color: var(--zl-primary-color);
-    transform: translateY(-3px) scale(1.04);
-  }
-
-  .zl-vibe-option:hover .zl-vibe-art {
-    transform: scale(1.15) rotate(4deg);
-  }
-
-  .zl-vibe-option:active {
-    transform: translateY(1px) scale(0.92);
-    box-shadow: 1px 1px 0px #1e1714 !important;
-  }
-
-  .zl-vibe-option:active .zl-vibe-art {
-    transform: scale(0.88) rotate(-2deg);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .zl-vibe-art,
-    .zl-vibe-option:hover .zl-vibe-art {
-      transition: none;
-      transform: none;
-    }
-  }
-
-  /* Selected = the check badge, full stop. The old mint-fill + amber-border
-     + badge trio was three signals doing one job (Pablo's call 2026-08-07);
-     the tile itself stays identical to its siblings so the four vibes read
-     as one calm palette strip. */
-
-  .zl-vibe-check {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    background: var(--zl-primary-color);
-    color: #fffdf5;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: bold;
-    border: 2px solid #fffdf5;
-  }
-
-  @media (max-width: 480px) {
-    .zl-settings-card {
-      width: min(94vw, 30rem);
-      max-height: min(88dvh, 42rem);
-      padding: 1rem;
-      border-radius: 24px;
-    }
-
-    .zl-settings-content {
-      max-height: calc(min(88dvh, 42rem) - 2rem);
-    }
-
-    /* Card padding is tighter here, so the eyebrow line needs the full
-       44px to keep tiles clear of the X. */
-
-    /* Canonical 4-up holds on mobile; tighten padding so tiles fit. */
-    .zl-vibe-grid {
-      gap: 0.5rem;
-    }
-
-    .zl-vibe-option {
-      padding: 0.75rem 0.25rem;
-    }
-
-    /* Avatar row stacks on narrow screens — the label + a 9.5rem input
-       side by side wrap into a tall, ragged block otherwise. */
-    .zl-setting-row {
-      padding: 0.6rem 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .zl-avatar-field-inline {
-      width: 100%;
-      margin-top: 0.4rem;
-    }
-
-    .zl-avatar-input {
-      width: 100%;
-      flex: 1;
-      min-width: 0;
-    }
-  }
-
-  /* The avatar row is the one row that needs to wrap; the rest stay inline. */
-  .zl-settings-section .zl-setting-row:has(.zl-avatar-field-inline) {
-    flex-wrap: wrap;
   }
 </style>
