@@ -595,6 +595,28 @@ export function broadcastVoiceActivity(listId, data = {}) {
   sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.VOICE_ACTIVITY, data);
 }
 
+export function broadcastAvatarChange(newAvatar) {
+  if (!newAvatar) return;
+  for (const connection of activeConnections.values()) {
+    if (connection?.socket) {
+      if (connection.socket.partySocketOptions?.query) {
+        connection.socket.partySocketOptions.query.avatar = newAvatar;
+      }
+      sendUpdate(connection.socket, LIVE_MESSAGE_TYPES.AVATAR_UPDATE, {
+        avatar: newAvatar,
+      });
+    }
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("ziplist-avatar-changed", (event) => {
+    if (event?.detail?.avatar) {
+      broadcastAvatarChange(event.detail.avatar);
+    }
+  });
+}
+
 /**
  * Rejoin the room a list was already in, after a reload.
  *

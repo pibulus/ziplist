@@ -17,6 +17,7 @@
   import Confetti from "$lib/components/ui/effects/Confetti.svelte";
   import { soundService } from "$lib/services/infrastructure/soundService.js";
   import { hapticService } from "$lib/services/infrastructure/hapticService.js";
+  import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
 
   export let vaultHash = "";
   export let passportCode = "";
@@ -265,8 +266,8 @@
     if (e) e.stopPropagation();
     const toCopy = effectivePassportCode || identity.memberId;
     if (!toCopy) return;
-    try {
-      await navigator.clipboard.writeText(toCopy);
+    const success = await copyTextToClipboard(toCopy);
+    if (success) {
       idCopied = true;
       soundService?.play?.("bloom") || soundService?.copySuccess?.();
       hapticService?.notification?.("success") ||
@@ -275,8 +276,21 @@
       idCopiedTimer = setTimeout(() => {
         idCopied = false;
       }, 2200);
-    } catch (err) {
-      console.warn("[MembershipCard] Copy failed:", err);
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: { message: "Passport ID copied! 🪪", type: "success" },
+        }),
+      );
+    } else {
+      soundService?.locked?.();
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: {
+            message: "Couldn't copy automatically — select ID manually",
+            type: "warning",
+          },
+        }),
+      );
     }
   }
 

@@ -154,6 +154,11 @@ export function setAvatarName(name) {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(STORAGE_KEY, finalName);
+      window.dispatchEvent(
+        new CustomEvent("ziplist-avatar-changed", {
+          detail: { avatar: finalName },
+        }),
+      );
     } catch {
       // privacy mode — the name just won't persist
     }

@@ -13,6 +13,7 @@ export const LIVE_MESSAGE_TYPES = Object.freeze({
   HEART: "heart",
   ITEM_CHECKED: "item_checked",
   SYNC_ENVELOPE: "sync_envelope",
+  AVATAR_UPDATE: "avatar_update",
 });
 
 export const LIVE_CLOSE_CODES = Object.freeze({
@@ -352,6 +353,11 @@ export function normalizeLiveMessage(input) {
     case LIVE_MESSAGE_TYPES.VOICE_ACTIVITY: {
       const data = normalizeVoiceActivityData(input.data);
       return data ? { type: LIVE_MESSAGE_TYPES.VOICE_ACTIVITY, data } : null;
+    }
+
+    case LIVE_MESSAGE_TYPES.AVATAR_UPDATE: {
+      const avatar = sanitizeAvatar(input.avatar || input.data?.avatar);
+      return avatar ? { type: LIVE_MESSAGE_TYPES.AVATAR_UPDATE, avatar } : null;
     }
 
     default:

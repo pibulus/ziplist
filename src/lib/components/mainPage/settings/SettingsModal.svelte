@@ -248,7 +248,7 @@
           <div class="w-32 shrink-0 sm:w-44">
             <input
               type="text"
-              class="w-full rounded-lg border border-pink-200 bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-gray-800 transition-colors focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-200"
+              class="w-full rounded-lg border border-pink-200 bg-white px-2.5 py-1.5 font-mono text-base font-bold text-gray-800 transition-colors focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-200 sm:text-xs"
               value={avatarName}
               maxlength="48"
               on:change={saveAvatarName}

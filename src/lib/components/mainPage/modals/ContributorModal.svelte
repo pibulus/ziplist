@@ -18,6 +18,7 @@
     getVaultHash,
   } from "$lib/services/vaultHashStorage.js";
   import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";
+  import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
 
   export let closeModal = () => {};
 
@@ -79,8 +80,8 @@
     const targetCode = passportCode || readStoredSupporterCode();
     if (!targetCode) return;
     const syncUrl = buildDeviceSyncUrl({ code: targetCode });
-    try {
-      await navigator.clipboard.writeText(syncUrl);
+    const success = await copyTextToClipboard(syncUrl);
+    if (success) {
       linkCopied = true;
       soundService?.play?.("bloom") || soundService?.copySuccess?.();
       hapticService?.impact?.("light");
@@ -90,8 +91,16 @@
           detail: { message: "Sync link copied! 🔗", type: "success" },
         }),
       );
-    } catch (err) {
-      console.warn("Copy link failed:", err);
+    } else {
+      soundService?.locked?.();
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: {
+            message: "Couldn't copy automatically — select link manually",
+            type: "warning",
+          },
+        }),
+      );
     }
   }
 

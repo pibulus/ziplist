@@ -275,6 +275,18 @@ export class ListRoom {
       return;
     }
 
+    if (normalized.type === LIVE_MESSAGE_TYPES.AVATAR_UPDATE) {
+      const newAvatar = sanitizeAvatar((normalized as any).avatar);
+      if (user) {
+        ws.serializeAttachment({
+          ...user,
+          avatar: newAvatar,
+        } satisfies ConnectionState);
+        this.broadcastPresence();
+      }
+      return;
+    }
+
     if (normalized.type === LIVE_MESSAGE_TYPES.LIST_UPDATE) {
       await this.saveListData(normalized.data as ListData);
       await this.touchRoomMetadata(roomState.metadata);

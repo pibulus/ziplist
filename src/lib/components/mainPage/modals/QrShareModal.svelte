@@ -2,7 +2,11 @@
   import QRCode from "qrcode";
   import { ModalCloseButton } from "./index.js";
   import { Mascot } from "$lib/components/ui";
-  import { soundService, hapticService } from "$lib/services/infrastructure";
+  import {
+    soundService,
+    hapticService,
+    copyTextToClipboard,
+  } from "$lib/services/infrastructure";
 
   export let closeModal;
   export let shareUrl = "";
@@ -43,8 +47,8 @@
 
   async function copyLink() {
     if (!shareUrl) return;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
+    const success = await copyTextToClipboard(shareUrl);
+    if (success) {
       copied = true;
       soundService.copySuccess({ force: true });
       hapticService.selection();
@@ -64,15 +68,25 @@
         copied = false;
         copyTimer = null;
       }, 2200);
-    } catch (err) {
-      console.error("[QrShareModal] Copy failed:", err);
+    } else {
+      soundService.locked({ force: true });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              message: "Couldn't copy link automatically",
+              type: "warning",
+            },
+          }),
+        );
+      }
     }
   }
 
   async function copyPhrase() {
     if (!syncPhrase) return;
-    try {
-      await navigator.clipboard.writeText(syncPhrase);
+    const success = await copyTextToClipboard(syncPhrase);
+    if (success) {
       phraseCopied = true;
       soundService.copySuccess({ force: true });
       hapticService.selection();
@@ -92,8 +106,18 @@
         phraseCopied = false;
         phraseTimer = null;
       }, 2200);
-    } catch (err) {
-      console.error("[QrShareModal] Phrase copy failed:", err);
+    } else {
+      soundService.locked({ force: true });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("ziplist:toast", {
+            detail: {
+              message: "Couldn't copy phrase automatically",
+              type: "warning",
+            },
+          }),
+        );
+      }
     }
   }
 
