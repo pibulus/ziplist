@@ -3,12 +3,26 @@ import path from "path";
 import os from "os";
 import { FileSystemAdapter } from "./FileSystemAdapter.js";
 import { MemoryAdapter } from "./MemoryAdapter.js";
+import { NetlifyBlobsAdapter } from "./NetlifyBlobsAdapter.js";
 
 function createStorage() {
   const requestedAdapter = env.ZIPLIST_STORAGE_ADAPTER?.trim();
 
   if (requestedAdapter === "memory") {
     return new MemoryAdapter();
+  }
+
+  const isNetlifyProd =
+    requestedAdapter === "netlify-blobs" ||
+    Boolean(
+      env.NETLIFY === "true" ||
+      process.env.NETLIFY === "true" ||
+      process.env.NETLIFY_BLOBS_CONTEXT ||
+      process.env.AWS_LAMBDA_FUNCTION_NAME,
+    );
+
+  if (isNetlifyProd) {
+    return new NetlifyBlobsAdapter();
   }
 
   const isServerless = Boolean(

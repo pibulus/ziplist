@@ -50,6 +50,7 @@
     "@dicebear/collection": "9.4.2",
     "@dicebear/core": "9.4.2",
     "@google/genai": "1.52.0",
+    "@netlify/blobs": "10.7.13",
     "canvas-confetti": "1.9.4",
     "daisyui": "^4.12.23",
     "partysocket": "1.3.0",

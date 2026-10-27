@@ -15,7 +15,7 @@ differentiators:
   - Tap #tags to filter or [ ✂️ Resample to new list ]
   - RiffRap pastel waterfall gradient cards with 12:1 WCAG AAA text contrast
   - Local-first persistence so everyday lists stay fast, private, and account-free
-  - Sovereign 4-word device sync & PartyKit live rooms with zero accounts
+  - Sovereign 4-word device sync, live shared rooms, and Holographic Passport cards with zero accounts
   - Installable web app, no app store required
 proof_points:
   - Single-pass speech processing extracts, categorizes, and auto-titles checklists in 350ms
@@ -24,7 +24,7 @@ proof_points:
   - Multiple list CRUD with rename, reorder, share, and color-safe creation
 objections:
   - Still wants a real physical iPhone PWA pass before launch copy gets too confident
-  - Live collaboration exists as optional PartyKit infrastructure, not the main launch promise yet
+  - Live collaboration is an optional instant room handoff, not a heavyweight team workspace
 keywords:
   seed:
     - ziplist
