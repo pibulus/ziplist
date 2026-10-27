@@ -103,7 +103,7 @@
         <div
           class="animate-zl-pulse-slow zl-pitch-hero h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
         >
-          <Mascot interactive={false} aura={false} />
+          <Mascot interactive={false} aura={false} float={false} />
         </div>
       </div>
 
@@ -230,6 +230,24 @@
 </dialog>
 
 <style>
+  .zl-pitch-hero :global(.mascot) {
+    --mascot-size-mobile: 64px;
+    --mascot-size-sm: 72px;
+    --mascot-size-md: 72px;
+    --mascot-size-lg: 72px;
+    --mascot-ink-pad: 0%;
+    width: var(--mascot-size-mobile);
+    height: var(--mascot-size-mobile);
+    margin-bottom: 0;
+  }
+
+  @media (min-width: 640px) {
+    .zl-pitch-hero :global(.mascot) {
+      width: var(--mascot-size-sm);
+      height: var(--mascot-size-sm);
+    }
+  }
+
   .about-tips {
     list-style: none;
     margin: 0;

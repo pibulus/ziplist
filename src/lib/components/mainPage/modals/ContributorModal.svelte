@@ -1,7 +1,11 @@
 <script>
   import { onMount, tick } from "svelte";
   import { browser } from "$app/environment";
-  import { isContributor, setContributorStatus } from "$lib";
+  import {
+    getContributorTokenSnapshot,
+    isContributor,
+    setContributorStatus,
+  } from "$lib";
   import {
     CONTRIBUTOR_BENEFITS,
     CONTRIBUTOR_COPY,
@@ -29,7 +33,6 @@
   const PREVIEW_VAULT_HASH =
     "000000100000000f000000000000000000000000000000000000000000000000";
   const MAX_PASSPORT_CODE_LENGTH = 64;
-  const CONTRIBUTOR_TOKEN_KEY = "ziplist_contributor_token";
 
   let code = "";
   let errorMessage = "";
@@ -176,13 +179,7 @@
     emailError = "";
 
     try {
-      let contributorToken = "";
-      try {
-        contributorToken =
-          window.localStorage.getItem(CONTRIBUTOR_TOKEN_KEY) || "";
-      } catch {
-        contributorToken = "";
-      }
+      const contributorToken = getContributorTokenSnapshot();
 
       const headers = { "Content-Type": "application/json" };
       if (contributorToken) {
@@ -367,7 +364,7 @@
           <div
             class="animate-zl-pulse-slow zl-pitch-hero h-14 w-14 sm:h-16 sm:w-16"
           >
-            <Mascot interactive={false} aura={false} />
+            <Mascot interactive={false} aura={false} float={false} />
           </div>
         </div>
       {/if}
@@ -441,7 +438,7 @@
                   required
                   placeholder="name@example.com"
                   autocomplete="email"
-                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:outline-none"
+                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
                 />
                 <button
                   type="submit"
@@ -479,7 +476,7 @@
                   bind:value={syncPhraseInput}
                   placeholder="four-word-sync-phrase"
                   aria-label="4-word device sync phrase"
-                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 font-mono text-xs font-bold text-[#1e1714] focus:outline-none"
+                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 font-mono text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
                 />
                 <button
                   type="button"
@@ -674,6 +671,7 @@
     --mascot-ink-pad: 0%;
     width: var(--mascot-size-mobile);
     height: var(--mascot-size-mobile);
+    margin-bottom: 0;
   }
 
   @media (min-width: 640px) {

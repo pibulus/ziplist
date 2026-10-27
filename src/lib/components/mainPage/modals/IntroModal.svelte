@@ -43,7 +43,7 @@
         <div
           class="animate-zl-pulse-slow zl-pitch-hero h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
         >
-          <Mascot interactive={false} aura={false} />
+          <Mascot interactive={false} aura={false} float={false} />
         </div>
       </div>
 
@@ -64,7 +64,7 @@
         <p class="intro-line">Say the list out loud — it writes itself.</p>
         <p class="intro-line">"Got the milk" — and milk ticks itself off.</p>
         <p class="intro-line pt-2">
-          No account, no login. Lists stay on your phone.
+          No account, no login. Lists stay on this device.
         </p>
       </div>
 

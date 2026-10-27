@@ -135,10 +135,10 @@
       type="button"
       class="{footerButtonClass} zl-footer-pass"
       on:click={showContributor}
-      title="Extras · 12 lists, live rooms, every device"
-      aria-label="Extras — more lists and live rooms"
+      title="ZipList Passport · 12 lists, live rooms, every device"
+      aria-label="Unlock ZipList Passport"
     >
-      Extras
+      Passport
     </button>
   {/if}
   <span class="sr-only" role="status" aria-live="polite">{shareStatus}</span>

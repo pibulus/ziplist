@@ -99,7 +99,7 @@
 
       if (contributorCode) {
         vaultHash = await getVaultHash(contributorCode);
-        await deviceSyncStore.activatePassport(contributorCode);
+        await deviceSyncStore.enableSync();
       }
     } catch {
       failedPolls += 1;

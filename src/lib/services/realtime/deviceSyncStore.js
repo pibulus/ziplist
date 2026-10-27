@@ -461,7 +461,17 @@ function createDeviceSyncStore() {
       };
     }
 
-    // Bare code entered directly (e.g. "ZL-XXXX-XXXX")
+    // If the input looks like a URL or path without code/unlock query/hash params,
+    // never treat the URL itself as a bare Passport code.
+    if (
+      /^https?:\/\//i.test(value) ||
+      value.includes("://") ||
+      value.includes("/")
+    ) {
+      return null;
+    }
+
+    // Bare code or 4-word passkey entered directly (e.g. "ZL-XXXX-XXXX" or "velvet-octopus-drifts-by")
     if (value.startsWith("ZL-") || value.length >= 8) {
       return {
         code: value.toUpperCase(),
@@ -473,9 +483,7 @@ function createDeviceSyncStore() {
   }
 
   async function applyPairing({ code, phrase }) {
-    if (!code) return;
-    let canonicalCode = code;
-    let token = code;
+    if (!code) return false;
     try {
       const res = await fetch("/api/contributor/redeem", {
         method: "POST",
@@ -483,21 +491,23 @@ function createDeviceSyncStore() {
         body: JSON.stringify({ code }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (res.ok && payload.valid) {
-        canonicalCode = payload.code || code;
-        token = payload.token || canonicalCode;
+      if (!res.ok || !payload.valid) {
+        return false;
       }
+      const canonicalCode = payload.code || code;
+      const token = payload.token || null;
+      saveStoredSupporterCode(canonicalCode);
+      setContributorStatus(true, token);
+      if (phrase) {
+        setPrivatePhrase(phrase);
+      }
+      refreshStoreState();
+      await connect();
+      toast("Devices linked! ✨");
+      return true;
     } catch {
-      // Offline fallback: use provided code directly
+      return false;
     }
-    saveStoredSupporterCode(canonicalCode);
-    setContributorStatus(true, token);
-    if (phrase) {
-      setPrivatePhrase(phrase);
-    }
-    refreshStoreState();
-    await connect();
-    toast("Devices linked! ✨");
   }
 
   /**
@@ -537,8 +547,8 @@ function createDeviceSyncStore() {
   async function pairWithLink(text) {
     const pairing = parsePairingLink(text);
     if (!pairing || !pairing.code) return { ok: false };
-    await applyPairing(pairing);
-    return { ok: true };
+    const ok = await applyPairing(pairing);
+    return { ok };
   }
 
   function pairWithPhrase(phrase) {
@@ -569,6 +579,7 @@ function createDeviceSyncStore() {
     connect,
     disconnect,
     enableSync,
+    activatePassport: enableSync,
     disableSync,
     handleIncomingUrl,
     pairWithLink,
