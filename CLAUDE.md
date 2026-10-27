@@ -146,11 +146,10 @@ of solving it is worse than no rule.
   while recording
 - **infrastructure/stores.js**: Central reactive state (audio, recording, transcription, UI)
 - **infrastructure/hapticService.js**: Haptic feedback for touch interactions
-- **realtime/liveListProtocol.js**: Shared PartyKit room ids, message names,
+- **realtime/liveListProtocol.js**: Shared live room ids, message names,
   limits, and validators
-- **realtime/**: PartyKit live collaboration (liveListsService, partyService, presenceStore, typingStore, avatarService)
-- **party/listRoom.ts**: PartyKit room server for validated live-list snapshots
-  and ephemeral presence
+- **realtime/**: Live collaboration & PartySocket client bridge (liveListsService, partyService, presenceStore, typingStore, avatarService)
+- **worker/index.ts**: Cloudflare Worker + Durable Object room server (`ziplist-rooms.pibulus.workers.dev`) for validated live-list snapshots, ephemeral presence, and E2EE device sync relay
 - **realtime/deviceSyncStore.js** + **syncCrypto.js** + **lists/listMergeService.js**:
   Device Sync — every list on every paired device, AES-GCM sealed client-side,
   relayed by `worker/index.ts` (`zl_p*` rooms). Pairing is by link only (QR,

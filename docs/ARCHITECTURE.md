@@ -10,9 +10,9 @@ transcription, optional PartyKit live sharing, and PWA support.
 - `src/routes/import/+page.svelte` - Static snapshot import flow.
 - `src/routes/live/[roomId]/+page.svelte` - Join an existing live list room.
 - `src/routes/api/gemini/+server.js` - Server-side Gemini transcription route.
-- `src/routes/api/live/create/+server.js` - Contributor-gated PartyKit room
+- `src/routes/api/live/create/+server.js` - Contributor-gated room
   creation proxy.
-- `party/listRoom.ts` - PartyKit room server.
+- `worker/index.ts` - Cloudflare Durable Object room server (`ziplist-rooms.pibulus.workers.dev`).
 
 ## UI Ownership
 
@@ -88,8 +88,8 @@ Static share is a snapshot. It does not stay connected to the source list.
 SingleList
   -> liveListsService.makeLive()
   -> /api/live/create
-  -> PartyKit /parties/main/:roomId
-  -> party/listRoom.ts
+  -> Cloudflare Worker /parties/main/:roomId
+  -> worker/index.ts
   -> /live/:roomId joiners
   -> liveListsService
   -> listsStore

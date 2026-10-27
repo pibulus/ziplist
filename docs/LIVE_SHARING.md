@@ -23,8 +23,8 @@ SingleList.svelte
   -> liveListsService.makeLive(listId)
   -> partyService.createLiveList()
   -> /api/live/create
-  -> PartyKit /parties/main/:roomId
-  -> party/listRoom.ts
+  -> Cloudflare DO Worker /parties/main/:roomId
+  -> worker/index.ts
 ```
 
 Joining:
@@ -191,9 +191,9 @@ ZipList cost model:
 - a free room can disappear by policy; a supporter room needs explicit
   durability, export, and backup expectations
 
-## PartyKit Room
+## Room Worker
 
-`party/listRoom.ts`:
+`worker/index.ts`:
 
 - rejects joins to rooms that were never created
 - rejects expired rooms with a typed close code / HTTP 410
@@ -228,7 +228,7 @@ npm run dev
 npm run dev:party
 ```
 
-`partykit.json` pins local PartyKit to port `1999`. In Vite dev, local/LAN app
+`package.json` pins local Wrangler (`wrangler dev --port 1999 --local`) to port `1999`. In Vite dev, local/LAN app
 clients infer the current host with port `1999`, so an iPhone at
 `http://192.168.0.148:3001` can connect to `192.168.0.148:1999`. The local
 room-create endpoint follows the same host in dev, even when production

@@ -82,7 +82,7 @@
   unchecked items; `listsService` toggles the matching target-list items.
 - **Static import** - `shareService` encodes a snapshot URL, `/import` decodes it,
   and `ImportConfirmationDialog` adds it as a local list.
-- **Live list** - `/api/live/create` creates a PartyKit room, `party/listRoom.ts`
+- **Live list** - `/api/live/create` creates a Cloudflare Durable Object room, `worker/index.ts`
   stores the validated snapshot, `/live/[roomId]` joins it, and
   `liveListsService` keeps local state in sync.
 

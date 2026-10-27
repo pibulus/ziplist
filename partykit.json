@@ -1,6 +1,0 @@
-{
-  "name": "ziplist",
-  "main": "party/listRoom.ts",
-  "port": 1999,
-  "compatibilityDate": "2026-05-26"
-}

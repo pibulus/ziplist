@@ -32,7 +32,7 @@ export const LIVE_ROOM_TIERS = Object.freeze({
 // link — which the other person never received. Seven days outlasts the actual
 // use case. Supporters keep a year.
 // NOTE: this constant is read by BOTH /api/live/create (Netlify) and
-// party/listRoom.ts (the worker), so changing it needs `npm run party:deploy`
+// worker/index.ts (Cloudflare DO worker), so changing it needs `npm run party:deploy`
 // AND a Netlify deploy or the two disagree about when a room dies.
 export const LIVE_ROOM_TTL_MS = Object.freeze({
   [LIVE_ROOM_TIERS.FREE]: 7 * 24 * 60 * 60 * 1000,

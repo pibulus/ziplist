@@ -113,7 +113,7 @@ SQUARE_WEBHOOK_NOTIFICATION_URL=https://ziplist.app/api/square/webhook
 ├── lib/services/transcription/  # Audio processing flow
 ├── lib/services/pwa/            # PWA installation support
 ├── routes/                      # SvelteKit pages and server endpoints
-└── ../party/listRoom.ts         # PartyKit room server
+└── ../worker/index.ts           # Cloudflare Durable Object room server
 ```
 
 ## Tech Stack
