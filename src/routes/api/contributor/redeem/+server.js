@@ -2,6 +2,10 @@ import { env } from "$env/dynamic/private";
 import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter.js";
 import {
+  generateLicenseCode,
+  generatePasskeyPhrase,
+} from "$lib/server/contributor/licenseCrypto.js";
+import {
   isContributorCodeValid,
   normalizeContributorCode,
   parseContributorCodes,
@@ -20,27 +24,45 @@ function getManualCodes() {
 }
 
 export async function POST(event) {
-  const rateResponse = enforceRateLimit(event);
+  const rateResponse = await enforceRateLimit(event);
   if (rateResponse) return rateResponse;
 
+  let body;
   try {
-    const { code } = await event.request.json();
-    const normalizedCode = normalizeContributorCode(code);
+    body = await event.request.json();
+  } catch {
+    return json(
+      { valid: false, error: "Enter a 4-word passkey or code to unlock." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const rawCode = body?.code?.toString().trim() || "";
+    const normalizedCode = normalizeContributorCode(rawCode);
 
     if (!normalizedCode) {
       return json(
-        { valid: false, error: "Enter your contributor code to unlock." },
+        { valid: false, error: "Enter a 4-word passkey or code to unlock." },
         { status: 400 },
       );
     }
 
-    const license = await redeemStoredLicense(normalizedCode);
+    const license = await redeemStoredLicense(rawCode);
     if (license) {
+      const canonicalCode = license.checkoutId
+        ? generateLicenseCode(license.checkoutId)
+        : normalizedCode;
+      const canonicalPhrase = license.checkoutId
+        ? generatePasskeyPhrase(license.checkoutId)
+        : generatePasskeyPhrase(canonicalCode);
+
       return json({
         valid: true,
         token: issueTokenForLicense(license),
         license,
-        code: normalizedCode,
+        code: canonicalCode,
+        phrase: canonicalPhrase,
       });
     }
 
@@ -60,20 +82,29 @@ export async function POST(event) {
       return json(
         {
           valid: false,
-          error: "Check the contributor code and try once more.",
+          error: "Check the passkey or code and try once more.",
         },
         { status: 401 },
       );
     }
 
-    const voucher = await createVoucherLicense(normalizedCode);
+    // Shared unlock words mint a personal license per redemption so devices
+    // don't land in one shared sync room.
+    const voucher = await createVoucherLicense();
     return json({
       valid: true,
       token: issueTokenForLicense(voucher.license),
       license: voucher.license,
       code: voucher.code,
+      phrase: voucher.phrase,
     });
   } catch (error) {
+    if (error?.code === "VOUCHER_LIMIT") {
+      return json(
+        { valid: false, code: error.code, error: error.message },
+        { status: 410 },
+      );
+    }
     console.error(
       "[ContributorRedeem] Failed to redeem contributor code:",
       error,

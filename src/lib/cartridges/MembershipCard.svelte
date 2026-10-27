@@ -2,7 +2,13 @@
   import { onMount } from "svelte";
   import { generateMemberIdentity } from "./identityUtils.js";
   import { hexToRgba, mixHex } from "./passportPalettes.js";
-  import { buildPassportAvatar } from "./passportAvatar.js";
+  import {
+    buildPassportAvatar,
+    clearCustomPassportAvatar,
+    compressAvatarImageFile,
+    readCustomPassportAvatar,
+    saveCustomPassportAvatar,
+  } from "./passportAvatar.js";
   import {
     selectSkin,
     selectNamedSkin,
@@ -25,8 +31,11 @@
   export let privatePhrase = "";
   // Optional: force a named skin (e.g. 'hacker') for preview/dev.
   export let skinName = "";
+  export let isPreview = false;
 
   let storedPassportCode = "";
+  let customAvatarUri = "";
+  let avatarInputEl;
   let cardEl;
   let shuffleSeed = 0;
   let showTapBurst = false;
@@ -45,17 +54,13 @@
   let pendingX = 50;
   let pendingY = 50;
 
-  // Gyroscope (mobile tilt) state.
-  let gyroSupported = false;
-  let gyroEnabled = false;
-  let removeGyroListener = null;
+  // Pointer sheen stays on desktop; touch never asks for motion permission.
   let reducedMotion = false;
 
   const clamp = (value, min = 0, max = 100) =>
     Math.min(max, Math.max(min, value));
 
-  $: if (cardEl)
-    cardEl.style.setProperty("--hovered", isHovered || gyroEnabled ? "1" : "0");
+  $: if (cardEl) cardEl.style.setProperty("--hovered", isHovered ? "1" : "0");
 
   $: identity = generateMemberIdentity(vaultHash);
   $: hasVaultHash = !identity.isFallback;
@@ -67,7 +72,9 @@
         ? selectNamedSkin(skinName, vaultHash)
         : selectSkin(vaultHash);
   $: palette = skin.palette;
-  $: avatarUri = buildPassportAvatar(vaultHash || "ziplist", skin.avatarStyle);
+  $: avatarUri =
+    (!isPreview && customAvatarUri) ||
+    buildPassportAvatar(vaultHash || "ziplist", skin.avatarStyle);
 
   // Dark-substrate frames (terminal) force light ink so text stays legible.
   $: isDarkSubstrate = skin.choices.frame === "terminal";
@@ -99,19 +106,18 @@
     `--p-accent-w45: ${mixHex(palette.accent, 0.45)}`,
     `--p-accent-w86: ${mixHex(palette.accent, 0.86)}`,
     `--f-glow-38: ${hexToRgba(palette.glow, 0.38)}`,
+    `--f-glow-28: ${hexToRgba(palette.glow, 0.28)}`,
+    `--f-glow-24: ${hexToRgba(palette.glow, 0.24)}`,
     `--f-glow-20: ${hexToRgba(palette.glow, 0.2)}`,
+    `--f-glow-16: ${hexToRgba(palette.glow, 0.16)}`,
     skin.varString,
   ].join("; ");
 
   $: effectivePassportCode = passportCode || storedPassportCode;
-  $: effectivePrivatePhrase =
-    privatePhrase || $deviceSyncStore.privatePhrase || "";
+  $: resolvedPhrase = privatePhrase || $deviceSyncStore.privatePhrase || "";
   $: passportSyncUrl =
-    hasVaultHash && effectivePassportCode
-      ? buildDeviceSyncUrl({
-          code: effectivePassportCode,
-          phrase: effectivePrivatePhrase,
-        })
+    !isPreview && hasVaultHash && effectivePassportCode
+      ? buildDeviceSyncUrl(effectivePassportCode, resolvedPhrase)
       : "";
 
   $: if (passportSyncUrl !== previousQrImageUrl) {
@@ -164,7 +170,7 @@
   }
 
   function handlePointerMove(e) {
-    if (!cardEl) return;
+    if (!cardEl || reducedMotion || e.pointerType !== "mouse") return;
     const rect = cardEl.getBoundingClientRect();
     schedulePointer(
       ((e.clientX - rect.left) / rect.width) * 100,
@@ -177,69 +183,21 @@
     schedulePointer(50, 50);
   }
 
-  function handleOrientation(event) {
-    const gamma = event.gamma ?? 0;
-    const beta = event.beta ?? 0;
-    schedulePointer(
-      50 + clamp(gamma, -35, 35) * (50 / 35),
-      50 + clamp(beta - 45, -35, 35) * (50 / 35),
-    );
-  }
-
-  function attachGyro() {
-    window.addEventListener("deviceorientation", handleOrientation, true);
-    gyroEnabled = true;
-    removeGyroListener = () =>
-      window.removeEventListener("deviceorientation", handleOrientation, true);
-  }
-
-  async function enableGyro() {
-    const evt =
-      typeof DeviceOrientationEvent !== "undefined"
-        ? DeviceOrientationEvent
-        : null;
-    if (!evt) return;
-    try {
-      if (typeof evt.requestPermission === "function") {
-        const state = await evt.requestPermission();
-        if (state !== "granted") return;
-      }
-      attachGyro();
-    } catch (error) {
-      console.warn("Passport tilt permission denied:", error);
-    }
-  }
-
   onMount(() => {
     storedPassportCode = readStoredSupporterCode();
+    customAvatarUri = readCustomPassportAvatar();
     writePointerVars(50, 50);
 
     reducedMotion =
       typeof window !== "undefined" &&
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) return cleanup;
-
-    const hasMotion =
-      typeof window !== "undefined" && "DeviceOrientationEvent" in window;
-    const isTouch =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(pointer: coarse)").matches;
-    gyroSupported = hasMotion && isTouch;
-
-    const needsPermission =
-      gyroSupported &&
-      typeof DeviceOrientationEvent.requestPermission === "function";
-    if (gyroSupported && !needsPermission) attachGyro();
-
     return cleanup;
   });
 
   function cleanup() {
     if (rafId !== null && typeof cancelAnimationFrame === "function")
       cancelAnimationFrame(rafId);
-    if (removeGyroListener) removeGyroListener();
     if (squishTimer) clearTimeout(squishTimer);
     if (idCopiedTimer) clearTimeout(idCopiedTimer);
   }
@@ -264,7 +222,9 @@
 
   async function handleCopyCode(e) {
     if (e) e.stopPropagation();
-    const toCopy = effectivePassportCode || identity.memberId;
+    if (isPreview) return;
+    const toCopy =
+      identity.phrase || effectivePassportCode || identity.memberId;
     if (!toCopy) return;
     const success = await copyTextToClipboard(toCopy);
     if (success) {
@@ -278,7 +238,7 @@
       }, 2200);
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
-          detail: { message: "Passport ID copied! 🪪", type: "success" },
+          detail: { message: "4-word passkey copied! 🪪", type: "success" },
         }),
       );
     } else {
@@ -286,7 +246,7 @@
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
           detail: {
-            message: "Couldn't copy automatically — select ID manually",
+            message: "Couldn't copy automatically — select passkey manually",
             type: "warning",
           },
         }),
@@ -294,11 +254,42 @@
     }
   }
 
+  function handleAvatarClick(e) {
+    if (e) e.stopPropagation();
+    if (isPreview) return;
+    avatarInputEl?.click();
+  }
+
+  async function handleAvatarFileChange(e) {
+    const file = e.currentTarget?.files?.[0];
+    if (e.currentTarget) e.currentTarget.value = "";
+    if (!file) return;
+    try {
+      const dataUri = await compressAvatarImageFile(file, 128);
+      customAvatarUri = saveCustomPassportAvatar(dataUri);
+      soundService?.play?.("bloom") || soundService?.select?.();
+      hapticService?.impact?.("light") || hapticService?.selection?.();
+    } catch (err) {
+      console.warn("[MembershipCard] Custom avatar upload failed:", err);
+    }
+  }
+
+  function handleResetAvatar(e) {
+    if (e) e.stopPropagation();
+    clearCustomPassportAvatar();
+    customAvatarUri = "";
+    soundService?.play?.("bloom") || soundService?.select?.();
+    hapticService?.impact?.("light") || hapticService?.selection?.();
+  }
+
   function handleCardClick(e) {
-    if (e.target && e.target.closest && e.target.closest(".passport-qr-stamp"))
+    if (
+      e.target &&
+      e.target.closest &&
+      (e.target.closest(".passport-qr-stamp") ||
+        e.target.closest(".avatar-chip-wrap"))
+    ) {
       return;
-    if (gyroSupported && !gyroEnabled) {
-      void enableGyro();
     }
     cycleSkin();
   }
@@ -314,12 +305,13 @@
   role="button"
   tabindex="0"
   aria-label={hasVaultHash
-    ? `ZipList contributor passport for ${identity.name}. Tap to cycle look.`
+    ? `ZipList contributor passport${isPreview ? " preview" : ""} for ${identity.name}. Tap to cycle look.`
     : "ZipList contributor passport placeholder"}
   on:click={handleCardClick}
   on:keydown={(e) => (e.key === "Enter" || e.key === " ") && cycleSkin()}
   on:pointermove={handlePointerMove}
-  on:pointerenter={() => (isHovered = true)}
+  on:pointerenter={(e) =>
+    (isHovered = !reducedMotion && e.pointerType === "mouse")}
   on:pointerleave={settleToCenter}
 >
   <div class="passport-substrate pointer-events-none absolute inset-0"></div>
@@ -336,66 +328,98 @@
   <div class="relative z-10 flex items-start justify-between gap-3">
     <div class="min-w-0">
       <h3 class="passport-kicker text-[11px] font-black uppercase">
-        ZipList Passport
+        {isPreview ? "Passport Preview" : "ZipList Passport"}
       </h3>
       <p class="passport-name mt-1 max-w-[190px] font-black">
         {identity.name}
       </p>
     </div>
 
-    <!-- Avatar chip: DiceBear SVG with initials fallback -->
-    <div
-      class="avatar-chip grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl font-black"
-      aria-hidden="true"
-    >
-      {#if avatarUri}
-        <img
-          src={avatarUri}
-          alt=""
-          class="avatar-img h-full w-full object-cover"
-          draggable="false"
-        />
-      {:else}
-        <span class="avatar-initials">{identity.initials}</span>
+    <!-- Avatar chip: tap to upload a custom photo (128x128 local WebP) or DiceBear SVG -->
+    <div class="avatar-chip-wrap group relative shrink-0">
+      <input
+        bind:this={avatarInputEl}
+        type="file"
+        accept="image/*"
+        class="sr-only"
+        tabindex="-1"
+        aria-hidden="true"
+        on:change={handleAvatarFileChange}
+      />
+      <button
+        type="button"
+        class="avatar-chip grid h-14 w-14 place-items-center overflow-hidden rounded-2xl font-black transition-transform duration-150 active:scale-95 group-hover:scale-105"
+        disabled={isPreview}
+        title={isPreview
+          ? "Passport preview avatar"
+          : "Tap to upload custom avatar"}
+        aria-label={isPreview
+          ? "Passport preview avatar"
+          : "Upload custom Passport avatar"}
+        on:click={handleAvatarClick}
+        on:dblclick={handleResetAvatar}
+      >
+        {#if avatarUri}
+          <img
+            src={avatarUri}
+            alt=""
+            class="avatar-img h-full w-full object-cover"
+            draggable="false"
+          />
+        {:else}
+          <span class="avatar-initials">{identity.initials}</span>
+        {/if}
+      </button>
+      {#if !isPreview && customAvatarUri}
+        <button
+          type="button"
+          class="absolute -right-1.5 -top-1.5 z-20 grid h-6 w-6 place-items-center rounded-full border border-[#1e1714] bg-[#fffef7] text-[11px] font-black leading-none text-[#1e1714] opacity-0 shadow-sm transition-opacity focus:opacity-100 group-hover:opacity-100"
+          title="Reset to default avatar"
+          aria-label="Reset custom Passport avatar"
+          on:click={handleResetAvatar}
+        >
+          ×
+        </button>
       {/if}
     </div>
   </div>
 
   <div class="relative z-10 flex items-end justify-between gap-4">
     <div
-      class="passport-id-chip -mx-1.5 -my-1 min-w-0 rounded-lg p-1.5 transition-all duration-150 hover:bg-black/5 active:scale-95"
+      class="passport-id-chip -mx-1.5 -my-1 min-w-0 rounded-lg p-1.5 transition-all duration-150 hover:bg-[#1e1714]/5 active:scale-95"
       on:click={handleCopyCode}
       on:keydown={(e) =>
         (e.key === "Enter" || e.key === " ") && handleCopyCode(e)}
       role="button"
       tabindex="0"
-      title="Click to copy pass code"
-      aria-label="Click to copy pass code"
+      title={isPreview
+        ? "Passport preview (sample)"
+        : "Click to copy 4-word passkey"}
+      aria-label={isPreview
+        ? "Passport preview (sample)"
+        : "Click to copy 4-word passkey"}
     >
       <p
         class="passport-label flex items-center gap-1.5 text-[10px] font-bold uppercase"
       >
-        <span>Passport ID</span>
+        <span>{isPreview ? "Sample Passkey" : "4-Word Passkey"}</span>
         {#if idCopied}
           <span
-            class="shadow-xs rounded bg-emerald-500/90 px-1 py-0.5 text-[9px] font-black text-white"
+            class="shadow-xs rounded bg-emerald-600 px-1 py-0.5 text-[9px] font-black text-[#fffef7]"
           >
             Copied! ✨
           </span>
-        {:else}
+        {:else if !isPreview}
           <span class="text-[9px] font-semibold lowercase opacity-60"
             >tap to copy</span
           >
         {/if}
       </p>
       <p
-        class="passport-member-id mt-0.5 font-mono text-sm font-black tracking-normal"
+        class="passport-member-id mt-0.5 font-mono text-xs font-black tracking-tight sm:text-sm"
       >
-        {identity.memberId}
+        {identity.phrase || identity.memberId}
       </p>
-      {#if hasVaultHash && identity.phrase}
-        <p class="passport-phrase mt-0.5 italic">{identity.phrase}</p>
-      {/if}
     </div>
 
     {#if passportQrImageUrl}
@@ -404,7 +428,7 @@
         class:is-loading={!qrHasLoaded && !qrHasFailed}
         class:is-fallback={qrHasFailed}
         href={passportSyncUrl}
-        aria-label={`Open ZipList on another device with ${identity.memberId}`}
+        aria-label={`Open ZipList on another device with ${identity.phrase || identity.memberId}`}
       >
         {#if !qrHasFailed}
           <img
@@ -421,7 +445,7 @@
         {/if}
         {#if qrHasFailed}
           <span class="passport-link-fallback" aria-hidden="true">
-            <span class="fallback-word">SYNC</span>
+            <span class="fallback-word">PASS</span>
           </span>
         {/if}
         <span class="qr-tap-hint" aria-hidden="true">tap to sync</span>
@@ -608,16 +632,6 @@
     color: var(--p-ink-soft);
   }
 
-  .passport-phrase {
-    font-size: 0.64rem;
-    line-height: 1.3;
-    color: var(--p-ink-soft);
-    max-width: 160px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
   .passport-name {
     font-size: var(--t-name-size, 1.56rem);
     font-weight: var(--t-name-weight, 900);
@@ -758,8 +772,8 @@
     z-index: 2;
     display: none;
     padding: 0.12rem 0;
-    background: rgba(0, 0, 0, 0.46);
-    color: #fff;
+    background: rgba(30, 23, 20, 0.56);
+    color: #fffef7;
     font-size: 0.46rem;
     font-weight: 800;
     letter-spacing: 0.06em;
@@ -793,7 +807,7 @@
   }
 
   .fallback-word {
-    font-size: 0.7rem;
+    font-size: 0.54rem;
     font-weight: 900;
     letter-spacing: 0;
     color: var(--p-ink);
@@ -819,6 +833,78 @@
   @media (prefers-reduced-motion: no-preference) {
     .passport-card {
       animation: passportReveal 520ms cubic-bezier(0.16, 1.25, 0.3, 1) both;
+      animation-timing-function: linear(
+        0,
+        0.006,
+        0.025 0.9%,
+        0.101 1.8%,
+        0.539 6.5%,
+        0.826 10%,
+        0.967 11.8%,
+        1.037 13.1%,
+        1.078 14.2%,
+        1.103 15.3%,
+        1.115,
+        1.118 17.7%,
+        1.114 18.9%,
+        1.106 20%,
+        1.094 21.2%,
+        1.08 22.3%,
+        1.064 23.5%,
+        1.046 24.6%,
+        1.028 25.8%,
+        1.01 26.9%,
+        0.992 28.1%,
+        0.975 29.2%,
+        0.959 30.4%,
+        0.945 31.5%,
+        0.931 32.8%,
+        0.92 33.9%,
+        0.91 35%,
+        0.901 36.2%,
+        0.894 37.3%,
+        0.888 38.5%,
+        0.883 39.6%,
+        0.88 40.8%,
+        0.877 42.2%,
+        0.875 43.5%,
+        0.875 44.9%,
+        0.875 46.2%,
+        0.877 47.6%,
+        0.88 48.9%,
+        0.883 50.3%,
+        0.888 51.6%,
+        0.893 53%,
+        0.9 54.5%,
+        0.907 56%,
+        0.915 57.6%,
+        0.924 59.1%,
+        0.933 60.7%,
+        0.943 62.2%,
+        0.954 63.8%,
+        0.964 65.3%,
+        0.975 67%,
+        0.986 69%,
+        0.996 71%,
+        1.005 73.1%,
+        1.013 75.2%,
+        1.02 77.2%,
+        1.026 79.3%,
+        1.03 81.4%,
+        1.034 83.5%,
+        1.036 85.5%,
+        1.037 87.6%,
+        1.037 89.7%,
+        1.036 91.8%,
+        1.034 93.9%,
+        1.032 95.9%,
+        1.029 97.5%,
+        1.026 98.5%,
+        1.024 99.1%,
+        1.022 99.5%,
+        1.021 99.8%,
+        1.02 100%
+      );
     }
 
     .passport-card:not([style*="--hovered: 1"]) .holofoil {

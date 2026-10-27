@@ -69,9 +69,9 @@ const HOLO = {
 const FRAME = {
   chunky: {
     "--f-radius": "1.55rem",
-    "--f-border": "3px solid rgba(0, 0, 0, 0.78)",
-    "--f-shadow": "0 18px 40px var(--f-glow-38)",
-    "--f-filter": "drop-shadow(7px 7px 0 rgba(0, 0, 0, 0.65))",
+    "--f-border": "3px solid rgba(30, 23, 20, 0.78)",
+    "--f-shadow": "0 10px 24px var(--f-glow-24)",
+    "--f-filter": "drop-shadow(4px 4px 0 rgba(30, 23, 20, 0.45))",
     "--f-substrate": "transparent",
     "--f-ink-shift": "0",
   },
@@ -79,7 +79,7 @@ const FRAME = {
     "--f-radius": "1.55rem",
     "--f-border": "2px solid rgba(255, 255, 255, 0.38)",
     "--f-shadow":
-      "0 24px 48px var(--f-glow-38), 0 8px 18px var(--f-glow-20), 0 3px 0 rgba(255, 255, 255, 0.22) inset",
+      "0 14px 28px var(--f-glow-28), 0 4px 12px var(--f-glow-16), 0 2px 0 rgba(255, 255, 255, 0.22) inset",
     "--f-filter": "none",
     "--f-substrate": "transparent",
     "--f-ink-shift": "0",
@@ -88,7 +88,7 @@ const FRAME = {
     "--f-radius": "1.1rem",
     "--f-border": "1px solid rgba(255, 255, 255, 0.55)",
     "--f-shadow":
-      "0 16px 40px var(--f-glow-20), 0 2px 10px rgba(0, 0, 0, 0.06)",
+      "0 16px 40px var(--f-glow-20), 0 2px 10px rgba(30, 23, 20, 0.06)",
     "--f-filter": "none",
     "--f-substrate": "rgba(255, 255, 255, 0.22)",
     "--f-ink-shift": "0",
@@ -97,7 +97,7 @@ const FRAME = {
     "--f-radius": "0.5rem",
     "--f-border": "1px solid var(--p-accent)",
     "--f-shadow":
-      "0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 22px var(--f-glow-38), 0 18px 40px rgba(0, 0, 0, 0.55)",
+      "0 0 0 1px rgba(30, 23, 20, 0.6), 0 0 22px var(--f-glow-38), 0 18px 40px rgba(30, 23, 20, 0.55)",
     "--f-filter": "none",
     "--f-substrate": "rgba(8, 10, 16, 0.86)",
     "--f-ink-shift": "1",

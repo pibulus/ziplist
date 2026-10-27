@@ -83,13 +83,14 @@ export async function POST(event) {
     // Square to retry forever while the customer silently has no license.
     // Log loudly instead so a paid-but-no-license checkout can be recovered.
     try {
-      const { code } = await createLicenseForCheckout(paidCheckout);
+      const { code, phrase } = await createLicenseForCheckout(paidCheckout);
       if (payment.buyer_email_address && code) {
         const appUrl = env.PUBLIC_APP_URL?.trim() || "https://ziplist.app";
         try {
           await sendContributorPassportEmail({
             to: payment.buyer_email_address,
             code,
+            phrase,
             appUrl,
           });
         } catch (emailErr) {

@@ -92,7 +92,7 @@
 
   --zl-modal-close-bg: #ff5ca8;
   --zl-modal-close-hover-bg: #ff6eb3;
-  --zl-modal-close-ink: #ffffff;
+  --zl-modal-close-ink: #fffef7;
 
   --zl-vibe-caret: #f472b6;
   --zl-vibe-caret-glow: rgba(244, 114, 182, 0.45);
@@ -308,7 +308,7 @@ html[data-theme="highlighter"] {
 
   --zl-modal-close-bg: #ff5ca8;
   --zl-modal-close-hover-bg: #ff6eb3;
-  --zl-modal-close-ink: #ffffff;
+  --zl-modal-close-ink: #fffef7;
 
   --zl-vibe-caret: #f472b6;
   --zl-vibe-caret-glow: rgba(244, 114, 182, 0.45);

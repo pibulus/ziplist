@@ -10,15 +10,37 @@ export function parseContributorCodes(...values) {
     .filter(Boolean);
 }
 
+function stripPunctuation(str) {
+  return str.replace(/[-\s_]/g, "");
+}
+
 export function isContributorCodeValid(code, validCodes) {
   const normalizedCode = normalizeContributorCode(code);
   if (!normalizedCode || !Array.isArray(validCodes)) return false;
+
+  const cleanInput = stripPunctuation(normalizedCode);
+  const strippedInput = cleanInput.replace(/^ZL/i, "");
 
   // Constant-time comparison across the whole allowlist so response timing
   // can't narrow down a manual code character by character.
   let matched = false;
   for (const validCode of validCodes) {
-    if (timingSafeStringEqual(normalizedCode, validCode)) {
+    const normValid = normalizeContributorCode(validCode);
+    const cleanValid = stripPunctuation(normValid);
+    const strippedValid = cleanValid.replace(/^ZL/i, "");
+
+    if (timingSafeStringEqual(normalizedCode, normValid)) {
+      matched = true;
+    } else if (
+      cleanInput.length > 0 &&
+      timingSafeStringEqual(cleanInput, cleanValid)
+    ) {
+      matched = true;
+    } else if (
+      strippedInput.length >= 4 &&
+      strippedValid.length >= 4 &&
+      timingSafeStringEqual(strippedInput, strippedValid)
+    ) {
       matched = true;
     }
   }

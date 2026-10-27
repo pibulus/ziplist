@@ -2,20 +2,42 @@
   import { onDestroy, onMount } from "svelte";
   import { browser } from "$app/environment";
   import { setContributorStatus } from "$lib";
+  import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
+  import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+  import Confetti from "$lib/components/ui/effects/Confetti.svelte";
+  import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
+  import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";
+  import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
+  import {
+    getVaultHash,
+    saveStoredSupporterCode,
+  } from "$lib/services/vaultHashStorage.js";
 
   let status = "checking";
-  let message = "Checking your contributor unlock...";
+  let message = "Confirming Passport unlock...";
   let contributorCode = "";
+  let contributorPhrase = "";
+  let vaultHash = "";
   let checkoutId = "";
   let pollTimer;
   let copyMessageTimer;
   let copyMessage = "";
+  let showConfetti = false;
 
   // One flaky request right after paying must not kill the poll — only give
   // up after several consecutive failures. 403/404 are definitive and stay
   // immediate.
   let failedPolls = 0;
   const MAX_TRANSIENT_FAILURES = 4;
+
+  $: identity = generateMemberIdentity(vaultHash);
+  $: displayPasskey =
+    contributorPhrase ||
+    (!identity.isFallback ? identity.phrase : "") ||
+    contributorCode;
+  $: unlockUrl = contributorCode
+    ? buildDeviceSyncUrl(contributorCode, $deviceSyncStore.privatePhrase)
+    : "";
 
   function claimStorageKey(id) {
     return `ziplist_checkout_claim_${id}`;
@@ -50,7 +72,7 @@
         if (failedPolls >= MAX_TRANSIENT_FAILURES) {
           status = "error";
           message =
-            "Your payment is safe — the status check needs a break. Refresh this page in a moment.";
+            "Payment is safe — status check needs a brief pause. Refresh this page in a moment.";
         }
         return;
       }
@@ -65,15 +87,25 @@
       }
 
       status = "paid";
-      message = "Contributor is unlocked on this device.";
-      contributorCode = payload.code || "";
+      message = "ZipList Passport is active on this device.";
+      const savedCode = payload.code
+        ? saveStoredSupporterCode(payload.code)
+        : "";
+      contributorCode = savedCode || payload.code || "";
+      contributorPhrase = payload.phrase || "";
       setContributorStatus(true, payload.token || null);
       sessionStorage.removeItem(claimStorageKey(checkoutId));
+      showConfetti = true;
+
+      if (contributorCode) {
+        vaultHash = await getVaultHash(contributorCode);
+        await deviceSyncStore.activatePassport(contributorCode);
+      }
     } catch {
       failedPolls += 1;
       if (failedPolls >= MAX_TRANSIENT_FAILURES) {
         status = "error";
-        message = "Check your connection, then refresh this page.";
+        message = "Check the connection, then refresh this page.";
       }
     }
   }
@@ -92,20 +124,25 @@
     }
   }
 
-  async function copyContributorCode() {
-    if (!browser || !contributorCode) return;
+  function showCopiedNotice(text) {
+    copyMessage = text;
+    clearCopyMessageTimer();
+    copyMessageTimer = setTimeout(() => {
+      copyMessage = "";
+      copyMessageTimer = null;
+    }, 2000);
+  }
 
-    try {
-      await navigator.clipboard.writeText(contributorCode);
-      copyMessage = "Copied";
-      clearCopyMessageTimer();
-      copyMessageTimer = setTimeout(() => {
-        copyMessage = "";
-        copyMessageTimer = null;
-      }, 1800);
-    } catch {
-      copyMessage = "Tap the page, then try copy.";
-    }
+  async function copyPasskey() {
+    if (!browser || !displayPasskey) return;
+    const ok = await copyTextToClipboard(displayPasskey);
+    showCopiedNotice(ok ? "4-word passkey copied" : "Select key to copy");
+  }
+
+  async function copyUnlockLink() {
+    if (!browser || !unlockUrl) return;
+    const ok = await copyTextToClipboard(unlockUrl);
+    showCopiedNotice(ok ? "Unlock link copied" : "Select link to copy");
   }
 
   onMount(() => {
@@ -116,7 +153,7 @@
 
     if (!checkoutId) {
       status = "error";
-      message = "Open ZipList and start contributor checkout again.";
+      message = "Open ZipList and start Passport checkout again.";
       return;
     }
 
@@ -146,17 +183,25 @@
 </script>
 
 <svelte:head>
-  <title>Contributor Unlock | ZipList</title>
+  <title>ZipList Passport | ZipList</title>
   <meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
+{#if showConfetti}
+  <Confetti
+    kind="stars"
+    particleCount={48}
+    duration={2600}
+    on:complete={() => (showConfetti = false)}
+  />
+{/if}
+
 <main class="zl-success-page">
   <section class="zl-success-card" aria-live="polite">
-    <div class="zl-success-mark" aria-hidden="true">Zip</div>
+    <div class="zl-success-mark" aria-hidden="true">✦ ZipList Passport</div>
 
     <div class="zl-success-copy">
-      <p>Contributor</p>
-      <h1>{status === "paid" ? "You are unlocked" : "Almost there"}</h1>
+      <h1>{status === "paid" ? "Passport Ready" : "Almost there"}</h1>
       <span>{message}</span>
     </div>
 
@@ -167,17 +212,38 @@
     {/if}
 
     {#if contributorCode}
+      {#if vaultHash}
+        <div class="w-full max-w-[310px]">
+          <MembershipCard {vaultHash} passportCode={contributorCode} />
+        </div>
+      {/if}
+
       <div class="zl-code-card">
-        <p>Your contributor code</p>
-        <strong>{contributorCode}</strong>
-        <span>Keep this code for unlocking ZipList on another device.</span>
-        <button
-          type="button"
-          class="zl-code-copy-button"
-          on:click={copyContributorCode}
+        <p>4-Word Passport Key</p>
+        <strong>{displayPasskey}</strong>
+        <span
+          >Keep this 4-word key or scan the Passport QR above to link another
+          phone or laptop.</span
         >
-          {copyMessage || "Copy Code"}
-        </button>
+        <div class="zl-code-actions">
+          <button
+            type="button"
+            class="zl-code-copy-button"
+            on:click={copyPasskey}
+          >
+            Copy 4-Word Key
+          </button>
+          <button
+            type="button"
+            class="zl-code-copy-button is-teal"
+            on:click={copyUnlockLink}
+          >
+            🔗 Copy Unlock Link
+          </button>
+        </div>
+        {#if copyMessage}
+          <p class="zl-copy-feedback" aria-live="polite">{copyMessage}</p>
+        {/if}
       </div>
     {/if}
 
@@ -195,7 +261,7 @@
         transparent 34rem
       ),
       #fff6e6;
-    color: #111827;
+    color: #1e1714;
     display: flex;
     font-family: "Space Mono", monospace;
     justify-content: center;
@@ -205,60 +271,65 @@
 
   .zl-success-card {
     align-items: center;
-    background: linear-gradient(145deg, #fffaf0, #ffefd5);
-    border: 4px solid #000000;
+    background: linear-gradient(145deg, #fffef7, #fbf1e4);
+    border: 3px solid #1e1714;
     border-radius: 28px;
-    box-shadow: 10px 10px 0 #000000;
+    box-shadow: 6px 6px 0 #1e1714;
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
     max-width: 28rem;
-    padding: 2rem;
+    padding: 1.75rem 1.5rem;
     text-align: center;
     width: 100%;
   }
 
   .zl-success-mark {
     align-items: center;
-    background: var(--zl-cta-color, #ffb000);
-    border: 3px solid #000000;
-    border-radius: 18px;
-    box-shadow: 4px 4px 0 #000000;
+    background: #fde68a;
+    border: 2px solid #1e1714;
+    border-radius: 999px;
+    box-shadow: 2px 2px 0 #1e1714;
+    color: #1e1714;
     display: inline-flex;
+    font-size: 0.78rem;
     font-weight: 900;
-    min-height: 56px;
-    padding: 0 1rem;
+    letter-spacing: 0.04em;
+    min-height: 36px;
+    padding: 0 0.9rem;
+    text-transform: uppercase;
   }
 
-  .zl-success-copy p,
   .zl-code-card p {
-    color: #11776d;
+    color: #525252;
     font-size: 0.72rem;
     font-weight: 900;
-    letter-spacing: 0;
+    letter-spacing: 0.04em;
     margin: 0 0 0.45rem;
     text-transform: uppercase;
   }
 
   .zl-success-copy h1 {
-    font-size: clamp(2rem, 10vw, 2.7rem);
+    color: #1e1714;
+    font-size: clamp(1.85rem, 8vw, 2.4rem);
     font-weight: 900;
-    letter-spacing: 0;
-    line-height: 1;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
     margin: 0;
   }
 
   .zl-success-copy span,
   .zl-code-card span {
-    color: #4b5563;
+    color: #525252;
     display: block;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    margin-top: 0.5rem;
   }
 
   .zl-success-progress {
-    background: rgba(255, 255, 255, 0.72);
+    background: #fbf1e4;
+    border: 1.5px solid #1e1714;
     border-radius: 999px;
     height: 0.65rem;
     overflow: hidden;
@@ -267,66 +338,105 @@
 
   .zl-success-progress div {
     animation: pulse-progress 1.2s ease-in-out infinite;
-    background: #ffb000;
+    background: #ff5ca8;
     border-radius: inherit;
     height: 100%;
     width: 42%;
   }
 
   .zl-code-card {
-    background: rgba(255, 255, 255, 0.72);
-    border: 2px solid rgba(0, 0, 0, 0.12);
+    background: #fffdf5;
+    border: 2px solid #1e1714;
     border-radius: 20px;
+    box-shadow: 2px 2px 0 #1e1714;
     padding: 1rem;
     width: 100%;
   }
 
   .zl-code-card strong {
-    color: #111827;
+    background: #fbf1e4;
+    border: 1.5px solid #1e1714;
+    border-radius: 12px;
+    color: #1e1714;
     display: block;
     font-family: "Space Mono", monospace;
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 900;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
+    padding: 0.55rem 0.75rem;
     word-break: break-word;
+  }
+
+  .zl-code-actions {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr;
+    margin-top: 0.85rem;
+  }
+
+  @media (min-width: 440px) {
+    .zl-code-actions {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   .zl-return-button {
     align-items: center;
-    background: var(--zl-cta-color, #ffb000);
-    border: 3px solid #000000;
-    border-radius: 999px;
-    box-shadow: 5px 5px 0 #000000;
-    color: #111111;
+    background: #ff5ca8;
+    border: 2px solid #1e1714;
+    border-radius: 16px;
+    box-shadow: 3px 3px 0 #1e1714;
+    color: #1e1714;
     display: inline-flex;
     font-weight: 900;
     justify-content: center;
-    min-height: 52px;
+    min-height: 48px;
     padding: 0 1.25rem;
     text-decoration: none;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
     width: 100%;
+  }
+
+  .zl-return-button:hover {
+    box-shadow: 4px 4px 0 #1e1714;
+    transform: translate(-1px, -1px);
   }
 
   .zl-code-copy-button {
-    background: rgba(255, 255, 255, 0.86);
-    border: 2px solid #000000;
-    border-radius: 16px;
-    box-shadow: 3px 3px 0 #000000;
-    color: #111827;
+    background: #fde68a;
+    border: 2px solid #1e1714;
+    border-radius: 14px;
+    box-shadow: 2px 2px 0 #1e1714;
+    color: #1e1714;
     cursor: pointer;
     font-family: "Space Mono", monospace;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 900;
-    margin-top: 1rem;
     min-height: 44px;
-    padding: 0.6rem 1rem;
-    transition: var(--zl-transition-fast, all 0.2s ease);
+    padding: 0.55rem 0.85rem;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
     width: 100%;
   }
 
+  .zl-code-copy-button.is-teal {
+    background: #ccfbf1;
+  }
+
   .zl-code-copy-button:hover {
-    box-shadow: 4px 4px 0 #000000;
+    box-shadow: 3px 3px 0 #1e1714;
     transform: translate(-1px, -1px);
+  }
+
+  .zl-copy-feedback {
+    color: #db2777 !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    margin: 0.55rem 0 0 !important;
+    text-transform: none !important;
   }
 
   @keyframes pulse-progress {
@@ -345,11 +455,13 @@
       transform: none;
     }
 
-    .zl-code-copy-button {
+    .zl-code-copy-button,
+    .zl-return-button {
       transition: none;
     }
 
-    .zl-code-copy-button:hover {
+    .zl-code-copy-button:hover,
+    .zl-return-button:hover {
       transform: none;
     }
   }

@@ -474,8 +474,24 @@ function createDeviceSyncStore() {
 
   async function applyPairing({ code, phrase }) {
     if (!code) return;
-    saveStoredSupporterCode(code);
-    setContributorStatus(true, code);
+    let canonicalCode = code;
+    let token = code;
+    try {
+      const res = await fetch("/api/contributor/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (res.ok && payload.valid) {
+        canonicalCode = payload.code || code;
+        token = payload.token || canonicalCode;
+      }
+    } catch {
+      // Offline fallback: use provided code directly
+    }
+    saveStoredSupporterCode(canonicalCode);
+    setContributorStatus(true, token);
     if (phrase) {
       setPrivatePhrase(phrase);
     }
@@ -494,15 +510,21 @@ function createDeviceSyncStore() {
 
     // Clean address bar so code doesn't stay in browser history
     const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
     url.searchParams.delete("code");
     url.searchParams.delete("unlock");
     url.searchParams.delete("sync");
     url.searchParams.delete("k");
-    url.hash = "";
+    hashParams.delete("code");
+    hashParams.delete("unlock");
+    hashParams.delete("sync");
+    hashParams.delete("k");
+    const nextHash = hashParams.toString();
+    url.hash = nextHash ? `#${nextHash}` : "";
     window.history.replaceState(
       {},
       document.title,
-      url.pathname + (url.search || ""),
+      url.pathname + (url.search || "") + (url.hash || ""),
     );
 
     void applyPairing(pairing);
@@ -517,6 +539,10 @@ function createDeviceSyncStore() {
     if (!pairing || !pairing.code) return { ok: false };
     await applyPairing(pairing);
     return { ok: true };
+  }
+
+  function pairWithPhrase(phrase) {
+    return setPrivatePhrase(phrase);
   }
 
   async function enableSync() {
@@ -546,6 +572,7 @@ function createDeviceSyncStore() {
     disableSync,
     handleIncomingUrl,
     pairWithLink,
+    pairWithPhrase,
     setPrivatePhrase,
     syncNow: () => pushLocalEnvelope(),
     init: () => {

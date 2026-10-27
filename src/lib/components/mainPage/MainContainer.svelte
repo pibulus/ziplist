@@ -33,6 +33,8 @@
   import { StorageUtils } from "$lib/services/infrastructure/storageUtils";
   import { STORAGE_KEYS } from "$lib/constants";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
+  import { saveStoredSupporterCode } from "$lib/services/vaultHashStorage.js";
+  import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
 
   import { AboutModal, ExtensionModal, IntroModal } from "./modals";
 
@@ -899,30 +901,8 @@
       pwaService.setupEventListeners();
       void pwaService.checkIfRunningAsPwa();
 
-      // 1-Tap Magic Link Auto-Unlock (?unlock=code or ?code=code)
-      const urlParams = new URLSearchParams(window.location.search);
-      const unlockCode = urlParams.get("unlock") || urlParams.get("code");
-      if (unlockCode && unlockCode.trim()) {
-        void (async () => {
-          try {
-            const res = await fetch("/api/contributor/redeem", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ code: unlockCode.trim() }),
-            });
-            const payload = await res.json().catch(() => ({}));
-            if (res.ok && payload.valid) {
-              setContributorStatus(true, payload.token || null);
-              soundService.success?.({ force: true });
-              hapticService.success?.();
-              const cleanUrl = window.location.pathname + window.location.hash;
-              window.history.replaceState({}, document.title, cleanUrl);
-            }
-          } catch (e) {
-            console.error("[MagicUnlock] Auto-redeem failed:", e);
-          }
-        })();
-      }
+      // 1-Tap Magic Link Auto-Unlock (?unlock=code / ?code=code and #unlock=code / #code=code / #sync=phrase)
+      void handleUrlUnlock();
     }
 
     // Auto-open the intro on first visit. The historic root-scrollbar jump
@@ -934,6 +914,73 @@
     // animations apply).
     void firstVisitService.showIntroModal("intro_modal", 500);
   });
+
+  async function handleUrlUnlock() {
+    if (!browser) return;
+    try {
+      const url = new URL(window.location.href);
+      const hashParams = new URLSearchParams(
+        url.hash.startsWith("#") ? url.hash.slice(1) : url.hash,
+      );
+      const rawCode =
+        url.searchParams.get("unlock") ||
+        url.searchParams.get("code") ||
+        hashParams.get("unlock") ||
+        hashParams.get("code") ||
+        "";
+      const code = rawCode.trim();
+      const syncPhrase = (
+        hashParams.get("sync") ||
+        url.searchParams.get("sync") ||
+        ""
+      ).trim();
+
+      if (!code && !syncPhrase) return;
+
+      // Immediately scrub unlock, code, and sync from both searchParams and hash
+      // so secrets never leak in the URL bar or browser history.
+      url.searchParams.delete("unlock");
+      url.searchParams.delete("code");
+      url.searchParams.delete("sync");
+      hashParams.delete("unlock");
+      hashParams.delete("code");
+      hashParams.delete("sync");
+      const nextHash = hashParams.toString();
+      url.hash = nextHash ? `#${nextHash}` : "";
+      window.history.replaceState(
+        {},
+        document.title,
+        url.pathname + (url.search || "") + (url.hash || ""),
+      );
+
+      firstVisitService.cancelPendingIntroModal();
+      firstVisitService.markIntroAsSeen();
+
+      if (code) {
+        const res = await fetch("/api/contributor/redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (res.ok && payload.valid) {
+          const canonicalCode = payload.code || code;
+          saveStoredSupporterCode(canonicalCode);
+          setContributorStatus(true, payload.token || null);
+          if (syncPhrase) {
+            deviceSyncStore.pairWithPhrase(syncPhrase);
+          }
+          await deviceSyncStore.enableSync();
+          soundService.success?.({ force: true });
+          hapticService.success?.();
+        }
+      } else if (syncPhrase) {
+        deviceSyncStore.pairWithPhrase(syncPhrase);
+      }
+    } catch (e) {
+      console.error("[MagicUnlock] Auto-redeem failed:", e);
+    }
+  }
 
   // Auto-stop recording when time limit is reached
   $: if (

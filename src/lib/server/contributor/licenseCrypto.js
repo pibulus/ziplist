@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { env } from "$env/dynamic/private";
+import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
 import { normalizeContributorCode } from "../contributorCodes.js";
 
 const CODE_PREFIX = "ZL";
@@ -52,8 +53,53 @@ export function generateLicenseCode(seed, secret = getContributorSecret()) {
   return `${CODE_PREFIX}-${digest.slice(0, 4)}-${digest.slice(4, 8)}-${digest.slice(8, 12)}`;
 }
 
+export function normalizePasskeyPhrase(value) {
+  return (value ?? "")
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .join("-");
+}
+
+export function vaultHashForCode(code) {
+  const normalized = normalizeContributorCode(code);
+  if (!normalized) return "";
+  return crypto
+    .createHash("sha256")
+    .update(`ziplist-vault-id:${normalized}`)
+    .digest("hex");
+}
+
+export function generatePasskeyPhrase(seed, secret = getContributorSecret()) {
+  const cleanSeed = seed?.toString().trim() || "";
+  if (!cleanSeed) {
+    throw new Error("Passkey phrase seed is required");
+  }
+  const canonicalCode = /^ZL-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/i.test(
+    cleanSeed,
+  )
+    ? cleanSeed.toUpperCase()
+    : generateLicenseCode(cleanSeed, secret);
+  const vaultHash = vaultHashForCode(canonicalCode);
+  return generateMemberIdentity(vaultHash).phrase;
+}
+
+export function licenseIdForCheckout(
+  checkoutId,
+  secret = getContributorSecret(),
+) {
+  const hex = hmacHex(`ziplist-license-id:${checkoutId}`, secret).toLowerCase();
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
 export function hashContributorCode(code, secret = getContributorSecret()) {
-  return hashSensitiveValue(normalizeContributorCode(code), secret);
+  const normalized = normalizeContributorCode(code)
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-");
+  return hashSensitiveValue(normalized, secret);
 }
 
 export function issueContributorToken(
@@ -66,7 +112,9 @@ export function issueContributorToken(
     ...payload,
     v: TOKEN_VERSION,
     iat: issuedAt,
-    exp: issuedAt + TOKEN_TTL_SECONDS,
+    exp: Number.isFinite(payload.exp)
+      ? payload.exp
+      : issuedAt + TOKEN_TTL_SECONDS,
   };
 
   const encodedHeader = base64url(JSON.stringify(header));

@@ -1,5 +1,5 @@
 import { browser } from "$app/environment";
-import { STORAGE_KEYS } from "$lib/constants";
+import { STORAGE_KEYS } from "$lib/constants.js";
 
 function getStorage(storage) {
   if (storage) return storage;
@@ -8,7 +8,11 @@ function getStorage(storage) {
 }
 
 export function normalizeStoredSupporterCode(code) {
-  return code?.toString().trim().toUpperCase() || "";
+  const clean = code?.toString().trim().toUpperCase() || "";
+  const compact = clean.replace(/^ZL[-_\s]?/, "").replace(/[-_\s]/g, "");
+  return /^[A-F0-9]{12}$/.test(compact)
+    ? `ZL-${compact.slice(0, 4)}-${compact.slice(4, 8)}-${compact.slice(8)}`
+    : clean;
 }
 
 export function clearStoredSupporterCode(storage) {
@@ -35,12 +39,91 @@ export function readStoredSupporterCode(storage) {
   }
 }
 
+export function isPersonalPassportCode(code) {
+  const clean = code?.toString().trim().toUpperCase() || "";
+  const compact = clean.replace(/^ZL[-_\s]?/, "").replace(/[-_\s]/g, "");
+  return clean.startsWith("ZL-") || /^[A-F0-9]{12}$/.test(compact);
+}
+
+export function readStoredRecoveryCodes(storage) {
+  const targetStorage = getStorage(storage);
+  if (!targetStorage) return [];
+  try {
+    const raw = targetStorage.getItem(STORAGE_KEYS.RECOVERY_PASSPORT_CODES);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    const list = Array.isArray(parsed) ? parsed : [parsed];
+    const active = readStoredSupporterCode(targetStorage);
+    const seen = new Set();
+    const result = [];
+    for (const item of list) {
+      const norm = normalizeStoredSupporterCode(item);
+      if (norm && norm !== active && !seen.has(norm)) {
+        seen.add(norm);
+        result.push(norm);
+      }
+    }
+    return result;
+  } catch {
+    return [];
+  }
+}
+
+export function saveStoredRecoveryCodes(codes, storage) {
+  if (!Array.isArray(codes)) return [];
+  const targetStorage = getStorage(storage);
+  const active = readStoredSupporterCode(targetStorage);
+  const seen = new Set();
+  const result = [];
+  for (const item of codes) {
+    const norm = normalizeStoredSupporterCode(item);
+    if (norm && norm !== active && !seen.has(norm)) {
+      seen.add(norm);
+      result.push(norm);
+    }
+  }
+  if (targetStorage) {
+    try {
+      targetStorage.setItem(
+        STORAGE_KEYS.RECOVERY_PASSPORT_CODES,
+        JSON.stringify(result),
+      );
+    } catch (error) {
+      console.warn("Failed to save recovery passport codes:", error);
+    }
+  }
+  return result;
+}
+
+export function addStoredRecoveryCode(code, storage) {
+  const norm = normalizeStoredSupporterCode(code);
+  if (!norm || !isPersonalPassportCode(norm))
+    return readStoredRecoveryCodes(storage);
+  const existing = readStoredRecoveryCodes(storage);
+  if (!existing.includes(norm)) {
+    return saveStoredRecoveryCodes([norm, ...existing], storage);
+  }
+  return existing;
+}
+
+export function clearStoredRecoveryCodes(storage) {
+  const targetStorage = getStorage(storage);
+  if (!targetStorage) return;
+  try {
+    targetStorage.removeItem(STORAGE_KEYS.RECOVERY_PASSPORT_CODES);
+  } catch {
+    // Ignore blocked storage
+  }
+}
+
 export function saveStoredSupporterCode(code, storage) {
   const targetStorage = getStorage(storage);
   const normalizedCode = normalizeStoredSupporterCode(code);
   if (!normalizedCode) {
     throw new Error("Supporter passport code is missing");
   }
+
+  const previousCode = readStoredSupporterCode(targetStorage);
 
   if (targetStorage) {
     try {
@@ -52,6 +135,24 @@ export function saveStoredSupporterCode(code, storage) {
       console.warn("Failed to save supporter passport code:", error);
     }
   }
+
+  if (
+    previousCode &&
+    previousCode !== normalizedCode &&
+    isPersonalPassportCode(previousCode)
+  ) {
+    addStoredRecoveryCode(previousCode, targetStorage);
+  }
+
+  // If the newly active code was previously in recovery codes, remove it from recovery
+  const recovery = readStoredRecoveryCodes(targetStorage);
+  if (recovery.includes(normalizedCode)) {
+    saveStoredRecoveryCodes(
+      recovery.filter((c) => c !== normalizedCode),
+      targetStorage,
+    );
+  }
+
   return normalizedCode;
 }
 

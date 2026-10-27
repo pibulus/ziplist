@@ -19,11 +19,12 @@ function getZipListBaseUrl(baseUrl) {
   return "https://ziplist.app";
 }
 
-export function buildPassportSyncUrl({
-  code,
-  baseUrl = "",
-  appBaseUrl = "",
-} = {}) {
+export function buildPassportSyncUrl(codeOrOptions = {}, baseUrlArg = "") {
+  const options =
+    typeof codeOrOptions === "string"
+      ? { code: codeOrOptions, baseUrl: baseUrlArg }
+      : codeOrOptions || {};
+  const { code, baseUrl = "", appBaseUrl = "" } = options;
   const normalizedCode = code?.toString().trim();
   if (!normalizedCode) return "";
 
@@ -40,12 +41,16 @@ export function buildPassportSyncUrl({
  * is set. Both sit in the fragment, which browsers never send to a server, so
  * neither lands in an access log.
  */
-export function buildDeviceSyncUrl({
-  code,
-  phrase = "",
-  baseUrl = "",
-  appBaseUrl = "",
-} = {}) {
+export function buildDeviceSyncUrl(
+  codeOrOptions = {},
+  phraseArg = "",
+  baseUrlArg = "",
+) {
+  const options =
+    typeof codeOrOptions === "string"
+      ? { code: codeOrOptions, phrase: phraseArg, baseUrl: baseUrlArg }
+      : codeOrOptions || {};
+  const { code, phrase = "", baseUrl = "", appBaseUrl = "" } = options;
   const normalizedCode = code?.toString().trim();
   if (!normalizedCode) return "";
 
@@ -56,6 +61,21 @@ export function buildDeviceSyncUrl({
   if (normalizedPhrase) fragment.set("sync", normalizedPhrase);
   url.hash = fragment.toString();
   return url.toString();
+}
+
+export function buildUnlockUrl(codeOrOptions = {}, baseUrlArg = "") {
+  const options =
+    typeof codeOrOptions === "string"
+      ? { code: codeOrOptions, baseUrl: baseUrlArg }
+      : codeOrOptions || {};
+  const { code, baseUrl = "", appBaseUrl = "" } = options;
+  const normalizedCode = code?.toString().trim();
+  if (!normalizedCode) return "";
+
+  return new URL(
+    `/u/${encodeURIComponent(normalizedCode)}`,
+    getZipListBaseUrl(appBaseUrl || baseUrl),
+  ).toString();
 }
 
 /**

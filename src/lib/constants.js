@@ -38,7 +38,9 @@ export const STORAGE_KEYS = {
   CONTRIBUTOR_TOKEN: "ziplist-contributor-token",
   CONTRIBUTOR_EXPIRES: "ziplist-contributor-expires",
   SUPPORTER_PASSPORT_CODE: "ziplist-supporter-passport-code",
+  RECOVERY_PASSPORT_CODES: "ziplist-recovery-passport-codes",
   SYNC_PRIVATE_PHRASE: "ziplist-sync-private-phrase",
+  ABOUT_TIPS_DECK: "ziplist-about-tips-deck",
 
   // PWA Related
   TRANSCRIPTION_COUNT: "ziplist-transcription-count",
@@ -114,6 +116,7 @@ export const ANIMATION = {
   // Modal timing
   MODAL: {
     CLOSE_DELAY: 50, // Delay before running closeModal function
+    CLOSE_DURATION: 150, // Matches zl-modal-pop-out in app.css
     PERMISSION_ERROR_DURATION: 8000, // How long the permission error shows
   },
 

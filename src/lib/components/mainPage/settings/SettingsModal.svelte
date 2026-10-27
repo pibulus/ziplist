@@ -1,8 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import { browser } from "$app/environment";
-  import { theme, listFirstMode, applyTheme } from "$lib";
-  import { THEMES } from "$lib/constants";
+  import { theme, listFirstMode, isContributor, applyTheme } from "$lib";
+  import { ANIMATION, THEMES } from "$lib/constants";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import {
     getOrCreateAvatar,
@@ -90,6 +90,14 @@
     closeModal();
   }
 
+  function openContributorModal() {
+    if (!browser) return;
+    handleModalClose();
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
+    }, ANIMATION.MODAL.CLOSE_DURATION + 30);
+  }
+
   function saveAvatarName(event) {
     avatarName = setAvatarName(event.currentTarget.value);
     event.currentTarget.value = avatarName;
@@ -113,150 +121,192 @@
   aria-describedby="settings_modal_description"
   aria-modal="true"
 >
-  <div class="zl-modal-md modal-box relative">
+  <div class="zl-modal-md zl-modal-contained modal-box relative">
     <form method="dialog">
       <ModalCloseButton
         closeModal={handleModalClose}
         label="Close options"
-        position="right-3 top-3"
         modalId="settings_modal"
       />
     </form>
 
-    <div class="space-y-4 pb-1">
+    <!-- Keep scrolling inside the rounded panel -->
+    <div
+      class="zl-modal-scroll-area min-h-0 space-y-4 overflow-y-auto overflow-x-hidden pb-1.5 pr-1"
+    >
       <!-- Header (TalkType canon: small mascot circle + Options title) -->
       <div class="mb-1 flex items-center gap-2">
         <div
-          class="flex h-8 w-8 items-center justify-center rounded-full border border-pink-200/60 bg-gradient-to-br from-white to-pink-50 shadow-sm"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffdf5] shadow-[1px_1px_0px_#1e1714]"
         >
           <ThemeMascot theme={selectedVibe} size="22px" />
         </div>
         <h3
           id="settings_modal_title"
-          class="text-xl font-black tracking-tight text-gray-800"
+          class="text-xl font-black tracking-tight text-[#1e1714]"
         >
           Options
         </h3>
         <p id="settings_modal_description" class="sr-only">
-          Adjust vibe, preferences, and identity in shared rooms.
+          Adjust vibe, startup screen, and shared room handle.
         </p>
       </div>
 
       <!-- Vibe Section -->
-      <section class="space-y-2" aria-labelledby="settings_vibe_title">
+      <section
+        class="settings-section space-y-2"
+        aria-labelledby="settings_vibe_title"
+      >
         <h4 id="settings_vibe_title" class="settings-section-title">Vibe</h4>
         <div class="grid grid-cols-4 gap-2" role="group" aria-label="Vibe">
           {#each vibeOptions as vibe}
             <button
               type="button"
-              class="vibe-option relative flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-pink-100 bg-[#fffdf5] p-2 shadow-sm transition-all duration-200 hover:border-pink-200 hover:shadow-md {selectedVibe ===
+              class="vibe-option relative flex min-h-[76px] flex-col items-center justify-center rounded-2xl border-2 border-[#1e1714] px-1 py-2 transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 active:translate-y-0.5 {selectedVibe ===
               vibe.id
-                ? 'selected-vibe border-pink-300 ring-2 ring-pink-200 ring-opacity-60'
-                : ''}"
+                ? 'selected-vibe bg-[#fffef7] shadow-[2px_2px_0px_#1e1714]'
+                : 'zl-control-border bg-[#fffdf5]'}"
               on:click={() => changeVibe(vibe.id)}
-              aria-label={`Use ${vibe.name} vibe`}
+              aria-label={`Choose ${vibe.name} vibe`}
               aria-pressed={selectedVibe === vibe.id}
             >
               <span class="preview-mascot mb-1">
-                <ThemeMascot theme={vibe.id} size="28px" />
+                <ThemeMascot theme={vibe.id} size="30px" />
               </span>
-              <span class="tile-label text-[11px] font-bold text-gray-700">
+              <span
+                class="tile-label {selectedVibe === vibe.id
+                  ? 'font-black text-[#1e1714]'
+                  : 'font-semibold text-[#525252]'}"
+              >
                 {vibe.name}
               </span>
-              {#if selectedVibe === vibe.id}
-                <div
-                  class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-[10px] font-black text-white shadow-sm"
-                  aria-hidden="true"
-                >
-                  ✓
-                </div>
-              {/if}
             </button>
           {/each}
         </div>
       </section>
 
-      <!-- Preferences Section -->
-      <section class="space-y-2.5 pt-1" aria-label="Preferences">
-        <h4 class="settings-section-title">Preferences</h4>
+      <!-- System Section -->
+      <section
+        class="settings-section space-y-2"
+        aria-labelledby="settings_system_title"
+      >
+        <h4 id="settings_system_title" class="settings-section-title">
+          System
+        </h4>
 
-        <!-- Straight to the list toggle -->
-        <button
-          type="button"
-          class={`setting-row flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left shadow-sm transition-all duration-200 ${
-            listFirstModeValue
-              ? "border-pink-300 bg-pink-50 text-gray-900 ring-2 ring-pink-100"
-              : "border-pink-100 bg-[#fffdf5] text-gray-700 hover:border-pink-200 hover:bg-pink-50/70"
-          }`}
-          aria-pressed={listFirstModeValue}
-          on:click={toggleListFirstMode}
-        >
-          <div class="min-w-0 pr-2">
-            <span class="block text-sm font-black leading-tight text-gray-900">
-              Straight to the list
-            </span>
-            <span
-              class="mt-0.5 block text-[11px] font-bold leading-tight text-gray-500"
-            >
-              Skip the microphone screen on startup
-            </span>
-          </div>
-          <span
-            class="auto-start-glyph {listFirstModeValue ? 'is-on' : ''}"
-            aria-hidden="true"
-          >
-            <span></span>
-          </span>
-        </button>
-
-        <!-- Name in shared rooms (streamlined compact row) -->
         <div
-          class="setting-row flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-pink-100 bg-[#fffdf5] px-3.5 py-2.5 shadow-sm transition-all duration-200 hover:border-pink-200"
+          class="zl-control-border space-y-3 rounded-2xl border-2 border-[#1e1714] bg-[#fffdf5] p-3.5 shadow-sm"
         >
-          <div class="flex min-w-0 items-center gap-2.5">
-            {#if avatarName}
-              <button
-                type="button"
-                class="avatar-face-btn shadow-xs relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-pink-200/70 bg-gradient-to-br from-white to-pink-50 transition-transform active:scale-90"
-                class:rerolling={avatarRerolling}
-                on:click={rerollAvatarFace}
-                title="Tap for a new face"
-                aria-label="Re-roll avatar face"
-              >
-                <img
-                  class="h-7 w-7 rounded-full object-cover"
-                  src={getAvatarImage(avatarName)}
-                  alt=""
-                  aria-hidden="true"
-                />
-              </button>
-            {/if}
-            <div class="min-w-0">
+          <!-- List-first mode row -->
+          <div class="flex items-center justify-between gap-3">
+            <div
+              class="min-w-0 flex-1 cursor-pointer select-none"
+              role="button"
+              tabindex="0"
+              on:click={toggleListFirstMode}
+              on:keydown={(e) => e.key === "Enter" && toggleListFirstMode()}
+            >
               <span
-                class="block text-sm font-black leading-tight text-gray-900"
+                class="block text-sm font-black leading-tight text-[#1e1714]"
               >
-                Name in shared rooms
+                Straight to the list
               </span>
               <span
-                class="mt-0.5 block text-[11px] font-bold leading-tight text-gray-500"
+                class="row-sub mt-0.5 block truncate text-[11px] font-semibold leading-tight"
               >
-                Tap avatar to re-roll
+                Open directly on the active list
               </span>
             </div>
+            <button
+              type="button"
+              class="flex min-h-11 min-w-11 items-center justify-end transition-opacity focus:outline-none"
+              aria-pressed={listFirstModeValue}
+              aria-label={`${listFirstModeValue ? "Disable" : "Enable"} straight to the list`}
+              on:click={toggleListFirstMode}
+            >
+              <span
+                class="auto-start-glyph"
+                class:is-on={listFirstModeValue}
+                aria-hidden="true"
+              >
+                <span></span>
+              </span>
+            </button>
           </div>
 
-          <div class="w-32 shrink-0 sm:w-44">
-            <input
-              type="text"
-              class="w-full rounded-lg border border-pink-200 bg-white px-2.5 py-1.5 font-mono text-base font-bold text-gray-800 transition-colors focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-200 sm:text-xs"
-              value={avatarName}
-              maxlength="48"
-              on:change={saveAvatarName}
-              aria-label="Name in shared rooms"
-            />
+          <div class="zl-divider border-t"></div>
+
+          <!-- Shared Room Face (Avatar + Handle + Dice Reroll) -->
+          <div class="flex items-center justify-between gap-2.5">
+            <div class="flex min-w-0 items-center gap-2.5">
+              {#if avatarName}
+                <button
+                  type="button"
+                  class="avatar-face-btn relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-[1.5px_1.5px_0px_#1e1714] transition-transform active:scale-90"
+                  class:rerolling={avatarRerolling}
+                  on:click={rerollAvatarFace}
+                  title="Tap for a new face"
+                  aria-label="Re-roll shared room avatar"
+                >
+                  <img
+                    class="h-8 w-8 rounded-full object-cover"
+                    src={getAvatarImage(avatarName)}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                </button>
+              {/if}
+              <div class="min-w-0">
+                <span
+                  class="block text-sm font-black leading-tight text-[#1e1714]"
+                >
+                  Shared room face
+                </span>
+                <span
+                  class="row-sub mt-0.5 block text-[11px] font-semibold leading-tight"
+                >
+                  Tap face or dice to re-roll
+                </span>
+              </div>
+            </div>
+
+            <div class="flex shrink-0 items-center gap-1.5">
+              <input
+                type="text"
+                class="min-h-11 w-28 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-2.5 py-1.5 font-mono text-xs font-bold text-[#1e1714] transition-colors focus:outline-none sm:w-36"
+                value={avatarName}
+                maxlength="48"
+                on:change={saveAvatarName}
+                aria-label="Handle in shared rooms"
+              />
+              <button
+                type="button"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-sm font-black text-[#1e1714] shadow-[1.5px_1.5px_0px_#1e1714] transition-transform hover:bg-[#fafaf9] active:scale-95"
+                on:click={rerollAvatarFace}
+                title="Roll a random room handle"
+                aria-label="Roll a random room handle"
+              >
+                🎲
+              </button>
+            </div>
           </div>
         </div>
       </section>
+
+      <!-- Bottom Passport CTA (TalkType parity) -->
+      <button
+        type="button"
+        class="zl-pitch-cta zl-pitch-cta-pink flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] bg-[#ff5ca8] px-4 py-3 text-base font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition-all hover:bg-[#ff459b] hover:shadow-[3px_3px_0px_#1e1714] active:translate-y-0.5 active:bg-[#e62e84] active:shadow-[1px_1px_0px_#1e1714]"
+        title="12 colour lists, device sync, live shared rooms, and holo Passport card"
+        on:click={openContributorModal}
+      >
+        <span class="text-base" aria-hidden="true">✦</span>
+        <span class="text-base font-black tracking-tight text-[#1e1714]">
+          {$isContributor
+            ? "Open ZipList Passport"
+            : "+ Grab the ZipList Passport!"}
+        </span>
+      </button>
     </div>
   </div>
 
@@ -265,23 +315,45 @@
     class="modal-backdrop"
     aria-label="Close options modal"
     tabindex="-1"
-    on:click={handleModalClose}
+    on:click|self|preventDefault|stopPropagation={handleModalClose}
+    on:keydown={(e) => e.key === "Enter" && handleModalClose()}
   ></button>
 </dialog>
 
 <style>
   .selected-vibe {
-    box-shadow:
-      0 0 0 2px rgba(249, 168, 212, 0.4),
-      0 4px 8px rgba(249, 168, 212, 0.2);
+    box-shadow: 2px 2px 0px #1e1714;
+  }
+
+  .tile-label {
+    font-size: 11.5px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
   }
 
   .vibe-option {
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
 
   .vibe-option:active {
     box-shadow: none !important;
+  }
+
+  .preview-mascot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .vibe-option:hover .preview-mascot {
+    transform: scale(1.15) rotate(4deg);
+  }
+
+  .vibe-option:active .preview-mascot {
+    transform: scale(0.88) rotate(-2deg);
   }
 
   /* Soft pill toggle switch (TalkType canon) */
@@ -314,12 +386,18 @@
   }
 
   .auto-start-glyph.is-on {
-    background: #f9a8d4;
-    box-shadow: 0 0 0 0.22rem rgba(249, 168, 212, 0.18);
+    background: color-mix(in srgb, var(--zl-vibe-caret, #f472b6) 62%, #fffef7);
+    box-shadow: 0 0 0 0.22rem
+      color-mix(in srgb, var(--zl-vibe-caret, #f472b6) 18%, transparent);
   }
 
   .auto-start-glyph.is-on span {
     transform: translateX(0.82rem);
+  }
+
+  /* Row subtitles: a quiet neutral grey, never a muddy brown. */
+  .row-sub {
+    color: #525252;
   }
 
   .settings-section-title {
@@ -327,7 +405,7 @@
     font-size: 0.72rem;
     font-weight: 900;
     line-height: 1;
-    color: #be185d;
+    color: #374151;
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -349,6 +427,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .vibe-option,
+    .preview-mascot,
     .auto-start-glyph,
     .auto-start-glyph span,
     .avatar-face-btn.rerolling img {

@@ -37,6 +37,8 @@
   --modal-border-radius: 1.5rem;
   --modal-max-height: 85vh;
   --zl-modal-panel-width: min(92vw, 32rem);
+  --zl-modal-pad: clamp(1rem, 2.6vw, 1.5rem);
+  --zl-close-inset: 0.625rem;
 }
 
 /* Any inner panel that scrolls wears the app's bar, not the OS one. html and
@@ -144,6 +146,7 @@ body::-webkit-scrollbar-corner {
 
 :where(
   .modal-box,
+  .zl-modal-scroll-area,
   .zl-scrollbar,
   .zl-scrollbar-x,
   .zl-settings-content,
@@ -153,12 +156,20 @@ body::-webkit-scrollbar-corner {
   scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
 }
 
-:where(.modal-box, .zl-scrollbar, .zl-settings-content, .zl-list-container) {
+/* .modal-box deliberately absent: its reserved gutter sits inside the padding box
+   and pushed every corner-pinned ✕ ~13px inward. Inner scroll panes keep it. */
+:where(
+  .zl-modal-scroll-area,
+  .zl-scrollbar,
+  .zl-settings-content,
+  .zl-list-container
+) {
   scrollbar-gutter: stable;
 }
 
 :where(
   .modal-box,
+  .zl-modal-scroll-area,
   .zl-scrollbar,
   .zl-scrollbar-x,
   .zl-settings-content,
@@ -170,6 +181,7 @@ body::-webkit-scrollbar-corner {
 
 :where(
   .modal-box,
+  .zl-modal-scroll-area,
   .zl-scrollbar,
   .zl-scrollbar-x,
   .zl-settings-content,
@@ -180,6 +192,7 @@ body::-webkit-scrollbar-corner {
 
 :where(
   .modal-box,
+  .zl-modal-scroll-area,
   .zl-scrollbar,
   .zl-scrollbar-x,
   .zl-settings-content,
@@ -194,6 +207,7 @@ body::-webkit-scrollbar-corner {
 
 :where(
     .modal-box,
+    .zl-modal-scroll-area,
     .zl-scrollbar,
     .zl-scrollbar-x,
     .zl-settings-content,
@@ -205,6 +219,7 @@ body::-webkit-scrollbar-corner {
 
 :where(
   .modal-box,
+  .zl-modal-scroll-area,
   .zl-scrollbar,
   .zl-scrollbar-x,
   .zl-settings-content,
@@ -216,16 +231,24 @@ body::-webkit-scrollbar-corner {
 /* Inside modal cards the gradient thumb reads as a decorative bar — content
    barely overflows, so the thumb runs nearly full height. Keep it neutral
    and quiet there; the juicy gradient belongs to the page scroll. */
-:where(.modal-box, .zl-settings-content) {
-  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+:where(.modal-box, .zl-modal-scroll-area, .zl-settings-content) {
+  scrollbar-color: rgba(30, 23, 20, 0.18) transparent;
 }
 
-:where(.modal-box, .zl-settings-content)::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.14);
+:where(
+  .modal-box,
+  .zl-modal-scroll-area,
+  .zl-settings-content
+)::-webkit-scrollbar-thumb {
+  background: rgba(30, 23, 20, 0.14);
 }
 
-:where(.modal-box, .zl-settings-content)::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.26);
+:where(
+    .modal-box,
+    .zl-modal-scroll-area,
+    .zl-settings-content
+  )::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 23, 20, 0.26);
 }
 
 /* iOS Safari: -webkit-overflow-scrolling does NOT inherit, and a nested
@@ -235,7 +258,7 @@ body::-webkit-scrollbar-corner {
    desktop Chromium at the same width. Every in-modal scroller needs it
    explicitly. touch-action keeps the vertical gesture on the panel
    instead of letting Safari hand it to the frozen body. */
-:where(.modal-box, .zl-scrollbar, .zl-settings-content) {
+:where(.modal-box, .zl-modal-scroll-area, .zl-scrollbar, .zl-settings-content) {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
 }
@@ -243,6 +266,7 @@ body::-webkit-scrollbar-corner {
 @media (hover: none) and (pointer: coarse) {
   :where(
     .modal-box,
+    .zl-modal-scroll-area,
     .zl-scrollbar,
     .zl-scrollbar-x,
     .zl-settings-content,
@@ -254,6 +278,7 @@ body::-webkit-scrollbar-corner {
 
   :where(
     .modal-box,
+    .zl-modal-scroll-area,
     .zl-scrollbar,
     .zl-scrollbar-x,
     .zl-settings-content,
@@ -348,18 +373,23 @@ dialog.zl-contributor-dialog::backdrop {
   overflow-y: auto;
   overscroll-behavior: contain;
   margin: 0 auto;
-  padding: clamp(1rem, 2.6vw, 1.5rem);
+  padding: var(--zl-modal-pad, clamp(1rem, 2.6vw, 1.5rem));
   border: 2px solid #1e1714;
   border-radius: var(--modal-border-radius, 1.5rem);
   background: linear-gradient(145deg, #fffcf5, #fff6e6);
   background-color: #fffdf7;
   box-shadow:
-    0px 10px 0px rgba(0, 0, 0, 0.12),
-    0px 20px 25px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    0px 10px 0px rgba(30, 23, 20, 0.12),
+    0px 20px 25px rgba(30, 23, 20, 0.08),
+    inset 0 1px 0 rgba(255, 254, 247, 0.82);
   transform-origin: center;
   scrollbar-width: thin;
   scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
+}
+
+.modal-box.zl-modal-contained,
+.modal-box.tt-modal-contained {
+  overflow: hidden;
 }
 
 .modal-box.zl-modal-sm,
@@ -504,10 +534,21 @@ dialog.zl-contributor-dialog::backdrop {
 .tt-pitch-cta {
   min-height: 3rem;
   background-color: var(--zl-pass-color, #ff5ca8);
-  color: #ffffff;
+  color: #fffef7;
   font-size: 1rem;
   letter-spacing: -0.01em;
   box-shadow: 2px 2px 0 #1e1714;
+}
+
+.zl-pitch-cta.zl-pitch-cta-pink,
+.tt-pitch-cta.tt-pitch-cta-pink {
+  background-color: #ff5ca8;
+  color: #fffef7;
+}
+
+.zl-pitch-cta.zl-pitch-cta-pink:hover:not(:disabled),
+.tt-pitch-cta.tt-pitch-cta-pink:hover:not(:disabled) {
+  background-color: #ff6eb3;
 }
 
 .zl-pitch-cta:hover:not(:disabled),
@@ -541,7 +582,7 @@ dialog.zl-contributor-dialog::backdrop {
 .zl-pitch-secondary,
 .tt-pitch-secondary {
   min-height: 2.75rem;
-  background-color: #ffffff;
+  background-color: #fffdf5;
   color: #1e1714;
   font-size: 0.875rem;
   box-shadow: 2px 2px 0 #1e1714;
@@ -568,6 +609,91 @@ dialog.zl-contributor-dialog::backdrop {
   outline-offset: 3px;
 }
 
+/* Quiet detail disclosure and a little paper sleeve for an existing Passport. */
+.zl-usage-details > summary,
+.tt-usage-details > summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.zl-usage-details p + p,
+.tt-usage-details p + p {
+  margin-top: 0.5rem;
+}
+
+.zl-passport-code-form,
+.tt-passport-code-form {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border: 2px solid #1e1714;
+  border-radius: 1.25rem;
+  background: #fffef7;
+  box-shadow: 2px 2px 0 #1e1714;
+}
+
+.zl-passport-code-input,
+.tt-passport-code-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #1e1714;
+  border-radius: 0.875rem;
+  background: #fffdf5;
+  color: #1e1714;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.zl-passport-code-input::placeholder,
+.tt-passport-code-input::placeholder {
+  color: #a8a29e;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+.zl-passport-code-input:focus-visible,
+input.zl-passport-code-input:focus,
+.tt-passport-code-input:focus-visible,
+input.tt-passport-code-input:focus {
+  outline: none;
+  border-color: #1e1714;
+  box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.22);
+}
+
+.zl-passport-code-link,
+.tt-passport-code-link {
+  border-color: transparent;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  box-shadow: none;
+}
+
+.zl-passport-code-link:hover,
+.tt-passport-code-link:hover {
+  background: transparent;
+  box-shadow: none;
+}
+
+.zl-control-border,
+.tt-control-border {
+  border-color: #1e1714;
+}
+
+.zl-divider,
+.tt-divider {
+  border-color: rgba(30, 23, 20, 0.14);
+}
+
 /* Every modal wraps its close button in a bare `<form method="dialog">`. Make
    that wrapper sticky so the button rides along at the top of the panel
    instead of scrolling out of reach. Zero-height so it never displaces the
@@ -580,12 +706,25 @@ dialog.zl-contributor-dialog::backdrop {
   overflow: visible;
 }
 
+/* The ✕ reaches back out through the padding to the panel's corner. Headings
+   that start at the top keep their text clear of it with side padding. */
+.modal-box > form:has(> .modal-close-btn) > .modal-close-btn {
+  top: calc(
+    var(--zl-close-inset, 0.625rem) -
+      var(--zl-modal-pad, clamp(1rem, 2.6vw, 1.5rem))
+  );
+  right: calc(
+    var(--zl-close-inset, 0.625rem) -
+      var(--zl-modal-pad, clamp(1rem, 2.6vw, 1.5rem))
+  );
+}
+
 /* Keep the pinned close button legible when content scrolls beneath it */
 .modal-box > form:has(> .modal-close-btn)::before {
   content: "";
   position: absolute;
-  top: calc(-1 * clamp(1rem, 2.6vw, 1.5rem));
-  right: calc(-1 * clamp(1rem, 2.6vw, 1.5rem));
+  top: calc(-1 * var(--zl-modal-pad, clamp(1rem, 2.6vw, 1.5rem)));
+  right: calc(-1 * var(--zl-modal-pad, clamp(1rem, 2.6vw, 1.5rem)));
   width: 6.5rem;
   height: 4rem;
   z-index: -1;
@@ -604,8 +743,13 @@ dialog.zl-contributor-dialog::backdrop {
   .modal-box {
     max-height: calc(100dvh - 4rem);
     width: var(--zl-modal-panel-width, min(92vw, 32rem));
-    padding: 1rem;
+    --zl-modal-pad: 1rem;
     border-radius: 1.25rem;
+  }
+
+  .modal-box.zl-modal-lg,
+  .modal-box.tt-modal-lg {
+    --zl-modal-panel-width: min(92vw, 32rem);
   }
 }
 
@@ -614,7 +758,7 @@ dialog.zl-contributor-dialog::backdrop {
    purpose: an SE matches both, and the last matching rule wins. */
 @media (max-height: 700px) {
   .modal-box {
-    padding: 0.75rem;
+    --zl-modal-pad: 0.75rem;
   }
 }
 

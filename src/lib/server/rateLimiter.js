@@ -41,7 +41,8 @@ function getClientKey(event) {
 
 function clearExpired(now) {
   for (const [key, entry] of buckets.entries()) {
-    if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    const windowMs = entry.windowMs ?? RATE_LIMIT_WINDOW_MS;
+    if (now - entry.windowStart > windowMs) {
       buckets.delete(key);
     }
   }
@@ -70,19 +71,23 @@ function evictIfNeeded() {
   }
 }
 
-export function enforceRateLimit(event) {
-  if (RATE_LIMIT_MAX <= 0 || RATE_LIMIT_WINDOW_MS <= 0) {
+export function enforceRateLimit(event, options = {}) {
+  const windowMs = Number(options.windowMs ?? RATE_LIMIT_WINDOW_MS);
+  const max = Number(options.max ?? RATE_LIMIT_MAX);
+  const bucket = options.bucket || "global";
+
+  if (max <= 0 || windowMs <= 0) {
     return null;
   }
 
   const now = Date.now();
   clearExpired(now);
 
-  const key = getClientKey(event);
+  const key = `${bucket}:${getClientKey(event)}`;
   const existing = buckets.get(key);
 
-  if (!existing || now - existing.windowStart > RATE_LIMIT_WINDOW_MS) {
-    buckets.set(key, { count: 1, windowStart: now });
+  if (!existing || now - existing.windowStart > windowMs) {
+    buckets.set(key, { count: 1, windowStart: now, windowMs });
     evictIfNeeded();
     return null;
   }
@@ -90,13 +95,19 @@ export function enforceRateLimit(event) {
   existing.count += 1;
   buckets.set(key, existing);
 
-  if (existing.count > RATE_LIMIT_MAX) {
+  if (existing.count > max) {
+    const retryAfterMs = Math.max(0, windowMs - (now - existing.windowStart));
     return json(
       {
         error: "Too many requests. Slow down a little.",
-        retry_after_ms: RATE_LIMIT_WINDOW_MS - (now - existing.windowStart),
+        retry_after_ms: retryAfterMs,
       },
-      { status: 429 },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(retryAfterMs / 1000)),
+        },
+      },
     );
   }
 

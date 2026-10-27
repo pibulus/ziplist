@@ -8,7 +8,7 @@ import {
 } from "$lib/server/contributor/licenseStore.js";
 
 export async function GET(event) {
-  const rateResponse = enforceRateLimit(event);
+  const rateResponse = await enforceRateLimit(event);
   if (rateResponse) return rateResponse;
 
   const checkoutId = event.params.checkoutId;
@@ -37,12 +37,13 @@ export async function GET(event) {
   }
 
   try {
-    const { license, code } = await createLicenseForCheckout(checkout);
+    const { license, code, phrase } = await createLicenseForCheckout(checkout);
     const token = issueTokenForLicense(license);
 
     return json({
       status: "paid",
       code,
+      phrase,
       token,
       license,
     });

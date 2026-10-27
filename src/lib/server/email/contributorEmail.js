@@ -1,129 +1,302 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// contributorEmail — zero-storage Passport note with 4-word passkey & QR
+// ═══════════════════════════════════════════════════════════════════════════
+
 import { env } from "$env/dynamic/private";
+import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+import { vaultHashForCode } from "$lib/server/contributor/licenseCrypto.js";
+
+const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const DEFAULT_FROM = "ZipList <hello@ziplist.app>";
+const RESEND_ONBOARDING_FROM = "ZipList <onboarding@resend.dev>";
+const QR_CONTENT_ID = "ziplist-passport-qr";
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function isValidEmailAddress(value) {
+  if (typeof value !== "string") return false;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 254 || /[\r\n]/.test(trimmed)) return false;
+  return EMAIL_PATTERN.test(trimmed);
+}
+
+export function isContributorEmailConfigured() {
+  return Boolean(env.RESEND_API_KEY?.trim());
+}
+
+export function getContributorEmailFrom() {
+  return (
+    env.RESEND_FROM_EMAIL?.trim() ||
+    env.CONTRIBUTOR_EMAIL_FROM?.trim() ||
+    DEFAULT_FROM
+  );
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+export function buildUnlockLink(appOrigin, code) {
+  const origin = (appOrigin || "https://ziplist.app").replace(/\/+$/, "");
+  return `${origin}/u/${encodeURIComponent(code)}`;
+}
+
+export function derivePassportIdentityFromCode(code) {
+  const hash = vaultHashForCode(code);
+  if (!hash) return { memberName: "", phrase: "" };
+  const identity = generateMemberIdentity(hash);
+  return {
+    memberName: identity.isFallback ? "" : identity.name,
+    phrase: identity.isFallback ? "" : identity.phrase,
+  };
+}
 
 /**
- * Sends a bespoke, warm "ZipList Contributor Passport" email with the user's
- * 4-word unlock code and a 1-tap magic unlock link.
+ * Pure builder so the copy is testable without a network.
+ */
+export function buildContributorEmail({
+  to,
+  code,
+  phrase,
+  memberName,
+  appOrigin = "https://ziplist.app",
+  hasQr = false,
+}) {
+  const derived = derivePassportIdentityFromCode(code);
+  const cleanMemberName = memberName?.toString().trim() || "";
+  const displayMemberName = cleanMemberName || derived.memberName;
+  const resolvedPhrase = phrase?.toString().trim() || derived.phrase;
+  const unlockKey = code || resolvedPhrase;
+  const unlockUrl = buildUnlockLink(appOrigin, unlockKey);
+  const subject = `ZipList Passport 🎟️ (${displayMemberName || resolvedPhrase || code})`;
+
+  const text = [
+    "Full Passport unlocked.",
+    "One pass unlocks everything. No subscriptions.",
+    "",
+    displayMemberName ? `Passport identity: ${displayMemberName}` : null,
+    hasQr ? "QR code attached." : null,
+    `Unlock this device: ${unlockUrl}`,
+    resolvedPhrase
+      ? `4-word passkey: ${resolvedPhrase}`
+      : `Passport passkey: ${code}`,
+    "",
+    "12 colour lists, live shared rooms, and device sync.",
+    "Speak a list in one breath, share a live room to tick boxes together, or link phones and laptops with the Passport QR.",
+    "",
+    "Paid once, kept for good. Zero tracking.",
+    "",
+    "Zip up a list, lickety-split.",
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+
+  const safeCode = escapeHtml(code);
+  const safeUrl = escapeHtml(unlockUrl);
+  const safeMemberName = displayMemberName ? escapeHtml(displayMemberName) : "";
+  const safePhrase = resolvedPhrase ? escapeHtml(resolvedPhrase) : "";
+  const muted = "color:#525252;";
+  const rule = `<tr><td style="padding:24px 0 0;"><div style="height:2px;background:#efe3c8;border-radius:2px;"></div></td></tr>`;
+  const memberBadgeBlock = safeMemberName
+    ? `<tr><td align="center" style="padding:12px 0 0;">
+				<div style="display:inline-block;padding:6px 14px;background:#fce7f3;border:2px solid #1e1714;border-radius:999px;font-size:13px;font-weight:900;color:#1e1714;">Passport: ${safeMemberName}</div>
+			</td></tr>`
+    : "";
+  const qrBlock = hasQr
+    ? `<tr><td align="center" style="padding:22px 0 0;">
+				<img src="cid:${QR_CONTENT_ID}" width="128" height="128" alt="QR code: scan to unlock" style="display:block;border:2px solid #1e1714;border-radius:14px;background:#fffef7;" />
+			</td></tr>`
+    : "";
+  const passkeyBlock = safePhrase
+    ? `<tr><td align="center" style="padding:16px 0 0;">
+				<div style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};padding-bottom:6px;">4-Word Passkey</div>
+				<div style="display:inline-block;padding:12px 18px;background:#fff1f2;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:17px;font-weight:800;color:#1e1714;">${safePhrase}</div>
+			</td></tr>`
+    : `<tr><td align="center" style="padding:16px 0 0;">
+				<div style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};padding-bottom:6px;">Passport Passkey</div>
+				<div style="display:inline-block;padding:12px 18px;background:#fffef7;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:800;letter-spacing:0.06em;">${safeCode}</div>
+			</td></tr>`;
+
+  const html = `<!doctype html>
+<html>
+	<body style="margin:0;padding:32px 16px;background:#fbf0d9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1e1714;-webkit-font-smoothing:antialiased;">
+		<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:420px;margin:0 auto;">
+			<tr><td style="background:#fffaef;border:2px solid #1e1714;border-radius:24px;padding:34px 28px 24px;box-shadow:4px 4px 0 #1e1714;">
+				<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+					<tr><td align="center" style="font-size:12px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#db2777;">ZipList Passport</td></tr>
+					<tr><td align="center" style="padding:10px 0 0;font-size:28px;line-height:1.1;font-weight:900;letter-spacing:-0.02em;">Full Passport unlocked.</td></tr>
+					<tr><td align="center" style="padding:8px 0 0;font-size:14px;line-height:1.5;${muted}">One pass unlocks everything. No subscriptions.</td></tr>
+					${memberBadgeBlock}
+
+					${rule}
+
+					${qrBlock}
+					<tr><td align="center" style="padding:16px 0 0;">
+						<a href="${safeUrl}" style="display:inline-block;padding:13px 24px;background:#ffb000;color:#1e1714;text-decoration:none;font-weight:900;font-size:15px;border:2px solid #1e1714;border-radius:16px;box-shadow:3px 3px 0 #1e1714;">Unlock this device</a>
+					</td></tr>
+					${passkeyBlock}
+
+					${rule}
+
+					<tr><td style="padding:22px 0 0;font-size:15px;font-weight:900;color:#db2777;">12 colour lists, live rooms, device sync.</td></tr>
+					<tr><td style="padding:8px 0 0;font-size:14px;line-height:1.55;">Speak a list in one breath, share a live room to tick boxes together, or scan the Passport QR to link phones and laptops.</td></tr>
+					<tr><td style="padding:14px 0 0;font-size:13px;line-height:1.5;${muted}">Paid once, kept for good. Zero tracking.</td></tr>
+
+					${rule}
+
+					<tr><td style="padding:20px 0 0;font-size:14px;line-height:1.35;font-weight:900;color:#db2777;text-align:center;">
+						Zip up a list, lickety-split.
+					</td></tr>
+				</table>
+			</td></tr>
+		</table>
+	</body>
+</html>`;
+
+  return {
+    from: getContributorEmailFrom(),
+    to: [to],
+    subject,
+    text,
+    html,
+  };
+}
+
+async function renderPassportQr(unlockUrl) {
+  try {
+    const { default: QRCode } = await import("qrcode");
+    return await QRCode.toBuffer(unlockUrl, {
+      type: "png",
+      width: 360,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#1e1714", light: "#fffef7" },
+    });
+  } catch (error) {
+    console.warn(
+      "[ContributorEmail] QR render failed, sending without it:",
+      error?.message || error,
+    );
+    return null;
+  }
+}
+
+/**
+ * Sends a bespoke, warm "ZipList Passport" email with the 4-word passkey,
+ * 1-tap unlock link, and inline Passport QR PNG.
  */
 export async function sendContributorPassportEmail({
   to,
   code,
-  appUrl = "https://ziplist.app",
+  phrase,
+  memberName,
+  appOrigin,
+  appUrl,
+  fetchImpl = fetch,
 }) {
-  const apiKey = env.RESEND_API_KEY?.trim();
-  if (!apiKey || !to) {
-    return {
-      sent: false,
-      reason: !apiKey ? "no_resend_api_key" : "no_recipient_email",
-    };
+  if (!isContributorEmailConfigured()) {
+    return { sent: false, reason: "no_resend_api_key" };
+  }
+  if (!to || !code) {
+    return { sent: false, reason: !to ? "no_recipient_email" : "no_code" };
   }
 
-  const magicLink = `${appUrl.replace(/\/$/, "")}?unlock=${encodeURIComponent(code)}`;
-  const fromAddress =
-    env.RESEND_FROM_EMAIL?.trim() || "ZipList <hello@ziplist.app>";
-
-  const html = `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Your ZipList Contributor Pass</title>
-  </head>
-  <body style="margin:0; padding:24px; background:#fff6e6; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#1e1714;">
-    <div style="max-width:540px; margin:0 auto; background:#ffffff; border:3px solid #1e1714; border-radius:24px; box-shadow:8px 8px 0 #1e1714; padding:32px;">
-      
-      <div style="display:inline-block; background:#ffb000; color:#1e1714; border:2px solid #1e1714; border-radius:12px; font-weight:900; font-size:14px; padding:6px 14px; margin-bottom:20px;">
-        ZIPLIST CONTRIBUTOR
-      </div>
-
-      <h1 style="margin:0 0 16px; font-size:24px; font-weight:900; color:#1e1714; letter-spacing:-0.5px;">
-        You're officially unlocked! 🎟️
-      </h1>
-
-      <p style="margin:0 0 20px; font-size:15px; line-height:1.6; color:#4a3f35;">
-        Thanks for supporting ZipList! Your sovereign contributor pass is active. Here is your permanent unlock phrase:
-      </p>
-
-      <div style="background:#fffaf0; border:2px dashed #ff82c3; border-radius:16px; padding:20px; text-align:center; margin-bottom:24px;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:800; color:#ff6ac2; margin-bottom:8px;">
-          Your 4-Word Passcode
-        </div>
-        <div style="font-family:'Courier New', monospace; font-size:20px; font-weight:900; color:#1e1714; word-break:break-all;">
-          ${code}
-        </div>
-      </div>
-
-      <div style="text-align:center; margin-bottom:28px;">
-        <a href="${magicLink}" style="display:inline-block; background:#ffb000; color:#1e1714; text-decoration:none; font-weight:900; font-size:16px; padding:14px 28px; border:2px solid #1e1714; border-radius:16px; box-shadow:4px 4px 0 #1e1714;">
-          1-Tap Unlock on Any Device &rarr;
-        </a>
-      </div>
-
-      <div style="border-top:2px solid rgba(30,23,20,0.08); padding-top:20px; font-size:13px; line-height:1.6; color:#6b5f54;">
-        <p style="margin:0 0 8px; font-weight:800; color:#1e1714;">What this pass gives you:</p>
-        <ul style="margin:0 0 16px; padding-left:20px;">
-          <li>Up to 12 custom color lists (instead of 3)</li>
-          <li>Unlimited live shared rooms with real-time sync</li>
-          <li>No subscriptions, no accounts, and no data harvesting</li>
-        </ul>
-        <p style="margin:0; font-size:12px; color:#8c7e72;">
-          Keep this email! You can use your 4-word code or the button above to restore your pass on any phone, laptop, or tablet.
-        </p>
-      </div>
-
-      <div style="margin-top:28px; border-top:1px solid rgba(30,23,20,0.08); padding-top:16px; font-size:12px; color:#8c7e72; text-align:center;">
-        Made with soul by <a href="https://madebypablo.app" style="color:#1e1714; font-weight:700;">Pablo</a> in Melbourne &bull; <a href="https://ziplist.app" style="color:#1e1714; font-weight:700;">ziplist.app</a>
-      </div>
-
-    </div>
-  </body>
-</html>`;
-
-  const text = `Hey!
-
-Thanks for supporting ZipList. Your sovereign contributor pass is officially unlocked!
-
-Your 4-Word Passcode:
-${code}
-
-1-Tap Magic Unlock Link:
-${magicLink}
-
-What your pass unlocks:
-- Up to 12 custom color lists
-- Unlimited live shared rooms with real-time sync
-- No subscriptions, no accounts, zero tracking
-
-Keep this email to unlock ZipList on any phone, laptop, or tablet anytime.
-
-Cheers,
-Pablo • Melbourne
-https://madebypablo.app`;
+  const origin = (appOrigin || appUrl || "https://ziplist.app").replace(
+    /\/+$/,
+    "",
+  );
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        to: [to],
-        subject: "Your ZipList Contributor Pass 🎟️",
-        html,
-        text,
-      }),
+    const derived = derivePassportIdentityFromCode(code);
+    const unlockUrl = buildUnlockLink(origin, code);
+    const qrPng = await renderPassportQr(unlockUrl);
+    const message = buildContributorEmail({
+      to,
+      code,
+      phrase: phrase || derived.phrase,
+      memberName: memberName || derived.memberName,
+      appOrigin: origin,
+      hasQr: Boolean(qrPng),
     });
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      console.error("[ContributorEmail] Failed to send via Resend:", data);
-      return { sent: false, error: data };
+    const attachments = [];
+    if (qrPng) {
+      attachments.push({
+        filename: "ziplist-passport-qr.png",
+        content: qrPng.toString("base64"),
+        content_type: "image/png",
+        content_id: QR_CONTENT_ID,
+      });
     }
 
-    return { sent: true, id: data.id };
+    const headers = {
+      Authorization: `Bearer ${env.RESEND_API_KEY.trim()}`,
+      "Content-Type": "application/json",
+    };
+
+    const payloadBody = attachments.length
+      ? { ...message, attachments }
+      : { ...message };
+
+    let response = await fetchImpl(RESEND_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payloadBody),
+    });
+
+    if (
+      !response.ok &&
+      response.status === 403 &&
+      message.from !== RESEND_ONBOARDING_FROM
+    ) {
+      const firstDetail = await response.text().catch(() => "");
+      if (firstDetail.includes("domain is not verified")) {
+        console.warn(
+          "[ContributorEmail] Custom sender domain not verified yet; retrying via onboarding@resend.dev",
+        );
+        response = await fetchImpl(RESEND_ENDPOINT, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            ...payloadBody,
+            from: RESEND_ONBOARDING_FROM,
+          }),
+        });
+      } else {
+        console.error(
+          "[ContributorEmail] Resend rejected the email:",
+          response.status,
+          firstDetail,
+        );
+        return { sent: false, error: firstDetail };
+      }
+    }
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      console.error(
+        "[ContributorEmail] Resend rejected the email:",
+        response.status,
+        detail,
+      );
+      return { sent: false, error: detail };
+    }
+
+    const data = await response.json().catch(() => ({}));
+    return { sent: true, id: data?.id };
   } catch (err) {
-    console.error("[ContributorEmail] Unexpected error sending email:", err);
+    console.error(
+      "[ContributorEmail] Unexpected error sending email:",
+      err?.message || err,
+    );
     return { sent: false, error: err?.message };
   }
+}
+
+export async function sendContributorCodeEmail(options) {
+  const result = await sendContributorPassportEmail(options);
+  return Boolean(result?.sent);
 }
