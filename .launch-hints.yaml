@@ -6,13 +6,39 @@ app_type: web-app
 audience: people who want to talk a small list into existence
 problem: notes apps make spoken lists messy, while todo apps make you set up the container before the thought is down
 promise: Talk it into a list. Tick it off.
-cta: Try ZipList.
+cta: Try ZipList at https://ziplist.app
+pricing: Free local studio forever · Optional Passport ~$19 USD (A$29) once for 365 days (zero auto-renew)
+pricing_anchor: ~$19 USD (A$29) once for 365 days vs. $60–$120/yr recurring task-manager subscriptions
+competitors:
+  - name: Todoist Pro
+    price: $60/yr
+    trap: Mandatory account setup, overdue-task guilt badges, and project-management overhead before a single errand is down
+  - name: AnyList / Out of Milk
+    price: $15–$60/yr
+    trap: Clunky account walls for household sharing and dated interfaces built around manual typing
+  - name: Notion
+    price: $120/yr
+    trap: Slow cloud loading, database setup friction, and zero single-breath voice-to-checklist flow
+high_intent_keywords:
+  - voice to checklist app no account
+  - talk into a grocery list app
+  - shared household checklist without login
+  - Todoist alternative no subscription no due dates
+  - ADHD voice list app instant tick off
+low_intent_keywords:
+  - enterprise project management software
+  - gantt chart team tracker
+  - free online notepad
+force_multiplier_personas:
+  - Households & Couples — share live grocery, packing, and errand rooms across phones via a 4-word Passport or instant room link without creating accounts
+  - Event Producers, Stylists & Run-Sheet Crews — ramble 30 prep items in one breath, auto-sort into ## Sections, and hand off live checklists on set
+  - Neurodivergent Makers & Solo Operators — dump spoken tasks into RiffRap pastel cards with zero due-date guilt and [Resample to new list] in one tap
 differentiators:
   - Make a checklist by talking
   - No dates, priorities, streaks, or setup
-  - 1-layer modular depth (## Sections & movable divider bars)
-  - → List Portals for fluid cross-list jumping with spring roulette physics
-  - Tap #tags to filter or [ ✂️ Resample to new list ]
+  - "1-layer modular depth (Sections & movable divider bars)"
+  - "→ List Portals for fluid cross-list jumping with spring roulette physics"
+  - "Tap #tags to filter or [ Resample to new list ]"
   - RiffRap pastel waterfall gradient cards with 12:1 WCAG AAA text contrast
   - Local-first persistence so everyday lists stay fast, private, and account-free
   - Sovereign 4-word device sync, live shared rooms, and Holographic Passport cards with zero accounts

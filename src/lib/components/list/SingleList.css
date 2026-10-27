@@ -80,35 +80,6 @@
   }
 }
 
-@keyframes action-sheet-rise {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 28px, 0) scale(0.96);
-  }
-  58% {
-    opacity: 1;
-    transform: translate3d(0, -4px, 0) scale(1.012);
-  }
-  78% {
-    transform: translate3d(0, 2px, 0) scale(0.998);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes action-row-rise {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 10px, 0) scale(0.985);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
 @keyframes swatch-pop {
   0% {
     opacity: 0;
@@ -121,15 +92,6 @@
   100% {
     opacity: 1;
     transform: scale(1) rotate(0);
-  }
-}
-
-@keyframes sheet-sheen {
-  0% {
-    transform: translateX(-120%) rotate(8deg);
-  }
-  100% {
-    transform: translateX(160%) rotate(8deg);
   }
 }
 
@@ -473,35 +435,10 @@
   background: rgba(255, 255, 255, 0.98);
 }
 
-.zl-title-edit-button {
-  min-height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 999px;
-  padding: 0.4rem 0.75rem;
-  background: rgba(255, 255, 255, 0.52);
-  color: var(--zl-text-color-secondary);
-  font-family: "Space Mono", monospace;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  transition: var(--zl-transition-fast);
-}
-
-.zl-title-edit-button:hover,
-.zl-title-edit-button:focus-visible {
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--zl-text-color-primary);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
-  outline: none;
-}
-
-.zl-add-item-button,
 .zl-share-button,
 .zl-shuffle-button,
 .zl-live-stop-btn,
-.zl-sort-button,
-.zl-live-indicator {
+.zl-sort-button {
   width: 44px;
   min-width: 44px;
   height: 44px;
@@ -513,16 +450,6 @@
   justify-content: center;
   gap: 0;
   white-space: nowrap;
-}
-
-/* Ghost icon buttons — one quiet action language for the whole card:
-   header trio up top, ≡/× twins in the rows. Icons carry the meaning,
-   tooltips carry the words. */
-.zl-add-item-button,
-.zl-share-button,
-.zl-shuffle-button,
-.zl-live-stop-btn,
-.zl-sort-button {
   border: 0;
   background: transparent;
   color: var(--zl-text-color-secondary);
@@ -536,11 +463,9 @@
   height: 18px;
 }
 
-.zl-add-item-button:hover:not(:disabled),
 .zl-share-button:hover:not(:disabled),
 .zl-shuffle-button:hover:not(:disabled),
 .zl-sort-button:hover:not(:disabled),
-.zl-add-item-button:focus-visible:not(:disabled),
 .zl-share-button:focus-visible:not(:disabled),
 .zl-shuffle-button:focus-visible:not(:disabled),
 .zl-sort-button:focus-visible:not(:disabled) {
@@ -548,17 +473,6 @@
   color: var(--zl-text-color-primary);
   opacity: 1;
   outline: none;
-}
-
-.zl-live-indicator {
-  background: rgba(255, 244, 244, 0.9);
-  color: #d9485f;
-  border: 1px solid rgba(217, 72, 95, 0.16);
-}
-
-.live-count {
-  min-width: 1.25rem;
-  text-align: center;
 }
 
 .zl-live-header-pill {
@@ -1041,7 +955,7 @@
   background: color-mix(
     in srgb,
     var(--zl-item-accent, #ffcc33) calc(14% + var(--zl-item-step, 0) * 28%),
-    #ffffff
+    #fffef7
   );
   transform: translateY(-2px);
   box-shadow: var(
@@ -1869,107 +1783,17 @@
 }
 
 /* ===================================================================
-   ITEM ROW ACTION TWINS — grab + delete share one visual language:
-   44px ghost squares, muted glyphs at rest, matching tint on wake.
-   The checkbox stays the only "drawn" control — it's the state, not
-   an action, so it gets the border and the fill.
+   UNIFIED ITEM HANDLE + ACTION BUTTON (.zl-item-side)
+   One clean 44x44px tactile affordance on the right of each row:
+   drag vertically to reorder; tap to toggle the inline item action bar.
    =================================================================== */
-.grab-indicator {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  border-radius: 12px;
-  color: inherit;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  opacity: var(--zl-grab-handle-opacity, 0.55);
-  transition: all 0.25s ease;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  justify-content: center;
-  align-items: center;
-  position: static;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  flex-shrink: 0;
-}
-
-.grab-indicator span {
-  width: 16px;
-  height: 2px;
-  background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 0.8));
-  border-radius: 2px;
-  transition:
-    transform 0.2s ease,
-    width 0.2s ease,
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.zl-item:hover .grab-indicator {
-  opacity: var(--zl-grab-handle-hover-opacity, 1);
-}
-
-.grab-indicator:hover,
-.grab-indicator:focus-visible {
-  background-color: rgba(var(--zl-primary-color-rgb, 0, 188, 212), 0.1);
-  outline: none;
-  transform: scale(1.06);
-}
-
-.zl-item:hover .grab-indicator span {
-  background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1));
-  box-shadow: 0 1px 3px rgba(0, 151, 167, 0.3);
-}
-
-.grab-indicator.touch-active {
-  opacity: 1;
-  background-color: rgba(var(--zl-primary-color-rgb, 0, 188, 212), 0.12);
-  transform: scale(1.06);
-}
-
-.grab-indicator.touch-active span {
-  background-color: var(--zl-grab-handle-color, rgba(0, 188, 212, 1));
-  box-shadow: 0 2px 6px rgba(0, 151, 167, 0.35);
-}
-
-.zl-item-actions {
-  align-items: center;
-  display: flex;
-  flex-shrink: 0;
-  justify-content: flex-end;
-}
-
-/* Side controls: grab handle + more action button sit side-by-side with generous touch targets.
-   Neither is absolute so they never collide or overlap. */
 .zl-item-side {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  /* Grab handle sits OUTBOARD of the tray button, hard against the row's
-     right edge (Pablo's call). Done with `order` rather than by swapping the
-     markup: the handle is the only touchstart binding in the reorder system,
-     and moving that element in the DOM is how reordering silently died on
-     phones once already. Visual order changes, tab order doesn't. */
-  gap: 0.25rem;
   align-self: center;
-  min-width: 40px;
+  min-width: 44px;
   flex-shrink: 0;
-}
-
-.zl-item-side .grab-indicator {
-  order: 2;
-}
-
-.zl-item-side .zl-item-more-button {
-  order: 1;
 }
 
 .zl-item-delete-button {
@@ -1977,14 +1801,16 @@
   background: transparent;
   border: 0;
   border-radius: 12px;
-  color: var(--zl-delete-button-text-color, rgba(0, 188, 212, 0.9));
+  color: var(--zl-delete-button-text-color, #1e1714);
   cursor: pointer;
   display: flex;
   font-family: "Space Mono", monospace;
   font-size: 1.15rem;
   font-weight: 700;
-  height: 40px;
-  width: 40px;
+  height: 44px;
+  width: 44px;
+  min-height: 44px;
+  min-width: 44px;
   justify-content: center;
   line-height: 1;
   opacity: 0.55;
@@ -2027,12 +1853,12 @@
   margin: 0;
   opacity: 0.98;
   transform: rotate(calc(1.1deg + var(--drag-tilt, 0deg))) scale(1.02);
-  box-shadow: 0 16px 34px rgba(0, 151, 167, 0.24);
-  border-color: rgba(0, 188, 212, 0.7);
+  box-shadow: 0 16px 34px rgba(30, 23, 20, 0.22);
+  border-color: #1e1714;
   background: color-mix(
     in srgb,
     var(--zl-item-accent, #ffcc33) calc(12% + var(--zl-item-step, 0) * 25%),
-    #ffffff
+    #fffef7
   );
   animation: zl-ghost-lift 180ms cubic-bezier(0.16, 0.84, 0.24, 1.06) backwards;
   transition: transform 90ms ease-out;
@@ -2041,7 +1867,7 @@
 @keyframes zl-ghost-lift {
   from {
     transform: rotate(0deg) scale(1);
-    box-shadow: 0 2px 6px rgba(0, 151, 167, 0.08);
+    box-shadow: 0 2px 6px rgba(30, 23, 20, 0.08);
   }
 }
 
@@ -2051,22 +1877,6 @@
     transition: none;
     transform: scale(1.02);
   }
-}
-
-.ghost-checkbox {
-  padding: 0 6px 0 0;
-}
-
-.ghost-edit-wrapper {
-  width: auto;
-  min-height: auto;
-  margin-right: 0;
-  padding-top: 0;
-  align-items: center;
-}
-
-.ghost-edit-wrapper .zl-item-text {
-  padding: 0.45rem 0;
 }
 
 @media (max-width: 640px) {
@@ -2232,16 +2042,15 @@
   }
 }
 
-/* Touch devices: no hover to reveal the twins, so both rest awake —
-   still quiet, but clearly there. */
+/* Touch devices: no hover to reveal the handle/action button, so it rests
+   awake — still quiet, but clearly there. */
 @media (hover: none) {
-  .zl-item-delete-button,
-  .grab-indicator {
-    opacity: 0.75;
+  .zl-item-more-button {
+    opacity: 0.65;
   }
 
-  .zl-item.checked .zl-item-delete-button {
-    opacity: 0.6;
+  .zl-item.checked .zl-item-more-button {
+    opacity: 0.5;
   }
 }
 
@@ -2259,15 +2068,6 @@
   .zl-presence-dot,
   .zl-live-voice-row .zl-live-activity-orb > span {
     animation: none;
-  }
-
-  .zl-item-delete-button {
-    transition-duration: 0.01ms;
-  }
-
-  .zl-item-delete-button:hover,
-  .zl-item-delete-button:focus-visible {
-    transform: none;
   }
 }
 
@@ -2393,76 +2193,94 @@ body.zl-touch-dragging {
    The tray is INLINE under the row, never a popover: .zl-card is
    overflow:clip and anything floating out of the row gets sliced. */
 
-@media (prefers-reduced-motion: reduce) {
-}
-
-/* ── Share / export tray ────────────────────────────────────────────────
+/* ── Share & Manage Trays (Neo-Toybrut Action Pills) ────────────────────
    Inline under the header, never a popover — .zl-card is overflow:clip. */
-/* The tray sat 0.25rem off the first list row — the pills read as if they
-   belonged to the item below them rather than to the header above. It owes
-   more room below than between itself and the rule it hangs from. */
 .zl-share-tray {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 0.45rem;
-  padding: 0.6rem 0.15rem 0.95rem;
+  gap: 0.55rem 0.5rem;
+  padding: 0.65rem 0.15rem 0.95rem;
 }
 
 .zl-share-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 12px;
+  border: 2px solid #1e1714;
+  background: #fffdf5;
+  color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
   font-family: inherit;
   font-size: 0.78rem;
-  font-weight: 700;
-  padding: 0.36rem 0.72rem;
-  border-radius: 999px;
-  border: 2px solid rgba(30, 23, 20, 0.18);
-  background: rgba(255, 255, 255, 0.62);
-  color: #1e1714;
+  font-weight: 800;
+  line-height: 1;
   cursor: pointer;
+  user-select: none;
   transition:
-    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.15s ease;
+    transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.16s ease,
+    background-color 0.15s ease;
+}
+
+.zl-pill-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 .zl-share-option:hover:not(:disabled),
-.zl-share-option:focus-visible {
-  background: rgba(30, 23, 20, 0.06);
+.zl-share-option:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 18%, #fffdf5);
+  transform: translateY(-1px);
+  box-shadow: 2.5px 2.5px 0 #1e1714;
+  outline: none;
 }
 
 .zl-share-option:active:not(:disabled) {
-  transform: scale(0.94);
+  transform: translate(1px, 1px);
+  box-shadow: 0.5px 0.5px 0 #1e1714;
 }
 
 .zl-share-option.is-active {
-  background: rgba(30, 23, 20, 0.1);
-  border-color: rgba(30, 23, 20, 0.45);
+  background: #1e1714;
+  color: #fffdf5;
+  box-shadow: 1.5px 1.5px 0 var(--zl-item-accent, #ffb000);
 }
 
 .zl-share-option:disabled {
   opacity: 0.45;
   cursor: default;
+  box-shadow: none;
 }
 
 /* Emptying is reversible-ish and deleting is not, so Delete carries the
-   heavier tint — but both speak Coral, not stock red. */
+   warm coral tint — never stock red or muddy brown. */
 .zl-share-option.zl-share-clear {
-  border-color: rgba(var(--zl-caution-color-rgb, 255, 138, 122), 0.5);
-  color: var(--zl-caution-ink, #8f3a28);
-  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 10%, #fffef7);
+  border-color: #1e1714;
+  color: #1e1714;
+  background: #fffdf5;
 }
 
-.zl-share-option.zl-share-clear:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 20%, #fffef7);
+.zl-share-option.zl-share-clear:hover:not(:disabled),
+.zl-share-option.zl-share-clear:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 22%, #fffdf5);
 }
 
 .zl-share-option.zl-share-delete-list {
-  border-color: rgba(var(--zl-caution-color-rgb, 255, 138, 122), 0.75);
-  color: var(--zl-caution-ink, #8f3a28);
-  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 20%, #fffef7);
-  font-weight: 700;
+  border-color: #1e1714;
+  color: #1e1714;
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 24%, #fffdf5);
+  font-weight: 800;
 }
 
-.zl-share-option.zl-share-delete-list:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 32%, #fffef7);
+.zl-share-option.zl-share-delete-list:hover:not(:disabled),
+.zl-share-option.zl-share-delete-list:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 38%, #fffdf5);
 }
 
 .zl-empty-container {
@@ -2478,9 +2296,7 @@ body.zl-touch-dragging {
   z-index: 2;
 }
 
-/* Tag filter — chips that decide what leaves. Same cream-tint-with-coloured-
-   ink language as the chips on the rows, so a #shop here reads as the same
-   object as a #shop there. */
+/* Tag filter — chips that decide what leaves. */
 .zl-share-filter {
   display: flex;
   flex-wrap: wrap;
@@ -2494,12 +2310,12 @@ body.zl-touch-dragging {
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: 800;
-  padding: 0.28rem 0.6rem;
+  min-height: 36px;
+  padding: 0.28rem 0.65rem;
   border-radius: 999px;
-  border: 2px solid
-    color-mix(in srgb, var(--tag-colour, #6c85e9) 40%, transparent);
-  background: color-mix(in srgb, var(--tag-colour, #6c85e9) 10%, #fffef7);
-  color: color-mix(in srgb, var(--tag-colour, #6c85e9) 72%, #1e1714);
+  border: 2px solid color-mix(in srgb, var(--tag-colour, #6c85e9) 45%, #1e1714);
+  background: color-mix(in srgb, var(--tag-colour, #6c85e9) 12%, #fffdf5);
+  color: #1e1714;
   cursor: pointer;
   transition:
     transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -2512,8 +2328,9 @@ body.zl-touch-dragging {
 
 .zl-share-tag.is-on {
   background: var(--tag-colour, #6c85e9);
-  border-color: var(--tag-colour, #6c85e9);
+  border-color: #1e1714;
   color: #fffef7;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
 }
 
 .zl-share-filter-count {
@@ -2522,30 +2339,29 @@ body.zl-touch-dragging {
   opacity: 0.6;
 }
 
-/* The live door reads as the livelier of the two share options — a filled
-   pill against the outlined "Send a copy", since one of them starts
-   something ongoing and the other just hands over a snapshot. */
-.zl-share-live {
+/* The live door reads as the livelier of the share options — a filled
+   brand-yellow Neo-Toybrut pill. */
+.zl-share-option.zl-share-live {
   background: var(--zl-cta-color, #ffb000);
-  border-color: transparent;
+  border-color: #1e1714;
   color: #1e1714;
 }
 
-.zl-share-live:hover:not(:disabled),
-.zl-share-live:focus-visible {
+.zl-share-option.zl-share-live:hover:not(:disabled),
+.zl-share-option.zl-share-live:focus-visible:not(:disabled) {
   background: var(--zl-cta-color, #ffb000);
-  filter: saturate(1.08) brightness(1.04);
+  filter: saturate(1.06) brightness(1.03);
 }
 
-.zl-share-stop {
-  color: var(--zl-text-color-primary, #1e1714);
-  border-color: rgba(30, 23, 20, 0.3);
-  background: color-mix(in srgb, #fffef7 90%, rgba(30, 23, 20, 0.08));
+.zl-share-option.zl-share-stop {
+  color: #1e1714;
+  border-color: #1e1714;
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 22%, #fffdf5);
 }
 
-.zl-share-stop:hover:not(:disabled),
-.zl-share-stop:focus-visible {
-  background: rgba(30, 23, 20, 0.08);
+.zl-share-option.zl-share-stop:hover:not(:disabled),
+.zl-share-option.zl-share-stop:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 36%, #fffdf5);
 }
 
 /* The ⋯ joins the header's ghost icon trio — same 44px target, same
@@ -2578,13 +2394,11 @@ body.zl-touch-dragging {
 }
 
 /* Same tray chrome as sharing — different contents, one visual grammar. */
-/* Same breathing room as the share tray — 0.25rem left these pills nearly
-   touching the first list row, so they read as that row's controls. */
 .zl-manage-tray {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 0.45rem;
-  padding: 0.6rem 0.15rem 0.95rem;
+  gap: 0.55rem 0.5rem;
+  padding: 0.65rem 0.15rem 0.95rem;
 }
 
 .zl-manage-button.is-open,
@@ -2592,29 +2406,6 @@ body.zl-touch-dragging {
   opacity: 1;
   background: rgba(30, 23, 20, 0.08);
   border-radius: 10px;
-}
-
-.zl-share-phrase {
-  flex: 1 1 100%;
-  margin: 0.25rem 0 0;
-  font-size: 0.72rem;
-  line-height: 1.5;
-}
-
-.zl-share-phrase code {
-  display: inline-block;
-  font-family: "Space Mono", monospace;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.3rem 0.55rem;
-  border-radius: 8px;
-  background: rgba(30, 23, 20, 0.06);
-  margin-right: 0.4rem;
-  overflow-wrap: anywhere;
-}
-
-.zl-share-phrase span {
-  opacity: 0.62;
 }
 
 .zl-share-paste {
@@ -2631,9 +2422,9 @@ body.zl-touch-dragging {
   font-family: "Space Mono", monospace;
   font-size: 0.82rem;
   padding: 0.55rem 0.7rem;
-  border-radius: 10px;
-  border: 2px solid rgba(30, 23, 20, 0.16);
-  background: rgba(30, 23, 20, 0.04);
+  border-radius: 12px;
+  border: 2px solid #1e1714;
+  background: #fffdf5;
   color: #1e1714;
   resize: vertical;
   min-height: 4.5rem;
@@ -2647,16 +2438,16 @@ body.zl-touch-dragging {
   gap: 0.5rem;
 }
 
-.zl-share-magic {
-  background: color-mix(in srgb, var(--zl-primary-color, #ffb000) 25%, #fffef7);
-  border-color: var(--zl-primary-color, #ffb000);
+.zl-share-option.zl-share-magic {
+  background: var(--zl-cta-color, #ffb000);
+  border-color: #1e1714;
   font-weight: 800;
   color: #1e1714;
 }
 
-.zl-share-magic:hover:not(:disabled) {
-  background: var(--zl-primary-color, #ffb000);
-  color: #1e1714;
+.zl-share-option.zl-share-magic:hover:not(:disabled) {
+  background: var(--zl-cta-color, #ffb000);
+  filter: saturate(1.06) brightness(1.03);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2665,134 +2456,135 @@ body.zl-touch-dragging {
   }
 }
 
-/* ── One button, one tray ───────────────────────────────────────────────
-   Send-to and delete used to sit on every row permanently. Three icons on a
-   list whose entire job is ticking things competed with the tick, and forced
-   the row taller to hold them. Now: checkbox, text, and a single "more". */
+/* ── Unified handle + action button on each item row ───────────────────── */
 .zl-item-more-button {
   position: static;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  border: none;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1.5px solid transparent;
   background: transparent;
-  color: var(--zl-text-color-primary, #1e1714);
-  opacity: 0.62;
-  font-size: 1.15rem;
-  line-height: 1;
-  letter-spacing: 0.06em;
+  color: #1e1714;
+  opacity: 0.52;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 12px;
   flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   transition:
     opacity 0.15s ease,
-    background 0.15s ease,
-    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-item-more-button.grab-indicator {
+  cursor: grab;
+  touch-action: none;
+}
+
+.zl-item-handle-icon {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.zl-item:hover .zl-item-more-button,
+.zl-item:focus-within .zl-item-more-button {
+  opacity: 0.78;
 }
 
 .zl-item-more-button:hover,
 .zl-item-more-button:focus-visible {
   opacity: 1;
-  background: rgba(30, 23, 20, 0.07);
+  background: rgba(30, 23, 20, 0.08);
+  outline: none;
 }
 
 .zl-item-more-button:active {
-  transform: scale(0.86);
+  transform: scale(0.9);
 }
 
-.zl-item-more-button.is-open {
+.zl-item-more-button.is-open,
+.zl-item-more-button.touch-active {
   opacity: 1;
-  background: rgba(30, 23, 20, 0.1);
+  background: #fffdf5;
+  border-color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
 }
 
-/* Reorder is a POINTER affordance. On touch, long-press on the row already
-   starts a drag — a permanent handle advertises a gesture that already works
-   and costs a slot on every single row.
-
-   ^ THAT WAS WRONG ON BOTH COUNTS, fixed 2026-08-17. The row has no
-   touchstart handler; `.grab-indicator` is the ONLY thing that calls
-   handleTouchGrabStart. Hiding it on touch with display:none meant the
-   element could not receive touch events at all — so on every phone the
-   entire long-press reorder system (ghost transport, auto-scroll, tilt)
-   was unreachable code. And a handle that rests at opacity 0 on desktop
-   is a feature nobody discovers. The handle now rests visible-but-quiet
-   everywhere and wakes on hover. */
-@media (hover: hover) and (pointer: fine) {
-  .grab-indicator {
-    opacity: var(--zl-grab-handle-rest-opacity, 0.3);
-    transition: opacity 0.15s ease;
-  }
-
-  .zl-item:hover .grab-indicator,
-  .zl-item:focus-within .grab-indicator,
-  .grab-indicator:focus-visible {
-    opacity: var(--zl-grab-handle-opacity, 0.55);
-  }
-}
-
-/* Inline, never a popover — .zl-card is overflow:clip and anything floating
-   out of a row gets sliced. Seamlessly merges into the card with a clean
-   dashed divider, dropping the nested pill-in-a-pill border clutter. */
+/* Inline item action bar: Move / Delete in Neo-Toybrut pills */
 .zl-item-tray {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem 0 0.15rem;
+  padding: 0.55rem 0 0.15rem;
   margin-top: 0.35rem;
-  border-top: 1.5px dashed rgba(30, 23, 20, 0.15);
+  border-top: 1.5px dashed rgba(30, 23, 20, 0.2);
 }
 
 .zl-item-tray-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   width: 100%;
   gap: 0.5rem;
 }
 
 .zl-item-tray-btn {
   flex: 1 1 0;
-  max-width: 120px;
-  height: 36px;
-  min-height: 36px;
+  max-width: 148px;
+  height: 44px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  padding: 0 0.6rem;
-  border-radius: 999px;
-  border: 1.5px solid rgba(30, 23, 20, 0.22);
-  background: var(--zl-item-bg, #fffef7);
-  color: var(--zl-text-color-primary, #1e1714);
+  gap: 0.4rem;
+  padding: 0 0.85rem;
+  border-radius: 12px;
+  border: 2px solid #1e1714;
+  background: #fffdf5;
+  color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
   font-family: inherit;
-  font-size: 0.76rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 800;
   cursor: pointer;
   transition:
     transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.15s ease,
-    border-color 0.15s ease;
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
-.zl-item-tray-btn:hover {
-  background: rgba(30, 23, 20, 0.07);
-  border-color: rgba(30, 23, 20, 0.45);
+.zl-item-tray-btn:hover,
+.zl-item-tray-btn:focus-visible {
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 20%, #fffdf5);
+  transform: translateY(-1px);
+  box-shadow: 2.5px 2.5px 0 #1e1714;
+  outline: none;
 }
 
 .zl-item-tray-btn:active {
-  transform: scale(0.95);
+  transform: translate(1px, 1px);
+  box-shadow: 0.5px 0.5px 0 #1e1714;
 }
 
-.zl-item-tray-btn.zl-item-tray-remove:hover {
-  color: #e11d48;
-  border-color: rgba(225, 29, 72, 0.35);
-  background: rgba(225, 29, 72, 0.06);
+.zl-item-tray-btn.zl-item-tray-remove {
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 18%, #fffdf5);
+}
+
+.zl-item-tray-btn.zl-item-tray-remove:hover,
+.zl-item-tray-btn.zl-item-tray-remove:focus-visible {
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 34%, #fffdf5);
+  color: #1e1714;
 }
 
 .zl-tray-icon {
@@ -2807,7 +2599,7 @@ body.zl-touch-dragging {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 0.4rem;
+  gap: 0.45rem;
   padding: 0.1rem 0;
 }
 
@@ -2816,14 +2608,14 @@ body.zl-touch-dragging {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  opacity: 0.6;
+  opacity: 0.7;
   flex-shrink: 0;
 }
 
 .zl-item-move-targets {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
   flex: 1;
 }
@@ -2832,70 +2624,71 @@ body.zl-touch-dragging {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  height: 32px;
-  padding: 0 0.65rem;
-  border-radius: 999px;
-  border: 1.5px solid var(--target-colour, rgba(30, 23, 20, 0.3));
-  background: color-mix(in srgb, var(--target-colour, #6c85e9) 12%, #fffef7);
+  height: 44px;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border-radius: 12px;
+  border: 2px solid #1e1714;
+  background: color-mix(in srgb, var(--target-colour, #6c85e9) 18%, #fffdf5);
   color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
   font-family: inherit;
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  font-weight: 800;
   cursor: pointer;
   transition:
     transform 0.15s ease,
-    background 0.15s ease;
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
-.zl-item-move-pill:hover {
-  transform: scale(1.04);
-  background: color-mix(in srgb, var(--target-colour, #6c85e9) 24%, #fffef7);
+.zl-item-move-pill:hover,
+.zl-item-move-pill:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 2.5px 2.5px 0 #1e1714;
+  background: color-mix(in srgb, var(--target-colour, #6c85e9) 30%, #fffdf5);
+  outline: none;
 }
 
 .zl-item-move-pill .zl-target-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  border: 1.5px solid #1e1714;
   background: var(--target-colour, #6c85e9);
   flex-shrink: 0;
 }
 
 .zl-item-move-cancel {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  border: none;
-  background: rgba(30, 23, 20, 0.08);
-  color: var(--zl-text-color-primary, #1e1714);
+  border-radius: 12px;
+  border: 2px solid #1e1714;
+  background: #fffdf5;
+  color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 900;
   flex-shrink: 0;
   transition: transform 0.15s ease;
 }
 
-.zl-item-move-cancel:hover {
-  background: rgba(30, 23, 20, 0.15);
-}
-
-:global(html.mode-neo-brutalist) .zl-item-tray-btn {
-  border-radius: 8px;
-  border-width: 2px;
-  box-shadow: 2px 2px 0 0 var(--zl-chunky-ink, #1e1714);
-}
-
-:global(html.mode-neo-brutalist) .zl-item-move-pill {
-  border-radius: 8px;
-  border-width: 2px;
+.zl-item-move-cancel:hover,
+.zl-item-move-cancel:focus-visible {
+  background: rgba(30, 23, 20, 0.08);
+  transform: translateY(-1px);
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .zl-item-more-button,
-  .zl-item-tray-action,
+  .zl-item-tray-btn,
   .grab-indicator {
     transition: none;
   }
@@ -3361,39 +3154,6 @@ body.zl-touch-dragging {
   font-weight: 800;
   letter-spacing: 0.01em;
   color: color-mix(in srgb, var(--zl-primary-color, #a970ea) 72%, #1e1714);
-}
-
-/* Quieter than the send buttons — different kind of action — but it IS a
-   button. Borderless grey text under a stack of pills read as a heading for
-   an input that wasn't there. It wears the same dashes as the draft row and
-   the sync phrase now: in this app, dashed means "something goes in here". */
-.zl-share-import {
-  font-family: inherit;
-  font-size: 0.76rem;
-  font-weight: 700;
-  min-height: 44px;
-  padding: 0 0.9rem;
-  border: 2px dashed
-    color-mix(in srgb, var(--zl-text-color-primary, #1e1714) 22%, transparent);
-  background: none;
-  color: color-mix(
-    in srgb,
-    var(--zl-text-color-primary, #1e1714) 72%,
-    transparent
-  );
-  cursor: pointer;
-  border-radius: 14px;
-  align-self: center;
-  transition: all 0.16s ease;
-}
-
-.zl-share-import:hover {
-  color: var(--zl-text-color-primary, #1e1714);
-  border-color: color-mix(
-    in srgb,
-    var(--zl-text-color-primary, #1e1714) 45%,
-    transparent
-  );
 }
 
 @media (prefers-reduced-motion: reduce) {

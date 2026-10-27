@@ -486,6 +486,11 @@
   <div class="lists-wrapper" bind:this={wrapperEl} style="--tilt: {tilt}deg;">
     {#each lists as list, i (list.id)}
       {@const sx = slideX(i, x)}
+      {@const isMovingDeck = isSwiping || spinning || rafId !== null}
+      {@const shouldMount =
+        list.id === activeListId ||
+        Math.abs(sx) < 100 ||
+        (isMovingDeck && Math.abs(sx) <= 105)}
       <div
         id="list-slide-{list.id}"
         class="list-slide"
@@ -499,7 +504,11 @@
         )}"
       >
         <div class="list-content-wrapper">
-          <SingleList listId={list.id} />
+          {#if shouldMount}
+            <SingleList listId={list.id} />
+          {:else}
+            <div class="zl-card-parked-shell" aria-hidden="true"></div>
+          {/if}
         </div>
       </div>
     {/each}
@@ -587,18 +596,26 @@
     height: 100%;
   }
 
+  .zl-card-parked-shell {
+    width: 100%;
+    height: 0;
+    pointer-events: none;
+  }
+
   .pagination-dots {
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
     margin: 0;
+    min-width: 0;
   }
 
   .list-nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: 0.2rem;
     margin-bottom: 0.4rem;
   }
 
@@ -606,13 +623,16 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
     border: 0;
     background: transparent;
     color: var(--zl-text-color-secondary, #666);
     cursor: pointer;
+    flex-shrink: 0;
     transition: all 0.25s ease;
   }
 
@@ -635,8 +655,11 @@
   }
 
   .dot {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
+    min-width: 26px;
+    min-height: 44px;
+    padding: 0;
     border-radius: 50%;
     background: transparent;
     border: 0;
@@ -695,13 +718,17 @@
      goes in here" everywhere else in this app (draft row, sync phrase, paste
      button, the pull-to-add ghost), so it costs nothing to learn. */
   .nav-add-list {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
     border-radius: 50%;
     background: transparent;
-    border: 2px dashed rgba(30, 23, 20, 0.35);
+    border: 0;
     color: #1e1714;
     cursor: pointer;
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -709,19 +736,34 @@
     font-size: 1.1rem;
     font-weight: 900;
     line-height: 1;
-    margin-left: 0.35rem;
+    margin-left: 0.15rem;
     align-self: center;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .nav-add-list::before {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px dashed rgba(30, 23, 20, 0.35);
     box-shadow: 1px 1px 0 rgba(30, 23, 20, 0.15);
     transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
   }
 
   .nav-add-list:hover,
   .nav-add-list:focus-visible {
+    transform: scale(1.12) rotate(90deg);
+    outline: none;
+  }
+
+  .nav-add-list:hover::before,
+  .nav-add-list:focus-visible::before {
     background: #fffdf5;
     border-color: #1e1714;
-    transform: scale(1.15) rotate(90deg);
     box-shadow: 2px 2px 0 #1e1714;
-    outline: none;
   }
 
   .nav-add-list:active {

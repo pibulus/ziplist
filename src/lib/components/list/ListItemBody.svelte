@@ -17,7 +17,6 @@
   export let onSaveEdit = () => {};
   export let onEditKeyDown = () => {};
   export let onTyping = () => {};
-  export let onReorderClick = () => {};
   export let onReorderKeyDown = () => {};
   export let onTouchGrabStart = () => {};
   export let onDelete = () => {};
@@ -214,84 +213,84 @@
 </div>
 
 <div class="zl-item-side">
-  <!-- This handle is the ONLY entry point into the touch-drag reorder
-       system — nothing else binds touchstart. It must stay rendered and
-       hit-testable on touch devices; CSS that hides it disables reordering
-       on every phone (that is exactly what happened until 2026-08-17). -->
-  {#if !item.checked && !isEditing && activeItemsCount > 1}
+  {#if !isEditing}
     <button
       type="button"
-      class="grab-indicator"
+      class="zl-item-more-button"
+      class:grab-indicator={!item.checked && activeItemsCount > 1}
       class:touch-active={isTouchActive}
+      class:is-open={isMoving}
       data-swipe-ignore="true"
-      aria-label={`Reorder ${item.text}`}
-      title="Drag to reorder"
-      on:click|stopPropagation={() => onReorderClick(item.id)}
+      aria-expanded={isMoving}
+      aria-label={isMoving
+        ? `Close actions for ${item.text}`
+        : !item.checked && activeItemsCount > 1
+          ? `Drag to reorder or tap for actions on ${item.text}`
+          : `Actions for ${item.text}`}
+      title={isMoving
+        ? "Close actions"
+        : !item.checked && activeItemsCount > 1
+          ? "Drag to reorder · Tap for actions"
+          : "Item actions"}
+      on:click|stopPropagation={() => onRequestMove(item.id)}
       on:keydown={(event) => onReorderKeyDown(event, item.id)}
-      on:touchstart={(event) => onTouchGrabStart(event, item.id)}
+      on:touchstart={(event) => {
+        if (!item.checked && activeItemsCount > 1) {
+          onTouchGrabStart(event, item.id);
+        }
+      }}
     >
-      <span></span>
-      <span></span>
-      <span></span>
+      {#if isMoving}
+        <svg
+          class="zl-item-handle-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
+        </svg>
+      {:else if !item.checked && activeItemsCount > 1}
+        <svg
+          class="zl-item-handle-icon"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <circle cx="7" cy="5" r="1.65" />
+          <circle cx="13" cy="5" r="1.65" />
+          <circle cx="7" cy="10" r="1.65" />
+          <circle cx="13" cy="10" r="1.65" />
+          <circle cx="7" cy="15" r="1.65" />
+          <circle cx="13" cy="15" r="1.65" />
+        </svg>
+      {:else}
+        <svg
+          class="zl-item-handle-icon"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <circle cx="4.5" cy="10" r="1.65" />
+          <circle cx="10" cy="10" r="1.65" />
+          <circle cx="15.5" cy="10" r="1.65" />
+        </svg>
+      {/if}
     </button>
   {/if}
-
-  <!-- One affordance, not three. Send-to and delete used to sit on every row
-       permanently; three icons per item on a list whose whole job is ticking
-       things competed with the tick. They live in the tray now. -->
-  <button
-    type="button"
-    class="zl-item-more-button"
-    class:is-open={isMoving}
-    data-swipe-ignore="true"
-    on:click|stopPropagation={() => onRequestMove(item.id)}
-    aria-expanded={isMoving}
-    aria-label={`More for ${item.text}`}
-  >
-    <span aria-hidden="true">⋯</span>
-  </button>
 </div>
 
 <!-- Inline, not a popover. .zl-card is overflow:clip, so anything floating out
      of the row gets sliced — the same trap the header tooltips were in. -->
 {#if isMoving}
-  <!-- Was `fade` alone, which is why this read as "no animation": the tray
-       took its full height instantly and only the ink faded in, so the row
-       jumped and nothing appeared to open. `slide` animates the height, so
-       the tray actually unfolds out of the row it belongs to. -->
   <div
     class="zl-item-tray"
-    transition:slide={{ duration: 220, easing: cubicOut }}
+    transition:slide={{ duration: 200, easing: cubicOut }}
   >
     {#if !showMoveTargets}
       <div class="zl-item-tray-actions">
-        <button
-          type="button"
-          class="zl-item-tray-btn zl-item-tray-edit"
-          data-swipe-ignore="true"
-          title="Edit item text and tags"
-          aria-label="Edit item"
-          on:click|stopPropagation={() => {
-            onRequestMove(item.id);
-            onStartEdit(item);
-          }}
-        >
-          <svg
-            class="zl-tray-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-          </svg>
-          <span>Edit</span>
-        </button>
-
         {#if moveTargets.length > 0}
           <button
             type="button"
@@ -306,7 +305,7 @@
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="2.2"
+              stroke-width="2.3"
               stroke-linecap="round"
               stroke-linejoin="round"
               aria-hidden="true"
@@ -333,7 +332,7 @@
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2.2"
+            stroke-width="2.3"
             stroke-linecap="round"
             stroke-linejoin="round"
             aria-hidden="true"
@@ -352,7 +351,7 @@
         class="zl-item-move-panel"
         transition:slide={{ duration: 150, easing: cubicOut }}
       >
-        <span class="zl-item-move-label">Move to:</span>
+        <span class="zl-item-move-label">Move to</span>
         <div class="zl-item-move-targets">
           {#each moveTargets as target (target.id)}
             <button
@@ -373,7 +372,7 @@
           type="button"
           class="zl-item-move-cancel"
           data-swipe-ignore="true"
-          title="Cancel move"
+          title="Back"
           aria-label="Cancel move"
           on:click|stopPropagation={() => (showMoveTargets = false)}
         >

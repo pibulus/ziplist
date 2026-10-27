@@ -24,19 +24,25 @@
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
+  let hasMounted = false;
+
   // Gentle pop/scale-in for freshly added rows — a little overshoot via backOut
-  // makes an add feel like it *lands*. Reduced-motion folks get a plain fade.
+  // makes an add feel like it *lands*. Initial card mount renders immediately
+  // at 0ms so deck virtualization never staggers existing items on swipe.
   function itemIn(node, { delay = 0 } = {}) {
+    if (!hasMounted) {
+      return { duration: 0 };
+    }
     if (prefersReducedMotion) {
       return { delay, duration: 160, css: (t) => `opacity: ${t}` };
     }
     return {
       delay,
-      duration: 320,
+      duration: 280,
       easing: backOut,
       css: (t) => {
         const eased = Math.min(1, t);
-        return `opacity: ${Math.min(1, t * 1.4)}; transform: translateY(${(1 - eased) * 14}px) scale(${0.9 + eased * 0.1});`;
+        return `opacity: ${Math.min(1, t * 1.4)}; transform: translateY(${(1 - eased) * 12}px) scale(${0.92 + eased * 0.08});`;
       },
     };
   }
@@ -121,12 +127,14 @@
   let touchDragItemId = null;
   let touchDragPendingItemId = null;
   let touchDragPendingTouchId = null;
+  let touchDragStartX = 0;
   let touchDragStartY = 0;
   let touchDragCurrentY = 0;
   let touchDragTilt = 0; // deg — smoothed vertical-velocity lean on the ghost
   let touchDragGhostRect = null;
   let touchDragTargetIndex = -1;
   let touchDragLongPressTimer = null;
+  let lastTouchDragCommitTime = 0;
   let touchDragAutoScrollDelta = 0;
   let touchDragAutoScrollFrame = null;
   let touchDragListenersAttached = false;
@@ -137,9 +145,10 @@
   export let listId = null;
   export let showListManagement = true;
 
-  // Subscribe to the appropriate list
+  // Subscribe to the appropriate list (single store subscription per instance)
   let unsubscribe;
   let subscribedListId;
+  let allLists = [];
 
   $: if (subscribedListId !== listId) {
     subscribeToList(listId);
@@ -150,12 +159,14 @@
     if (unsubscribe) unsubscribe();
     if (nextListId) {
       unsubscribe = listsStore.subscribe((state) => {
-        const foundList = state.lists.find((l) => l.id === nextListId);
+        allLists = state.lists || [];
+        const foundList = allLists.find((l) => l.id === nextListId);
         if (foundList) list = foundList;
       });
     } else {
       unsubscribe = listsStore.subscribe((state) => {
-        const activeListData = state.lists.find(
+        allLists = state.lists || [];
+        const activeListData = allLists.find(
           (l) => l.id === state.activeListId,
         );
         if (activeListData) list = activeListData;
@@ -223,6 +234,11 @@
       window.addEventListener("ziplist-heart", handleRemoteHeart);
       window.addEventListener("ziplist-item-checked", handleRemoteItemChecked);
       window.addEventListener("keydown", handleGlobalKeyDown);
+      requestAnimationFrame(() => {
+        hasMounted = true;
+      });
+    } else {
+      hasMounted = true;
     }
   });
 
@@ -1020,6 +1036,8 @@
       return;
     }
 
+    movingItemId = null;
+
     const containerRect = listContainerNode.getBoundingClientRect();
     const nodeRect = draggedNode.getBoundingClientRect();
     touchDragItemId = touchDragPendingItemId;
@@ -1050,15 +1068,20 @@
     }
 
     stopTouchDragAutoScroll();
+    clearTouchDragLongPressTimer();
     addTouchDragListeners();
 
     const touch = event.changedTouches[0];
     touchDragPendingItemId = itemId;
     touchDragPendingTouchId = touch.identifier;
+    touchDragStartX = touch.clientX;
     touchDragStartY = touch.clientY;
     touchDragCurrentY = touch.clientY;
 
-    startTouchDrag();
+    touchDragLongPressTimer = setTimeout(() => {
+      touchDragLongPressTimer = null;
+      startTouchDrag();
+    }, 170);
   }
 
   function handleTouchGrabMove(event) {
@@ -1066,7 +1089,16 @@
     if (!touch) return;
 
     if (!touchDragItemId) {
-      return;
+      const dy = Math.abs(touch.clientY - touchDragStartY);
+      const dx = Math.abs(touch.clientX - touchDragStartX);
+      if (dy >= 5 && dy >= dx) {
+        startTouchDrag();
+      } else if (dx > 10 && dx > dy) {
+        resetTouchDragState();
+        return;
+      } else {
+        return;
+      }
     }
 
     event.preventDefault();
@@ -1114,9 +1146,12 @@
 
     if (touchDragItemId) {
       event.preventDefault();
+      lastTouchDragCommitTime = performance.now();
+      finishTouchDrag(true);
+      return;
     }
 
-    finishTouchDrag(true);
+    resetTouchDragState();
   }
 
   function handleTouchGrabCancel(event) {
@@ -1376,7 +1411,7 @@
   // nothing ever called it. This is the UI it was waiting for.
   let movingItemId = null;
 
-  $: moveTargets = ($listsStore?.lists ?? [])
+  $: moveTargets = allLists
     .filter((candidate) => candidate.id !== list.id)
     .map((candidate) => ({
       id: candidate.id,
@@ -1398,7 +1433,7 @@
   // list, they are ways of ending one.
   let manageTrayOpen = false;
 
-  $: nonLiveListCount = $listsStore.lists.filter(
+  $: nonLiveListCount = allLists.filter(
     (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
   ).length;
   $: canDeleteList = showListManagement && nonLiveListCount > 1;
@@ -1540,7 +1575,7 @@
     }
 
     isMagicParsing = true;
-    showListStatus("Magic parsing with AI...", true, 4000);
+    showListStatus("Magic import in progress...", true, 4000);
     hapticService.impact("light");
 
     try {
@@ -1578,7 +1613,7 @@
       }
     } catch (err) {
       console.warn("Magic paste fallback:", err);
-      showListStatus("Could not reach AI. Added as raw lines.", false, 2500);
+      showListStatus("Magic import offline. Added as raw lines.", false, 2500);
       pasteItemsIn();
     } finally {
       isMagicParsing = false;
@@ -1810,6 +1845,7 @@
   }
 
   function requestMove(itemId) {
+    if (performance.now() - lastTouchDragCommitTime < 320) return;
     movingItemId = movingItemId === itemId ? null : itemId;
     if (movingItemId) soundService.select();
   }
@@ -1818,7 +1854,7 @@
     const result = listsService.moveItem(itemId, list.id, targetListId);
     movingItemId = null;
 
-    if (result?.success) {
+    if (result?.ok || result?.success) {
       soundService.plop({ force: true });
       hapticService.impact("medium");
       showListStatus(result.message || "Moved.", true, 2200);
@@ -1988,11 +2024,14 @@
     draftItemActive = false;
     draftItemText = "";
     editingItemId = item.id;
-    editedItemText = item.text;
+    const tagSuffix = item.tags?.length
+      ? ` ${item.tags.map((t) => `#${t}`).join(" ")}`
+      : "";
+    editedItemText = `${item.text}${tagSuffix}`;
     if (isLive) {
       liveListsService.broadcastItemFocus(list.id, item.id);
       broadcastDraftActivity({
-        text: item.text,
+        text: editedItemText,
         itemId: item.id,
         mode: "typing",
       });
@@ -2036,20 +2075,24 @@
     (a, b) => (listTagCounts.get(b) || 0) - (listTagCounts.get(a) || 0),
   );
 
-  // Global tags across all lists in workspace
-  $: globalVocabulary = Array.from(
-    new Set(
-      ($listsStore.lists ?? []).flatMap((l) =>
-        (l.items ?? []).flatMap((item) => item.tags ?? []),
-      ),
-    ),
-  );
+  // Global tags across all lists in workspace (computed lazily only while drafting)
+  $: globalVocabulary = draftItemActive
+    ? Array.from(
+        new Set(
+          allLists.flatMap((l) =>
+            (l.items ?? []).flatMap((item) => item.tags ?? []),
+          ),
+        ),
+      )
+    : [];
 
   // Suggested tags: list tags first (ranked by frequency), followed by other global tags
-  $: suggestedTags = [
-    ...listTags,
-    ...globalVocabulary.filter((tag) => !listTags.includes(tag)),
-  ];
+  $: suggestedTags = draftItemActive
+    ? [
+        ...listTags,
+        ...globalVocabulary.filter((tag) => !listTags.includes(tag)),
+      ]
+    : listTags;
 
   function cancelItemEdit() {
     editingItemId = null;
@@ -2167,7 +2210,7 @@
   }
 
   function deleteEntireList() {
-    const nonLiveLists = $listsStore.lists.filter(
+    const nonLiveLists = allLists.filter(
       (l) => typeof l?.id !== "string" || !l.id.startsWith("live_"),
     );
     if (nonLiveLists.length <= 1) {
@@ -2247,11 +2290,6 @@
     manageTrayOpen = false;
   }
 
-  function handleClearDoneFromMenu() {
-    clearDoneItems();
-    manageTrayOpen = false;
-  }
-
   function duplicateCurrentList() {
     if (!showListManagement) return;
     const baseName = list.name || "List";
@@ -2275,11 +2313,6 @@
     soundService.add?.({ force: true });
     showListStatus(`Duplicated "${baseName}"`, true);
     manageTrayOpen = false;
-  }
-
-  function handleRenameFromMenu() {
-    manageTrayOpen = false;
-    startEditingListName();
   }
 
   function restoreDeletedItem() {
@@ -2898,16 +2931,13 @@
          a popover: .zl-card is overflow:clip and anything floating gets sliced. -->
     {#if shareTrayOpen}
       <div class="zl-share-tray" transition:fade={{ duration: 130 }}>
-        <!-- Send only the part you mean. Appears solely on a list that has
-             tags, so a plain list never sees it. Not shown for a live room —
-             a room is the whole list by definition. -->
-        {#if !isLive && suggestedTags.length > 0}
+        {#if !isLive && listTags.length > 0}
           <div
             class="zl-share-filter"
             role="group"
             aria-label="Send only items tagged"
           >
-            {#each suggestedTags as tag (tag)}
+            {#each listTags as tag (tag)}
               <button
                 type="button"
                 class="zl-share-tag"
@@ -2928,12 +2958,6 @@
           </div>
         {/if}
 
-        <!-- One job now: hand this list to someone. "Copy as text" and
-             "Save as file" used to sit below this row, but `shareAsLink`
-             delegates to navigator.share and the sheet it opens already
-             offers Copy and Save to Files — they were the OS wearing our
-             chrome. QR stays: scanning is the one handoff a share sheet
-             cannot do, because it needs the other phone in the room. -->
         <div class="zl-share-actions" role="group" aria-label="Send this list">
           <button
             type="button"
@@ -2944,7 +2968,22 @@
             aria-label={isLive ? "Copy live link" : "Send a copy"}
             on:click={shareAsLink}
           >
-            Copy
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path
+                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+              />
+            </svg>
+            <span>Copy</span>
           </button>
           {#if liveFeatureAvailable && !isLive}
             <button
@@ -2956,7 +2995,21 @@
               aria-label="Share live"
               on:click={shareAsLiveRoom}
             >
-              {isMakingLive ? "Connecting..." : "Live"}
+              <svg
+                class="zl-pill-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
+                <path d="M7.76 16.24a6 6 0 0 1 0-8.49" />
+              </svg>
+              <span>{isMakingLive ? "Connecting..." : "Live"}</span>
             </button>
           {/if}
           {#if isLive}
@@ -2967,7 +3020,19 @@
               aria-label="Stop live sharing"
               on:click={handleStopLive}
             >
-              Stop
+              <svg
+                class="zl-pill-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+              <span>Stop</span>
             </button>
           {/if}
           <button
@@ -2978,7 +3043,22 @@
             aria-label="Paste into list"
             on:click={toggleShareInput}
           >
-            Paste
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+              />
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+            </svg>
+            <span>Paste</span>
           </button>
           <button
             type="button"
@@ -2987,7 +3067,22 @@
             aria-label="QR this list"
             on:click={qrThisList}
           >
-            QR
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 18v3" />
+            </svg>
+            <span>QR</span>
           </button>
         </div>
 
@@ -3019,7 +3114,7 @@
                 disabled={!pasteText.trim() || isMagicParsing}
                 on:click={magicAiPaste}
               >
-                {isMagicParsing ? "🪄 Parsing..." : "🪄 Magic AI Import"}
+                {isMagicParsing ? "🪄 Parsing..." : "🪄 Magic Import"}
               </button>
               <button
                 type="button"
@@ -3035,9 +3130,9 @@
       </div>
     {/if}
 
-    <!-- Ending a list is not a way of sending it, so it gets its own drawer
-         rather than a hairline at the foot of someone else's. Inline for the
-         same reason the share tray is: .zl-card is overflow:clip. -->
+    <!-- List-level actions only: Duplicate, Empty, Delete.
+         Completed items have their own Reset/Clear divider in context, and
+         tapping the list title already renames inline. -->
     {#if manageTrayOpen && canManageList}
       <div
         class="zl-manage-tray"
@@ -3045,24 +3140,30 @@
         aria-label="Manage this list"
         transition:fade={{ duration: 130 }}
       >
-        {#if completedItems.length > 0}
+        {#if showListManagement}
           <button
             type="button"
             class="zl-share-option"
-            title="Reset all completed items back to active checklist"
-            aria-label="Reset completed items"
-            on:click={uncheckAllItems}
+            title="Clone this list and all its items"
+            aria-label="Duplicate list"
+            on:click={duplicateCurrentList}
           >
-            Reset
-          </button>
-          <button
-            type="button"
-            class="zl-share-option"
-            title="Clear completed items from list ({completedItems.length})"
-            aria-label="Clear completed items"
-            on:click={handleClearDoneFromMenu}
-          >
-            Clear
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="8" y="8" width="13" height="13" rx="2" />
+              <path
+                d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"
+              />
+            </svg>
+            <span>Duplicate</span>
           </button>
         {/if}
         {#if list.items.length > 0}
@@ -3073,29 +3174,22 @@
             aria-label="Empty this list"
             on:click={clearEntireList}
           >
-            Empty
-          </button>
-        {/if}
-        {#if showListManagement && list.items.length > 0}
-          <button
-            type="button"
-            class="zl-share-option"
-            title="Clone this list and all its items"
-            aria-label="Duplicate list"
-            on:click={duplicateCurrentList}
-          >
-            Duplicate
-          </button>
-        {/if}
-        {#if showListManagement}
-          <button
-            type="button"
-            class="zl-share-option"
-            title="Rename this list"
-            aria-label="Rename list"
-            on:click={handleRenameFromMenu}
-          >
-            Rename
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21.6 7.4c.8.8.8 2 0 2.8L11 20"
+              />
+              <path d="m6 11 7 7" />
+            </svg>
+            <span>Empty</span>
           </button>
         {/if}
         {#if canDeleteList}
@@ -3106,7 +3200,21 @@
             aria-label="Delete this list"
             on:click={deleteEntireList}
           >
-            Delete
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 6h18" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+            <span>Delete</span>
           </button>
         {/if}
       </div>
@@ -3280,20 +3388,11 @@
           in:fade={{ duration: 200 }}
         >
           {#each renderedActiveItems as item, index (item.id)}
-            <!-- --zl-item-step is the row's position as 0..1. The tint and the
-                 hover pitch both read it, so the colour ramp and the note ramp
-                 are the same ramp — hover the third row, hear the third note.
-                 Contract lives in weightless' noteAt(); nothing is shared but
-                 the number, so they cannot drift apart. -->
             <li
               class="zl-item"
               style="--zl-item-step: {renderedActiveItems.length > 1
                 ? index / (renderedActiveItems.length - 1)
                 : 0}"
-              on:mouseenter={() =>
-                soundService.playAt("hover", index, {
-                  total: renderedActiveItems.length,
-                })}
               class:checked={item.checked}
               class:section-divider={!item.checked &&
                 (/^##\s*/.test(item.text) || item.text.trim() === "---")}
@@ -3320,7 +3419,7 @@
                 duration: touchDragItemId ? 220 : 260,
                 easing: quintOut,
               }}
-              in:itemIn={{ delay: getStaggerDelay(index) }}
+              in:itemIn
               out:itemOut
               aria-grabbed={getItemGrabbedState(item.id)}
               aria-dropeffect="move"
@@ -3341,7 +3440,6 @@
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
                 onTyping={handleEditTyping}
-                onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
@@ -3435,7 +3533,7 @@
             />
           {/if}
 
-          {#each renderedCompletedItems as item, index (item.id)}
+          {#each renderedCompletedItems as item (item.id)}
             <li
               class="zl-item"
               class:checked={item.checked}
@@ -3458,9 +3556,7 @@
                 duration: touchDragItemId ? 220 : 260,
                 easing: quintOut,
               }}
-              in:itemIn={{
-                delay: getStaggerDelay(renderedActiveItems.length + index + 1),
-              }}
+              in:itemIn
               out:itemOut
               aria-grabbed={getItemGrabbedState(item.id)}
               aria-dropeffect="move"
@@ -3481,7 +3577,6 @@
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
                 onTyping={handleEditTyping}
-                onReorderClick={() => hapticService.selection()}
                 onReorderKeyDown={handleReorderKeyDown}
                 onTouchGrabStart={handleTouchGrabStart}
                 onDelete={deleteItem}
@@ -3574,13 +3669,20 @@
             </div>
 
             <div class="zl-item-side">
-              <div class="grab-indicator touch-active">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <div class="zl-item-more-button">
-                <span>⋯</span>
+              <div class="zl-item-more-button grab-indicator touch-active">
+                <svg
+                  class="zl-item-handle-icon"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <circle cx="7" cy="5" r="1.65" />
+                  <circle cx="13" cy="5" r="1.65" />
+                  <circle cx="7" cy="10" r="1.65" />
+                  <circle cx="13" cy="10" r="1.65" />
+                  <circle cx="7" cy="15" r="1.65" />
+                  <circle cx="13" cy="15" r="1.65" />
+                </svg>
               </div>
             </div>
           </div>
