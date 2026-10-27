@@ -1055,8 +1055,10 @@
     }
 
     hapticService.dragStart();
-    soundService.select();
+    soundService.pickup();
   }
+
+  let touchDragFromHandle = false;
 
   function handleTouchGrabStart(event, itemId) {
     if (
@@ -1072,6 +1074,7 @@
     addTouchDragListeners();
 
     const touch = event.changedTouches[0];
+    touchDragFromHandle = true;
     touchDragPendingItemId = itemId;
     touchDragPendingTouchId = touch.identifier;
     touchDragStartX = touch.clientX;
@@ -1081,7 +1084,44 @@
     touchDragLongPressTimer = setTimeout(() => {
       touchDragLongPressTimer = null;
       startTouchDrag();
-    }, 170);
+    }, 120);
+  }
+
+  function handleRowTouchStart(event, item) {
+    if (
+      !item ||
+      item.checked ||
+      event.touches.length !== 1 ||
+      editingItemId === item.id ||
+      activeItems.length < 2
+    ) {
+      return;
+    }
+
+    if (
+      event.target?.closest?.(
+        ".zl-checkbox-wrapper, .zl-item-more-button, .zl-item-tag, .zl-item-tray, input",
+      )
+    ) {
+      return;
+    }
+
+    stopTouchDragAutoScroll();
+    clearTouchDragLongPressTimer();
+    addTouchDragListeners();
+
+    const touch = event.changedTouches[0];
+    touchDragFromHandle = false;
+    touchDragPendingItemId = item.id;
+    touchDragPendingTouchId = touch.identifier;
+    touchDragStartX = touch.clientX;
+    touchDragStartY = touch.clientY;
+    touchDragCurrentY = touch.clientY;
+
+    touchDragLongPressTimer = setTimeout(() => {
+      touchDragLongPressTimer = null;
+      startTouchDrag();
+    }, 260);
   }
 
   function handleTouchGrabMove(event) {
@@ -1091,12 +1131,19 @@
     if (!touchDragItemId) {
       const dy = Math.abs(touch.clientY - touchDragStartY);
       const dx = Math.abs(touch.clientX - touchDragStartX);
-      if (dy >= 5 && dy >= dx) {
-        startTouchDrag();
-      } else if (dx > 10 && dx > dy) {
-        resetTouchDragState();
-        return;
+      if (touchDragFromHandle) {
+        if (dy >= 4 && dy >= dx) {
+          startTouchDrag();
+        } else if (dx > 10 && dx > dy) {
+          resetTouchDragState();
+          return;
+        } else {
+          return;
+        }
       } else {
+        if (dy > 7 || dx > 7) {
+          resetTouchDragState();
+        }
         return;
       }
     }
@@ -2018,8 +2065,14 @@
   // worker relay, receiving store, even a focus-by-item Map in this component.
   // Nothing had ever called it.
 
+  function pressCheckbox() {
+    hapticService.press();
+    soundService.press();
+  }
+
   function startEditingItem(item) {
     if (item.checked) return;
+    if (performance.now() - lastTouchDragCommitTime < 320) return;
     clearDraftActivity();
     draftItemActive = false;
     draftItemText = "";
@@ -2147,8 +2200,8 @@
       : list.items.filter((item) => item.checked);
     if (!doneItems.length) return;
 
-    hapticService.impact("medium");
-    soundService.delete();
+    hapticService.notification("success");
+    soundService.clearSweep(doneItems.length);
 
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
 
@@ -3411,6 +3464,7 @@
               draggable={!item.checked &&
                 editingItemId !== item.id &&
                 !touchDragItemId}
+              on:touchstart={(e) => handleRowTouchStart(e, item)}
               on:dragstart|passive={(e) => handleDragStart(e, item.id)}
               on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
@@ -3436,6 +3490,7 @@
                 activeItemsCount={activeItems.length}
                 isTouchActive={touchDragItemId === item.id}
                 onToggle={toggleItem}
+                onPressCheckbox={pressCheckbox}
                 onStartEdit={startEditingItem}
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
@@ -3485,6 +3540,7 @@
               onTyping={handleDraftTyping}
               onCancelDraft={cancelDraftItem}
               {suggestedTags}
+              {moveTargets}
             />
           {:else}
             <li
@@ -3548,6 +3604,7 @@
               draggable={!item.checked &&
                 editingItemId !== item.id &&
                 !touchDragItemId}
+              on:touchstart={(e) => handleRowTouchStart(e, item)}
               on:dragstart|passive={(e) => handleDragStart(e, item.id)}
               on:dragend|passive={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
@@ -3573,6 +3630,7 @@
                 activeItemsCount={activeItems.length}
                 isTouchActive={touchDragItemId === item.id}
                 onToggle={toggleItem}
+                onPressCheckbox={pressCheckbox}
                 onStartEdit={startEditingItem}
                 onSaveEdit={saveItemEdit}
                 onEditKeyDown={handleEditItemKeyDown}
@@ -3593,17 +3651,6 @@
             </li>
           {/each}
         </ul>
-        {#if !draftItemActive}
-          <button
-            type="button"
-            class="zl-tactile-add-button"
-            on:click={startDraftItem}
-            aria-label={`Add item to ${list.name || "this list"}`}
-          >
-            <span class="zl-tactile-add-plus" aria-hidden="true">+</span>
-            <span class="zl-tactile-add-text">Add item</span>
-          </button>
-        {/if}
       {:else}
         <!-- Empty state - Minimalist and friendly with tactile add button -->
         <div class="zl-empty-container" in:fade={{ duration: 200 }}>
@@ -3611,12 +3658,12 @@
             type="button"
             class="zl-empty-state clickable"
             on:click={handleEmptyStateClick}
-            aria-label={`Your list awaits. Add the first thing or talk it in. Add the first item to ${
+            aria-label={`Fresh slate. Add the first thing or talk it in. Add the first item to ${
               list.name || "this list"
             }`}
           >
             <div class="zl-empty-content">
-              <h3 class="zl-empty-title">Your list awaits</h3>
+              <h3 class="zl-empty-title">Fresh slate</h3>
               <p class="zl-empty-description">Add the first thing</p>
               <p class="zl-empty-hint">or talk it in</p>
             </div>
@@ -3635,9 +3682,15 @@
         </div>
       {/if}
       {#if touchDraggedItem && touchDragGhostRect}
+        {@const ghostIsSection =
+          /^##\s*/.test(touchDraggedItem.text) ||
+          touchDraggedItem.text.trim() === "---"}
+        {@const ghostIsPortal = /^(\u2192|->)\s+/.test(touchDraggedItem.text)}
         <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">
           <div
             class="zl-item zl-touch-ghost-item"
+            class:section-divider={ghostIsSection}
+            class:portal-item={ghostIsPortal}
             style="--zl-item-step: {renderedActiveItems.length > 1
               ? Math.max(
                   0,
@@ -3648,13 +3701,38 @@
                 (renderedActiveItems.length - 1)
               : 0}"
           >
-            <span class="zl-checkbox-wrapper">
-              <span class="zl-checkbox-custom"></span>
-            </span>
+            {#if ghostIsSection}
+              <span class="zl-checkbox-wrapper zl-item-section-glyph">
+                <span class="zl-section-badge">§</span>
+              </span>
+            {:else if ghostIsPortal}
+              <span class="zl-checkbox-wrapper zl-portal-button">
+                <span class="zl-portal-badge">→</span>
+              </span>
+            {:else}
+              <span class="zl-checkbox-wrapper">
+                <span class="zl-checkbox-custom"></span>
+              </span>
+            {/if}
 
             <div class="edit-wrapper">
               <span class="zl-item-text-button">
-                <span class="zl-item-text">{touchDraggedItem.text}</span>
+                {#if ghostIsSection}
+                  <span class="zl-item-section-text">
+                    {touchDraggedItem.text.replace(/^##\s*/, "").trim()}
+                  </span>
+                {:else if ghostIsPortal}
+                  <span class="zl-item-text zl-item-portal-text">
+                    <span class="zl-portal-target-name">
+                      {touchDraggedItem.text
+                        .replace(/^(\u2192|->)\s+/, "")
+                        .trim()}
+                    </span>
+                    <span class="zl-portal-jump-chip">Jump ↗</span>
+                  </span>
+                {:else}
+                  <span class="zl-item-text">{touchDraggedItem.text}</span>
+                {/if}
                 {#if touchDraggedItem.tags?.length}
                   <span class="zl-item-tags">
                     {#each touchDraggedItem.tags as tag (tag)}

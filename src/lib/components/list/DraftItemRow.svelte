@@ -13,6 +13,11 @@
   export let onCancelDraft = () => {};
   /** Tags this list already uses — offered while you type, not after. */
   export let suggestedTags = [];
+  /** Other lists in the deck — offered as 1-tap portal targets when drafting a portal. */
+  export let moveTargets = [];
+
+  $: isDraftSection = /^##\s*/.test(draftItemText);
+  $: isDraftPortal = /^(\u2192|->)\s*/.test(draftItemText);
 
   // Only offer what isn't already in the box, and if user is actively typing a #hashtag, filter by prefix!
   $: typedTags = extractTags(draftItemText).tags;
@@ -29,6 +34,31 @@
     }
     return unselected.slice(0, 5);
   })();
+
+  function toggleSectionPrefix() {
+    if (isDraftSection) {
+      draftItemText = draftItemText.replace(/^##\s*/, "");
+    } else {
+      const clean = draftItemText.replace(/^(\u2192|->)\s*/, "");
+      draftItemText = `## ${clean}`;
+    }
+    inputNode?.focus();
+  }
+
+  function togglePortalPrefix() {
+    if (isDraftPortal) {
+      draftItemText = draftItemText.replace(/^(\u2192|->)\s*/, "");
+    } else {
+      const clean = draftItemText.replace(/^##\s*/, "");
+      draftItemText = `→ ${clean}`;
+    }
+    inputNode?.focus();
+  }
+
+  function selectPortalTarget(targetName) {
+    draftItemText = `→ ${targetName}`;
+    inputNode?.focus();
+  }
 
   function appendTag(tag) {
     if (partialQuery !== null) {
@@ -95,11 +125,47 @@
       <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>
   </button>
-  {#if offers.length}
-    <!-- pointerdown|preventDefault is load-bearing: the input saves on blur,
-         so without it tapping a tag would commit the half-typed item. Same
-         guard the cancel button below already needs. -->
-    <div class="zl-draft-tags">
+  <!-- pointerdown|preventDefault is load-bearing: the input saves on blur,
+       so without it tapping a chip would commit the half-typed item. -->
+  <div class="zl-draft-tags">
+    <button
+      type="button"
+      class="zl-draft-tag zl-draft-syntax-chip"
+      class:is-active={isDraftSection}
+      data-swipe-ignore="true"
+      title="Make this line a section header"
+      on:pointerdown|preventDefault
+      on:click|stopPropagation={toggleSectionPrefix}
+    >
+      § Section
+    </button>
+    {#if moveTargets.length > 0}
+      <button
+        type="button"
+        class="zl-draft-tag zl-draft-syntax-chip"
+        class:is-active={isDraftPortal}
+        data-swipe-ignore="true"
+        title="Link to another list"
+        on:pointerdown|preventDefault
+        on:click|stopPropagation={togglePortalPrefix}
+      >
+        → Portal
+      </button>
+    {/if}
+    {#if isDraftPortal && moveTargets.length > 0}
+      {#each moveTargets.slice(0, 5) as target (target.id)}
+        <button
+          type="button"
+          class="zl-draft-tag zl-draft-portal-offer"
+          style={target.primary ? `--tag-colour: ${target.primary}` : ""}
+          data-swipe-ignore="true"
+          on:pointerdown|preventDefault
+          on:click|stopPropagation={() => selectPortalTarget(target.name)}
+        >
+          → {target.name}
+        </button>
+      {/each}
+    {:else}
       {#each offers as tag (tag)}
         <button
           type="button"
@@ -112,6 +178,6 @@
           #{tag}
         </button>
       {/each}
-    </div>
-  {/if}
+    {/if}
+  </div>
 </li>

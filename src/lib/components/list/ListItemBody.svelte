@@ -13,6 +13,7 @@
   export let activeItemsCount = 0;
   export let isTouchActive = false;
   export let onToggle = () => {};
+  export let onPressCheckbox = () => {};
   export let onStartEdit = () => {};
   export let onSaveEdit = () => {};
   export let onEditKeyDown = () => {};
@@ -36,18 +37,11 @@
   let showMoveTargets = false;
   $: if (!isMoving) showMoveTargets = false;
 
-  /* Chips are quiet until they have something to say.
-     Every item used to wear every one of its tags at all times — the same
-     vocabulary the tag rack is already showing forty pixels above, reprinted
-     on every row. They earn their place only while a filter is on.
-     Even then the tag being filtered BY is dropped: filtered to #ziplist,
-     every visible row wears a #ziplist chip that restates the filter which
-     selected it. What is left is the useful part — what ELSE an item is.
-     Derived once and shared with the edit ghost, or the ghost stops matching
-     the row's height and two-line items jump on click. */
-  $: visibleTags = activeTagFilter
-    ? (item.tags || []).filter((tag) => tag !== activeTagFilter)
-    : [];
+  /* Every tagged item wears its colour-coded #tag chips right on the row so
+     categories are scannable at rest, and tapping any chip filters the list
+     by that tag (lighting up .is-active). Shared with the edit ghost so a
+     tagged item never jumps in height when clicked. */
+  $: visibleTags = item.tags || [];
 
   $: isSection =
     !item.checked && (/^##\s*/.test(item.text) || item.text.trim() === "---");
@@ -60,6 +54,13 @@
   $: portalTarget = isPortal
     ? item.text.replace(/^(\u2192|->)\s+/, "").trim()
     : "";
+  $: portalMatch =
+    isPortal && portalTarget
+      ? moveTargets.find(
+          (t) => t.name.toLowerCase() === portalTarget.toLowerCase(),
+        )
+      : null;
+  $: portalColor = portalMatch?.primary || "";
 </script>
 
 {#if checkedBloom}
@@ -91,20 +92,24 @@
 
 {#if isSection}
   <div class="zl-checkbox-wrapper zl-item-section-glyph" aria-hidden="true">
-    <span>§</span>
+    <span class="zl-section-badge">§</span>
   </div>
 {:else if isPortal}
   <button
     type="button"
     class="zl-checkbox-wrapper zl-portal-button"
+    style={portalColor ? `--portal-colour: ${portalColor}` : ""}
     on:click|stopPropagation={() => onNavigateToPortal(portalTarget)}
     title={`Open ${portalTarget} list`}
     aria-label={`Jump to ${portalTarget} list`}
   >
-    <span class="zl-portal-arrow">→</span>
+    <span class="zl-portal-badge">→</span>
   </button>
 {:else}
-  <label class="zl-checkbox-wrapper">
+  <label
+    class="zl-checkbox-wrapper"
+    on:pointerdown={() => onPressCheckbox(item.id)}
+  >
     <input
       type="checkbox"
       id="item-{listId}-{item.id}"
@@ -115,7 +120,11 @@
         ? `Mark ${item.text} incomplete`
         : `Mark ${item.text} complete`}
     />
-    <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}"></span>
+    <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}">
+      <svg class="zl-check-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <path class="zl-check-path" d="M5 13l4.2 4.2L19 7" />
+      </svg>
+    </span>
   </label>
 {/if}
 
@@ -177,9 +186,14 @@
           </div>
         {/if}
       {:else if isPortal}
-        <span class="zl-item-text zl-item-portal-text">
-          <span class="zl-portal-arrow-inline">→</span>
-          {portalTarget}
+        <span
+          class="zl-item-text zl-item-portal-text"
+          style={portalColor ? `--portal-colour: ${portalColor}` : ""}
+        >
+          <span class="zl-portal-target-name">{portalTarget}</span>
+          <span class="zl-portal-jump-chip" aria-hidden="true">
+            {portalMatch ? "Jump ↗" : "New list ↗"}
+          </span>
         </span>
       {:else}
         <span class="zl-item-text {item.checked ? 'checked' : ''}">
@@ -291,6 +305,37 @@
   >
     {#if !showMoveTargets}
       <div class="zl-item-tray-actions">
+        {#if isPortal}
+          <button
+            type="button"
+            class="zl-item-tray-btn zl-item-tray-edit"
+            data-swipe-ignore="true"
+            title="Edit portal target"
+            aria-label="Edit portal target"
+            on:click|stopPropagation={() => {
+              onRequestMove(null);
+              onStartEdit(item);
+            }}
+          >
+            <svg
+              class="zl-tray-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 20h9" />
+              <path
+                d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
+              />
+            </svg>
+            <span>Edit</span>
+          </button>
+        {/if}
+
         {#if moveTargets.length > 0}
           <button
             type="button"

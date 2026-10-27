@@ -23,25 +23,33 @@
 
 @keyframes check-pop {
   0% {
-    transform: scale(1);
+    transform: scaleX(1.22) scaleY(0.79);
+  }
+  14% {
+    /* 45ms hit-stop compression window before spring release */
+    transform: scaleX(1.22) scaleY(0.79);
   }
   50% {
-    transform: scale(1.3);
+    /* Area-conserving vertical stretch rebound */
+    transform: scaleX(0.86) scaleY(1.18);
+  }
+  78% {
+    transform: scaleX(1.05) scaleY(0.96);
   }
   100% {
-    transform: scale(1);
+    transform: scaleX(1) scaleY(1);
   }
 }
 
 @keyframes item-settle {
   0% {
-    transform: translateY(0) scale(1);
+    transform: translateY(-4px) scaleX(0.98) scaleY(1.02);
   }
   45% {
-    transform: translateY(-3px) scale(1.015);
+    transform: translateY(1.5px) scaleX(1.015) scaleY(0.985);
   }
   100% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scaleX(1) scaleY(1);
   }
 }
 
@@ -984,26 +992,41 @@
 .zl-item.section-divider {
   background: color-mix(
     in srgb,
-    var(--zl-item-accent, #ffcc33) calc(18% + var(--zl-item-step, 0) * 15%),
-    #fffef7
+    var(--zl-item-accent, #ffcc33) calc(22% + var(--zl-item-step, 0) * 15%),
+    #fffdf5
   );
-  border-left-width: 8px;
+  border: 2px solid #1e1714;
+  border-left-width: 7px;
+  border-left-color: var(--zl-item-accent, #ffcc33);
   border-radius: 14px;
   min-height: 48px;
-  padding: 0.4rem 0.75rem;
-  margin-top: 0.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  padding: 0.35rem 0.65rem;
+  margin-top: 0.45rem;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
 }
 
 .zl-item-section-glyph {
-  font-family: "Space Mono", monospace;
-  font-weight: 900;
-  font-size: 1.15rem;
-  color: var(--zl-item-accent, #ffcc33);
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
+}
+
+.zl-section-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  border: 2px solid #1e1714;
+  background: color-mix(in srgb, var(--zl-item-accent, #ffcc33) 50%, #fffdf5);
+  color: #1e1714;
+  box-shadow: 1px 1px 0 #1e1714;
+  font-family: "Space Mono", monospace;
+  font-weight: 900;
+  font-size: 0.92rem;
+  line-height: 1;
 }
 
 .zl-item-section-text {
@@ -1092,14 +1115,14 @@
 
 /* ── List Portal: → Another List ── */
 .zl-item.portal-item {
-  border-style: dashed;
-  border-left-style: solid;
-  border-left-width: 6px;
+  border: 2px dashed #1e1714;
+  border-left: 6px solid var(--portal-colour, var(--zl-item-accent, #ffcc33));
   background: color-mix(
     in srgb,
-    var(--zl-item-accent, #ffcc33) calc(12% + var(--zl-item-step, 0) * 20%),
-    #fffef7
+    var(--portal-colour, var(--zl-item-accent, #ffcc33)) 16%,
+    #fffdf5
   );
+  box-shadow: 1.5px 1.5px 0 rgba(30, 23, 20, 0.18);
 }
 
 .zl-portal-button {
@@ -1111,27 +1134,63 @@
   justify-content: center;
 }
 
-.zl-portal-arrow {
-  font-size: 1.25rem;
+.zl-portal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 2px solid #1e1714;
+  background: color-mix(
+    in srgb,
+    var(--portal-colour, var(--zl-primary-color, #ffb000)) 65%,
+    #fffdf5
+  );
+  color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
+  font-size: 1.05rem;
   font-weight: 900;
   line-height: 1;
-  color: var(--zl-primary-color, #ffb000);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.18s ease;
 }
 
 .zl-item-portal-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
   font-weight: 800;
   color: var(--zl-text-color-primary, #1e1714);
 }
 
-.zl-portal-arrow-inline {
-  color: var(--zl-primary-color, #ffb000);
-  font-weight: 900;
-  margin-right: 0.2rem;
+.zl-portal-target-name {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
-.zl-item:hover .zl-portal-arrow {
-  transform: translateX(4px);
+.zl-portal-jump-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  border: 1.5px solid #1e1714;
+  background: #fffdf5;
+  color: #1e1714;
+  box-shadow: 1px 1px 0 #1e1714;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.zl-item:hover .zl-portal-badge {
+  transform: translateX(2px) scale(1.06);
+  box-shadow: 2px 2px 0 #1e1714;
 }
 
 .zl-item.settling:not(.touch-placeholder) {
@@ -1199,9 +1258,27 @@
 }
 
 .zl-item-text.checked {
-  text-decoration: line-through
-    var(--zl-primary-color, rgba(201, 120, 255, 0.5)) 1.5px;
-  color: var(--zl-text-color-disabled, #9d9d9d);
+  color: var(--zl-text-color-disabled, #8c857e);
+  text-decoration: none;
+  width: fit-content;
+  max-width: 100%;
+  background-image: linear-gradient(
+    var(--zl-primary-color, #ff8a7a),
+    var(--zl-primary-color, #ff8a7a)
+  );
+  background-position: 0 54%;
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  animation: zl-strike-sweep 230ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes zl-strike-sweep {
+  from {
+    background-size: 0% 2px;
+  }
+  to {
+    background-size: 100% 2px;
+  }
 }
 
 .zl-item-text-button {
@@ -1276,24 +1353,39 @@
 
 .zl-checkbox-custom {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: var(--zl-checkbox-size, 32px);
   height: var(--zl-checkbox-size, 32px);
   border: var(--zl-checkbox-border, 2px solid rgba(201, 120, 255, 0.5));
   border-radius: var(--zl-checkbox-border-radius, 12px);
   background-color: var(--zl-checkbox-bg, rgba(255, 255, 255, 0.8));
-  transition: var(--zl-transition-fast, all 0.2s ease);
+  /* Planted bottom-center origin sells physical mass during squash & stretch */
+  transform-origin: 50% 85%;
+  will-change: transform;
+  transition:
+    transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
   box-shadow: var(--zl-checkbox-shadow, 0 3px 7px rgba(0, 151, 167, 0.15));
 }
 
 .zl-checkbox-wrapper:hover .zl-checkbox-custom {
   border: var(--zl-checkbox-hover-border, 2px solid rgba(0, 188, 212, 0.7));
   background-color: var(--zl-checkbox-hover-bg, rgba(255, 245, 250, 0.8));
-  transform: scale(1.1);
+  transform: scale(1.08);
   box-shadow: var(
     --zl-checkbox-hover-shadow,
     0 3px 8px rgba(0, 151, 167, 0.15)
   );
+}
+
+/* Phase 1: Area-conserving squash on pointerdown (Sx * Sy ~= 1) */
+.zl-checkbox-wrapper:active .zl-checkbox-custom {
+  transform: scaleX(1.24) scaleY(0.78);
+  transition-duration: 30ms;
 }
 
 .zl-checkbox:checked + .zl-checkbox-custom {
@@ -1309,23 +1401,28 @@
   );
 }
 
-/* The tick itself — a drawn white check so "done" reads at a glance
-   instead of a bare filled square. Pops in with the checkbox's bounce. */
-.zl-checkbox:checked + .zl-checkbox-custom::before {
-  content: "";
-  position: absolute;
-  top: 44%;
-  left: 50%;
-  width: 38%;
-  height: 20%;
-  border-left: 3px solid #fffef7;
-  border-bottom: 3px solid #fffef7;
-  border-radius: 1px;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  /* Soft shadow keeps the white tick legible on light theme fills
-     (focus yellow, nocturne sky) without needing per-theme tick colors. */
+/* Self-drawing SVG checkmark via stroke-dashoffset interpolation */
+.zl-check-svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #fffef7;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
   z-index: 6;
+  pointer-events: none;
+}
+
+.zl-check-path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  transition: stroke-dashoffset 0.19s cubic-bezier(0.22, 1, 0.36, 1) 0.035s;
+}
+
+.zl-checkbox:checked + .zl-checkbox-custom .zl-check-path {
+  stroke-dashoffset: 0;
 }
 
 .zl-checkbox:checked + .zl-checkbox-custom::after {
@@ -1851,14 +1948,17 @@
 
 .zl-touch-ghost-item {
   margin: 0;
-  opacity: 0.98;
-  transform: rotate(calc(1.1deg + var(--drag-tilt, 0deg))) scale(1.02);
-  box-shadow: 0 16px 34px rgba(30, 23, 20, 0.22);
-  border-color: #1e1714;
+  opacity: 0.99;
+  transform: rotate(calc(1.2deg + var(--drag-tilt, 0deg))) scale(1.03);
+  border: 2px solid #1e1714;
+  border-left: 6px solid var(--zl-item-accent, #ffcc33);
+  box-shadow:
+    4px 6px 0 #1e1714,
+    0 14px 28px rgba(30, 23, 20, 0.22);
   background: color-mix(
     in srgb,
-    var(--zl-item-accent, #ffcc33) calc(12% + var(--zl-item-step, 0) * 25%),
-    #fffef7
+    var(--zl-item-accent, #ffcc33) calc(16% + var(--zl-item-step, 0) * 25%),
+    #fffdf5
   );
   animation: zl-ghost-lift 180ms cubic-bezier(0.16, 0.84, 0.24, 1.06) backwards;
   transition: transform 90ms ease-out;
@@ -2987,6 +3087,29 @@ body.zl-touch-dragging {
 
 .zl-draft-tag:active {
   transform: scale(0.94);
+}
+
+.zl-draft-tag.zl-draft-syntax-chip {
+  color: #1e1714;
+  background: #fffdf5;
+  border: 1.5px dashed rgba(30, 23, 20, 0.42);
+}
+
+.zl-draft-tag.zl-draft-syntax-chip.is-active {
+  background: #1e1714;
+  color: #fffdf5;
+  border-style: solid;
+  border-color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 var(--zl-item-accent, #ffb000);
+}
+
+.zl-draft-tag.zl-draft-portal-offer {
+  border-style: solid;
+  border-width: 1.5px;
+  border-color: #1e1714;
+  background: color-mix(in srgb, var(--tag-colour, #6c85e9) 24%, #fffdf5);
+  color: #1e1714;
+  box-shadow: 1px 1px 0 #1e1714;
 }
 
 @media (prefers-reduced-motion: reduce) {
