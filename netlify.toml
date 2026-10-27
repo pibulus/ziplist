@@ -71,18 +71,22 @@
   from = "/couples"
   to = "/for/couples"
   status = 301
+  force = true
 
 [[redirects]]
   from = "/groceries"
   to = "/for/groceries"
   status = 301
+  force = true
 
 [[redirects]]
   from = "/mandado"
   to = "/es/mandado"
   status = 301
+  force = true
 
 [[redirects]]
   from = "/parejas"
   to = "/es/parejas"
   status = 301
+  force = true
