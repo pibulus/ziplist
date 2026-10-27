@@ -44,6 +44,22 @@ for (const s of ["Milk", "Tent pegs", "ABC"]) {
   assert.equal(fn(s), s);
 }
 
+// Verify normalizeItemText preserves "---" and normalizes "-> " portals without stripping.
+const normBody = src.slice(
+  src.indexOf("function normalizeFreeformText"),
+  src.indexOf("function capitalizeFirstWord") +
+    body.slice(0, body.indexOf("\n}") + 2).length,
+);
+const normalizeItemText = new Function(
+  `const PRODUCT_LIMITS = { MAX_ITEM_TEXT_LENGTH: 280 }; ${normBody}; return normalizeItemText;`,
+)();
+
+assert.equal(normalizeItemText("---"), "---");
+assert.equal(normalizeItemText("  ---  "), "---");
+assert.equal(normalizeItemText("-> Pink List"), "→ Pink List");
+assert.equal(normalizeItemText("- milk"), "Milk");
+assert.equal(normalizeItemText("## Produce"), "## Produce");
+
 console.log(
-  "✓ item text: tidies plain entries, leaves iPhone/eBay/pH/iOS alone",
+  "✓ item text: tidies plain entries, leaves iPhone/eBay/pH/iOS alone, preserves --- and ->",
 );

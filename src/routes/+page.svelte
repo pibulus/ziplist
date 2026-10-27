@@ -2,7 +2,7 @@
   import { MainContainer } from "$lib/components/mainPage";
   import { PRICING } from "$lib/config/pricing.js";
 
-  const canonicalUrl = "https://ziplist.app";
+  const canonicalUrl = "https://ziplist.app/";
   const title = "ZipList — Talk it into a list. Tick it off.";
   const description =
     "A warm, tactile voice checklist for groceries, errands, packing, and chores. No dates, no streaks, no pressure.";

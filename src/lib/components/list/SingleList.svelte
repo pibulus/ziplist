@@ -15,7 +15,7 @@
   import { shareList, generateShareableUrl } from "$lib/services/share";
   import { tagColour } from "$lib/services/lists/itemTags";
   import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
-  import { fade } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
   import { cubicOut, backOut, quintOut } from "svelte/easing";
   import { flip } from "svelte/animate";
 
@@ -199,7 +199,7 @@
   }
 
   $: isDefaultName = DEFAULT_LIST_NAMES.has(list.name);
-  $: accessibleListName = list.name || "Your List";
+  $: accessibleListName = list.name || "Active list";
 
   // Subscribe to presence and typing for this list
   let presenceUnsubscribe = null;
@@ -231,6 +231,7 @@
 
     if (typeof window !== "undefined") {
       window.addEventListener("ziplist-list-notice", handleListNotice);
+      window.addEventListener("ziplist-list-deleted", handleListDeleted);
       window.addEventListener("ziplist-heart", handleRemoteHeart);
       window.addEventListener("ziplist-item-checked", handleRemoteItemChecked);
       window.addEventListener("keydown", handleGlobalKeyDown);
@@ -266,6 +267,7 @@
     }
     if (typeof window !== "undefined") {
       window.removeEventListener("ziplist-list-notice", handleListNotice);
+      window.removeEventListener("ziplist-list-deleted", handleListDeleted);
       window.removeEventListener("ziplist-heart", handleRemoteHeart);
       window.removeEventListener(
         "ziplist-item-checked",
@@ -323,19 +325,41 @@
   }
 
   function getConfettiOrigin(event) {
-    if (typeof window === "undefined" || !event?.clientX || !event?.clientY) {
+    if (typeof window === "undefined") {
+      return { x: 0.5, y: 0.62 };
+    }
+    let cx = event?.clientX;
+    let cy = event?.clientY;
+    if ((!cx || !cy) && event?.currentTarget?.getBoundingClientRect) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      if (rect.width || rect.height) {
+        cx = rect.left + rect.width / 2;
+        cy = rect.top + rect.height / 2;
+      }
+    }
+    if (!cx || !cy) {
       return { x: 0.5, y: 0.62 };
     }
 
     return {
-      x: Math.max(0.08, Math.min(0.92, event.clientX / window.innerWidth)),
-      y: Math.max(0.12, Math.min(0.86, event.clientY / window.innerHeight)),
+      x: Math.max(0.08, Math.min(0.92, cx / window.innerWidth)),
+      y: Math.max(0.12, Math.min(0.86, cy / window.innerHeight)),
     };
   }
 
   function handleListNotice(event) {
     if (!event.detail?.message) return;
     showListStatus(event.detail.message, !!event.detail.success);
+  }
+
+  function handleListDeleted(event) {
+    if (!event.detail || get(listsStore).activeListId !== list.id) return;
+    if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
+    undoDelete = event.detail;
+    undoDeleteTimer = setTimeout(() => {
+      undoDelete = null;
+      undoDeleteTimer = null;
+    }, 6500);
   }
 
   async function copyText(text) {
@@ -357,14 +381,14 @@
 
     const sharePayload = {
       title: "Live ZipList",
-      text: "Join my live ZipList.",
+      text: list.name ? `${list.name} · Live ZipList` : "Live ZipList",
       url: liveUrl,
     };
 
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share(sharePayload);
-        showListStatus("Live link shared!", true);
+        showListStatus("Live link shared.", true);
         soundService.copySuccess({ force: true });
         return;
       } catch (error) {
@@ -376,23 +400,12 @@
       const copied = await copyText(liveUrl);
       showListStatus(
         copied
-          ? "Live link copied — send it to someone lovely!"
+          ? "Live link copied."
           : "Live link ready. Copying needs browser permission.",
         copied,
       );
       if (copied) {
         soundService.copySuccess({ force: true });
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("ziplist:toast", {
-              detail: {
-                message: "Live link copied to clipboard!",
-                icon: "🔗",
-                type: "success",
-              },
-            }),
-          );
-        }
       } else {
         soundService.locked({ force: true });
       }
@@ -420,26 +433,11 @@
       const result = await shareList(listToShare);
       if (result.success) {
         showListStatus(
-          result.urlTooLong
-            ? "Link copied — it's a long one, but it'll work!"
-            : "Link copied — send it to someone lovely!",
+          result.urlTooLong ? "Long link copied." : "Link copied.",
           true,
           result.urlTooLong ? 5000 : 3000,
         );
         soundService.copySuccess({ force: true });
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("ziplist:toast", {
-              detail: {
-                message: result.urlTooLong
-                  ? "Long link copied to clipboard!"
-                  : "List link copied to clipboard!",
-                icon: "📋",
-                type: "success",
-              },
-            }),
-          );
-        }
         notePwaMoment(); // a shared list earns the install suggestion
       } else {
         showListStatus("Share needs one more try.");
@@ -968,6 +966,10 @@
       return;
     }
 
+    const prevTop = listContainerNode
+      ? listContainerNode.getBoundingClientRect().top
+      : 0;
+
     if (scrollContainer === window) {
       window.scrollBy({
         top: touchDragAutoScrollDelta,
@@ -975,6 +977,11 @@
       });
     } else {
       scrollContainer.scrollTop += touchDragAutoScrollDelta;
+    }
+
+    if (listContainerNode) {
+      touchDragStartY +=
+        listContainerNode.getBoundingClientRect().top - prevTop;
     }
 
     updateTouchDragPreview(touchDragCurrentY);
@@ -1084,7 +1091,7 @@
     touchDragLongPressTimer = setTimeout(() => {
       touchDragLongPressTimer = null;
       startTouchDrag();
-    }, 120);
+    }, 220);
   }
 
   function handleRowTouchStart(event, item) {
@@ -1100,7 +1107,7 @@
 
     if (
       event.target?.closest?.(
-        ".zl-checkbox-wrapper, .zl-item-more-button, .zl-item-tag, .zl-item-tray, input",
+        ".zl-checkbox-wrapper, .zl-item-more-button, .zl-item-tag, .zl-item-tray, .zl-item-portal-text, input",
       )
     ) {
       return;
@@ -1242,8 +1249,14 @@
   }
 
   function handleDragStart(event, itemId) {
-    // Prevent dragging if item is being edited
-    if (editingItemId === itemId) {
+    // Prevent dragging if item is being edited or initiated from interactive child controls
+    if (
+      editingItemId === itemId ||
+      activeItems.length < 2 ||
+      event.target?.closest?.(
+        ".zl-checkbox-wrapper, .zl-item-tag, .zl-item-tray, input",
+      )
+    ) {
       event.preventDefault();
       return;
     }
@@ -1432,15 +1445,48 @@
     settlingTimers.set(itemId, timer);
   }
 
+  function isCheckableItem(item) {
+    if (!item || typeof item.text !== "string") return false;
+    const text = item.text.trim();
+    if (!text) return false;
+    return (
+      !/^##\s*/.test(text) && text !== "---" && !/^(\u2192|->)\s+/.test(text)
+    );
+  }
+
+  function resolvePortalColor(item) {
+    if (!item || item.checked || !/^(\u2192|->)\s+/.test(item.text)) return "";
+    const targetName = item.text.replace(/^(\u2192|->)\s+/, "").trim();
+    if (!targetName) return "";
+    const match = moveTargets.find(
+      (t) => t.name.toLowerCase() === targetName.toLowerCase(),
+    );
+    return match?.primary || "";
+  }
+
   // ── Order play: shuffle & entry-order sort ─────────────────────────────
   function shuffleActiveItems() {
     const active = list.items.filter((i) => !i.checked);
-    if (active.length < 2) return;
-    const shuffled = [...active];
-    for (let i = shuffled.length - 1; i > 0; i--) {
+    const checkableIndices = [];
+    const checkablePool = [];
+    active.forEach((item, idx) => {
+      if (isCheckableItem(item)) {
+        checkableIndices.push(idx);
+        checkablePool.push(item);
+      }
+    });
+    if (checkablePool.length < 2) return;
+    for (let i = checkablePool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      [checkablePool[i], checkablePool[j]] = [
+        checkablePool[j],
+        checkablePool[i],
+      ];
     }
+    const shuffled = [...active];
+    checkableIndices.forEach((slotIdx, poolIdx) => {
+      shuffled[slotIdx] = checkablePool[poolIdx];
+    });
     const completed = list.items.filter((i) => i.checked);
     listsService.reorderItems([...shuffled, ...completed], list.id);
     soundService.ratchet({ force: true });
@@ -1522,8 +1568,12 @@
     if (shareTrayOpen) manageTrayOpen = false;
     if (!shareTrayOpen) {
       shareInputMode = null;
-      syncPhrase = "";
+      if (!isLive) syncPhrase = "";
       shareTagFilter = null;
+    } else if (isLive && !syncPhrase) {
+      const shareUrl = liveListsService.getShareUrl(list.id) || "";
+      const phraseMatch = shareUrl.match(/\/j\/([a-z-]+)$/i);
+      if (phraseMatch) syncPhrase = phraseMatch[1];
     }
     soundService.select();
   }
@@ -1669,13 +1719,28 @@
 
   function handlePortalClick(targetName) {
     if (!targetName) return;
-    const allLists = get(listsStore).lists;
-    let target = allLists.find(
+    const currentLists = get(listsStore).lists;
+    let target = currentLists.find(
       (l) => l.name.toLowerCase() === targetName.toLowerCase(),
     );
+    if (target?.id === list.id) {
+      showListStatus("Already on this list.", true, 1800);
+      soundService.select();
+      return;
+    }
     if (!target) {
-      const created = listsService.addList(targetName);
-      if (created?.id) target = { id: created.id };
+      const created = listsService.createList(targetName);
+      if (created?.ok && created.listId) {
+        target = { id: created.listId };
+      } else {
+        showListStatus(
+          created?.message || "Could not create list.",
+          false,
+          2600,
+        );
+        soundService.locked();
+        return;
+      }
     }
     if (target?.id) {
       listsStore.setActiveList(target.id);
@@ -1774,10 +1839,35 @@
     }
   }
 
-  function renameActiveTag() {
+  let renamingTagActive = false;
+  let renamingTagValue = "";
+  let renameTagInputNode = null;
+
+  async function startRenamingActiveTag() {
     if (!activeTagFilter) return;
+    renamingTagActive = true;
+    renamingTagValue = activeTagFilter;
+    hapticService.selection();
+    soundService.select();
+    await tick();
+    renameTagInputNode?.focus();
+    renameTagInputNode?.select?.();
+  }
+
+  function cancelRenamingActiveTag() {
+    renamingTagActive = false;
+    renamingTagValue = "";
+  }
+
+  function commitRenameActiveTag() {
+    if (!renamingTagActive || !activeTagFilter) {
+      cancelRenamingActiveTag();
+      return;
+    }
     const oldTag = activeTagFilter;
-    const input = prompt(`Rename #${oldTag} to:`, oldTag);
+    const input = renamingTagValue;
+    renamingTagActive = false;
+    renamingTagValue = "";
     if (!input || !input.trim()) return;
 
     const newTag = input
@@ -1917,20 +2007,31 @@
 
   function sortItemsByAdded() {
     const active = list.items.filter((i) => !i.checked);
-    if (active.length < 2) return;
+    const checkableIndices = [];
+    const checkablePool = [];
+    active.forEach((item, idx) => {
+      if (isCheckableItem(item)) {
+        checkableIndices.push(idx);
+        checkablePool.push({ item, index: idx });
+      }
+    });
+    if (checkablePool.length < 2) return;
     // addedAt is epoch ms on items created since the stamp landed; older
     // items fall back to their current index (tiny vs epoch), which sorts
     // them first while preserving their relative order — correct, since
     // they genuinely predate every stamped item.
-    const sorted = active
-      .map((item, index) => ({ item, index }))
+    const sortedPool = checkablePool
       .sort(
         (a, b) =>
           (a.item.addedAt ?? a.index) - (b.item.addedAt ?? b.index) ||
           a.index - b.index,
       )
       .map((entry) => entry.item);
-    if (sortNewestFirst) sorted.reverse();
+    if (sortNewestFirst) sortedPool.reverse();
+    const sorted = [...active];
+    checkableIndices.forEach((slotIdx, poolIdx) => {
+      sorted[slotIdx] = sortedPool[poolIdx];
+    });
     const completed = list.items.filter((i) => i.checked);
     listsService.reorderItems([...sorted, ...completed], list.id);
     soundService.select();
@@ -1976,10 +2077,11 @@
   async function toggleItem(itemId, event) {
     const itemToToggle = list.items.find((item) => item.id === itemId);
     const willCheckItem = itemToToggle && !itemToToggle.checked;
+    const checkableItems = list.items.filter(isCheckableItem);
     const willCompleteList =
       willCheckItem &&
-      list.items.length > 0 &&
-      list.items
+      checkableItems.length > 0 &&
+      checkableItems
         .filter((item) => item.id !== itemId)
         .every((item) => item.checked);
 
@@ -1995,7 +2097,7 @@
       if (willCompleteList) {
         // Five-plus items done = a real accomplishment: confetti + fanfare.
         // Smaller lists keep the modest completion chime.
-        if (list.items.length >= 5) {
+        if (checkableItems.length >= 5) {
           soundService.fanfare({ force: true });
           fireListCompleteCelebration();
         } else {
@@ -2030,31 +2132,26 @@
 
       // Add sparkle animation after a small delay
       scheduleCelebration(() => {
-        const checkbox = document.getElementById(`item-${list.id}-${itemId}`);
-        if (checkbox) {
-          // Force reflow to restart animation
-          void checkbox.offsetWidth;
+        const remainingCheckable = list.items.filter(isCheckableItem);
+        const allCompleted =
+          remainingCheckable.length > 0 &&
+          remainingCheckable
+            .filter((i) => i.id !== itemId)
+            .every((i) => i.checked);
 
-          // Check if we've completed all items
-          const allCompleted =
-            list.items.length > 0 &&
-            list.items.filter((i) => i.id !== itemId).every((i) => i.checked);
+        if (allCompleted) {
+          hapticService.notification("success");
 
-          // If this completes the list, trigger haptic feedback but no message
-          if (allCompleted) {
-            hapticService.notification("success");
-
-            // Extra confetti for finishing the list!
-            scheduleCelebration(() => {
-              confetti({
-                particleCount: ANIMATION.CONFETTI.PIECE_COUNT,
-                spread: 82,
-                origin: { x: 0.5, y: 0.62 },
-                colors: ["#FFB000", "#FF6AC2", "#00D4FF"],
-                disableForReducedMotion: true,
-              });
-            }, 300);
-          }
+          // Extra confetti for finishing the list!
+          scheduleCelebration(() => {
+            confetti({
+              particleCount: ANIMATION.CONFETTI.PIECE_COUNT,
+              spread: 82,
+              origin: { x: 0.5, y: 0.62 },
+              colors: ["#FFB000", "#FF6AC2", "#00D4FF"],
+              disableForReducedMotion: true,
+            });
+          }, 300);
         }
       }, 50);
     }
@@ -2282,13 +2379,20 @@
 
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
 
-    undoDelete = {
+    const undoPayload = {
       type: "list",
       listSnapshot,
       listName: list.name || "List",
     };
+    undoDelete = undoPayload;
 
     listsStore.deleteList(list.id);
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("ziplist-list-deleted", { detail: undoPayload }),
+      );
+    }
 
     undoDeleteTimer = setTimeout(() => {
       undoDelete = null;
@@ -2578,7 +2682,8 @@
   // Returns true when an item was actually committed, so callers (e.g. Enter
   // for rapid-fire adds) know whether to keep the draft open for the next one.
   function saveDraftItem({ keepAdding = false } = {}) {
-    const newText = draftItemText.trim();
+    const rawTrimmed = draftItemText.trim();
+    const newText = /^(?:##|\u2192|->)\s*$/.test(rawTrimmed) ? "" : rawTrimmed;
     let didAdd = false;
 
     if (newText) {
@@ -2587,6 +2692,11 @@
         showListStatus(result.message || "That item needs one more try.");
         hapticService.notification("warning");
         soundService.locked();
+        if (!keepAdding) {
+          draftItemActive = false;
+          draftItemText = "";
+          clearDraftActivity();
+        }
         return false;
       }
 
@@ -2928,7 +3038,7 @@
           data-tip={isLive ? "Copy the live link" : "Share or export"}
           aria-label={isLive
             ? `Copy the live link for ${list.name || "this list"}`
-            : `Send a copy of ${list.name || "this list"}. The link holds the list as it is now, and does not stay in sync.`}
+            : `Share or export ${list.name || "this list"}`}
         >
           <svg
             class="zl-header-icon"
@@ -2983,7 +3093,10 @@
          these are things you do to this list, not preferences. Inline tray, not
          a popover: .zl-card is overflow:clip and anything floating gets sliced. -->
     {#if shareTrayOpen}
-      <div class="zl-share-tray" transition:fade={{ duration: 130 }}>
+      <div
+        class="zl-share-tray"
+        transition:slide={{ duration: 180, easing: cubicOut }}
+      >
         {#if !isLive && listTags.length > 0}
           <div
             class="zl-share-filter"
@@ -2995,6 +3108,7 @@
                 type="button"
                 class="zl-share-tag"
                 class:is-on={shareTagFilter === tag}
+                data-swipe-ignore="true"
                 style={`--tag-colour: ${tagColour(tag)}`}
                 aria-pressed={shareTagFilter === tag}
                 on:click={() => toggleShareTag(tag)}
@@ -3167,7 +3281,21 @@
                 disabled={!pasteText.trim() || isMagicParsing}
                 on:click={magicAiPaste}
               >
-                {isMagicParsing ? "🪄 Parsing..." : "🪄 Magic Import"}
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"
+                  />
+                </svg>
+                <span>{isMagicParsing ? "Parsing..." : "Magic Import"}</span>
               </button>
               <button
                 type="button"
@@ -3175,7 +3303,7 @@
                 disabled={!pasteText.trim() || isMagicParsing}
                 on:click={pasteItemsIn}
               >
-                Add Lines
+                <span>Add Lines</span>
               </button>
             </div>
           </div>
@@ -3191,7 +3319,7 @@
         class="zl-manage-tray"
         role="group"
         aria-label="Manage this list"
-        transition:fade={{ duration: 130 }}
+        transition:slide={{ duration: 180, easing: cubicOut }}
       >
         {#if showListManagement}
           <button
@@ -3326,17 +3454,26 @@
 
     <!-- Interactive Tag Rack Shelf: 1-tap filtering across list tags -->
     {#if listTags.length > 0}
-      <div class="zl-tag-rack" role="toolbar" aria-label="Filter by tag">
+      <div
+        class="zl-tag-rack"
+        data-swipe-ignore="true"
+        role="toolbar"
+        aria-label="Filter by tag"
+      >
         <button
           type="button"
           class="zl-tag-rack-pill zl-tag-rack-all"
           class:is-active={activeTagFilter === null}
+          data-swipe-ignore="true"
           on:click={() => {
             if (activeTagFilter !== null) clearActiveTagFilter();
           }}
           aria-pressed={activeTagFilter === null}
         >
-          All <span class="zl-tag-rack-count">{activeItems.length}</span>
+          All
+          <span class="zl-tag-rack-count">
+            {activeItems.filter(isCheckableItem).length || activeItems.length}
+          </span>
         </button>
         {#each listTags as tag (tag)}
           {@const count = listTagCounts.get(tag) || 0}
@@ -3344,6 +3481,7 @@
             type="button"
             class="zl-tag-rack-pill"
             class:is-active={activeTagFilter === tag}
+            data-swipe-ignore="true"
             style={`--tag-colour: ${tagColour(tag)}`}
             on:click={() => toggleActiveTagFilter(tag)}
             aria-pressed={activeTagFilter === tag}
@@ -3387,29 +3525,84 @@
           <button
             type="button"
             class="zl-tag-action-btn zl-tag-spin-btn"
+            data-swipe-ignore="true"
             on:click={spinOutTagToNewList}
             title={`Spin #${activeTagFilter} items into a new list`}
             aria-label={`Spin #${activeTagFilter} into new list`}
           >
-            ✂️ Spin
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="6" cy="6" r="3" />
+              <circle cx="6" cy="18" r="3" />
+              <line x1="20" y1="4" x2="8.12" y2="15.88" />
+              <line x1="14.47" y1="14.48" x2="20" y2="20" />
+              <line x1="8.12" y1="8.12" x2="12" y2="12" />
+            </svg>
+            <span>Spin</span>
           </button>
-          <button
-            type="button"
-            class="zl-tag-action-btn"
-            on:click={renameActiveTag}
-            title={`Rename #${activeTagFilter} across this list`}
-            aria-label={`Rename #${activeTagFilter}`}
-          >
-            ✎ Rename
-          </button>
+          {#if renamingTagActive}
+            <input
+              type="text"
+              class="zl-tag-rename-input"
+              data-swipe-ignore="true"
+              bind:this={renameTagInputNode}
+              bind:value={renamingTagValue}
+              aria-label={`Rename #${activeTagFilter}`}
+              on:blur={commitRenameActiveTag}
+              on:keydown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitRenameActiveTag();
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  cancelRenamingActiveTag();
+                }
+              }}
+            />
+          {:else}
+            <button
+              type="button"
+              class="zl-tag-action-btn"
+              data-swipe-ignore="true"
+              on:click={startRenamingActiveTag}
+              title={`Rename #${activeTagFilter} across this list`}
+              aria-label={`Rename #${activeTagFilter}`}
+            >
+              <svg
+                class="zl-pill-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 20h9" />
+                <path
+                  d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
+                />
+              </svg>
+              <span>Rename</span>
+            </button>
+          {/if}
           <button
             type="button"
             class="zl-tag-action-btn zl-tag-action-untag"
+            data-swipe-ignore="true"
             on:click={untagAllActiveTag}
             title={`Remove #${activeTagFilter} from all items`}
             aria-label={`Remove #${activeTagFilter} tag`}
           >
-            Untag
+            <span>Untag</span>
           </button>
         </div>
       {/if}
@@ -3441,11 +3634,14 @@
           in:fade={{ duration: 200 }}
         >
           {#each renderedActiveItems as item, index (item.id)}
+            {@const itemPortalColor = resolvePortalColor(item)}
             <li
               class="zl-item"
               style="--zl-item-step: {renderedActiveItems.length > 1
                 ? index / (renderedActiveItems.length - 1)
-                : 0}"
+                : 0}{itemPortalColor
+                ? `; --portal-colour: ${itemPortalColor}`
+                : ''}"
               class:checked={item.checked}
               class:section-divider={!item.checked &&
                 (/^##\s*/.test(item.text) || item.text.trim() === "---")}
@@ -3465,8 +3661,8 @@
                 editingItemId !== item.id &&
                 !touchDragItemId}
               on:touchstart={(e) => handleRowTouchStart(e, item)}
-              on:dragstart|passive={(e) => handleDragStart(e, item.id)}
-              on:dragend|passive={handleDragEnd}
+              on:dragstart={(e) => handleDragStart(e, item.id)}
+              on:dragend={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{
@@ -3489,6 +3685,8 @@
                 {dragOverPosition}
                 activeItemsCount={activeItems.length}
                 isTouchActive={touchDragItemId === item.id}
+                isSettling={settlingItemIds.has(item.id)}
+                currentListName={list.name || ""}
                 onToggle={toggleItem}
                 onPressCheckbox={pressCheckbox}
                 onStartEdit={startEditingItem}
@@ -3534,7 +3732,7 @@
               listId={list.id}
               bind:draftItemText
               bind:inputNode={draftInputNode}
-              staggerDelay={getStaggerDelay(renderedActiveItems.length)}
+              staggerDelay={0}
               onSaveDraft={saveDraftItem}
               onDraftKeyDown={handleDraftItemKeyDown}
               onTyping={handleDraftTyping}
@@ -3605,8 +3803,8 @@
                 editingItemId !== item.id &&
                 !touchDragItemId}
               on:touchstart={(e) => handleRowTouchStart(e, item)}
-              on:dragstart|passive={(e) => handleDragStart(e, item.id)}
-              on:dragend|passive={handleDragEnd}
+              on:dragstart={(e) => handleDragStart(e, item.id)}
+              on:dragend={handleDragEnd}
               on:dragover={(e) => handleDragOver(e, item.id)}
               on:drop={(e) => handleDrop(e, item.id)}
               animate:flip={{
@@ -3629,6 +3827,8 @@
                 {dragOverPosition}
                 activeItemsCount={activeItems.length}
                 isTouchActive={touchDragItemId === item.id}
+                isSettling={settlingItemIds.has(item.id)}
+                currentListName={list.name || ""}
                 onToggle={toggleItem}
                 onPressCheckbox={pressCheckbox}
                 onStartEdit={startEditingItem}
@@ -3685,11 +3885,21 @@
         {@const ghostIsSection =
           /^##\s*/.test(touchDraggedItem.text) ||
           touchDraggedItem.text.trim() === "---"}
+        {@const ghostSectionTitle = ghostIsSection
+          ? touchDraggedItem.text.trim() === "---"
+            ? ""
+            : touchDraggedItem.text.replace(/^##\s*/, "").trim()
+          : ""}
         {@const ghostIsPortal = /^(\u2192|->)\s+/.test(touchDraggedItem.text)}
+        {@const ghostPortalTarget = ghostIsPortal
+          ? touchDraggedItem.text.replace(/^(\u2192|->)\s+/, "").trim()
+          : ""}
+        {@const ghostPortalColor = resolvePortalColor(touchDraggedItem)}
         <div class="zl-touch-ghost" style={touchGhostStyle} aria-hidden="true">
           <div
             class="zl-item zl-touch-ghost-item"
             class:section-divider={ghostIsSection}
+            class:pure-divider={ghostIsSection && !ghostSectionTitle}
             class:portal-item={ghostIsPortal}
             style="--zl-item-step: {renderedActiveItems.length > 1
               ? Math.max(
@@ -3699,12 +3909,16 @@
                   ),
                 ) /
                 (renderedActiveItems.length - 1)
-              : 0}"
+              : 0}{ghostPortalColor
+              ? `; --portal-colour: ${ghostPortalColor}`
+              : ''}"
           >
             {#if ghostIsSection}
-              <span class="zl-checkbox-wrapper zl-item-section-glyph">
-                <span class="zl-section-badge">§</span>
-              </span>
+              {#if ghostSectionTitle}
+                <span class="zl-checkbox-wrapper zl-item-section-glyph">
+                  <span class="zl-section-badge">§</span>
+                </span>
+              {/if}
             {:else if ghostIsPortal}
               <span class="zl-checkbox-wrapper zl-portal-button">
                 <span class="zl-portal-badge">→</span>
@@ -3718,32 +3932,38 @@
             <div class="edit-wrapper">
               <span class="zl-item-text-button">
                 {#if ghostIsSection}
-                  <span class="zl-item-section-text">
-                    {touchDraggedItem.text.replace(/^##\s*/, "").trim()}
-                  </span>
+                  {#if ghostSectionTitle}
+                    <span class="zl-item-section-text">
+                      {ghostSectionTitle}
+                    </span>
+                  {:else}
+                    <div class="zl-item-divider-bar">
+                      <span class="zl-item-divider-line"></span>
+                    </div>
+                  {/if}
                 {:else if ghostIsPortal}
                   <span class="zl-item-text zl-item-portal-text">
                     <span class="zl-portal-target-name">
-                      {touchDraggedItem.text
-                        .replace(/^(\u2192|->)\s+/, "")
-                        .trim()}
+                      {ghostPortalTarget}
                     </span>
-                    <span class="zl-portal-jump-chip">Jump ↗</span>
+                    <span class="zl-portal-jump-chip">
+                      {ghostPortalColor ? "Jump ↗" : "New list ↗"}
+                    </span>
                   </span>
                 {:else}
                   <span class="zl-item-text">{touchDraggedItem.text}</span>
                 {/if}
-                {#if touchDraggedItem.tags?.length}
-                  <span class="zl-item-tags">
-                    {#each touchDraggedItem.tags as tag (tag)}
-                      <span
-                        class="zl-item-tag"
-                        style={`--tag-colour: ${tagColour(tag)}`}>#{tag}</span
-                      >
-                    {/each}
-                  </span>
-                {/if}
               </span>
+              {#if touchDraggedItem.tags?.length}
+                <div class="zl-item-tags">
+                  {#each touchDraggedItem.tags as tag (tag)}
+                    <span
+                      class="zl-item-tag"
+                      style={`--tag-colour: ${tagColour(tag)}`}>#{tag}</span
+                    >
+                  {/each}
+                </div>
+              {/if}
             </div>
 
             <div class="zl-item-side">

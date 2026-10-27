@@ -60,6 +60,13 @@
     inputNode?.focus();
   }
 
+  function startNewTag() {
+    if (!/(?:^|\s)#[\p{L}\p{N}_-]*$/u.test(draftItemText)) {
+      draftItemText = `${draftItemText.trimEnd()} #`.trimStart();
+    }
+    inputNode?.focus();
+  }
+
   function appendTag(tag) {
     if (partialQuery !== null) {
       draftItemText = draftItemText.replace(
@@ -127,7 +134,13 @@
   </button>
   <!-- pointerdown|preventDefault is load-bearing: the input saves on blur,
        so without it tapping a chip would commit the half-typed item. -->
-  <div class="zl-draft-tags">
+  <div
+    class="zl-draft-tags"
+    role="toolbar"
+    aria-label="Line syntax and tag helpers"
+    tabindex="-1"
+    on:pointerdown|preventDefault
+  >
     <button
       type="button"
       class="zl-draft-tag zl-draft-syntax-chip"
@@ -139,17 +152,28 @@
     >
       § Section
     </button>
-    {#if moveTargets.length > 0}
+    <button
+      type="button"
+      class="zl-draft-tag zl-draft-syntax-chip"
+      class:is-active={isDraftPortal}
+      data-swipe-ignore="true"
+      title="Link to another list"
+      on:pointerdown|preventDefault
+      on:click|stopPropagation={togglePortalPrefix}
+    >
+      → Portal
+    </button>
+    {#if !isDraftSection && !isDraftPortal && offers.length === 0}
       <button
         type="button"
         class="zl-draft-tag zl-draft-syntax-chip"
-        class:is-active={isDraftPortal}
+        class:is-active={partialQuery !== null}
         data-swipe-ignore="true"
-        title="Link to another list"
+        title="Add a #tag to this item"
         on:pointerdown|preventDefault
-        on:click|stopPropagation={togglePortalPrefix}
+        on:click|stopPropagation={startNewTag}
       >
-        → Portal
+        # Tag
       </button>
     {/if}
     {#if isDraftPortal && moveTargets.length > 0}

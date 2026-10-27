@@ -36,3 +36,53 @@
   for = "/version.json"
   [headers.values]
     Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/import*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/live/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/j/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/u/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/clear-cache*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/contributor/success*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[redirects]]
+  from = "/couples"
+  to = "/for/couples"
+  status = 301
+
+[[redirects]]
+  from = "/groceries"
+  to = "/for/groceries"
+  status = 301
+
+[[redirects]]
+  from = "/mandado"
+  to = "/es/mandado"
+  status = 301
+
+[[redirects]]
+  from = "/parejas"
+  to = "/es/parejas"
+  status = 301

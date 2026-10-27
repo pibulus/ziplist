@@ -33,6 +33,8 @@
   export let onNavigateToPortal = () => {};
   export let onFilterTag = () => {};
   export let activeTagFilter = null;
+  export let isSettling = false;
+  export let currentListName = "";
 
   let showMoveTargets = false;
   $: if (!isMoving) showMoveTargets = false;
@@ -54,6 +56,11 @@
   $: portalTarget = isPortal
     ? item.text.replace(/^(\u2192|->)\s+/, "").trim()
     : "";
+  $: isSelfPortal =
+    isPortal &&
+    portalTarget &&
+    currentListName &&
+    portalTarget.toLowerCase() === currentListName.toLowerCase();
   $: portalMatch =
     isPortal && portalTarget
       ? moveTargets.find(
@@ -91,9 +98,11 @@
 {/if}
 
 {#if isSection}
-  <div class="zl-checkbox-wrapper zl-item-section-glyph" aria-hidden="true">
-    <span class="zl-section-badge">§</span>
-  </div>
+  {#if sectionTitle}
+    <div class="zl-checkbox-wrapper zl-item-section-glyph" aria-hidden="true">
+      <span class="zl-section-badge">§</span>
+    </div>
+  {/if}
 {:else if isPortal}
   <button
     type="button"
@@ -120,7 +129,11 @@
         ? `Mark ${item.text} incomplete`
         : `Mark ${item.text} complete`}
     />
-    <span class="zl-checkbox-custom {item.checked ? 'animate-pop' : ''}">
+    <span
+      class="zl-checkbox-custom {item.checked && isSettling
+        ? 'animate-pop'
+        : ''}"
+    >
       <svg class="zl-check-svg" viewBox="0 0 24 24" aria-hidden="true">
         <path class="zl-check-path" d="M5 13l4.2 4.2L19 7" />
       </svg>
@@ -192,37 +205,38 @@
         >
           <span class="zl-portal-target-name">{portalTarget}</span>
           <span class="zl-portal-jump-chip" aria-hidden="true">
-            {portalMatch ? "Jump ↗" : "New list ↗"}
+            {portalMatch ? "Jump ↗" : isSelfPortal ? "Here" : "New list ↗"}
           </span>
         </span>
       {:else}
-        <span class="zl-item-text {item.checked ? 'checked' : ''}">
+        <span
+          class="zl-item-text {item.checked ? 'checked' : ''} {item.checked &&
+          isSettling
+            ? 'sweeping'
+            : ''}"
+        >
           {item.text}
         </span>
       {/if}
-      <!-- Chips sit INSIDE the text button, so the whole row including its tags
-           is one tap target for editing. The row only grows when tags exist. -->
-      {#if visibleTags.length}
-        <span class="zl-item-tags">
-          {#each visibleTags as tag (tag)}
-            <span
-              role="button"
-              tabindex="0"
-              class="zl-item-tag"
-              class:is-active={activeTagFilter === tag}
-              style={`--tag-colour: ${tagColour(tag)}`}
-              on:click|stopPropagation={() => onFilterTag(tag)}
-              on:keydown|stopPropagation={(e) =>
-                (e.key === "Enter" || e.key === " ") && onFilterTag(tag)}
-              title={`Filter by #${tag}`}
-              aria-label={`Filter list by #${tag}`}
-            >
-              #{tag}
-            </span>
-          {/each}
-        </span>
-      {/if}
     </button>
+    {#if visibleTags.length}
+      <div class="zl-item-tags">
+        {#each visibleTags as tag (tag)}
+          <button
+            type="button"
+            class="zl-item-tag"
+            class:is-active={activeTagFilter === tag}
+            data-swipe-ignore="true"
+            style={`--tag-colour: ${tagColour(tag)}`}
+            on:click|stopPropagation={() => onFilterTag(tag)}
+            title={`Filter by #${tag}`}
+            aria-label={`Filter list by #${tag}`}
+          >
+            #{tag}
+          </button>
+        {/each}
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -249,7 +263,7 @@
       on:click|stopPropagation={() => onRequestMove(item.id)}
       on:keydown={(event) => onReorderKeyDown(event, item.id)}
       on:touchstart={(event) => {
-        if (!item.checked && activeItemsCount > 1) {
+        if (!item.checked && !isMoving && activeItemsCount > 1) {
           onTouchGrabStart(event, item.id);
         }
       }}

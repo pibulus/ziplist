@@ -187,6 +187,22 @@
         </div>
       {/if}
 
+      <nav class="about-guides" aria-label="Guides and languages">
+        <a href="/about">How it works</a>
+        <span>·</span>
+        <a href="/for/groceries">The shop</a>
+        <span>·</span>
+        <a href="/for/couples">Two phones</a>
+        <span>·</span>
+        <a href="/for/packing">Packing</a>
+        <span>·</span>
+        <a href="/for/moving">Moving</a>
+        <span>·</span>
+        <a href="/for/gigs">Load-in</a>
+        <span>·</span>
+        <a href="/es">Español</a>
+      </nav>
+
       <p class="text-center text-xs font-semibold text-[#525252]">
         Made by
         <a
@@ -298,6 +314,29 @@
 
   .about-deal-again:active {
     transform: scale(0.97);
+  }
+
+  .about-guides {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem 0.4rem;
+    padding-top: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #525252;
+  }
+
+  .about-guides a {
+    color: #1e1714;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s ease;
+  }
+
+  .about-guides a:hover {
+    color: #db2777;
   }
 
   @keyframes about-tip-in {

@@ -1,5 +1,6 @@
 <script>
   import { MainContainer } from "$lib/components/mainPage";
+  import { PRICING } from "$lib/config/pricing.js";
 
   const canonicalUrl = "https://ziplist.app/es";
   const title =
@@ -27,14 +28,15 @@
       {
         "@type": "Offer",
         price: "0",
-        priceCurrency: "USD",
+        priceCurrency: PRICING.currency,
         description: "Creación gratuita de listas por voz y salas compartidas",
       },
       {
         "@type": "Offer",
-        price: "29",
-        priceCurrency: "USD",
-        description: "Pase Vitalicio de Contribuidor con listas ilimitadas",
+        price: String(PRICING.currentPrice),
+        priceCurrency: PRICING.currency,
+        description:
+          "Pase Vitalicio — 12 listas, salas en vivo, todos tus dispositivos",
       },
     ],
     keywords:
@@ -60,7 +62,7 @@
     description,
     canonical: canonicalUrl,
     ogLocale: "es_LA",
-    hreflangEn: "https://ziplist.app",
+    hreflangEn: "https://ziplist.app/",
     hreflangEs: canonicalUrl,
   }}
 />

@@ -42,8 +42,8 @@
      pairs with /es/mandado, not with the Spanish homepage. Defaults keep the
      old behaviour for any page that does not care. */
   export let ogLocale = "en_US";
-  export let hreflangEn = "https://ziplist.app";
-  export let hreflangEs = "https://ziplist.app/es";
+  export let hreflangEn = null;
+  export let hreflangEs = null;
   export let footerYear = new Date().getFullYear();
   export let appName = "ZipList";
   export let listFirst = false;
@@ -65,6 +65,7 @@
            Spanish twin pointing at /es tells Google the wrong thing. -->
       <link rel="alternate" hreflang="en" href={hreflangEn} />
       <link rel="alternate" hreflang="es" href={hreflangEs} />
+      <link rel="alternate" hreflang="x-default" href={hreflangEn} />
     {/if}
   {/if}
 

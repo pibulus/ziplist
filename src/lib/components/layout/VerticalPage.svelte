@@ -73,10 +73,23 @@
       <nav class="zl-prose-more" aria-label={moreHeading}>
         <h2>{moreHeading}</h2>
         <ul>
-          {#each otherUses as use (use.slug)}
-            <li><a href={useHref(use.slug)}>{use.nav}</a></li>
-          {/each}
-          <li><a href="/about">How it works</a></li>
+          {#if ogLocale === "es_LA"}
+            {#if currentUse !== "mandado"}
+              <li><a href="/es/mandado">El mandado</a></li>
+            {/if}
+            {#if currentUse !== "parejas"}
+              <li><a href="/es/parejas">En pareja</a></li>
+            {/if}
+            <li><a href="/es">ZipList en Español</a></li>
+          {:else}
+            {#each otherUses as use (use.slug)}
+              <li><a href={useHref(use.slug)}>{use.nav}</a></li>
+            {/each}
+            {#if currentUse !== "about"}
+              <li><a href="/about">How it works</a></li>
+            {/if}
+            <li><a href="/es">En Español</a></li>
+          {/if}
         </ul>
       </nav>
     {/if}

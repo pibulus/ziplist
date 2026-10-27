@@ -85,13 +85,21 @@ function applySecurityHeaders(response) {
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-  const response = await resolve(event);
+  const isSpanish =
+    event.url.pathname === "/es" || event.url.pathname.startsWith("/es/");
+  const response = await resolve(event, {
+    transformPageChunk: ({ html }) =>
+      isSpanish ? html.replace('<html lang="en">', '<html lang="es">') : html,
+  });
 
   applySecurityHeaders(response);
 
   if (
     event.url.pathname.startsWith("/import") ||
     event.url.pathname.startsWith("/live/") ||
+    event.url.pathname.startsWith("/j/") ||
+    event.url.pathname.startsWith("/u/") ||
+    event.url.pathname.startsWith("/clear-cache") ||
     event.url.pathname.startsWith("/contributor/success")
   ) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");

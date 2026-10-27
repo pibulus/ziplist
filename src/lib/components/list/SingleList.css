@@ -530,7 +530,8 @@
   gap: 0.4rem;
   /* 38, not 32: the avatars are 32 now and were filling the pill edge to
      edge with nowhere to sit. */
-  height: 38px;
+  height: 44px;
+  min-height: 44px;
   line-height: 1;
   color: var(--zl-text-color-secondary, #888);
   padding: 0 0.6rem;
@@ -753,8 +754,6 @@
   gap: 0.85rem;
   margin-bottom: var(--zl-spacing-m);
   position: relative;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 72px;
 }
 
 .zl-add-row {
@@ -764,15 +763,14 @@
 .zl-add-item-button {
   width: 100%;
   min-height: 52px;
-  border: 2px dashed rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.34);
+  border: 2px dashed
+    color-mix(
+      in srgb,
+      var(--zl-item-accent, #ffb000) 55%,
+      rgba(30, 23, 20, 0.35)
+    );
   border-radius: 18px;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.72),
-      rgba(255, 245, 250, 0.5)
-    ),
-    rgba(255, 255, 255, 0.5);
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 8%, #fffdf5);
   color: var(--zl-text-color-primary);
   cursor: pointer;
   display: inline-flex;
@@ -792,15 +790,9 @@
 
 .zl-add-item-button:hover,
 .zl-add-item-button:focus-visible {
-  border-color: rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.62);
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.88),
-      rgba(255, 241, 248, 0.72)
-    ),
-    rgba(255, 255, 255, 0.7);
-  box-shadow: 0 8px 18px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.13);
+  border-color: #1e1714;
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 18%, #fffdf5);
+  box-shadow: 2px 2px 0 #1e1714;
   outline: none;
   transform: translateY(-1px);
 }
@@ -848,8 +840,8 @@
 
 .zl-completed-count {
   align-items: center;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.24);
+  background: #fffdf5;
+  border: 1.5px solid rgba(30, 23, 20, 0.22);
   border-radius: 999px;
   display: inline-flex;
   height: 1.45rem;
@@ -860,8 +852,9 @@
 
 .zl-clear-done-btn {
   align-items: center;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.24);
+  justify-content: center;
+  background: #fffdf5;
+  border: 1.5px solid rgba(30, 23, 20, 0.26);
   border-radius: 999px;
   color: var(--zl-text-color-secondary);
   cursor: pointer;
@@ -870,7 +863,9 @@
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.02em;
-  padding: 0.2rem 0.65rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.8rem;
   text-transform: uppercase;
   transition:
     transform 0.15s ease,
@@ -881,6 +876,7 @@
 
 .zl-clear-done-btn:hover {
   background: #fffdf5;
+  border-color: #1e1714;
   color: #1e1714;
   transform: scale(1.04);
 }
@@ -891,24 +887,14 @@
 
 .zl-item {
   border-radius: var(--zl-item-border-radius, 20px);
-  background: var(--zl-item-bg, rgba(255, 255, 255, 0.5));
   padding: 0.85rem;
 
   display: grid;
-  /* Three columns now: checkbox | text | side column. The grab handle and the
-     move/delete buttons used to sit side by side in the middle of the row;
-     they're stacked top and bottom of the side column instead. That needs real
-     height — 72px minus 1.7rem of padding left ~45px, and two 44px touch
-     targets do not fit in 45px. Hence the taller min-height. */
+  /* Three columns: checkbox | text | side column. */
   grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.65rem;
 
-  /* Was 104px. That height existed ONLY to stack a grab handle above a
-     delete button in a side column — two 44px targets don't fit in less.
-     With the row's extra controls moved into a tray behind one button,
-     there is nothing to stack and nothing to make room for, so the item is
-     as tall as its text again instead of as tall as its widgets. */
   min-height: 64px;
   height: auto;
   max-height: none;
@@ -917,21 +903,10 @@
     --zl-item-box-shadow,
     0 4px 10px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.1)
   );
-  border: var(--zl-item-border-width, 2px) solid
-    var(--zl-item-border-color, rgba(255, 212, 218, 0.6));
-  /* The one place colour lives on an item. This border-left was already split
-     out as its own property — the structure for a colour spine existed, it was
-     just pointed at --zl-item-border-color, which is warm-black in EVERY vibe.
-     That single line is most of why four themes rendered as the same beige
-     rectangles.
-
-     Full saturation AT REST, not on hover. The muted-until-hover version
-     shipped the good state to the one platform that can never reach it —
-     phones have no hover, so the resting paint is what touch users see
   /* RiffRap pastel waterfall gradient:
      Ramps smoothly from a soft, light pastel tint to a richer, deeper pastel tone.
-     Uses color-mix with the list's primary color / accent against warm cream/white,
-     providing beautiful saturated color while preserving excellent contrast with dark text. */
+     Uses color-mix with the list's primary color / accent against warm cream,
+     providing saturated color while preserving contrast with dark text. */
   background: color-mix(
     in srgb,
     var(--zl-item-accent, #ffcc33) calc(7% + var(--zl-item-step, 0) * 25%),
@@ -971,12 +946,16 @@
     0 8px 20px rgba(var(--zl-primary-color-rgb, 201, 120, 255), 0.2)
   );
   border-left-width: 7px;
-  border-color: var(--zl-item-border-hover-color, rgba(255, 212, 218, 0.9));
+  border-color: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) calc(45% + var(--zl-item-step, 0) * 35%),
+    rgba(30, 23, 20, 0.35)
+  );
 }
 
 .zl-item.checked {
   opacity: var(--zl-item-checked-opacity, 0.75);
-  background: color-mix(in srgb, var(--zl-item-accent, #ffcc33) 6%, #f7f4fa);
+  background: color-mix(in srgb, var(--zl-item-accent, #ffcc33) 6%, #fffef7);
   border-left: 4px solid
     color-mix(in srgb, var(--zl-item-accent, #ffcc33) 40%, transparent);
   border-color: color-mix(
@@ -985,7 +964,7 @@
     rgba(30, 23, 20, 0.12)
   );
   transform: scale(0.98);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 6px rgba(30, 23, 20, 0.04);
 }
 
 /* ── Section Divider: ## Category Header ── */
@@ -1094,6 +1073,16 @@
   border-left-width: 6px;
 }
 
+.zl-item.pure-divider .edit-wrapper {
+  grid-column: 1 / 3;
+  min-height: 28px;
+}
+
+.zl-item.pure-divider .zl-item-text-button {
+  min-height: 28px;
+  padding: 0.1rem 0;
+}
+
 .zl-item-divider-bar {
   width: 100%;
   display: flex;
@@ -1176,13 +1165,13 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  padding: 0.22rem 0.55rem;
+  padding: 0.3rem 0.65rem;
   border-radius: 999px;
   border: 1.5px solid #1e1714;
   background: #fffdf5;
   color: #1e1714;
   box-shadow: 1px 1px 0 #1e1714;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.01em;
@@ -1252,9 +1241,7 @@
 }
 
 .zl-item-text-button:hover .zl-item-text:not(.checked) {
-  color: var(--zl-text-hover-color, #c978ff);
-  text-shadow: 0 0 8px rgba(0, 151, 167, 0.3);
-  transform: translateY(-1px) scale(1.01);
+  color: var(--zl-text-color-primary, #1e1714);
 }
 
 .zl-item-text.checked {
@@ -1269,6 +1256,9 @@
   background-position: 0 54%;
   background-repeat: no-repeat;
   background-size: 100% 2px;
+}
+
+.zl-item-text.checked.sweeping {
   animation: zl-strike-sweep 230ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1304,17 +1294,13 @@
 
 .zl-item-text-button:hover:not(:disabled),
 .zl-item-text-button:focus-visible:not(:disabled) {
-  background: var(
-    --zl-text-button-hover-bg,
-    linear-gradient(135deg, rgba(252, 235, 246, 0.7), rgba(255, 242, 253, 0.9))
+  background: color-mix(
+    in srgb,
+    var(--zl-item-accent, #ffcc33) 12%,
+    rgba(255, 253, 245, 0.65)
   );
   outline: none;
-  border-radius: 12px;
-  box-shadow: var(
-    --zl-text-button-focus-shadow,
-    0 3px 8px rgba(201, 120, 255, 0.2)
-  );
-  transform: translateY(-1px);
+  border-radius: 10px;
 }
 
 .zl-checkbox-wrapper {
@@ -1418,14 +1404,26 @@
 .zl-check-path {
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
-  transition: stroke-dashoffset 0.19s cubic-bezier(0.22, 1, 0.36, 1) 0.035s;
 }
 
 .zl-checkbox:checked + .zl-checkbox-custom .zl-check-path {
   stroke-dashoffset: 0;
 }
 
-.zl-checkbox:checked + .zl-checkbox-custom::after {
+.zl-checkbox:checked + .zl-checkbox-custom.animate-pop .zl-check-path {
+  animation: zl-check-draw 0.21s cubic-bezier(0.22, 1, 0.36, 1) 0.03s both;
+}
+
+@keyframes zl-check-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.zl-checkbox:checked + .zl-checkbox-custom.animate-pop::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -1435,8 +1433,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    var(--zl-checkbox-sparkle-color, rgba(255, 255, 255, 0.8)) 0%,
-    rgba(255, 255, 255, 0) 70%
+    var(--zl-checkbox-sparkle-color, rgba(255, 254, 247, 0.8)) 0%,
+    rgba(255, 254, 247, 0) 70%
   );
   transform: translate(-50%, -50%) scale(0);
   opacity: 0;
@@ -2083,6 +2081,17 @@
     border-radius: 16px;
   }
 
+  .zl-item.section-divider {
+    min-height: 46px;
+    padding: 0.3rem 0.55rem;
+  }
+
+  .zl-item.pure-divider {
+    grid-template-rows: minmax(28px, auto);
+    min-height: 36px;
+    padding: 0.15rem 0.65rem;
+  }
+
   .zl-live-activity-row {
     grid-template-columns: 44px minmax(0, 1fr);
     grid-template-rows: minmax(44px, auto);
@@ -2219,15 +2228,15 @@ body.zl-touch-dragging {
 }
 
 /* Right-anchored buttons keep their tooltips from clipping on the right edge of .zl-card */
-.zl-list-actions > button:last-child[data-tip]::after,
+.zl-list-actions > button[data-tip]::after,
 .zl-live-presence[data-tip]::after {
   left: auto;
   right: 0;
   transform: translateX(0) translateY(-3px);
 }
 
-.zl-list-actions > button:last-child[data-tip]:hover::after,
-.zl-list-actions > button:last-child[data-tip]:focus-visible::after,
+.zl-list-actions > button[data-tip]:hover::after,
+.zl-list-actions > button[data-tip]:focus-visible::after,
 .zl-live-presence[data-tip]:hover::after,
 .zl-live-presence[data-tip]:focus-visible::after {
   transform: translateX(0) translateY(0);
@@ -2299,7 +2308,9 @@ body.zl-touch-dragging {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem 0.5rem;
-  padding: 0.65rem 0.15rem 0.95rem;
+  padding: 0.15rem 0.15rem 0.75rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 2px dashed rgba(30, 23, 20, 0.12);
 }
 
 .zl-share-option {
@@ -2408,10 +2419,10 @@ body.zl-touch-dragging {
 
 .zl-share-tag {
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  min-height: 36px;
-  padding: 0.28rem 0.65rem;
+  min-height: 44px;
+  padding: 0.35rem 0.8rem;
   border-radius: 999px;
   border: 2px solid color-mix(in srgb, var(--tag-colour, #6c85e9) 45%, #1e1714);
   background: color-mix(in srgb, var(--tag-colour, #6c85e9) 12%, #fffdf5);
@@ -2498,7 +2509,9 @@ body.zl-touch-dragging {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem 0.5rem;
-  padding: 0.65rem 0.15rem 0.95rem;
+  padding: 0.15rem 0.15rem 0.75rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 2px dashed rgba(30, 23, 20, 0.12);
 }
 
 .zl-manage-button.is-open,
@@ -2626,8 +2639,7 @@ body.zl-touch-dragging {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.55rem 0 0.15rem;
-  margin-top: 0.35rem;
+  padding: 0.45rem 0 0.1rem;
   border-top: 1.5px dashed rgba(30, 23, 20, 0.2);
 }
 
@@ -2781,9 +2793,15 @@ body.zl-touch-dragging {
 
 .zl-item-move-cancel:hover,
 .zl-item-move-cancel:focus-visible {
-  background: rgba(30, 23, 20, 0.08);
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 20%, #fffdf5);
   transform: translateY(-1px);
+  box-shadow: 2.5px 2.5px 0 #1e1714;
   outline: none;
+}
+
+.zl-item-move-cancel:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0.5px 0.5px 0 #1e1714;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2801,21 +2819,23 @@ body.zl-touch-dragging {
 .zl-item-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.28rem;
-  margin-top: 0.22rem;
+  gap: 0.32rem;
+  margin-top: 0.2rem;
+  padding-left: 0.25rem;
 }
 
 .zl-item-tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   font-family: inherit;
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1;
-  padding: 0.2rem 0.42rem;
+  min-height: 28px;
+  padding: 0.22rem 0.55rem;
   border-radius: 999px;
-  /* --tag-colour comes from the tag's NAME (see itemTags.tagColour), so a list
-     of eight items isn't eight chips in one accent. Falls back to the list
-     accent if a chip somehow renders without one. */
   color: color-mix(
     in srgb,
     var(--tag-colour, var(--zl-item-accent)) 72%,
@@ -2826,15 +2846,21 @@ body.zl-touch-dragging {
     var(--tag-colour, var(--zl-item-accent)) 24%,
     var(--zl-item-bg, #fffef7)
   );
-  border: 1px solid
+  border: 1.5px solid
     color-mix(
       in srgb,
-      var(--tag-colour, var(--zl-item-accent)) 34%,
-      transparent
+      var(--tag-colour, var(--zl-item-accent)) 45%,
+      rgba(30, 23, 20, 0.2)
     );
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.zl-item-tag::after {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
 }
 
 .zl-item-tag:hover {
@@ -2874,30 +2900,28 @@ body.zl-touch-dragging {
 .zl-tag-rack-pill {
   display: inline-flex;
   align-items: center;
-  /* No flex gap: it would land between the "#" and the tag, so the rack read
-     "# ziplist" while the same tag on an item read "#ziplist". The count is
-     the only thing that wants separating, so it asks for it itself. */
   gap: 0;
-  padding: 0.24rem 0.6rem;
+  min-height: 44px;
+  padding: 0 0.78rem;
   border-radius: 999px;
   font-family: inherit;
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
   border: 1.5px solid
-    color-mix(in srgb, var(--tag-colour, #888) 40%, transparent);
-  background: color-mix(in srgb, var(--tag-colour, #888) 12%, #fffef7);
+    color-mix(in srgb, var(--tag-colour, #888) 45%, rgba(30, 23, 20, 0.2));
+  background: color-mix(in srgb, var(--tag-colour, #888) 14%, #fffef7);
   color: #1e1714;
-  box-shadow: 1px 1px 0 rgba(30, 23, 20, 0.08);
+  box-shadow: 1px 1px 0 rgba(30, 23, 20, 0.12);
   transition: all 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
   user-select: none;
   flex-shrink: 0;
 }
 
 .zl-tag-rack-pill.zl-tag-rack-all {
-  border-color: rgba(30, 23, 20, 0.2);
-  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(30, 23, 20, 0.26);
+  background: #fffdf5;
   color: #1e1714;
 }
 
@@ -2979,40 +3003,58 @@ body.zl-touch-dragging {
 .zl-tag-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.22rem 0.52rem;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0 0.85rem;
   font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border-radius: 8px;
-  border: 1.5px solid rgba(30, 23, 20, 0.18);
-  background: rgba(255, 255, 255, 0.85);
+  font-size: 0.76rem;
+  font-weight: 800;
+  border-radius: 12px;
+  border: 2px solid #1e1714;
+  background: #fffdf5;
   color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+}
+
+.zl-tag-rename-input {
+  min-height: 44px;
+  width: 9.5rem;
+  padding: 0 0.75rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border-radius: 12px;
+  border: 2px solid #1e1714;
+  background: #fffef7;
+  color: #1e1714;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
 }
 
 .zl-tag-action-btn:hover {
   background: #fffdf5;
   border-color: #1e1714;
   transform: translateY(-1px);
-  box-shadow: 1px 1px 0 #1e1714;
+  box-shadow: 2.5px 2.5px 0 #1e1714;
 }
 
 .zl-tag-action-btn:active {
-  transform: scale(0.95);
+  transform: translate(1px, 1px);
+  box-shadow: 0.5px 0.5px 0 #1e1714;
 }
 
 .zl-tag-action-untag {
-  color: var(--zl-caution-ink, #8f3a28);
-  border-color: rgba(var(--zl-caution-color-rgb, 255, 138, 122), 0.5);
-  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 10%, #fffef7);
+  margin-left: auto;
+  color: #1e1714;
+  border-color: #1e1714;
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 20%, #fffdf5);
 }
 
 .zl-tag-action-untag:hover {
-  border-color: var(--zl-caution-color, #ff8a7a);
-  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 22%, #fffef7);
+  border-color: #1e1714;
+  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 34%, #fffdf5);
 }
 
 /* ── Someone else is in this line ───────────────────────────────────────
@@ -3056,43 +3098,48 @@ body.zl-touch-dragging {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0.4rem 0 0.15rem;
+  gap: 0.4rem;
+  padding: 0.15rem 0 0.15rem;
 }
 
 .zl-draft-tag {
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 800;
   line-height: 1;
-  min-height: 32px;
-  padding: 0 0.6rem;
+  min-height: 44px;
+  padding: 0 0.78rem;
   border-radius: 999px;
   cursor: pointer;
   color: color-mix(in srgb, var(--tag-colour, #a970ea) 72%, #1e1714);
   background: var(--zl-item-bg, #fffef7);
-  border: 1px dashed
-    color-mix(in srgb, var(--tag-colour, #a970ea) 42%, transparent);
+  border: 1.5px dashed
+    color-mix(in srgb, var(--tag-colour, #a970ea) 48%, rgba(30, 23, 20, 0.25));
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .zl-draft-tag:hover {
-  transform: scale(1.06);
+  transform: scale(1.04);
   background: color-mix(
     in srgb,
-    var(--tag-colour, #a970ea) 12%,
+    var(--tag-colour, #a970ea) 14%,
     var(--zl-item-bg, #fffef7)
   );
 }
 
 .zl-draft-tag:active {
-  transform: scale(0.94);
+  transform: scale(0.95);
 }
 
 .zl-draft-tag.zl-draft-syntax-chip {
   color: #1e1714;
   background: #fffdf5;
   border: 1.5px dashed rgba(30, 23, 20, 0.42);
+}
+
+.zl-draft-tag.zl-draft-syntax-chip:hover {
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 16%, #fffdf5);
+  border-color: #1e1714;
 }
 
 .zl-draft-tag.zl-draft-syntax-chip.is-active {

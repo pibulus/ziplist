@@ -42,7 +42,7 @@
 
 <svelte:head>
   <title>Opening a live list · ZipList</title>
-  <meta name="robots" content="noindex" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
 </svelte:head>
 
 <div class="zl-join">

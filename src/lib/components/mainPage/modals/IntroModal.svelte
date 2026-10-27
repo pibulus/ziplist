@@ -48,12 +48,12 @@
       </div>
 
       <div class="space-y-1.5 text-center">
-        <h1
+        <h2
           id="intro_modal_title"
           class="text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
         >
           Zip up a list,<br /><span class="zl-marker">lickety-split.</span>
-        </h1>
+        </h2>
         <p class="text-sm font-bold tracking-tight text-pink-600 sm:text-base">
           The talkable, shareable list thing.
         </p>

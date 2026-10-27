@@ -59,7 +59,10 @@ export class HapticService {
 
     const input = document.createElement("input");
     input.type = "checkbox";
+    input.tabIndex = -1;
     input.setAttribute("switch", "");
+    label.addEventListener("click", (e) => e.stopPropagation());
+    input.addEventListener("change", (e) => e.stopPropagation());
     label.appendChild(input);
     document.body?.appendChild(label);
     this.iosSwitchLabel = label;

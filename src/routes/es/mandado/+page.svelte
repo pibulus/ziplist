@@ -8,6 +8,7 @@
      It was written and then never rendered; one array now feeds both the page
      and the markup, which is also what Google's FAQPage rules require. */
   import VerticalPage from "$lib/components/layout/VerticalPage.svelte";
+  import { PRICING } from "$lib/config/pricing.js";
 
   const canonicalUrl = "https://ziplist.app/es/mandado";
   const title =
@@ -47,7 +48,7 @@
         offers: {
           "@type": "Offer",
           price: "0",
-          priceCurrency: "USD",
+          priceCurrency: PRICING.currency,
           description:
             "Lista del mandado por voz gratuita con salas QR en vivo",
         },
@@ -86,6 +87,9 @@
   canonical={canonicalUrl}
   faqHeading={"Preguntas frecuentes"}
   ctaLabel={"Abrir ZipList"}
+  ctaHref={"/es"}
+  currentUse={"mandado"}
+  moreHeading={"Más formas de usar ZipList"}
   ogLocale={"es_LA"}
   hreflangEn={"https://ziplist.app/for/groceries"}
   hreflangEs={canonicalUrl}

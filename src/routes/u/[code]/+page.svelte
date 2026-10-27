@@ -16,6 +16,11 @@
   });
 </script>
 
+<svelte:head>
+  <title>Unlocking Passport · ZipList</title>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+</svelte:head>
+
 <div class="flex min-h-screen items-center justify-center bg-[#fffdf5]">
   <p class="animate-pulse text-sm font-bold text-pink-500">Waking ZipList...</p>
 </div>

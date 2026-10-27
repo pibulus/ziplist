@@ -191,8 +191,10 @@
         targetPos = index;
         x = -index * 100;
         initialized = true;
-      } else if (mod(targetPos, L) !== index) {
-        springTo(index + (wraps ? L * Math.round((targetPos - index) / L) : 0));
+      } else if ((wraps ? mod(targetPos, L) : targetPos) !== index) {
+        springTo(
+          wraps ? index + L * Math.round((targetPos - index) / L) : index,
+        );
       }
     }
   }
@@ -236,6 +238,13 @@
   }
 
   function handleTouchMove(e) {
+    if (
+      typeof document !== "undefined" &&
+      document.body.classList.contains("zl-touch-dragging")
+    ) {
+      handleTouchCancel();
+      return;
+    }
     if (!isSwiping) return;
     const touch = e.changedTouches[0];
     const diffX = touch.screenX - touchStartX;
@@ -274,6 +283,13 @@
   }
 
   function handleTouchEnd(e) {
+    if (
+      typeof document !== "undefined" &&
+      document.body.classList.contains("zl-touch-dragging")
+    ) {
+      handleTouchCancel();
+      return;
+    }
     if (!isSwiping && !isHorizontalSwipe) return;
 
     const endX = e.changedTouches[0].screenX;
@@ -346,7 +362,7 @@
     if (result.ok) {
       soundService.add({ force: true });
       hapticService.impact("medium");
-      const targetIndex = lists.length;
+      const targetIndex = Math.max(0, lists.length - 1);
       targetPos = targetIndex;
       x = -targetIndex * 100;
       listsStore.setActiveList(result.listId);
@@ -489,8 +505,8 @@
       {@const isMovingDeck = isSwiping || spinning || rafId !== null}
       {@const shouldMount =
         list.id === activeListId ||
-        Math.abs(sx) < 100 ||
-        (isMovingDeck && Math.abs(sx) <= 105)}
+        Math.abs(sx) <= 100 ||
+        (isMovingDeck && Math.abs(sx) <= 150)}
       <div
         id="list-slide-{list.id}"
         class="list-slide"
@@ -609,6 +625,12 @@
     gap: 2px;
     margin: 0;
     min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    max-width: calc(100vw - 110px);
+  }
+  .pagination-dots::-webkit-scrollbar {
+    display: none;
   }
 
   .list-nav {

@@ -24,6 +24,7 @@
   <button
     type="button"
     class="zl-clear-done-btn zl-reset-done-btn"
+    data-swipe-ignore="true"
     title="Reset completed items back to checklist"
     aria-label="Reset completed items back to checklist"
     on:click={handleReset}
@@ -33,6 +34,7 @@
   <button
     type="button"
     class="zl-clear-done-btn"
+    data-swipe-ignore="true"
     title="Clear completed items"
     aria-label="Clear completed items"
     on:click={handleClear}

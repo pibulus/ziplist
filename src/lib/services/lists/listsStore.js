@@ -195,9 +195,11 @@ function normalizeFreeformText(text) {
 }
 
 function normalizeItemText(text) {
-  const normalized = normalizeFreeformText(text)
-    .replace(/\s+/g, " ")
-    .replace(/^(?:[-\u2022*+]|\d+[.)]|\[\s*\]|\[\s*x\s*\])\s*/i, "")
+  const raw = normalizeFreeformText(text).replace(/\s+/g, " ").trim();
+  if (raw === "---") return "---";
+  const normalized = raw
+    .replace(/^->\s+/, "→ ")
+    .replace(/^(?:[-\u2022*+]\s+|\d+[.)]\s*|\[\s*\]\s*|\[\s*x\s*\]\s*)/i, "")
     .replace(/^["']|["']$/g, "")
     .replace(/^(?:and|then|also)\s+/i, "")
     .replace(/[.!?]+$/g, "")
@@ -232,10 +234,15 @@ function capitalizeFirstWord(text) {
 }
 
 export function getItemDedupeKey(text) {
-  return normalizeItemText(text)
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
+  const norm = normalizeItemText(text).toLowerCase();
+  if (norm === "---") return "---";
+  const prefix = norm.startsWith("## ")
+    ? "##:"
+    : norm.startsWith("→ ")
+      ? "->:"
+      : "";
+  const alnum = norm.replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  return prefix + (alnum || norm);
 }
 
 function getListPaletteForIndex(index = 0) {
@@ -809,11 +816,13 @@ function createListsStore() {
         ...state,
         lists: state.lists.map((list) => {
           if (list.id === targetListId) {
-            const alreadyExists = list.items.some(
-              (item) =>
-                getItemDedupeKey(item.text) ===
-                getItemDedupeKey(normalizedText),
-            );
+            const alreadyExists =
+              normalizedText !== "---" &&
+              list.items.some(
+                (item) =>
+                  getItemDedupeKey(item.text) ===
+                  getItemDedupeKey(normalizedText),
+              );
             if (alreadyExists) {
               return list;
             }
@@ -887,6 +896,7 @@ function createListsStore() {
               })
               .filter((entry) => entry.text.length > 0)
               .filter((entry) => {
+                if (entry.text === "---") return true;
                 const key = getItemDedupeKey(entry.text);
                 if (existingTexts.has(key)) {
                   return false;
