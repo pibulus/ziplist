@@ -15,6 +15,14 @@ const NOTIFICATION_PATTERNS = {
 export class HapticService {
   constructor() {
     this.enabled = true;
+    this.iosSwitchLabel = null;
+  }
+
+  isReducedMotion() {
+    return (
+      typeof window !== "undefined" &&
+      Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
+    );
   }
 
   hasTouchInput() {
@@ -32,17 +40,61 @@ export class HapticService {
     return typeof navigator !== "undefined" && "vibrate" in navigator;
   }
 
+  ensureIosSwitchMounted() {
+    if (typeof document === "undefined" || this.iosSwitchLabel) return;
+
+    // iOS Safari 17.4+ hooks <input type="checkbox" switch> directly into the
+    // physical Taptic Engine when toggled inside a user gesture.
+    const label = document.createElement("label");
+    label.setAttribute("aria-hidden", "true");
+    Object.assign(label.style, {
+      position: "fixed",
+      top: "-9999px",
+      left: "-9999px",
+      width: "1px",
+      height: "1px",
+      opacity: "0",
+      pointerEvents: "none",
+    });
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.setAttribute("switch", "");
+    label.appendChild(input);
+    document.body?.appendChild(label);
+    this.iosSwitchLabel = label;
+  }
+
   vibrate(pattern) {
-    if (!this.enabled || !this.isSupported() || !this.hasTouchInput()) {
+    if (!this.enabled || this.isReducedMotion() || !this.hasTouchInput()) {
       return false;
     }
 
+    if (this.isSupported()) {
+      try {
+        navigator.vibrate(pattern);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    // iOS Safari fallback: trigger physical Taptic Engine via hidden switch
     try {
-      navigator.vibrate(pattern);
-      return true;
+      this.ensureIosSwitchMounted();
+      if (this.iosSwitchLabel) {
+        this.iosSwitchLabel.click();
+        return true;
+      }
     } catch {
       return false;
     }
+
+    return false;
+  }
+
+  press() {
+    return this.vibrate(6);
   }
 
   impact(style = "medium") {

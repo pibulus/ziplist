@@ -55,6 +55,31 @@ const ZIPLIST_CUES = {
       [{ frequency: 700, duration: 0.04, gain: 0.019, voice: "bloom" }],
     ],
   },
+  // Pointer-down anticipation compression click before state release
+  press: {
+    cooldownMs: 35,
+    detuneCents: 5,
+    variants: [
+      [{ frequency: 148, duration: 0.032, gain: 0.022, voice: "knock" }],
+    ],
+  },
+  // Lifting an item card to reorder — a buoyant two-note pickup
+  pickup: {
+    cooldownMs: 70,
+    detuneCents: 6,
+    variants: [
+      [
+        { frequency: 340, duration: 0.038, gain: 0.022, voice: "knock" },
+        {
+          frequency: 510,
+          offset: 0.026,
+          duration: 0.052,
+          gain: 0.02,
+          voice: "tap",
+        },
+      ],
+    ],
+  },
   add: {
     cooldownMs: 90,
     detuneCents: 8,
@@ -389,8 +414,73 @@ class ZiplistSoundService extends Weightless {
       // who switched it off long ago isn't left permanently silent.
       enabled: true,
     });
+    this.checkStreak = 0;
+    this.lastCheckTime = 0;
   }
 
+  /**
+   * Dual-layer 'Shotgun' checkbox strike:
+   * 1. Low-end kinetic body thump (155Hz knock)
+   * 2. Ascending pentatonic two-note sparkle chime that climbs the scale
+   *    when multiple items are checked within 3.5 seconds.
+   */
+  check(opts = {}) {
+    if (!this.enabled) return false;
+    const now = Date.now();
+    if (now - this.lastCheckTime > 3500) {
+      this.checkStreak = 0;
+    } else {
+      this.checkStreak = Math.min(
+        this.checkStreak + 1,
+        (this.scale?.length || 10) - 2,
+      );
+    }
+    this.lastCheckTime = now;
+
+    const rootFreq = this.noteAt(this.checkStreak) || 523.25;
+    const topFreq = this.noteAt(this.checkStreak + 2) || rootFreq * 1.25;
+
+    // Layer 1: Low-frequency mechanical body
+    this.play("press", { frequency: 155, gain: 0.024, force: true, ...opts });
+    // Layer 2: Ascending pentatonic two-note pop
+    this.play("select", {
+      frequency: rootFreq,
+      delay: 0.008,
+      gain: 0.022,
+      force: true,
+      ...opts,
+    });
+    return this.play("select", {
+      frequency: topFreq,
+      delay: 0.038,
+      gain: 0.02,
+      force: true,
+      ...opts,
+    });
+  }
+
+  /**
+   * Cascading ascending arpeggio sweep when clearing completed items.
+   */
+  clearSweep(itemCount = 4) {
+    if (!this.enabled) return false;
+    const count = Math.min(Math.max(itemCount, 3), 7);
+    const notes = [];
+    for (let i = 0; i < count; i += 1) {
+      notes.push({
+        frequency: this.noteAt(i + 2) || 523.25,
+        gain: 0.02,
+      });
+    }
+    return this.sequence(notes, 0.042, "select");
+  }
+
+  press(opts) {
+    return this.play("press", opts);
+  }
+  pickup(opts) {
+    return this.play("pickup", opts);
+  }
   // Handle aliases not covered by Proxy automatically if needed
   // (Proxy handles them if the cue name exists, but we want .success() to play 'copy')
   success(opts) {
