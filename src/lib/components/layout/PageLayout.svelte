@@ -324,21 +324,13 @@
     padding-bottom: calc(8.5rem + env(safe-area-inset-bottom)) !important;
   }
 
-  /* Short viewports (SE-class phones, landscape): compress the hero
-     stack so the record button never needs a scroll to reach. */
-  @media (max-height: 700px) {
-    .page-shell {
-      gap: 1.25rem;
-      padding-top: max(env(safe-area-inset-top), 1.5rem) !important;
-    }
-  }
-
   /* Media queries for mobile optimization */
   @media (max-width: 640px) {
     .page-shell {
+      gap: 0.75rem;
       padding-top: max(
         env(safe-area-inset-top),
-        clamp(4rem, 10svh, 5.5rem)
+        clamp(1.5rem, 4.5svh, 2.75rem)
       ) !important;
       padding-bottom: max(
         6rem,
@@ -353,9 +345,9 @@
     .page-shell.list-first-shell {
       padding-top: max(
         env(safe-area-inset-top),
-        clamp(1.5rem, 5svh, 2.75rem)
+        clamp(1.25rem, 4svh, 2.25rem)
       ) !important;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     footer {
@@ -365,6 +357,15 @@
 
     footer .footer-row {
       gap: 0.75rem;
+    }
+  }
+
+  /* Short viewports (SE-class phones, landscape): compress the hero
+     stack so the record button never needs a scroll to reach. */
+  @media (max-height: 700px) {
+    .page-shell {
+      gap: 0.75rem;
+      padding-top: max(env(safe-area-inset-top), 1.25rem) !important;
     }
   }
 

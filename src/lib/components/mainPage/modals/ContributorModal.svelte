@@ -135,7 +135,7 @@
     const success = await copyTextToClipboard(syncUrl);
     if (success) {
       linkCopied = true;
-      soundService?.play?.("bloom") || soundService?.copySuccess?.();
+      soundService?.copySuccess?.({ force: true });
       hapticService?.impact?.("light");
       if (linkCopiedTimer) clearTimeout(linkCopiedTimer);
       linkCopiedTimer = setTimeout(() => {
@@ -203,7 +203,7 @@
       emailInput = "";
       showEmailForm = false;
       emailSent = true;
-      soundService?.play?.("bloom") || soundService?.copySuccess?.();
+      soundService?.copySuccess?.({ force: true });
       hapticService?.impact?.("light");
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
@@ -314,7 +314,7 @@
       vaultHash = await getVaultHash(personalCode);
       await deviceSyncStore.enableSync();
       showConfetti = true;
-      soundService?.play?.("bloom") || soundService?.success?.({ force: true });
+      soundService?.fanfare?.({ force: true });
       hapticService?.notification?.("success");
       view = "pitch";
       code = "";
@@ -369,12 +369,12 @@
         </div>
       {/if}
 
-      {#if $isContributor}
+      {#if $isContributor && view !== "redeem"}
         <!-- 1. Unlocked Passport Holder State -->
         <div class="space-y-1 text-center">
           <h3
             id="contributor_modal_title"
-            class="px-10 text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
+            class="text-balance px-10 text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
           >
             ZipList Passport <span class="zl-marker">Ready</span>
           </h3>
@@ -391,8 +391,7 @@
           <div class="flex flex-col items-center gap-1.5 py-1">
             <MembershipCard {vaultHash} {passportCode} />
             <p class="px-2 text-center text-[11px] font-bold text-[#525252]">
-              ✦ Tap card to shuffle skin · Tap avatar to change photo · Scan QR
-              to link a device
+              ✦ Tap card to shuffle skin · Tap avatar to change photo
             </p>
           </div>
         {/if}
@@ -403,18 +402,18 @@
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
               type="button"
-              class="zl-pitch-secondary"
+              class="zl-pitch-secondary whitespace-nowrap"
               on:click={copyUnlockLink}
             >
               {linkCopied ? "✨ Link copied!" : "🔗 Copy unlock link"}
             </button>
             <button
               type="button"
-              class="zl-pitch-secondary"
+              class="zl-pitch-secondary whitespace-nowrap"
               on:click={toggleEmailForm}
               aria-expanded={showEmailForm}
             >
-              {emailSent ? "✨ Emailed to inbox!" : "✉️ Email me my Passport"}
+              {emailSent ? "✨ Emailed to inbox!" : "✉️ Email Passport"}
             </button>
           </div>
 
@@ -460,7 +459,7 @@
           {/if}
 
           <details
-            class="zl-usage-details rounded-2xl border-2 border-[#1e1714] bg-[#fffdf5] px-3.5 py-1 text-left"
+            class="zl-usage-details zl-control-border rounded-2xl border-2 bg-[#fffdf5] px-3.5 py-1 text-left"
           >
             <summary class="text-xs font-black text-[#1e1714]">
               Device sync phrase & manual pairing

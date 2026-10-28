@@ -25,19 +25,15 @@ more whenever. Drag things around. Tick them off. That is the whole point.
 - **Fast local storage** - your everyday lists stay 100% on your device (IndexedDB/localStorage)
 - **Drag, drop, check off** - desktop drag plus 1:1 touch-native reorder on mobile
 - **Say what is done** - phrases like "I bought the milk" tick matching items via Gemini
-- **Optional live lists** - 4-word sovereign sync & PartyKit rooms with zero logins
+- **Optional live lists & Device Sync** - 4-word sovereign phrase rooms & Cloudflare Durable Object relay with zero logins
 - **No task-manager pressure** - no dates, priorities, streaks, or dashboard anxiety
 
 ## Use It Anywhere
 
-**As a PWA**: Save to your home screen and use it like a tiny checklist app.
+**As a PWA**: Save to home screen and use it like a tiny checklist app.
 Good for groceries, packing, gear, chores, set lists, and housemate runs.
 
-**Live sharing**: Contributor mode can turn a list into a live link so multiple
-people see the same checklist update.
-
-**Chrome Extension**: The app includes an extension info modal, but the packaged
-extension bundle is not currently part of this repo.
+**Live sharing & Device Sync**: Turn a single list into a live room (`/j/[phrase]` or `/live/[roomId]`) or pair devices with E2EE Device Sync so multiple screens stay in lockstep.
 
 ## Getting Started
 
@@ -63,7 +59,7 @@ npm run build
 - `npm run dev` - Start the show
 - `npm run build` - Make it production-ready
 - `npm run preview` - Test your build
-- `npm run dev:party` - Start local PartyKit on port `1999`
+- `npm run dev:party` - Start local Cloudflare Worker room relay on port `1999`
 - `npm run format` - Clean up the code (Prettier)
 - `npm run lint` - Catch the rough edges (ESLint)
 - `npm run lighthouse` - Performance check
@@ -78,12 +74,12 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 Do not use `VITE_GEMINI_API_KEY` for the main app runtime. `VITE_*` vars are exposed to the browser.
 
-If you want PartyKit live sharing in a deployed environment, also set:
+If you want live sharing in a deployed environment, also set:
 
 ```bash
-VITE_PARTYKIT_HOST=your-actual-host.partykit.dev
-PARTYKIT_HOST=your-actual-host.partykit.dev
-PARTYKIT_CREATE_SECRET=long_random_secret_also_set_in_partykit
+VITE_PARTYKIT_HOST=ziplist-rooms.pibulus.workers.dev
+PARTYKIT_HOST=ziplist-rooms.pibulus.workers.dev
+PARTYKIT_CREATE_SECRET=long_random_secret_also_set_in_worker
 ```
 
 Leave it unset for solo/demo deployments and ZipList will stay in clean solo mode.
@@ -120,46 +116,31 @@ SQUARE_WEBHOOK_NOTIFICATION_URL=https://ziplist.app/api/square/webhook
 
 - **SvelteKit** - Fast, modern, feels snappy
 - **Tailwind CSS + DaisyUI** - Pretty without the pain
-- **Local Storage** - Your lists stay yours, offline-first
-- **Gemini + local Whisper** - Server-side Gemini first, local Whisper when ready
-- **PartyKit** - Optional live shared lists
+- **Local Storage / IndexedDB** - Lists stay local and offline-first by default
+- **Gemini Audio** - Single-pass server-side audio transcription + item & completion parsing
+- **Cloudflare Durable Objects (`worker/index.ts`)** - Live shared checklist rooms and E2EE Device Sync relay
+- **Weightless + Juicy Sounds** - Tactile spring physics, rising pitch checkbox cascade, and Cherry MX key clicks
 - **PWA Ready** - Manifest, service worker, installed-device setup, and recording
   wake lock where supported
-- **Extension modal** - Placeholder/help path for a future packaged browser
-  extension
 
-## The Five Personalities
+## The Four Stationery Vibes
 
-Ziplist adapts its look and feel to match your mood:
+ZipList adapts its palette to four tactile stationery moods:
 
-- **Focus** - Warm tangerine sunrise
-- **Chill** - Minty cool clarity
-- **Zen** - Lavender calm with a lo-fi edge
-- **Nocturne** - Moonlit pastel night energy
-- **Neo** - High-contrast punch with extra pop
-
-Choose once, it remembers. Because good tools should feel like they know you.
+- **Highlighter** (`focus`) - Electric pink + highlighter yellow
+- **Sticky Note** (`chill`) - Warm coral + mint clarity
+- **Gel Pen** (`zen`) - Lilac calm + sky blue ink
+- **Legal Pad** (`nocturne`) - Warm amber + sage paper
 
 ## PWA Features
 
 - **Install to home screen** - Works like a native app
-- **Offline support** - No internet required after first load
-- **Offline voice setup** - Installed mobile users can preload offline voice
-  with progress feedback
+- **Offline support** - Lists open and edit without signal
 - **Recording wake lock** - Supported browsers keep the screen awake while
   recording
 - **Fast startup** - Cached and optimized for speed
-- **Mobile-first design** - Thumb-friendly, responsive everywhere
-- **App shortcuts** - Jump straight to recording from your home screen
-
-## Chrome Extension
-
-The app has an extension info modal, but this repo does not currently include a
-packaged extension bundle. Treat the extension as a future/placeholder surface
-until the files are added.
-
-When that ships, keep install instructions next to the actual downloadable
-extension artifact.
+- **Mobile-first design** - Sticky list navigation, thumb-friendly rows, responsive everywhere
+- **App shortcuts** - Jump straight to recording from the home screen
 
 ---
 

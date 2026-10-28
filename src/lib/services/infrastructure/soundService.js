@@ -398,6 +398,42 @@ const ZIPLIST_CUES = {
       ],
     ],
   },
+  // Warm two-note bloom for Passport card shuffles and avatar updates
+  bloom: {
+    cooldownMs: 85,
+    detuneCents: 8,
+    gainJitter: 0.1,
+    variants: [
+      [
+        { frequency: 523.25, duration: 0.042, gain: 0.02, voice: "bloom" },
+        {
+          frequency: 659.25,
+          offset: 0.034,
+          duration: 0.056,
+          gain: 0.019,
+          voice: "sparkle",
+        },
+      ],
+    ],
+  },
+  // Crisp high shimmer for tag merge & tag rename
+  sparkle: {
+    cooldownMs: 90,
+    detuneCents: 8,
+    gainJitter: 0.1,
+    variants: [
+      [
+        { frequency: 784, duration: 0.036, gain: 0.02, voice: "sparkle" },
+        {
+          frequency: 1046.5,
+          offset: 0.032,
+          duration: 0.052,
+          gain: 0.019,
+          voice: "bloom",
+        },
+      ],
+    ],
+  },
 };
 
 /**
@@ -410,9 +446,10 @@ class ZiplistSoundService extends Weightless {
       cues: ZIPLIST_CUES,
       voices: ZIPLIST_VOICES,
       // Sound is part of the feel now, not a preference — the toggle is gone.
-      // Deliberately ignores any legacy "ziplist-sound-cues" value so someone
-      // who switched it off long ago isn't left permanently silent.
+      // Deliberately ignores any legacy "ziplist-sound-cues" or "softstack:sound"
+      // value so someone who switched it off long ago isn't left permanently silent.
       enabled: true,
+      sharedState: false,
     });
     this.checkStreak = 0;
     this.lastCheckTime = 0;
@@ -427,9 +464,13 @@ class ZiplistSoundService extends Weightless {
   check(opts = {}) {
     if (!this.enabled) return false;
     const now = Date.now();
-    if (now - this.lastCheckTime > 3500) {
+    const elapsed = now - this.lastCheckTime;
+    if (elapsed < 35 && !opts.force) {
+      return false;
+    }
+    if (elapsed > 3500) {
       this.checkStreak = 0;
-    } else {
+    } else if (elapsed >= 45) {
       this.checkStreak = Math.min(
         this.checkStreak + 1,
         (this.scale?.length || 10) - 2,
@@ -481,6 +522,12 @@ class ZiplistSoundService extends Weightless {
   pickup(opts) {
     return this.play("pickup", opts);
   }
+  bloom(opts) {
+    return this.play("bloom", opts);
+  }
+  sparkle(opts) {
+    return this.play("sparkle", opts);
+  }
   // Handle aliases not covered by Proxy automatically if needed
   // (Proxy handles them if the cue name exists, but we want .success() to play 'copy')
   success(opts) {
@@ -509,6 +556,8 @@ class ZiplistSoundService extends Weightless {
     this.enabled = enabled;
     if (!enabled && this.context) {
       this.context.suspend().catch(() => {});
+    } else if (enabled && this.context?.state === "suspended") {
+      this.context.resume().catch(() => {});
     }
   }
 

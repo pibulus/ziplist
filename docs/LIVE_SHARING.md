@@ -1,7 +1,6 @@
 # Live Sharing
 
-ZipList live sharing uses PartyKit to let multiple devices edit one checklist
-through a magic link.
+ZipList live sharing uses a Cloudflare Durable Object Worker (`worker/index.ts`, compatible with the PartySocket client protocol) to let multiple devices edit one checklist through a magic link or 4-word phrase.
 
 ## User Flow
 
@@ -236,19 +235,17 @@ PartyKit env is present in `.env`.
 
 ## Production Deploy
 
-1. Generate a long random secret.
-2. Set the app env vars.
-3. Set the PartyKit env secret.
-4. Deploy PartyKit:
+1. Generate a long random secret (`PARTYKIT_CREATE_SECRET`).
+2. Set `PARTYKIT_HOST=ziplist-rooms.pibulus.workers.dev`, `VITE_PARTYKIT_HOST=ziplist-rooms.pibulus.workers.dev`, and `PARTYKIT_CREATE_SECRET` in Netlify env vars.
+3. Set `PARTYKIT_CREATE_SECRET` on the Cloudflare Worker and deploy from `worker/`:
 
 ```bash
-npx partykit deploy --with-vars
+cd worker && npx wrangler deploy
 ```
 
-5. Deploy/restart the ZipList app.
-6. On a fresh production device, redeem a contributor code before tapping
-   `Make Live`; room creation is intentionally contributor-gated.
-7. Run the two-device test against production.
+4. Run `node scripts/verify-live-relay-sync.mjs` to verify Worker protocol parity.
+5. Deploy the ZipList app (`netlify deploy --prod --build`).
+6. Run the two-device test against production.
 
 ## Test Checklist
 

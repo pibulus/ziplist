@@ -19,6 +19,8 @@
   let avatarName = "";
   let listFirstModeValue = false;
   let avatarRerolling = false;
+  let rerollTimer = null;
+  let contributorTimer = null;
 
   const unsubscribeTheme = theme.subscribe((value) => {
     selectedVibe = value;
@@ -37,23 +39,11 @@
 
   onMount(() => {
     avatarName = getOrCreateAvatar();
-
-    const dialog = document.getElementById("settings_modal");
-    function onDialogClose() {
-      closeModal();
-    }
-    if (dialog) {
-      dialog.addEventListener("close", onDialogClose);
-    }
-
-    return () => {
-      if (dialog) {
-        dialog.removeEventListener("close", onDialogClose);
-      }
-    };
   });
 
   onDestroy(() => {
+    if (rerollTimer) clearTimeout(rerollTimer);
+    if (contributorTimer) clearTimeout(contributorTimer);
     unsubscribeTheme();
     unsubscribeListFirstMode();
   });
@@ -93,7 +83,9 @@
   function openContributorModal() {
     if (!browser) return;
     handleModalClose();
-    setTimeout(() => {
+    if (contributorTimer) clearTimeout(contributorTimer);
+    contributorTimer = setTimeout(() => {
+      contributorTimer = null;
       window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
     }, ANIMATION.MODAL.CLOSE_DURATION + 30);
   }
@@ -108,8 +100,10 @@
     avatarName = rerollAvatar(avatarName);
     soundService.select();
     avatarRerolling = true;
-    setTimeout(() => {
+    if (rerollTimer) clearTimeout(rerollTimer);
+    rerollTimer = setTimeout(() => {
       avatarRerolling = false;
+      rerollTimer = null;
     }, 420);
   }
 </script>
@@ -137,7 +131,7 @@
       <!-- Header (TalkType canon: small mascot circle + Options title) -->
       <div class="mb-1 flex items-center gap-2">
         <div
-          class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffdf5] shadow-[1px_1px_0px_#1e1714]"
+          class="flex h-8 w-8 items-center justify-center rounded-full border border-pink-200/60 bg-gradient-to-br from-[#fffef7] to-pink-50 shadow-sm"
         >
           <ThemeMascot theme={selectedVibe} size="22px" />
         </div>
@@ -162,9 +156,9 @@
           {#each vibeOptions as vibe}
             <button
               type="button"
-              class="vibe-option relative flex min-h-[76px] flex-col items-center justify-center rounded-2xl border-2 border-[#1e1714] px-1 py-2 transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 active:translate-y-0.5 {selectedVibe ===
+              class="vibe-option relative flex min-h-[76px] flex-col items-center justify-center rounded-2xl border-2 px-1 py-2 transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 active:translate-y-0.5 {selectedVibe ===
               vibe.id
-                ? 'selected-vibe bg-[#fffef7] shadow-[2px_2px_0px_#1e1714]'
+                ? 'selected-vibe border-[#1e1714] bg-[#fffef7]'
                 : 'zl-control-border bg-[#fffdf5]'}"
               on:click={() => changeVibe(vibe.id)}
               aria-label={`Choose ${vibe.name} vibe`}
@@ -195,7 +189,7 @@
         </h4>
 
         <div
-          class="zl-control-border space-y-3 rounded-2xl border-2 border-[#1e1714] bg-[#fffdf5] p-3.5 shadow-sm"
+          class="zl-control-border space-y-3 rounded-2xl border-2 bg-[#fffdf5] p-3.5 shadow-sm"
         >
           <!-- List-first mode row -->
           <div class="flex items-center justify-between gap-3">
@@ -236,13 +230,13 @@
 
           <div class="zl-divider border-t"></div>
 
-          <!-- Shared Room Face (Avatar + Handle + Dice Reroll) -->
-          <div class="flex items-center justify-between gap-2.5">
-            <div class="flex min-w-0 items-center gap-2.5">
+          <!-- Shared Room Face (Avatar + Handle) -->
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex min-w-0 flex-1 items-center gap-2.5">
               {#if avatarName}
                 <button
                   type="button"
-                  class="avatar-face-btn relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-[1.5px_1.5px_0px_#1e1714] transition-transform active:scale-90"
+                  class="avatar-face-btn zl-control-border relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 bg-[#fffef7] shadow-sm transition-transform hover:scale-105 active:scale-90"
                   class:rerolling={avatarRerolling}
                   on:click={rerollAvatarFace}
                   title="Tap for a new face"
@@ -256,39 +250,28 @@
                   />
                 </button>
               {/if}
-              <div class="min-w-0">
+              <div class="min-w-0 flex-1">
                 <span
-                  class="block text-sm font-black leading-tight text-[#1e1714]"
+                  class="block truncate text-sm font-black leading-tight text-[#1e1714]"
                 >
-                  Shared room face
+                  Name in shared rooms
                 </span>
                 <span
-                  class="row-sub mt-0.5 block text-[11px] font-semibold leading-tight"
+                  class="row-sub mt-0.5 block truncate text-[11px] font-semibold leading-tight"
                 >
-                  Tap face or dice to re-roll
+                  Tap avatar to re-roll
                 </span>
               </div>
             </div>
 
-            <div class="flex shrink-0 items-center gap-1.5">
-              <input
-                type="text"
-                class="min-h-11 w-28 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-2.5 py-1.5 font-mono text-xs font-bold text-[#1e1714] transition-colors focus:outline-none sm:w-36"
-                value={avatarName}
-                maxlength="48"
-                on:change={saveAvatarName}
-                aria-label="Handle in shared rooms"
-              />
-              <button
-                type="button"
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-sm font-black text-[#1e1714] shadow-[1.5px_1.5px_0px_#1e1714] transition-transform hover:bg-[#fafaf9] active:scale-95"
-                on:click={rerollAvatarFace}
-                title="Roll a random room handle"
-                aria-label="Roll a random room handle"
-              >
-                🎲
-              </button>
-            </div>
+            <input
+              type="text"
+              class="zl-control-border min-h-11 w-32 shrink-0 rounded-xl border-2 bg-[#fffef7] px-2.5 py-1.5 font-mono text-base font-bold text-[#1e1714] transition-colors focus:border-[#1e1714] focus:outline-none sm:w-40 sm:text-xs"
+              value={avatarName}
+              maxlength="48"
+              on:change={saveAvatarName}
+              aria-label="Handle in shared rooms"
+            />
           </div>
         </div>
       </section>

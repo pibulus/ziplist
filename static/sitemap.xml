@@ -4,7 +4,7 @@
   <!-- English Homepage -->
   <url>
     <loc>https://ziplist.app/</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ziplist.app/" />
@@ -15,7 +15,7 @@
   <!-- Spanish Homepage -->
   <url>
     <loc>https://ziplist.app/es</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://ziplist.app/es" />
@@ -26,7 +26,7 @@
   <!-- Groceries / Supermarket (English) -->
   <url>
     <loc>https://ziplist.app/for/groceries</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ziplist.app/for/groceries" />
@@ -37,7 +37,7 @@
   <!-- Mandado / Súper (Español) -->
   <url>
     <loc>https://ziplist.app/es/mandado</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://ziplist.app/es/mandado" />
@@ -48,7 +48,7 @@
   <!-- Couples Shared Lists (English) -->
   <url>
     <loc>https://ziplist.app/for/couples</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ziplist.app/for/couples" />
@@ -59,7 +59,7 @@
   <!-- Listas para Parejas (Español) -->
   <url>
     <loc>https://ziplist.app/es/parejas</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://ziplist.app/es/parejas" />
@@ -69,28 +69,28 @@
   <!-- How it works / about -->
   <url>
     <loc>https://ziplist.app/about</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <!-- Packing lists -->
   <url>
     <loc>https://ziplist.app/for/packing</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <!-- Moving house -->
   <url>
     <loc>https://ziplist.app/for/moving</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <!-- Band load-in -->
   <url>
     <loc>https://ziplist.app/for/gigs</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

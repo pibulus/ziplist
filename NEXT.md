@@ -53,7 +53,9 @@ What is shipped & live:
 - **1-layer modular hierarchy**: `## Section` headers, movable divider bars (`##` / `---`), and `→ List Portals` with spring roulette flipping
 - **Tag engine & resampling**: `#tag` filtering + 1-tap `[ ✂️ Resample to new list ]`
 - **1-Tap 'Clear done' & 'Clear list'**: instant list cleanup with a 5.5s tactile Undo toast safety net
-- **Zero-shift silky modals**: stable `scrollbar-gutter` + tactile pop-in/pop-out animations across all dialogs
+- **Zero-shift silky modals**: TalkType-aligned modal geometry (`grid-template-areas: "modal"` centering, `3px 3px 0 #1e1714` shadow, `color-mix` pastel borders) + tactile pop-in/pop-out animations across all dialogs
+- **Mobile list view & scroll ergonomics**: collapsed off-screen `.list-slide.parked` height (preventing long neighbor lists from stretching short lists), sticky frosted `.list-nav` pill while scrolling, tightened mobile hero/row spacing (+24% item density above the fold while preserving 44×44px tap targets), and unobstructed vertical thumb scrolling over the `⋯` column
+- **Juicy Sounds + Cherry MX Typewriter audio**: `@softstack/juicy-sounds` integration (`bloom`, `sparkle`, `copySuccess`, `fanfare`, debounced rising-pitch `check` cascade, `sharedState: false` isolation, and `AudioContext.resume()` recovery) plus physical keyboard Cherry MX clicks on touchscreen laptops
 - **Live Room Voice Capture**: collaborate and speak items straight into shared rooms (`/live/[roomId]`)
 - **Hold-to-talk Mascot Quick Capture**: long-press / hold on the mascot anywhere for instant walkie-talkie recording
 - **1-Tap magic link auto-unlock**: `?unlock=<code>` unlocks on device without manual typing

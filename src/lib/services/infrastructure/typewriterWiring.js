@@ -27,10 +27,7 @@ export function wireTypewriterGlobally() {
     if (!soundService.isEnabled?.()) return false;
     // Mobile soft keyboards (iOS / Android) play their own native click audio/haptics.
     // Cherry MX pack is reserved for physical keyboards on desktop/laptop.
-    if (
-      window.matchMedia?.("(pointer: coarse)")?.matches ||
-      navigator.maxTouchPoints > 0
-    ) {
+    if (window.matchMedia?.("(pointer: coarse)")?.matches) {
       return false;
     }
     return true;

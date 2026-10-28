@@ -1,7 +1,7 @@
 # ZipList Architecture
 
 ZipList is a SvelteKit app with a local-first checklist core, server-side Gemini
-transcription, optional PartyKit live sharing, and PWA support.
+transcription, optional Cloudflare Durable Object live sharing & E2EE Device Sync, and PWA support.
 
 ## Entry Points
 
@@ -9,9 +9,9 @@ transcription, optional PartyKit live sharing, and PWA support.
 - `src/routes/+layout.svelte` - App layout wrapper.
 - `src/routes/import/+page.svelte` - Static snapshot import flow.
 - `src/routes/live/[roomId]/+page.svelte` - Join an existing live list room.
+- `src/routes/j/[phrase]/+page.svelte` - Join a live list room via 4-word phrase.
 - `src/routes/api/gemini/+server.js` - Server-side Gemini transcription route.
-- `src/routes/api/live/create/+server.js` - Contributor-gated room
-  creation proxy.
+- `src/routes/api/live/create/+server.js` - Room creation proxy.
 - `worker/index.ts` - Cloudflare Durable Object room server (`ziplist-rooms.pibulus.workers.dev`).
 
 ## UI Ownership
@@ -36,14 +36,15 @@ transcription, optional PartyKit live sharing, and PWA support.
 - `src/lib/services/transcription/` - End-to-end transcription orchestration
   and target-list locking.
 - `src/lib/services/lists/` - List store, persistence, limits, commands, item
-  operations, and completion matching.
-- `src/lib/services/realtime/` - PartyKit client protocol, socket connection,
-  live-list store bridge, presence, typing, and anonymous avatars.
+  operations, field-level sync merge (`listMergeService.js`), and completion matching.
+- `src/lib/services/realtime/` - Live room protocol, PartySocket connection,
+  live-list store bridge, E2EE Device Sync (`deviceSyncStore.js`, `syncCrypto.js`),
+  presence, typing, and anonymous avatars.
 - `src/lib/services/share/` - Static snapshot share/import URL handling.
 - `src/lib/services/pwa/` - Install prompt state, installed-device setup,
   persistent storage requests, and Screen Wake Lock.
-- `src/lib/services/theme/` - Theme and Chunky Mode application.
-- `src/lib/services/infrastructure/` - Shared event bus, stores, haptics, and
+- `src/lib/services/theme/` - Stationery Vibe (`focus`/`chill`/`zen`/`nocturne`) and Soft Neo-Toybrut application.
+- `src/lib/services/infrastructure/` - Shared event bus, stores, `@softstack/juicy-sounds` sound engine (`soundService.js`, `typewriterWiring.js`), haptics, and
   storage helpers.
 
 ## Data Flow

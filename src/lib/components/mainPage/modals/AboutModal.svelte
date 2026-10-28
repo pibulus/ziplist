@@ -14,12 +14,14 @@
   let emojiIndex = Math.floor(Math.random() * emojis.length);
 
   function shuffleEmoji() {
+    soundService?.select?.();
     emojiIndex = (emojiIndex + 1) % emojis.length;
   }
 
   let dialog;
   let tips = [];
   let openObserver;
+  let contributorTimer;
 
   function readDeck() {
     if (!browser) return [];
@@ -69,11 +71,15 @@
     }
   });
 
-  onDestroy(() => openObserver?.disconnect());
+  onDestroy(() => {
+    openObserver?.disconnect();
+    if (contributorTimer) clearTimeout(contributorTimer);
+  });
 
   function handlePassportClick() {
     closeModal();
-    setTimeout(() => {
+    if (contributorTimer) clearTimeout(contributorTimer);
+    contributorTimer = setTimeout(() => {
       window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
     }, ANIMATION.MODAL.CLOSE_DURATION + 30);
   }
@@ -87,7 +93,7 @@
   aria-modal="true"
   bind:this={dialog}
 >
-  <div class="zl-modal-sm zl-modal-contained modal-box relative">
+  <div class="zl-modal-md zl-modal-contained modal-box relative">
     <form method="dialog">
       <ModalCloseButton
         {closeModal}
@@ -111,16 +117,16 @@
         <div class="space-y-1.5 text-center">
           <h3
             id="about_modal_title"
-            class="px-6 text-[1.45rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
+            class="text-balance px-6 text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
           >
-            Getting the most out of <span class="zl-marker">ZipList</span>
+            ZipList <span class="zl-marker">tricks.</span>
           </h3>
           <p
             id="about_modal_description"
-            class="text-sm font-bold tracking-tight"
+            class="text-sm font-bold tracking-tight sm:text-base"
             style="color: var(--zl-vibe-accent-text, #db2777);"
           >
-            Fresh tricks on every open.
+            Fresh ones every time it opens.
           </p>
         </div>
 
@@ -135,7 +141,8 @@
             {/each}
           </ul>
           <button type="button" class="about-deal-again" on:click={dealAgain}>
-            <span>Deal three more ↻</span>
+            <span aria-hidden="true">🎲</span>
+            <span>Deal three more</span>
           </button>
         </div>
 
@@ -153,7 +160,7 @@
         <div class="space-y-1.5 text-center">
           <h3
             id="about_modal_title"
-            class="px-6 text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
+            class="text-balance px-4 text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
           >
             Zip up a list, <span class="zl-marker">lickety-split.</span>
           </h3>
@@ -187,53 +194,56 @@
         </div>
       {/if}
 
-      <nav class="about-guides" aria-label="Guides and languages">
-        <a href="/about">How it works</a>
-        <span>·</span>
-        <a href="/for/groceries">The shop</a>
-        <span>·</span>
-        <a href="/for/couples">Two phones</a>
-        <span>·</span>
-        <a href="/for/packing">Packing</a>
-        <span>·</span>
-        <a href="/for/moving">Moving</a>
-        <span>·</span>
-        <a href="/for/gigs">Load-in</a>
-        <span>·</span>
-        <a href="/es">Español</a>
-      </nav>
+      <div class="space-y-2.5 text-center text-xs font-semibold text-[#525252]">
+        <p>
+          Made by
+          <a
+            href="https://github.com/pibulus"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-black text-[#1e1714] underline transition-colors hover:text-pink-600"
+            >Pablo</a
+          >
+          <button
+            type="button"
+            class="-mx-1.5 -my-1 inline-flex min-h-11 min-w-11 transform cursor-pointer select-none items-center justify-center align-middle transition-transform hover:scale-125 active:scale-95"
+            on:click={shuffleEmoji}
+            title="Shuffle vibe emoji"
+            aria-label="Vibe emoji: click to shuffle"
+            >{emojis[emojiIndex]}</button
+          >
+          in Melbourne ·
+          <a
+            href="/privacy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline underline-offset-2">Privacy</a
+          >
+          ·
+          <a
+            href="/terms.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline underline-offset-2">Terms</a
+          >
+        </p>
 
-      <p class="text-center text-xs font-semibold text-[#525252]">
-        Made by
-        <a
-          href="https://github.com/pibulus"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="font-black text-[#1e1714] underline transition-colors hover:text-pink-600"
-          >Pablo</a
-        >
-        <button
-          type="button"
-          class="inline-flex min-h-11 min-w-11 transform cursor-pointer select-none items-center justify-center transition-transform hover:scale-125 active:scale-95"
-          on:click={shuffleEmoji}
-          title="Shuffle vibe emoji"
-          aria-label="Vibe emoji: click to shuffle">{emojis[emojiIndex]}</button
-        >
-        in Melbourne ·
-        <a
-          href="/privacy.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="underline underline-offset-2">Privacy</a
-        >
-        ·
-        <a
-          href="/terms.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="underline underline-offset-2">Terms</a
-        >
-      </p>
+        <nav class="about-guides" aria-label="Guides and languages">
+          <a href="/about">How it works</a>
+          <span aria-hidden="true">·</span>
+          <a href="/for/groceries">The shop</a>
+          <span aria-hidden="true">·</span>
+          <a href="/for/couples">Two phones</a>
+          <span aria-hidden="true">·</span>
+          <a href="/for/packing">Packing</a>
+          <span aria-hidden="true">·</span>
+          <a href="/for/moving">Moving</a>
+          <span aria-hidden="true">·</span>
+          <a href="/for/gigs">Load-in</a>
+          <span aria-hidden="true">·</span>
+          <a href="/es">Español</a>
+        </nav>
+      </div>
     </div>
   </div>
   <button

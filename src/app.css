@@ -320,19 +320,29 @@ dialog.zl-contributor-dialog {
   border: 0 !important;
   background: transparent !important;
   color: inherit;
+  align-items: center;
+  justify-items: center;
   overscroll-behavior: contain;
 }
 
 dialog.modal[open],
+dialog.modal.modal-open,
 dialog.zl-settings-dialog[open],
 dialog.zl-contributor-dialog[open] {
   display: grid !important;
+  grid-template-areas: "modal" !important;
   place-items: center !important;
   padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
   padding-bottom: max(
     clamp(0.75rem, 2.5vw, 1.5rem),
     calc(env(safe-area-inset-bottom, 0px) + 1.25rem)
   ) !important;
+}
+
+dialog.modal:not([open]),
+dialog.zl-settings-dialog:not([open]),
+dialog.zl-contributor-dialog:not([open]) {
+  display: none;
 }
 
 dialog.modal::backdrop,
@@ -349,6 +359,8 @@ dialog.zl-contributor-dialog::backdrop {
   grid-area: modal;
   position: fixed;
   inset: 0;
+  align-self: stretch;
+  justify-self: stretch;
   z-index: 0;
   border: 0;
   cursor: pointer;
@@ -371,6 +383,7 @@ dialog.zl-contributor-dialog::backdrop {
     calc(100dvh - 3.5rem - env(safe-area-inset-bottom, 0px))
   );
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   margin: 0 auto;
   padding: var(--zl-modal-pad, clamp(1rem, 2.6vw, 1.5rem));
@@ -378,10 +391,7 @@ dialog.zl-contributor-dialog::backdrop {
   border-radius: var(--modal-border-radius, 1.5rem);
   background: linear-gradient(145deg, #fffcf5, #fff6e6);
   background-color: #fffdf7;
-  box-shadow:
-    0px 10px 0px rgba(30, 23, 20, 0.12),
-    0px 20px 25px rgba(30, 23, 20, 0.08),
-    inset 0 1px 0 rgba(255, 254, 247, 0.82);
+  box-shadow: 3px 3px 0 #1e1714;
   transform-origin: center;
   scrollbar-width: thin;
   scrollbar-color: var(--zl-scrollbar-thumb-color) transparent;
@@ -582,23 +592,24 @@ dialog.zl-contributor-dialog::backdrop {
 .zl-pitch-secondary,
 .tt-pitch-secondary {
   min-height: 2.75rem;
-  background-color: #fffdf5;
+  background-color: #fffef7;
   color: #1e1714;
   font-size: 0.875rem;
-  box-shadow: 2px 2px 0 #1e1714;
+}
+
+.zl-pitch-secondary.is-dashed,
+.tt-pitch-secondary.is-dashed {
+  border-style: dashed;
 }
 
 .zl-pitch-secondary:hover,
 .tt-pitch-secondary:hover {
   background-color: #fafaf9;
-  transform: translateY(-1px);
-  box-shadow: 3px 3px 0 #1e1714;
 }
 
 .zl-pitch-secondary:active,
 .tt-pitch-secondary:active {
-  transform: translateY(1px);
-  box-shadow: none;
+  transform: scale(0.98);
 }
 
 .zl-pitch-cta:focus-visible,
@@ -686,12 +697,12 @@ input.tt-passport-code-input:focus {
 
 .zl-control-border,
 .tt-control-border {
-  border-color: #1e1714;
+  border-color: color-mix(in srgb, var(--zl-vibe-caret, #f472b6) 45%, #fffef7);
 }
 
 .zl-divider,
 .tt-divider {
-  border-color: rgba(30, 23, 20, 0.14);
+  border-color: color-mix(in srgb, var(--zl-vibe-caret, #f472b6) 22%, #fffef7);
 }
 
 /* Every modal wraps its close button in a bare `<form method="dialog">`. Make

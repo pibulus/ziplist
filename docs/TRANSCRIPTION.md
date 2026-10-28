@@ -1,31 +1,29 @@
 # Transcription And Completion
 
-ZipList turns recordings into list mutations. The current path supports both new
-items and completion detection.
+ZipList turns recordings into list mutations in a single server-side Gemini audio pass, supporting both new items and semantic completion detection.
 
 ## Services
 
 - `transcriptionService.js` - Main orchestrator. Captures the target list before
   transcription starts so late list switches do not send results to the wrong
   list.
-- `simpleHybridService.js` - Chooses the transcription backend.
-- `geminiService.js` - Sends audio/context to Gemini and normalizes structured
+- `geminiService.js` - Sends audio and active-list context to `/api/gemini` and normalizes structured
   responses.
+- `geminiApiService.js` - Server/client boundary for Gemini API calls.
 - `responseParser.js` - Parses model JSON/text responses.
-- `listParser.js` - Parses plain transcript text and simple commands.
+- `listParser.js` - Fallback regex splitter for unstructured text responses and simple commands.
 - `listsService.js` - Applies parsed items, commands, and completion matches.
-- `whisper/whisperService.js` - Local Whisper Tiny model loading/transcription.
 
-## Backend Selection
+## Single-Pass Audio Flow
 
 ```text
 recording
   -> active unchecked items collected as context
-  -> Gemini when completion context is needed or Whisper is not ready
-  -> Whisper when local model is ready and semantic completion is not needed
+  -> /api/gemini (single-pass audio + context prompt)
+  -> structured JSON { items, complete }
 ```
 
-Gemini can return structured JSON:
+Gemini returns structured JSON directly from the audio:
 
 ```json
 {
@@ -34,16 +32,18 @@ Gemini can return structured JSON:
 }
 ```
 
-Whisper returns transcript text only:
+If an unstructured text response is returned, `listParser.js` splits it into items as a safe fallback:
 
 ```json
 {
   "text": "buy eggs",
-  "items": [],
+  "items": ["Buy eggs"],
   "complete": [],
   "structured": false
 }
 ```
+
+_(Note: The legacy 117MB local Whisper fallback was removed on 2026-07-31 because raw transcript text lost semantic item splitting and completion matching.)_
 
 ## Completion Matching
 
@@ -64,15 +64,6 @@ ambiguous speech into destructive list commands.
   can be added as an item when it came from the model's `items` array.
 - Plain transcript text can still use command parsing.
 
-## Local Whisper
-
-- Model: Whisper Tiny English through Transformers.js.
-- The local model loads in the background.
-- Gemini remains the fallback while Whisper is loading or when semantic
-  completion context is needed.
-- Privacy/offline behavior should be tested on real devices before strong public
-  claims.
-
 ## Verification Checklist
 
 - Say new items and verify they append to the active list.
@@ -81,4 +72,3 @@ ambiguous speech into destructive list commands.
 - Say "I bought the milk" with `Buy milk` unchecked; it should tick the item.
 - Say a completion phrase that could match two items; it should avoid ambiguous
   toggles.
-- Test once with Whisper still loading and once after Whisper is ready.

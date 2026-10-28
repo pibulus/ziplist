@@ -3,7 +3,7 @@
 ## Build & Development
 
 - `npm run dev` - Start development server (runs on http://localhost:3001)
-- `npm run dev:party` - Start local PartyKit server (runs on http://localhost:1999)
+- `npm run dev:party` - Start local Cloudflare Worker room relay via Wrangler (runs on http://localhost:1999)
 - `npm run build` - Create production build
 - `npm run preview` - Preview production build
 - `npm run format` - Run Prettier formatter
@@ -18,10 +18,10 @@ ZipList is a minimal voice-to-list todo app. Core features:
 - Drag-and-drop reorder with haptic feedback
 - Local storage persistence with multiple color-coded lists (Blue, Pink, Yellow defaults + more)
 - PWA support with offline capability
-- Theme system (focus/chill/zen/nocturne/neo) with animated gradients
-- Neo-Brutalist "Chunky Mode" style overlay
+- Four stationery Vibes (**Highlighter**, **Sticky Note**, **Gel Pen**, **Legal Pad**) with Soft Neo-Toybrut styling
+- Tactile sound system (`@softstack/juicy-sounds` + Cherry MX typewriter keys + rising checkbox pitch cascade)
 - Responsive design with mobile-first approach
-- PartyKit real-time collaboration (optional — works without server)
+- Cloudflare Durable Object real-time room collaboration & E2EE Device Sync (optional — works without server)
 - Canvas confetti celebrations, particle effects
 
 **Current State**: ~99% complete, v1.0 runway. The 2026-07-09→10
@@ -145,6 +145,12 @@ of solving it is worse than no rule.
 - **pwa/wakeLockService.js**: Feature-detected Screen Wake Lock wrapper used
   while recording
 - **infrastructure/stores.js**: Central reactive state (audio, recording, transcription, UI)
+- **infrastructure/soundService.js** + **infrastructure/typewriterWiring.js**:
+  Shared `@softstack/juicy-sounds` sound engine (`ZiplistSoundService`) with
+  custom WebAudio cues (`check` rising pitch cascade, `uncheck`, `bloom`,
+  `sparkle`, `copySuccess`, `fanfare`, `locked`, `delete`, `clear`, `select`,
+  `recordStart`, `recordStop`) plus Cherry MX mechanical key clicks on desktop
+  text inputs (`sharedState: false` so Sound toggle is isolated per app).
 - **infrastructure/hapticService.js**: Haptic feedback for touch interactions
 - **realtime/liveListProtocol.js**: Shared live room ids, message names,
   limits, and validators
@@ -162,15 +168,15 @@ of solving it is worse than no rule.
 
 ### Modal System
 
-All five modals (Intro, About, Extension, Settings, Contributor) run on ONE
+All modals (`IntroModal`, `AboutModal`, `SettingsModal`, `ContributorModal`, `QrShareModal`) run on ONE
 global system: `services/modals/modalService.js` (imperative open/close by
 dialog id, scroll-lock, exit-animation orchestration, one-modal-at-a-time)
 over native `<dialog>`/`showModal()` top-layer semantics, with the shared
-`dialog.modal` skeleton + `zl-modal-*` keyframes in `app.css`. This is
-ZipList's equivalent of the softstack-charms chassis ModalShell — evaluated
-2026-07-20 and deliberately NOT migrated (the shell would add a second,
-weaker, div-based modal system). Never hand-roll per-modal Escape/backdrop/
-scroll-lock/keyframe machinery; route new modals through `modalService`.
+`dialog.modal` skeleton + `zl-modal-*` keyframes in `app.css`. Matches
+TalkType's modal specs (`box-shadow: 3px 3px 0 #1e1714`, `color-mix` pastel
+control borders, centered `grid-template-areas: "modal"`). Never hand-roll
+per-modal Escape/backdrop/scroll-lock/keyframe machinery; route new modals
+through `modalService`.
 
 ### Component Structure
 
@@ -179,25 +185,26 @@ scroll-lock/keyframe machinery; route new modals through `modalService`.
 - **AnimatedTitle.svelte**: Title with staggered animation + floating "Dude" record button
 - **SingleList.svelte**: Rich list component — CRUD, rename/add-list header controls, drag/drop, move actions, static share, live share, particles
 - **RecordButtonWithTimer.svelte**: Voice recording button with waveform visualization
-- **PwaDeviceSetup.svelte**: Installed mobile PWA setup pill for mic permission,
-  persistent storage, and offline model preload
-- **SwipeableLists.svelte**: Horizontal list navigation with touch/swipe
+- **PwaDeviceSetup.svelte**: Installed mobile PWA setup pill for mic permission
+  and persistent storage
+- **SwipeableLists.svelte**: Horizontal list navigation with sticky mobile `.list-nav` and collapsed parked slide height
 - **PageLayout.svelte**: App shell with responsive layout and fixed footer
 
 ### Live Sharing
 
-- Live sharing is optional and hidden unless PartyKit host config is present or
+- Live sharing is optional and hidden unless the relay host config is present or
   the app is running in local dev.
 - Create flow: `SingleList` -> `liveListsService.makeLive()` ->
-  `/api/live/create` -> PartyKit `/parties/main/:roomId`.
-- PartyKit room ids use high-entropy `zl_...` ids.
+  `/api/live/create` -> Cloudflare Durable Object Worker `/parties/main/:roomId`
+  (`worker/index.ts`, deployed at `ziplist-rooms.pibulus.workers.dev`).
+- Room ids use high-entropy `zl_...` ids (or 4-word phrase rooms via `/j/[phrase]`).
 - The live protocol intentionally uses full-list snapshots plus typing events.
   Keep it simple unless real usage proves conflict handling needs to become more
   granular.
 - Presence is ephemeral; do not persist collaborator presence into durable room
   storage.
 - Production deploy requires matching `PARTYKIT_CREATE_SECRET` in the app env and
-  PartyKit env.
+  Worker env (`npx wrangler deploy` from `worker/`).
 
 ## Text Animation System
 
@@ -261,14 +268,16 @@ The Ziplist app uses subtle text animations for improved user experience:
 - **Implementation**: Applied through dedicated CSS classes (.title-hover, .subtitle-hover)
 - **Note**: Hover effects should be subtle and not interfere with entrance animations
 
-## Theme System
+## Vibe / Theme System
 
-Five themes defined in `src/lib/styles/theme-variables.css` with 50+ CSS variables each:
+Four stationery Vibes defined in `src/lib/styles/theme-variables.css` and `src/lib/constants/theme.js`:
 
-- **focus** (warm tangerine), **chill** (cool mint), **zen** (lavender), **nocturne** (moonlight), **neo** (high-contrast, default)
-- Applied via `data-theme` attribute on `<html>` root
-- "Chunky Mode" (Neo-Brutalist) is an orthogonal style overlay
-- Theme constants in `src/lib/constants.js`, application in `src/lib/index.js:applyTheme()`
+- **focus** (_Highlighter_ — electric pink + highlighter yellow, default)
+- **chill** (_Sticky Note_ — warm coral + mint)
+- **zen** (_Gel Pen_ — lilac + sky blue)
+- **nocturne** (_Legal Pad_ — warm amber + sage)
+- Applied via `data-theme` attribute on `<html>` root (`chunky-mode` is always enabled on `<body>` as the unified Soft Neo-Toybrut styling).
+- Theme constants in `src/lib/constants/theme.js`, application in `src/lib/services/theme/themeService.js` (`applyTheme()`).
 
 ## Mascot Component
 

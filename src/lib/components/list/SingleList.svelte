@@ -1962,7 +1962,11 @@
     const url = `${window.location.origin}/j/${syncPhrase}`;
     const copied = await copyText(url).catch(() => false);
     hapticService.selection();
-    soundService.select();
+    if (copied) {
+      soundService.copySuccess({ force: true });
+    } else {
+      soundService.locked({ force: true });
+    }
     showListStatus(
       copied ? "Link copied" : "Couldn't copy — read the words out instead",
       copied,

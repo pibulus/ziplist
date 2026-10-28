@@ -46,6 +46,11 @@
         url: canonicalUrl,
         description,
         inLanguage: "en",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "ZipList",
+          url: "https://ziplist.app",
+        },
       },
       {
         "@type": "FAQPage",

@@ -7,6 +7,7 @@ import {
   uiActions,
 } from "../infrastructure/stores";
 import { soundService } from "../infrastructure/soundService";
+import { hapticService } from "../infrastructure/hapticService";
 import { wakeLockService } from "../pwa/wakeLockService";
 import { transcriptionService } from "../transcription/transcriptionService";
 import { AudioStates } from "./audioStates";
@@ -157,7 +158,7 @@ class AudioRecorderService {
   }
 
   handleHoldStart() {
-    soundService.impact?.("medium");
+    hapticService.impact("medium");
     if (!get(isRecording)) this.toggleRecording();
   }
 

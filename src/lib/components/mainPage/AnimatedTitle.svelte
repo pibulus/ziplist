@@ -129,7 +129,7 @@
 
 <!-- Updated subheadline with improved typography and reduced bottom margin -->
 <p
-  class="slide-in-subtitle mx-auto mb-6 mt-3 max-w-prose cursor-default select-none text-center text-sm font-medium leading-relaxed tracking-normal text-[#1e1714]/85 sm:mb-7 sm:mt-6 sm:text-lg sm:font-normal sm:text-[#1e1714]/90 md:text-xl lg:text-2xl"
+  class="slide-in-subtitle mx-auto mb-2 mt-1.5 max-w-prose cursor-default select-none text-center text-sm font-medium leading-relaxed tracking-normal text-[#1e1714]/85 sm:mb-7 sm:mt-6 sm:text-lg sm:font-normal sm:text-[#1e1714]/90 md:text-xl lg:text-2xl"
 >
   {#each subtitle.split("\n") as line, i}
     {#if i > 0}<br />{/if}{line}
@@ -273,9 +273,9 @@
     /* No need for major mobile overrides anymore */
 
     .slide-in-subtitle {
-      max-inline-size: 28ch !important;
-      font-size: 1rem;
-      line-height: 1.6;
+      max-inline-size: 32ch !important;
+      font-size: 0.88rem;
+      line-height: 1.38;
       text-wrap: balance;
     }
   }

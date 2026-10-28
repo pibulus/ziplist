@@ -556,6 +556,7 @@
      translates, which is what lets the ends join up seamlessly. */
   .lists-wrapper {
     display: grid;
+    align-items: start;
     width: 100%;
     max-width: 100%;
   }
@@ -592,11 +593,13 @@
 
   /* Perf: a slide parked at |sx| >= 100 is fully off-screen (translate one
      full width + the 0.95 scale pulls its near edge past the viewport).
-     visibility: hidden lets the compositor skip painting it entirely.
-     (Not content-visibility: its size containment drops parked slides out of
-     the deck's shared grid cell, so the page height jumps on every swipe.) */
+     visibility: hidden lets the compositor skip painting it entirely, and
+     collapsing its height prevents a 30-item neighbor list from stretching the
+     shared grid cell when viewing a short list. */
   .list-slide.parked {
     visibility: hidden;
+    height: 0;
+    overflow: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -634,11 +637,19 @@
   }
 
   .list-nav {
+    position: sticky;
+    top: max(env(safe-area-inset-top), 0.35rem);
+    z-index: 35;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.2rem;
-    margin-bottom: 0.4rem;
+    margin: 0 auto 0.4rem;
+    padding: 0 0.25rem;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--zl-card-bg, #fffef7) 88%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .nav-arrow {

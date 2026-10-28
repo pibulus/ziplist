@@ -8,7 +8,6 @@
      It was written and then never rendered; one array now feeds both the page
      and the markup, which is also what Google's FAQPage rules require. */
   import VerticalPage from "$lib/components/layout/VerticalPage.svelte";
-  import { PRICING } from "$lib/config/pricing.js";
 
   const canonicalUrl = "https://ziplist.app/es/mandado";
   const title =
@@ -36,21 +35,15 @@
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "WebApplication",
-        name: "ZipList Lista del Mandado por Voz",
-        url: "https://ziplist.app/es/mandado",
-        image: "https://ziplist.app/og-card.png",
-        description:
-          "Crea tu lista del mandado dictando por voz. Agrega jitomate, aguacate y tortillas sin escribir. Salas QR compartidas en vivo para ir al súper en pareja sin registrarse.",
-        applicationCategory: "ShoppingApplication",
-        operatingSystem: "Web",
+        "@type": "WebPage",
+        name: title,
+        url: canonicalUrl,
+        description,
         inLanguage: "es",
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: PRICING.currency,
-          description:
-            "Lista del mandado por voz gratuita con salas QR en vivo",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "ZipList",
+          url: "https://ziplist.app",
         },
       },
       {

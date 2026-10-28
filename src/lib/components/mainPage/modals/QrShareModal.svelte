@@ -135,12 +135,11 @@
 
 <dialog
   id="qr_modal"
-  class="modal modal-middle fixed z-50 overflow-hidden"
-  style="overflow-y: hidden!important;"
+  class="modal"
   aria-labelledby="qr_modal_title"
   aria-modal="true"
 >
-  <div class="zl-modal-sm modal-box relative text-center">
+  <div class="zl-modal-sm zl-modal-contained modal-box relative text-center">
     <form method="dialog">
       <ModalCloseButton
         {closeModal}
@@ -149,15 +148,17 @@
       />
     </form>
 
-    <div class="space-y-4">
+    <div
+      class="zl-modal-scroll-area min-h-0 space-y-4 overflow-y-auto overflow-x-hidden pb-1 pr-1"
+    >
       <!-- Header -->
-      <div class="flex items-center justify-center gap-2.5 pl-2 pr-8">
+      <div class="flex items-center justify-center gap-2.5 px-8">
         <div class="flex h-8 w-8 shrink-0 items-center justify-center">
           <Mascot interactive={false} aura={false} />
         </div>
         <h3
           id="qr_modal_title"
-          class="text-left text-xl font-black tracking-tight text-[#1e1714]"
+          class="text-center text-xl font-black tracking-tight text-[#1e1714]"
         >
           {title}
         </h3>
@@ -196,7 +197,7 @@
             class="h-full w-full rounded-lg object-contain"
           />
         {:else if qrError}
-          <div class="p-4 text-xs font-bold text-rose-600">
+          <div class="p-4 text-xs font-bold text-[#8f3a28]">
             Could not generate QR code.
           </div>
         {:else}
@@ -234,7 +235,11 @@
       </div>
     </div>
   </div>
-  <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-sm">
-    <button on:click={closeModal}>close</button>
-  </form>
+  <button
+    type="button"
+    class="modal-backdrop"
+    on:click={closeModal}
+    on:keydown={(e) => e.key === "Enter" && closeModal()}
+    aria-label="Close QR modal"
+  ></button>
 </dialog>

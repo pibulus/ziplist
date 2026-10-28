@@ -229,7 +229,7 @@
     const success = await copyTextToClipboard(toCopy);
     if (success) {
       idCopied = true;
-      soundService?.play?.("bloom") || soundService?.copySuccess?.();
+      soundService?.copySuccess?.({ force: true });
       hapticService?.notification?.("success") ||
         hapticService?.impact?.("medium");
       if (idCopiedTimer) clearTimeout(idCopiedTimer);
@@ -384,7 +384,7 @@
     </div>
   </div>
 
-  <div class="relative z-10 flex items-end justify-between gap-4">
+  <div class="relative z-10 flex items-end justify-between gap-2">
     <div
       class="passport-id-chip -mx-1.5 -my-1 min-w-0 rounded-lg p-1.5 transition-all duration-150 hover:bg-[#1e1714]/5 active:scale-95"
       on:click={handleCopyCode}
@@ -416,7 +416,7 @@
         {/if}
       </p>
       <p
-        class="passport-member-id mt-0.5 font-mono text-xs font-black tracking-tight sm:text-sm"
+        class="passport-member-id mt-0.5 whitespace-nowrap font-mono text-[11px] font-black tracking-tight sm:text-xs"
       >
         {identity.phrase || identity.memberId}
       </p>
