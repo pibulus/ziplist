@@ -96,7 +96,7 @@ export function buildContributorEmail({
     "More room for lists, private sync, and shared lists that keep going.",
     "Free sharing stays free.",
     "",
-    "Passport lasts one year. No auto-renewal.",
+    "One payment. No subscription, no renewal.",
     "Keep this email private. The passkey opens the lists.",
   ]
     .filter((line) => line !== null)
@@ -165,7 +165,7 @@ export function buildContributorEmail({
 					${passportCard}
 
 					<tr><td align="center" style="padding:32px 0 0;font-size:15px;line-height:1.55;">More room for lists. Private sync.<br />Shared lists that keep going.</td></tr>
-					<tr><td align="center" style="padding:18px 0 0;font-size:13px;line-height:1.5;${muted}">Free sharing stays free.<br />Passport lasts one year. No auto-renewal.<br />Keep this email private: the passkey opens the lists.</td></tr>
+					<tr><td align="center" style="padding:18px 0 0;font-size:13px;line-height:1.5;${muted}">Free sharing stays free.<br />One payment. No subscription, no renewal.<br />Keep this email private: the passkey opens the lists.</td></tr>
 
 					${rule}
 
