@@ -1,4 +1,5 @@
 import { storage } from "../storage/index.js";
+import { expiryForPaidAt } from "./renewalWindow.js";
 import { withStoreLock } from "../storage/storeLock.js";
 
 const STORE_KEY = "contributor-checkouts";
@@ -42,6 +43,23 @@ export async function saveCheckout(checkout) {
   });
 }
 
+export async function listCheckouts() {
+  const store = await readStore();
+  return store.checkouts;
+}
+
+export async function markRenewalReminderSent(id) {
+  return withStoreLock(STORE_KEY, async () => {
+    const store = await readStore();
+    const checkout = store.checkouts.find((candidate) => candidate.id === id);
+    if (!checkout || checkout.renewalReminderSentAt) return false;
+    checkout.renewalReminderSentAt = new Date().toISOString();
+    checkout.updatedAt = checkout.renewalReminderSentAt;
+    await writeStore(store);
+    return true;
+  });
+}
+
 export async function getCheckoutById(id) {
   const store = await readStore();
   return store.checkouts.find((checkout) => checkout.id === id) || null;
@@ -78,6 +96,12 @@ async function markPaid(matcher, payment) {
     if (!checkout) return null;
 
     checkout.status = "paid";
+    // Kept on the checkout (never on the lists) so a renewal reminder has an
+    // address to reach. Cleared with the record; not used for anything else.
+    checkout.buyerEmail =
+      payment?.buyer_email_address || checkout.buyerEmail || null;
+    checkout.expiresAt =
+      checkout.expiresAt || expiryForPaidAt(new Date().toISOString());
     checkout.providerPaymentId =
       payment?.id || checkout.providerPaymentId || null;
     // Backfill the order id when Square didn't return it at create time, so

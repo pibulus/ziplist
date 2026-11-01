@@ -706,7 +706,8 @@
           <p
             class="text-center text-[11px] font-bold leading-snug text-[#525252]"
           >
-            Passport arrives by email about a minute after payment.
+            Passport arrives by email about a minute after payment. The address
+            stays with it, so a reminder can find it before the year is up.
           </p>
         </div>
 
