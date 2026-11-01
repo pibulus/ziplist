@@ -109,7 +109,7 @@ Code: `deviceSyncStore.js` (socket, pairing, push/apply), `syncCrypto.js`,
 | Case                          | Behaviour                                                                |
 | ----------------------------- | ------------------------------------------------------------------------ |
 | No relay host configured      | Store stays disconnected, nothing opens                                  |
-| Pairing code is unlicensed    | Redeem rejects it; local lists stay on this device                      |
+| Pairing code is unlicensed    | Redeem rejects it; local lists stay on this device                       |
 | A live envelope won't decrypt | Pill reads "Mismatch" with a note; a fresh pairing link fixes both sides |
 | Stored catch-up won't decrypt | Ignored; matching pairing credentials are needed before lists can merge  |
 | Socket drops                  | "Offline"; partysocket reconnects and the device pushes again on open    |

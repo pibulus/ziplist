@@ -10,6 +10,12 @@ import {
 const DEFAULT_APP_ORIGIN = "http://localhost:3001";
 const ROOM_PATH = "/parties/main";
 const TIMEOUT_MS = 10000;
+// wrangler's local Hibernation proxy flushes an expired room's close frame at
+// almost exactly 10s. Sharing TIMEOUT_MS with the relay waits made this gate a
+// coin flip against its own timeout (close at 10,025ms, timeout at 10,000ms),
+// which is what "waiting for websocket close" was reporting. Production closes
+// the same socket in ~10ms; the longer ceiling is local-only headroom.
+const EXPIRED_CLOSE_TIMEOUT_MS = 30000;
 
 function readDotEnvValue(key) {
   if (!fs.existsSync(".env")) return "";
@@ -301,7 +307,7 @@ function waitForSocketMessage(socket, type, predicate = () => true) {
   });
 }
 
-function waitForSocketClose(socket) {
+function waitForSocketClose(socket, timeoutMs = TIMEOUT_MS) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       cleanup();
@@ -310,7 +316,7 @@ function waitForSocketClose(socket) {
           `Timed out waiting for websocket close (state=${socket.readyState})`,
         ),
       );
-    }, TIMEOUT_MS);
+    }, timeoutMs);
 
     const onClose = (event) => {
       cleanup();
@@ -471,7 +477,7 @@ async function assertExpiredSocket({ partyHost, roomId }) {
     )}?avatar=Expired%20Smoke`,
   );
 
-  const closeEvent = await waitForSocketClose(socket);
+  const closeEvent = await waitForSocketClose(socket, EXPIRED_CLOSE_TIMEOUT_MS);
   if (closeEvent.code !== 4005) {
     throw new Error(
       `expired socket expected close 4005, got ${closeEvent.code}`,
@@ -498,6 +504,22 @@ async function main() {
 
   console.log(`app=${appOrigin}`);
   console.log(`partykit=${partyHost}`);
+
+  if (isLocalHost(partyHost.split(":")[0])) {
+    const expiredRoomId = await createExpiredRoomDirect({ partyHost });
+    await assertExpiredRoom({ partyHost, roomId: expiredRoomId });
+    // Kept first so the expiry gate never competes with the relay sockets for
+    // the local proxy's close-frame budget. Keep this gate ON by default; the
+    // explicit skip only isolates relay/expiry-GET verification.
+    if (process.env.LIVE_SMOKE_SKIP_EXPIRED_SOCKET === "1") {
+      console.log("expired websocket close=unverified (explicit skip)");
+    } else {
+      await assertExpiredSocket({ partyHost, roomId: expiredRoomId });
+    }
+    // Room lookups are deliberately capped at 12 / 10s. Expiry checks use
+    // their own bucket; wait it out before the main burst.
+    await new Promise((resolve) => setTimeout(resolve, 10_500));
+  }
 
   const roomA = await createRoom({
     appOrigin,
@@ -571,23 +593,6 @@ async function main() {
     await getRoom({ partyHost, roomId: phraseRoomId }),
     "Shared phrase item",
   );
-
-  if (isLocalHost(partyHost.split(":")[0])) {
-    // Room lookups are deliberately capped at 12 / 10s. Exercise the expiry
-    // gate in a fresh bucket rather than treating our own test burst's 429 as
-    // a lifecycle failure.
-    await new Promise((resolve) => setTimeout(resolve, 10_500));
-    const expiredRoomId = await createExpiredRoomDirect({ partyHost });
-    await assertExpiredRoom({ partyHost, roomId: expiredRoomId });
-    // Wrangler's local Hibernation-DO proxy can leave an expired socket in
-    // CLOSING without finishing the TCP close handshake. Keep this gate ON by
-    // default; the explicit skip only isolates relay/expiry-GET verification.
-    if (process.env.LIVE_SMOKE_SKIP_EXPIRED_SOCKET === "1") {
-      console.log("expired websocket close=unverified (local proxy skip)");
-    } else {
-      await assertExpiredSocket({ partyHost, roomId: expiredRoomId });
-    }
-  }
 
   console.log(`room_a=${roomA.roomId}`);
   console.log(`room_b=${roomB.roomId}`);
