@@ -375,15 +375,35 @@ assert.ok(builtEmail.html.includes("cid:ziplist-mark"));
 assert.ok(builtEmail.html.includes("#ff6ac2"), "Passport CTA uses brand pink");
 if (process.env.ZL_MAIL_PREVIEW) {
   const { default: QRCode } = await import("qrcode");
+  const { renderPassportCardPng } = await import("./email/passportCard.js");
   const qr = await QRCode.toDataURL(`https://ziplist.app/u/${sampleCode}`);
+  const card = await renderPassportCardPng({
+    code: sampleCode,
+    phrase: samplePhrase,
+    memberName: "Marmot Puddle",
+    unlockUrl: `https://ziplist.app/u/${sampleCode}`,
+    appLabel: "ZipList Passport",
+  });
+  const previewEmail = buildContributorEmail({
+    to: "pablo@example.com",
+    code: sampleCode,
+    phrase: samplePhrase,
+    memberName: "Marmot Puddle",
+    appOrigin: "https://ziplist.app",
+    hasCard: true,
+  });
   writeFileSync(
     process.env.ZL_MAIL_PREVIEW,
-    builtEmail.html
+    previewEmail.html
       .replace(
         "cid:ziplist-mark",
         `data:image/png;base64,${ZIPLIST_EMAIL_PNG_BASE64}`,
       )
-      .replace("cid:ziplist-passport-qr", qr),
+      .replace("cid:ziplist-passport-qr", qr)
+      .replace(
+        "cid:ziplist-passport-card",
+        `data:image/png;base64,${card.toString("base64")}`,
+      ),
   );
 }
 
@@ -413,8 +433,14 @@ assert.equal(fallbackResult.sent, false);
 assert.equal(sentPayloads.length, 1);
 assert.equal(
   sentPayloads[0].attachments.map((item) => item.content_id).join(","),
-  "ziplist-mark,ziplist-passport-qr",
-  "dispatched payload must attach the mascot and inline QR PNG",
+  "ziplist-mark,ziplist-passport-card",
+  "dispatched payload must attach the mascot and the buyer's passport card",
+);
+assert.equal(
+  Buffer.from(sentPayloads[0].attachments[1].content, "base64")
+    .subarray(1, 4)
+    .toString("ascii"),
+  "PNG",
 );
 const acceptedEmail = await sendContributorPassportEmail({
   to: "pablo@example.com",

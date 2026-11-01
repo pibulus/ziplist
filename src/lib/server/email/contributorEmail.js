@@ -6,11 +6,13 @@ import { env } from "$env/dynamic/private";
 import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
 import { vaultHashForCode } from "$lib/server/contributor/licenseCrypto.js";
 import { ZIPLIST_EMAIL_PNG_BASE64 } from "./ziplistEmailImage.js";
+import { renderPassportCardPng } from "./passportCard.js";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const DEFAULT_FROM = "ZipList <hello@ziplist.app>";
 const QR_CONTENT_ID = "ziplist-passport-qr";
 const ICON_CONTENT_ID = "ziplist-mark";
+const CARD_CONTENT_ID = "ziplist-passport-card";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isValidEmailAddress(value) {
@@ -65,6 +67,7 @@ export function buildContributorEmail({
   memberName,
   appOrigin = "https://ziplist.app",
   hasQr = false,
+  hasCard = false,
 }) {
   const derived = derivePassportIdentityFromCode(code);
   const cleanMemberName = memberName?.toString().trim() || "";
@@ -81,7 +84,10 @@ export function buildContributorEmail({
     "Lists follow across linked devices.",
     "",
     displayMemberName ? `Passport identity: ${displayMemberName}` : null,
-    hasQr ? "QR code attached." : null,
+    hasCard
+      ? "The passport card is attached: passkey and QR on the card."
+      : null,
+    hasQr && !hasCard ? "QR code attached." : null,
     `Link this device: ${unlockUrl}`,
     resolvedPhrase
       ? `4-word passkey: ${resolvedPhrase}`
@@ -121,7 +127,18 @@ export function buildContributorEmail({
 				<div style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};padding-bottom:6px;">Passport Passkey</div>
 				<div style="display:inline-block;padding:12px 18px;background:#fffef7;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:800;letter-spacing:0.06em;">${safeCode}</div>
 			</td></tr>`;
-  const passportCard = `<tr><td align="center" style="padding:36px 0 0;">
+  // The buyer's actual card, drawn from the same seeded skin they see in the
+  // app. The HTML reproduction below is the fallback so a purchase never loses
+  // its passkey.
+  const passportCardImage = `<tr><td align="center" style="padding:34px 0 0;">
+		<img src="cid:${CARD_CONTENT_ID}" width="496" alt="Your ZipList Passport card: 4-word passkey and QR code" style="display:block;width:100%;max-width:496px;height:auto;border:2px solid #1e1714;border-radius:20px;box-shadow:4px 4px 0 #1e1714;" />
+	</td></tr>`;
+  const cardNameRow = safeMemberName
+    ? `<tr><td align="center" style="padding:20px 0 0;font-size:17px;font-weight:900;">${safeMemberName}</td></tr>`
+    : "";
+  const passportCard = hasCard
+    ? `${passportCardImage}${cardNameRow}${passkeyBlock}`
+    : `<tr><td align="center" style="padding:36px 0 0;">
 		<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:410px;border:2px solid #1e1714;border-radius:22px;background:#fbf1e4;">
 			<tr><td style="height:12px;background:#ffcc33;border-radius:20px 20px 0 0;font-size:1px;line-height:1px;">&nbsp;</td></tr>
 			<tr><td align="center" style="padding:18px 12px 0;font-size:11px;font-weight:900;letter-spacing:0.16em;color:#ad2770;">PASSPORT</td></tr>
@@ -217,15 +234,35 @@ export async function sendContributorPassportEmail({
 
   try {
     const derived = derivePassportIdentityFromCode(code);
+    const resolvedPhrase = phrase || derived.phrase;
+    const resolvedName = memberName || derived.memberName;
     const unlockUrl = buildUnlockLink(origin, code);
-    const qrPng = await renderPassportQr(unlockUrl);
+
+    // Their own card first; the standalone QR only stands in when the card
+    // cannot be drawn, so the passkey and door always reach them.
+    const cardPng = await renderPassportCardPng({
+      code,
+      phrase: resolvedPhrase,
+      memberName: resolvedName,
+      unlockUrl,
+      appLabel: "ZipList Passport",
+    }).catch((error) => {
+      console.warn(
+        "[ContributorEmail] Passport card render failed:",
+        error?.message || error,
+      );
+      return null;
+    });
+    const qrPng = cardPng ? null : await renderPassportQr(unlockUrl);
+
     const message = buildContributorEmail({
       to,
       code,
-      phrase: phrase || derived.phrase,
-      memberName: memberName || derived.memberName,
+      phrase: resolvedPhrase,
+      memberName: resolvedName,
       appOrigin: origin,
       hasQr: Boolean(qrPng),
+      hasCard: Boolean(cardPng),
     });
 
     const attachments = [
@@ -236,6 +273,14 @@ export async function sendContributorPassportEmail({
         content_id: ICON_CONTENT_ID,
       },
     ];
+    if (cardPng) {
+      attachments.push({
+        filename: "ziplist-passport.png",
+        content: cardPng.toString("base64"),
+        content_type: "image/png",
+        content_id: CARD_CONTENT_ID,
+      });
+    }
     if (qrPng) {
       attachments.push({
         filename: "ziplist-passport-qr.png",
