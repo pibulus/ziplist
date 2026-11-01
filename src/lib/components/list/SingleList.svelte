@@ -1532,6 +1532,18 @@
     return match?.primary || "";
   }
 
+  // ── Fate: let the list decide ──────────────────────────────────────────
+  // The opposite of deciding. One unchecked item, named out loud, so a stuck
+  // evening has somewhere to start. Deliberately not a streak or a score.
+  function pickOneForMe() {
+    const pool = activeItems;
+    if (pool.length < 2) return;
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    showListStatus(`Fate picks: ${chosen.text}`, true, 5200);
+    hapticService.impact("medium");
+    soundService.add({ force: true });
+  }
+
   // ── Order play: shuffle & entry-order sort ─────────────────────────────
   function shuffleActiveItems() {
     const active = list.items.filter((i) => !i.checked);
@@ -3067,6 +3079,33 @@
       </div>
 
       <div class="zl-list-actions">
+        {#if activeItems.length >= 2}
+          <button
+            type="button"
+            class="zl-shuffle-button"
+            on:click={pickOneForMe}
+            data-tip="Pick one for me"
+            aria-label={`Pick one item from ${list.name || "this list"}`}
+          >
+            <svg
+              class="zl-header-icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+              <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"></circle>
+              <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"></circle>
+              <circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"></circle>
+              <circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"></circle>
+            </svg>
+          </button>
+        {/if}
         {#if activeItems.length >= 3}
           <button
             type="button"

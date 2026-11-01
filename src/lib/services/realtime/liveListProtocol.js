@@ -19,7 +19,13 @@ export const LIVE_MESSAGE_TYPES = Object.freeze({
 export const LIVE_CLOSE_CODES = Object.freeze({
   ROOM_NOT_FOUND: 4004,
   ROOM_EXPIRED: 4005,
+  ROOM_FULL: 4006,
 });
+
+// Six people in one list is where a live list still reads as a conversation.
+// Past that the presence row becomes a crowd and full-snapshot edits get
+// noisy, so the room refuses the seventh rather than degrading quietly.
+export const LIVE_PEOPLE_LIMIT = 6;
 
 export const LIVE_ROOM_TIERS = Object.freeze({
   FREE: "free",

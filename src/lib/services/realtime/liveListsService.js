@@ -41,6 +41,7 @@ const LIVE_JOIN_TIMEOUT_MS = 12000;
 const TERMINAL_CLOSE_CODES = new Set([
   LIVE_CLOSE_CODES.ROOM_NOT_FOUND,
   LIVE_CLOSE_CODES.ROOM_EXPIRED,
+  LIVE_CLOSE_CODES.ROOM_FULL,
   1008, // policy violation (wrong/changed password)
 ]);
 
@@ -149,6 +150,10 @@ function createJoinError(event) {
     error.message = "This live room has popped.";
   } else if (event?.code === LIVE_CLOSE_CODES.ROOM_NOT_FOUND) {
     error.code = "room_not_found";
+  } else if (event?.code === LIVE_CLOSE_CODES.ROOM_FULL) {
+    error.code = "room_full";
+    error.message =
+      "That list is full — six people is the limit. Try again when someone leaves.";
   }
 
   return error;
@@ -439,7 +444,9 @@ export async function connectToLive(listId, roomId, password = null) {
             announceLiveNotice(
               event?.code === LIVE_CLOSE_CODES.ROOM_EXPIRED
                 ? "This shared link has expired. The local list remains."
-                : "Sharing ended for this list.",
+                : event?.code === LIVE_CLOSE_CODES.ROOM_FULL
+                  ? "That list is full — six people is the limit. The local list remains."
+                  : "Sharing ended for this list.",
             );
             disconnectFromLive(listId);
           }

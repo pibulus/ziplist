@@ -26,6 +26,7 @@ import {
   createLiveRoomMetadata,
   isLiveRoomExpired,
   LIVE_CLOSE_CODES,
+  LIVE_PEOPLE_LIMIT,
   LIVE_MESSAGE_TYPES,
   normalizeLiveMessage,
   sanitizeAvatar,
@@ -185,6 +186,12 @@ export class ListRoom {
     const [client, server] = Object.values(pair);
 
     this.ctx.acceptWebSocket(server);
+
+    // Counted after accepting, so this socket is included in the tally.
+    if (this.ctx.getWebSockets().length > LIVE_PEOPLE_LIMIT) {
+      server.close(LIVE_CLOSE_CODES.ROOM_FULL, "This list is full");
+      return new Response(null, { status: 101, webSocket: client });
+    }
 
     const isSync = await this.isSyncRoom(url);
 
