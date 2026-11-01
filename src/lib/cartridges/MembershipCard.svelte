@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { generateMemberIdentity } from "./identityUtils.js";
+  import { generateMemberIdentity } from "$lib/softstack-passport/index.js";
   import { hexToRgba, mixHex } from "./passportPalettes.js";
   import {
     buildPassportAvatar,

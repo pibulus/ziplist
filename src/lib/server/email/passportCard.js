@@ -11,7 +11,7 @@
 // sweep. Everything a buyer needs (face, name, passkey, QR) is identical to
 // what they see in the app, because it comes from the same pure functions.
 
-import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+import { generateMemberIdentity } from "$lib/softstack-passport/index.js";
 import { selectSkin } from "$lib/cartridges/passportSkins.js";
 import { buildPassportAvatar } from "$lib/cartridges/passportAvatar.js";
 import { vaultHashForCode } from "$lib/server/contributor/licenseCrypto.js";

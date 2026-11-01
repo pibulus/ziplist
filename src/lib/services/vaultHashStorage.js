@@ -51,7 +51,7 @@ export function isPersonalPassportCode(code) {
   if (parseFourWordPasskey(code)) return true;
   const clean = code?.toString().trim().toUpperCase() || "";
   const compact = clean.replace(/^ZL[-_\s]?/, "").replace(/[-_\s]/g, "");
-  return clean.startsWith("ZL-") || /^[A-F0-9]{12}$/.test(compact);
+  return clean.startsWith("SS-") || /^[A-F0-9]{12}$/.test(compact);
 }
 
 export function readStoredRecoveryCodes(storage) {
@@ -179,7 +179,7 @@ export async function getVaultHash(code) {
   const normalized = normalizeStoredSupporterCode(code);
   if (!normalized) return "";
   const encoder = new TextEncoder();
-  const data = encoder.encode(`ziplist-vault-id:${normalized}`);
+  const data = encoder.encode(`softstack-passport-id:${normalized}`);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");

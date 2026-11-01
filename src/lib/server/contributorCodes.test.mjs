@@ -240,8 +240,8 @@ assert.equal(
 const sampleCode = generateLicenseCode("checkout_test_001");
 assert.match(
   sampleCode,
-  /^ZL-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/,
-  "generated license code must use ZL-XXXX-XXXX-XXXX format",
+  /^SS-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/,
+  "generated license code must use SS-XXXX-XXXX-XXXX format",
 );
 
 const serverVaultHash = vaultHashForCode(sampleCode);
@@ -483,7 +483,7 @@ const unauthRes = await emailPassPost({
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       email: "friend@example.com",
-      code: "ZL-0000-0000-0000",
+      code: "SS-0000-0000-0000",
     }),
   }),
   url: new URL("https://ziplist.app/api/contributor/email-pass"),

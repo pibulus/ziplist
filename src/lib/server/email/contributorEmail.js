@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { env } from "$env/dynamic/private";
-import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+import { generateMemberIdentity } from "$lib/softstack-passport/index.js";
 import { vaultHashForCode } from "$lib/server/contributor/licenseCrypto.js";
 import { ZIPLIST_EMAIL_PNG_BASE64 } from "./ziplistEmailImage.js";
 import { renderPassportCardPng } from "./passportCard.js";
@@ -71,7 +71,7 @@ export function buildUnlockLink(appOrigin, code) {
 export function derivePassportIdentityFromCode(code) {
   const hash = vaultHashForCode(code);
   if (!hash) return { memberName: "", phrase: "" };
-  const identity = generateMemberIdentity(hash);
+  const identity = generateMemberIdentity(hash, code);
   return {
     memberName: identity.isFallback ? "" : identity.name,
     phrase: identity.isFallback ? "" : identity.phrase,

@@ -19,7 +19,7 @@ export function isContributorCodeValid(code, validCodes) {
   if (!normalizedCode || !Array.isArray(validCodes)) return false;
 
   const cleanInput = stripPunctuation(normalizedCode);
-  const strippedInput = cleanInput.replace(/^ZL/i, "");
+  const strippedInput = cleanInput.replace(/^(?:SS|TT|ZL)[-_\s]?/i, "");
 
   // Constant-time comparison across the whole allowlist so response timing
   // can't narrow down a manual code character by character.
@@ -27,7 +27,7 @@ export function isContributorCodeValid(code, validCodes) {
   for (const validCode of validCodes) {
     const normValid = normalizeContributorCode(validCode);
     const cleanValid = stripPunctuation(normValid);
-    const strippedValid = cleanValid.replace(/^ZL/i, "");
+    const strippedValid = cleanValid.replace(/^(?:SS|TT|ZL)[-_\s]?/i, "");
 
     if (timingSafeStringEqual(normalizedCode, normValid)) {
       matched = true;

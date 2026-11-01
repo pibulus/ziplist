@@ -80,7 +80,7 @@
   import { PRODUCT_LIMITS } from "$lib/constants";
   import { isContributor } from "$lib";
   import { listPreferences } from "$lib/services/lists/listPreferences.js";
-  import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+  import { generateMemberIdentity } from "$lib/softstack-passport/index.js";
   import {
     buildPassportAvatar,
     readCustomPassportAvatar,

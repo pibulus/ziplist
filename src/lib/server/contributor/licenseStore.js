@@ -254,6 +254,8 @@ export async function redeemStoredLicense(code) {
 export function issueTokenForLicense(license) {
   return issueContributorToken({
     sub: license.id,
+    stamps: ["ziplist"],
+    app: "ziplist",
     tier: license.tier || "contributor",
     source: license.source || "license",
   });

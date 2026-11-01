@@ -1,10 +1,15 @@
 import crypto from "crypto";
 import { env } from "$env/dynamic/private";
-import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+import {
+  CODE_NAMESPACE,
+  formatCode,
+  generateMemberIdentity,
+  idInput,
+  normalizeCode,
+} from "$lib/softstack-passport/index.js";
 import { normalizeContributorCode } from "../contributorCodes.js";
 import { PRICING } from "$lib/config/pricing.js";
 
-const CODE_PREFIX = "ZL";
 const TOKEN_ALG = "HS256";
 const TOKEN_VERSION = 1;
 
@@ -18,7 +23,10 @@ const MIN_SECRET_LENGTH = 32;
 export function getContributorSecret() {
   // Only the dedicated secret — no fallback to unrelated cookie/auth secrets,
   // which would silently let one credential sign contributor licenses.
-  const secret = env.CONTRIBUTOR_LICENSE_SECRET?.trim();
+  // One shared passport secret across TalkType, ZipList and QRBuddy.
+  const secret =
+    env.SOFTSTACK_PASSPORT_SECRET?.trim() ||
+    env.CONTRIBUTOR_LICENSE_SECRET?.trim();
 
   if (!secret || secret.length < MIN_SECRET_LENGTH) {
     throw new Error(
@@ -50,8 +58,8 @@ export function hashSensitiveValue(value, secret = getContributorSecret()) {
 }
 
 export function generateLicenseCode(seed, secret = getContributorSecret()) {
-  const digest = hmacHex(`ziplist-contributor-license:${seed}`, secret);
-  return `${CODE_PREFIX}-${digest.slice(0, 4)}-${digest.slice(4, 8)}-${digest.slice(8, 12)}`;
+  const digest = hmacHex(`${CODE_NAMESPACE}${seed}`, secret);
+  return formatCode(digest.slice(0, 12));
 }
 
 export function normalizePasskeyPhrase(value) {
@@ -66,12 +74,9 @@ export function normalizePasskeyPhrase(value) {
 }
 
 export function vaultHashForCode(code) {
-  const normalized = normalizeContributorCode(code);
+  const normalized = normalizeCode(code);
   if (!normalized) return "";
-  return crypto
-    .createHash("sha256")
-    .update(`ziplist-vault-id:${normalized}`)
-    .digest("hex");
+  return crypto.createHash("sha256").update(idInput(normalized)).digest("hex");
 }
 
 export function generatePasskeyPhrase(seed, secret = getContributorSecret()) {
@@ -79,13 +84,10 @@ export function generatePasskeyPhrase(seed, secret = getContributorSecret()) {
   if (!cleanSeed) {
     throw new Error("Passkey phrase seed is required");
   }
-  const canonicalCode = /^ZL-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/i.test(
-    cleanSeed,
-  )
-    ? cleanSeed.toUpperCase()
-    : generateLicenseCode(cleanSeed, secret);
+  const canonicalCode = normalizeCode(cleanSeed) ||
+    generateLicenseCode(cleanSeed, secret);
   const vaultHash = vaultHashForCode(canonicalCode);
-  return generateMemberIdentity(vaultHash).phrase;
+  return generateMemberIdentity(vaultHash, canonicalCode).phrase;
 }
 
 export function licenseIdForCheckout(
