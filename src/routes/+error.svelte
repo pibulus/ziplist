@@ -7,6 +7,7 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import BrandMark from "$lib/components/ui/BrandMark.svelte";
+  import { Mascot } from "$lib/components/ui";
   import { fly } from "svelte/transition";
 
   $: status = $page.status;
@@ -31,7 +32,9 @@
     <BrandMark />
   </div>
   <div class="zl-error-card" role="alert" in:fly={{ y: 20 }}>
-    <div class="zl-error-icon" aria-hidden="true">✦</div>
+    <div class="zl-error-mascot" aria-hidden="true">
+      <Mascot interactive={false} aura={false} />
+    </div>
     <h2>{heading}</h2>
     <p>{blurb}</p>
     <button type="button" class="zl-error-btn" on:click={() => goto("/")}>
@@ -84,6 +87,12 @@
     border: 2px solid rgba(255, 176, 0, 0.32);
     border-radius: 28px;
     box-shadow: 0 10px 24px rgba(255, 176, 0, 0.14);
+  }
+
+  .zl-error-mascot {
+    width: 116px;
+    height: 116px;
+    margin: 0 auto 0.9rem;
   }
 
   .zl-error-icon {
