@@ -37,7 +37,7 @@
   let showQr = false;
   let qrModalProps = {
     shareUrl: "",
-    title: "Join Live List",
+    title: "Shared list",
     subtitle: "Scan with any phone camera to join in real time",
     syncPhrase: "",
     isLive: true,
@@ -66,7 +66,7 @@
       shareUrl:
         detail.shareUrl ||
         (typeof window !== "undefined" ? window.location.href : ""),
-      title: detail.title || "Join Live List",
+      title: detail.title || "Shared list",
       subtitle:
         detail.subtitle || "Scan with any phone camera to join in real time",
       syncPhrase: detail.syncPhrase || "",
@@ -155,7 +155,7 @@
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="ZipList live shared list room" />
+  <meta property="og:image:alt" content="ZipList shared list" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content={`https://ziplist.app/live/${roomId}`} />
   <meta name="twitter:title" content="Someone saved you a spot on their list" />
@@ -164,14 +164,14 @@
     content="Hop in — you'll tick things off together, live."
   />
   <meta name="twitter:image" content="https://ziplist.app/og-card.png" />
-  <meta name="twitter:image:alt" content="ZipList live shared list room" />
+  <meta name="twitter:image:alt" content="ZipList shared list" />
 </svelte:head>
 
 <div class="live-join-container">
   {#if isLoading}
     <div class="loading-state" role="status" aria-live="polite" in:fade>
       <div class="spinner" aria-hidden="true"></div>
-      <h2>Joining live list...</h2>
+      <h2>Opening shared list...</h2>
       <p>Connected as <strong>{avatar}</strong></p>
     </div>
   {:else if error}
@@ -189,12 +189,12 @@
       </div>
       <h2>
         {errorCode === "room_expired"
-          ? "This room popped"
-          : "Live link needs another try"}
+          ? "This shared link has expired"
+          : "Shared link needs another try"}
       </h2>
       <p>
         {errorCode === "room_expired"
-          ? "The live link has gone quiet. Start fresh and make a new one."
+          ? "The shared link has gone quiet. Local lists are still here."
           : error}
       </p>
       <button type="button" class="btn-primary" on:click={() => goto("/")}>
@@ -203,7 +203,7 @@
     </div>
   {:else}
     <span class="live-status-sr" role="status" aria-live="polite">
-      Live collaboration is active.
+      Shared list is connected.
     </span>
     <div class="live-brand-row">
       <BrandMark />

@@ -13,7 +13,6 @@ import { transcriptionService } from "../transcription/transcriptionService";
 import { AudioStates } from "./audioStates";
 import { listsStore } from "../lists/listsStore";
 import * as liveListsService from "../realtime/liveListsService";
-import { pwaService } from "../pwa/pwaService";
 
 const AUDIO_CAPTURE_CONSTRAINTS = {
   audio: {
@@ -296,7 +295,6 @@ class AudioRecorderService {
             const transcriptionResult =
               await transcriptionService.transcribeAudio(audioBlob);
             this.playTranscriptionCue(transcriptionResult);
-            pwaService.incrementTranscriptionCount();
             this.retryAudioBlob = null;
           } catch (transcriptionError) {
             console.error(

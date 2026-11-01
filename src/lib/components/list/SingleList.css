@@ -166,6 +166,7 @@
   .zl-card {
     padding: 0.75rem 0.65rem 0.95rem;
     border-radius: 18px;
+    max-width: 100%;
     margin-top: 0.25rem;
     margin-bottom: 0.35rem;
     /* Shadow compensation moved to .list-slide so it applies at every width,
@@ -743,9 +744,7 @@
      negative margin means nothing shifts. */
   padding: 14px 0 0;
   margin: -14px 0 0;
-  /* Bottom clearance for the corner voice button is handled on
-     .page-shell.list-first-shell, so .zl-list itself stays tight above
-     + Add item and Completed. */
+  /* Leave a beat before the entry bar, including on a single-item list. */
   padding-bottom: 0.25rem;
   display: flex;
   flex-direction: column;
@@ -756,6 +755,7 @@
 
 .zl-add-row {
   list-style: none;
+  margin-top: 0.45rem;
 }
 
 .zl-add-item-button {
@@ -1173,6 +1173,14 @@
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.01em;
+}
+
+/* On phones the arrow tile already communicates the jump. The extra chip
+   squeezed "Pink List" into two lines on a 320px screen. */
+@media (max-width: 480px) {
+  .zl-portal-jump-chip {
+    display: none;
+  }
 }
 
 .zl-item:hover .zl-portal-badge {
@@ -2151,6 +2159,41 @@
 
 /* Touch devices: no hover to reveal the handle/action button, so it rests
    awake — still quiet, but clearly there. */
+/* Four 44px controls need their own rail on small phones; forcing them into
+   the title row silently clipped the card even when document overflow was 0. */
+@media (max-width: 360px) {
+  .zl-list-header {
+    flex-wrap: wrap;
+    gap: 0.1rem;
+  }
+
+  .zl-list-header-main,
+  .zl-list-actions {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .zl-list-actions {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .zl-list-header.is-sharing {
+    flex-wrap: wrap;
+  }
+
+  .zl-list-header.is-sharing .zl-list-header-main,
+  .zl-list-header.is-sharing .zl-list-actions {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .zl-list-header.is-sharing .zl-list-actions {
+    justify-content: space-between;
+  }
+}
+
 @media (hover: none) {
   .zl-item-more-button {
     opacity: 0.65;
@@ -2243,46 +2286,6 @@ body.zl-touch-dragging {
 @media (pointer: coarse) {
   [data-tip]::after {
     display: none; /* no hover on touch — labels + icons do the work */
-  }
-}
-
-/* ── Full-clear confetti ────────────────────────────────────────────────
-   Bursts from the top of the card when a 5+ item list is fully ticked.
-   Pieces are plain DOM spans; drift (--dx), spin (--rot), and timing all
-   ride custom props set per-piece in JS. */
-.zl-confetti {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 0;
-  overflow: visible;
-  pointer-events: none;
-  z-index: 30;
-}
-
-.zl-confetti-piece {
-  position: absolute;
-  top: -8px;
-  width: var(--size, 8px);
-  height: calc(var(--size, 8px) * 0.45);
-  border-radius: 2px;
-  opacity: 0;
-  animation: zl-confetti-fall var(--dur, 1100ms)
-    cubic-bezier(0.25, 0.46, 0.45, 0.94) var(--delay, 0ms) forwards;
-}
-
-@keyframes zl-confetti-fall {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(0deg);
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--dx, 0px), 300px) rotate(var(--rot, 360deg));
   }
 }
 
@@ -2510,6 +2513,44 @@ body.zl-touch-dragging {
   padding: 0.15rem 0.15rem 0.75rem;
   margin-bottom: 0.65rem;
   border-bottom: 2px dashed rgba(30, 23, 20, 0.12);
+}
+
+.zl-manage-tray > .zl-share-option {
+  flex: 1 1 calc(50% - 0.5rem);
+  min-width: 0;
+  padding-inline: 0.35rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.zl-collaborator-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  color: #1e1714;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.zl-collaborator-badge img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #1e1714;
+  background: #fbf1e4;
+}
+
+.zl-collaborator-badge input {
+  width: 0;
+  flex: 1;
+  min-height: 40px;
+  border: 2px solid #1e1714;
+  border-radius: 10px;
+  background: #fffef7;
+  color: #1e1714;
+  padding: 0.3rem 0.55rem;
+  font: inherit;
 }
 
 .zl-manage-button.is-open,
@@ -3277,16 +3318,27 @@ body.zl-touch-dragging {
   }
 }
 
-/* ── Share tray ────────────────────────────────────────────────────────
-   Seven buttons in one `flex-wrap` pile meant the BROWSER decided the
-   grouping, by label width — which is how "Clear entire list" ended up
-   sharing a row with "QR this list". Now it's a column of three groups
-   (send / export / danger) and each group wraps within itself, so meaning
-   holds at every width instead of only at the one it was eyeballed on. */
+/* Share has three equally weighted actions; list management uses the same
+   tap targets but can wrap when labels need room. */
 .zl-share-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
+}
+
+.zl-share-actions.two-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.zl-share-actions > .zl-share-option {
+  min-width: 0;
+  padding-inline: 0.25rem;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: clamp(0.62rem, 2.6vw, 0.78rem);
+  text-align: center;
+  line-height: 1.2;
 }
 
 /* The words are the link, so they're a button, not a caption. */

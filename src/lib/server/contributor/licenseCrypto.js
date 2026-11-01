@@ -2,13 +2,14 @@ import crypto from "crypto";
 import { env } from "$env/dynamic/private";
 import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
 import { normalizeContributorCode } from "../contributorCodes.js";
+import { PRICING } from "$lib/config/pricing.js";
 
 const CODE_PREFIX = "ZL";
 const TOKEN_ALG = "HS256";
 const TOKEN_VERSION = 1;
 
 // Server-side token lifetime. Mirrors the client lifetime pass.
-const TOKEN_TTL_SECONDS = 100 * 365 * 24 * 60 * 60;
+const TOKEN_TTL_SECONDS = PRICING.termDays * 24 * 60 * 60;
 
 // Minimum signing-key length. 32 chars so the HMAC key carries real entropy
 // and isn't a short shared value reused from elsewhere.

@@ -134,8 +134,6 @@
           <ul class="about-tips" aria-live="polite">
             {#each tips as tip (tip.id)}
               <li>
-                <span class="about-tip-icon" aria-hidden="true">{tip.icon}</span
-                >
                 <span>{tip.text}</span>
               </li>
             {/each}
@@ -227,22 +225,6 @@
             class="underline underline-offset-2">Terms</a
           >
         </p>
-
-        <nav class="about-guides" aria-label="Guides and languages">
-          <a href="/about">How it works</a>
-          <span aria-hidden="true">·</span>
-          <a href="/for/groceries">The shop</a>
-          <span aria-hidden="true">·</span>
-          <a href="/for/couples">Two phones</a>
-          <span aria-hidden="true">·</span>
-          <a href="/for/packing">Packing</a>
-          <span aria-hidden="true">·</span>
-          <a href="/for/moving">Moving</a>
-          <span aria-hidden="true">·</span>
-          <a href="/for/gigs">Load-in</a>
-          <span aria-hidden="true">·</span>
-          <a href="/es">Español</a>
-        </nav>
       </div>
     </div>
   </div>
@@ -299,14 +281,6 @@
     margin-top: 0.7rem;
   }
 
-  .about-tip-icon {
-    flex-shrink: 0;
-    width: 1.4rem;
-    text-align: center;
-    font-size: 1.05rem;
-    line-height: 1.3;
-  }
-
   .about-deal-again {
     display: inline-flex;
     min-height: 44px;
@@ -324,29 +298,6 @@
 
   .about-deal-again:active {
     transform: scale(0.97);
-  }
-
-  .about-guides {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem 0.4rem;
-    padding-top: 0.25rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #525252;
-  }
-
-  .about-guides a {
-    color: #1e1714;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    transition: color 0.15s ease;
-  }
-
-  .about-guides a:hover {
-    color: #db2777;
   }
 
   @keyframes about-tip-in {

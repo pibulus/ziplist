@@ -733,7 +733,6 @@
             const transcriptionResult =
               await transcriptionService.transcribeAudio(audioBlob);
             playTranscriptionResultCue(transcriptionResult);
-            pwaService.incrementTranscriptionCount();
 
             if (landedNothing(transcriptionResult)) {
               // Hold the audio so "Try again" can re-run the same take.

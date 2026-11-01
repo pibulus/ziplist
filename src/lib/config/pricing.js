@@ -18,20 +18,20 @@ export const PRICING = {
 };
 
 export const CONTRIBUTOR_BENEFITS = [
-  "12 colour lists instead of 3",
-  "Encrypted device sync across phone & laptop",
-  "Year-long live shared rooms",
-  "Holographic Passport card with custom holo skins",
+  "12 lists, up from 3",
+  "Private sync across paired devices",
+  "12 shared lists at once, up from 1",
+  "Shared links last a year between edits",
 ];
 
 export const CONTRIBUTOR_COPY = {
-  headline: "Unlock the ZipList",
+  headline: "ZipList",
   headlineHighlight: "Passport",
-  tagline: "More room, live sync across devices, one flat pass.",
+  tagline: "More room. Private sync. One flat pass.",
   ctaButton: "Grab the ZipList Passport",
   redeemButton: "Already have a Passport key?",
   get priceLine() {
-    return `${PRICING.displayPrice} once. No subscription, no renewals.`;
+    return `${PRICING.displayPrice} once. No subscription.`;
   },
   get finePrint() {
     return this.priceLine;

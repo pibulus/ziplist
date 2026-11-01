@@ -13,36 +13,9 @@
       "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z",
   };
 
-  // Warm pastel families to match the app's peach/cream/fluro language —
-  // with accessible icon contrast (> 3:1 WCAG AA).
-  const TYPE_COLORS = {
-    info: {
-      bg: "bg-amber-50",
-      border: "border-amber-300",
-      text: "text-amber-950",
-      icon: "text-amber-700",
-    },
-    success: {
-      bg: "bg-emerald-50",
-      border: "border-emerald-300",
-      text: "text-emerald-950",
-      icon: "text-emerald-700",
-    },
-    warning: {
-      bg: "bg-amber-100",
-      border: "border-amber-400",
-      text: "text-amber-950",
-      icon: "text-amber-800",
-    },
-    error: {
-      bg: "bg-rose-50",
-      border: "border-rose-300",
-      text: "text-rose-950",
-      icon: "text-rose-700",
-    },
-  };
+  const TOAST_TYPES = new Set(["info", "success", "warning", "error"]);
 
-  const MAX_VISIBLE_TOASTS = 3;
+  const MAX_VISIBLE_TOASTS = 2;
   const timers = new Map();
 
   let toasts = [];
@@ -73,7 +46,7 @@
     lastToastTime = now;
 
     const id = ++toastId;
-    const type = TYPE_COLORS[detail?.type] ? detail.type : "info";
+    const type = TOAST_TYPES.has(detail?.type) ? detail.type : "info";
     const duration =
       type === "error"
         ? ANIMATION.TOAST.ERROR_DURATION
@@ -147,14 +120,13 @@
   {#each toasts as toast (toast.id)}
     <button
       type="button"
-      class="toast-item {TYPE_COLORS[toast.type].bg} {TYPE_COLORS[toast.type]
-        .border} {TYPE_COLORS[toast.type].text}"
+      class="toast-item toast-{toast.type}"
       transition:fly={{ y: -20, duration: 240, easing: quintOut }}
       on:click={() => removeToast(toast.id)}
-      aria-label="{toast.message}. Tap to dismiss."
+      aria-label="{toast.message}. Close notification."
     >
       <svg
-        class="toast-icon {TYPE_COLORS[toast.type].icon}"
+        class="toast-icon"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -201,12 +173,15 @@
     gap: 0.5rem;
     padding: 0.625rem 1.1rem;
     border-radius: 1rem;
-    border: 2px solid;
+    border: 2px solid #1e1714;
+    background: #fbf1e4;
+    color: #1e1714;
     font-size: 0.9375rem;
     font-weight: 700;
     letter-spacing: 0;
-    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+    box-shadow: 3px 3px 0 rgba(30, 23, 20, 0.82);
     max-width: 100%;
+    min-height: 44px;
     cursor: pointer;
     text-align: left;
     transition:
@@ -216,7 +191,7 @@
 
   .toast-item:hover {
     transform: translateY(1px);
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
+    box-shadow: 2px 2px 0 rgba(30, 23, 20, 0.82);
   }
 
   .toast-item:active {
@@ -227,6 +202,18 @@
     width: 1.125rem;
     height: 1.125rem;
     flex-shrink: 0;
+  }
+
+  .toast-success {
+    background: color-mix(in srgb, var(--zl-cta-color, #ffcc33) 32%, #fbf1e4);
+  }
+
+  .toast-warning {
+    background: #f8e9bf;
+  }
+
+  .toast-error {
+    background: #f2d9d2;
   }
 
   .toast-message {

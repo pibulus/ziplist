@@ -153,20 +153,28 @@
 </div>
 
 <style>
+  @media (max-width: 639px) {
+    /* Keep the swipe canvas and its shadow inside a slim native gutter. */
+    .page-shell {
+      padding-left: 0.45rem;
+      padding-right: 0.45rem;
+    }
+  }
+
   .skip-link {
     position: fixed;
     top: 0.75rem;
     left: 0.75rem;
     z-index: 1000;
     transform: translateY(-150%);
-    border: 3px solid #000000;
+    border: 3px solid #1e1714;
     border-radius: 12px;
     background: #ffb000;
-    color: #000000;
+    color: #1e1714;
     font-family: "Space Mono", monospace;
     font-weight: 800;
     padding: 0.65rem 0.9rem;
-    box-shadow: 4px 4px 0 #000000;
+    box-shadow: 4px 4px 0 #1e1714;
     transition: transform 0.15s ease;
   }
 

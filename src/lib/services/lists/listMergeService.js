@@ -110,6 +110,20 @@ export function mergeSingleItem(localItem, incomingItem) {
   if (incomingCompletedTime > localCompletedTime) {
     checked = incomingItem.checked;
     completedAt = incomingItem.completedAt;
+  } else if (
+    localCompletedTime > 0 &&
+    incomingCompletedTime === localCompletedTime &&
+    localItem.checked !== incomingItem.checked
+  ) {
+    // Two devices can stamp opposite states in the same millisecond. A tie
+    // must converge in either merge order; the check wins, and a later
+    // explicit uncheck gets a strictly newer checkedAt stamp.
+    checked = Boolean(localItem.checked || incomingItem.checked);
+    completedAt = checked
+      ? localItem.checked
+        ? localItem.completedAt
+        : incomingItem.completedAt
+      : undefined;
   } else if (localCompletedTime === 0 && incomingCompletedTime === 0) {
     // Neither has completedAt timestamp; follow higher updatedAt
     if (incomingTime > localTime) {

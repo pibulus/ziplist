@@ -71,11 +71,13 @@ export function buildContributorEmail({
   const resolvedPhrase = phrase?.toString().trim() || derived.phrase;
   const unlockKey = code || resolvedPhrase;
   const unlockUrl = buildUnlockLink(appOrigin, unlockKey);
-  const subject = `ZipList Passport 🎟️ (${displayMemberName || resolvedPhrase || code})`;
+  // Subjects appear on lock screens and mail previews. Keep the recovery key
+  // inside the message, never in the notification-sized subject line.
+  const subject = "ZipList Passport";
 
   const text = [
     "Full Passport unlocked.",
-    "One pass unlocks everything. No subscriptions.",
+    "One ZipList Passport. No subscription.",
     "",
     displayMemberName ? `Passport identity: ${displayMemberName}` : null,
     hasQr ? "QR code attached." : null,
@@ -84,10 +86,10 @@ export function buildContributorEmail({
       ? `4-word passkey: ${resolvedPhrase}`
       : `Passport passkey: ${code}`,
     "",
-    "12 colour lists, live shared rooms, and device sync.",
-    "Speak a list in one breath, share a live room to tick boxes together, or link phones and laptops with the Passport QR.",
+    "12 lists, private device sync, and up to 12 shared lists at once.",
+    "Free sharing stays free. Passport also keeps shared links open for a year after the last edit.",
     "",
-    "Paid once, kept for good. Zero tracking.",
+    "Kept for good.",
     "",
     "Zip up a list, lickety-split.",
   ]
@@ -128,7 +130,7 @@ export function buildContributorEmail({
 				<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
 					<tr><td align="center" style="font-size:12px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#db2777;">ZipList Passport</td></tr>
 					<tr><td align="center" style="padding:10px 0 0;font-size:28px;line-height:1.1;font-weight:900;letter-spacing:-0.02em;">Full Passport unlocked.</td></tr>
-					<tr><td align="center" style="padding:8px 0 0;font-size:14px;line-height:1.5;${muted}">One pass unlocks everything. No subscriptions.</td></tr>
+                    <tr><td align="center" style="padding:8px 0 0;font-size:14px;line-height:1.5;${muted}">One ZipList Passport. No subscription.</td></tr>
 					${memberBadgeBlock}
 
 					${rule}
@@ -141,9 +143,9 @@ export function buildContributorEmail({
 
 					${rule}
 
-					<tr><td style="padding:22px 0 0;font-size:15px;font-weight:900;color:#db2777;">12 colour lists, live rooms, device sync.</td></tr>
-					<tr><td style="padding:8px 0 0;font-size:14px;line-height:1.55;">Speak a list in one breath, share a live room to tick boxes together, or scan the Passport QR to link phones and laptops.</td></tr>
-					<tr><td style="padding:14px 0 0;font-size:13px;line-height:1.5;${muted}">Paid once, kept for good. Zero tracking.</td></tr>
+                    <tr><td style="padding:22px 0 0;font-size:15px;font-weight:900;color:#db2777;">12 lists, private device sync, up to 12 shared lists.</td></tr>
+                    <tr><td style="padding:8px 0 0;font-size:14px;line-height:1.55;">Free sharing stays free. Passport also keeps shared links open for a year after the last edit.</td></tr>
+                    <tr><td style="padding:14px 0 0;font-size:13px;line-height:1.5;${muted}">Kept for good.</td></tr>
 
 					${rule}
 

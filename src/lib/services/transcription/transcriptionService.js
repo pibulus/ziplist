@@ -9,6 +9,7 @@ import {
   uiActions,
 } from "../infrastructure/stores";
 import { soundService } from "../infrastructure/soundService";
+import { notePwaMoment } from "../pwa/installMoments.js";
 import { COPY_MESSAGES, ATTRIBUTION, getRandomFromArray } from "$lib/constants";
 
 export const TranscriptionEvents = {
@@ -98,6 +99,10 @@ export class TranscriptionService {
         existingItems,
         targetListId,
       });
+
+      // One useful take counts once, regardless of whether it came from the
+      // home recorder, a shared list, or a retry. Silence and commands do not.
+      if (parsedResult.items.length || aiComplete.length) notePwaMoment();
 
       return { rawText: transcriptText, ...parsedResult, complete: aiComplete };
     } catch (error) {

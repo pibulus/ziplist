@@ -1,10 +1,11 @@
 <script>
   import VerticalPage from "$lib/components/layout/VerticalPage.svelte";
+  import { PRICING } from "$lib/config/pricing.js";
 
   const canonicalUrl = "https://ziplist.app/about";
   const title = "How ZipList Works — Voice Checklists, No Account | ZipList";
   const description =
-    "How the talkable list works: say it, it sorts itself, tick it off. No account, no dates, no streaks. Lists live on your device.";
+    "How ZipList works: talk a checklist into place, tick things off together in a shared list, or type items by hand. Free to start. No account.";
 
   /* The FAQ is written ONCE, here, and rendered into both the page and the
      schema below. Google's FAQPage guidelines require the answers to be
@@ -17,11 +18,11 @@
     },
     {
       q: "Where do my lists live?",
-      a: "On the device, in its own storage. They are not held on a server, which is also why clearing site data clears them.",
+      a: "Ordinary lists stay on this device. A live shared list also has a temporary copy in its relay so others can edit with it. Passport device sync sends an encrypted copy between paired devices. Clearing site data can erase local-only lists.",
     },
     {
       q: "How does sharing work?",
-      a: "Two ways. A copy is a link holding the list as it is now, frozen at the moment it was sent. A live list is a room two phones can tick at the same time, and it carries a four-word phrase that opens the same room on another device.",
+      a: "Copy List puts the checklist in plain text. QR Code opens a copy or a live link. Share Live Link lets two phones add, edit, and tick the same list together; four words open that same shared list.",
     },
     {
       q: "Does it work without signal?",
@@ -29,7 +30,7 @@
     },
     {
       q: "What does it cost?",
-      a: "Nothing. There is a one-off supporter pass for people who want to chip in, and it unlocks nothing that was previously withheld.",
+      a: `Free includes three lists and one live shared list at a time. ZipList Passport costs ${PRICING.displayPrice} once, with no subscription: twelve lists, private device sync, up to twelve shared lists at once, and shared links that stay open for a year after the last edit.`,
     },
     {
       q: "Can it do reminders and due dates?",
@@ -122,10 +123,9 @@
   <section class="zl-prose-section" aria-labelledby="zl-not-title">
     <h2 id="zl-not-title">What it doesn't do</h2>
     <p>
-      No account. No sign-up. No upsell to use it. Lists live on the device, not
-      on somebody's server. There are no due dates, no streaks and nothing
-      keeping score — the list is finished when the things are done, not when an
-      app says so.
+      No account. No sign-up. No pass required to share a list. Ordinary lists
+      stay on this device; a shared list also has a temporary relay copy so
+      everyone can edit together. No due dates, no streaks, no nagging.
     </p>
   </section>
 </VerticalPage>

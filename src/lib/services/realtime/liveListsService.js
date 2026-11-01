@@ -438,8 +438,8 @@ export async function connectToLive(listId, roomId, password = null) {
           if (TERMINAL_CLOSE_CODES.has(event?.code)) {
             announceLiveNotice(
               event?.code === LIVE_CLOSE_CODES.ROOM_EXPIRED
-                ? "This live room has popped — sharing has ended."
-                : "Live sharing ended for this list.",
+                ? "This shared link has expired. The local list remains."
+                : "Sharing ended for this list.",
             );
             disconnectFromLive(listId);
           }

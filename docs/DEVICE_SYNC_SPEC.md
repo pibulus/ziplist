@@ -1,51 +1,46 @@
 # Device Sync
 
-> Every list on every paired device. No account, no plaintext on any server.
+> Passport lists follow paired devices. The relay only sees sealed snapshots.
 
-Status: **built and verified 2026-10-02.** The first version of this doc
-specced a one-shot handoff that stored nothing. Pablo approved the continuous
-design in `_audits/fleet/SOVEREIGN-DEVICE-SYNC-AUDIT.md` instead, and that is
-what shipped, so this doc now describes the code.
+Status: **local two-browser check, 2026-11-01.** Owner → second browser,
+second browser → owner, and checks made immediately after remote additions
+converged in three repeated runs. Real Passport redemption, deployed Worker,
+and physical-device pairing still need a pass.
 
 Verify, in this order:
 
 ```bash
 npm run check                               # crypto, merge, bundle round-trip
-node scripts/verify-live-relay-sync.mjs     # two sockets vs the DEPLOYED relay
+LIVE_SMOKE_SKIP_EXPIRED_SOCKET=1 npm run smoke:live  # local relay + four-word list
+npx wrangler deploy --dry-run               # worker bundle, no deploy
 ```
 
-The second one is the one that matters after any `worker/index.ts` change.
-`wrangler deploy` never type-checks, so a worker can deploy green and still
-throw on every sync message.
+The old `scripts/verify-live-relay-sync.mjs` models a retired random-URL-key
+flow; it is **not** proof of current Passport pairing. A real two-device pass
+against the deployed relay remains a release gate.
 
 ---
 
-## The phrase is an address, the key is the secret
+## The Passport code is the secret
 
-Four words from the banks in `syncPhrase.js` are ~28 bits. That is enough to
-make a room id hard to stumble into, but it is nowhere near a key: the relay
-sees every room id, and could walk phrase → room id offline in minutes. So
-the two are separate:
+`deviceSyncStore.js` derives a room id **and** AES-GCM key from the saved
+Passport code (plus the optional private sync phrase, when set) using PBKDF2
+and HKDF. The room id has the `zl_p` prefix. The relay sees that id and sealed
+envelopes, never the code or plaintext. A four-word Passport passkey is
+**speakable, not high-entropy**; encryption does not make a guessed passkey
+unguessable. The optional phrase changes the secret and must match on every
+paired device.
 
-|         | Comes from                                     | Who sees it         |
-| ------- | ---------------------------------------------- | ------------------- |
-| Room id | `SHA-256("ziplist:sync:v1:" + phrase)`, 32 hex | the relay           |
-| Key     | 256 random bits, `crypto.getRandomValues`      | only paired devices |
+The Passport card's QR and copy-link carry `#code=<passkey>` and an optional
+`&sync=<private phrase>` in the URL fragment. The recipient redeems the code
+before syncing; an unlicensed phrase does not grant paid access. On iOS an
+installed PWA has different storage from Safari, so the link must be opened
+in the intended app or the key entered there. There is **no random `#k` key**
+in the current pairing flow.
 
-The pairing link carries both:
-
-```
-https://ziplist.app/?sync=<four-words>#k=<base64url key>&code=<contributor token>
-```
-
-Everything after `#` is a fragment, which browsers never send to a server, so
-Netlify and Cloudflare logs only ever see the phrase.
-
-**There is no type-the-words pairing, and there cannot be.** Four words get
-into the room but not the key. The ways in are the QR, opening the link, or
-pasting the link into Options → Device sync → Pair with a link. Pasting exists
-for installed PWAs: on iOS a QR scan opens Safari, whose storage is not the
-home-screen app's.
+Four-word **shared-list** links also use `zl_p` room ids, but contain list
+snapshots rather than sync envelopes. `worker/index.ts` distinguishes the
+existing room type by its stored `listData`, preserving older share links.
 
 ---
 
@@ -114,9 +109,9 @@ Code: `deviceSyncStore.js` (socket, pairing, push/apply), `syncCrypto.js`,
 | Case                          | Behaviour                                                                |
 | ----------------------------- | ------------------------------------------------------------------------ |
 | No relay host configured      | Store stays disconnected, nothing opens                                  |
-| Pasted text isn't a full link | Inline note: it needs the part after `#`                                 |
+| Pairing code is unlicensed    | Redeem rejects it; local lists stay on this device                      |
 | A live envelope won't decrypt | Pill reads "Mismatch" with a note; a fresh pairing link fixes both sides |
-| Stored catch-up won't decrypt | Ignored. It's stale, and this device's push on connect replaces it       |
+| Stored catch-up won't decrypt | Ignored; matching pairing credentials are needed before lists can merge  |
 | Socket drops                  | "Offline"; partysocket reconnects and the device pushes again on open    |
 | Merged lists exceed the cap   | Extras stay on the other device; toast says how many                     |
 | Room idle 30 days             | Relay alarm deletes the envelope; devices keep their own copies          |

@@ -303,9 +303,22 @@ function createDeviceSyncStore() {
     }
 
     try {
-      isApplyingRemote = true;
-
-      const result = await listsStore.importCollectionBundle(envelope, roomKey);
+      const result = await listsStore.importCollectionBundle(
+        envelope,
+        roomKey,
+        null,
+        (apply) => {
+          // Suppress only the store update made by the remote merge. The old
+          // 100ms grace period also swallowed real taps made right after a
+          // remote item arrived, leaving a check undone on the other device.
+          isApplyingRemote = true;
+          try {
+            apply();
+          } finally {
+            isApplyingRemote = false;
+          }
+        },
+      );
       if (result.ok) {
         update((s) => ({
           ...s,
@@ -340,10 +353,6 @@ function createDeviceSyncStore() {
     } catch (err) {
       console.error("[DeviceSync] Error merging remote envelope:", err);
       update((s) => ({ ...s, status: "connected" }));
-    } finally {
-      setTimeout(() => {
-        isApplyingRemote = false;
-      }, 100);
     }
   }
 

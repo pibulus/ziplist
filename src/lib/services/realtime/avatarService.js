@@ -3,12 +3,14 @@
  *
  * Generates and persists random avatar names like "Misty Fox" or "Happy Frog"
  * for anonymous user identification in live collaboration. Names are editable
- * (Options → your room name); faces come from DiceBear's thumbs collection,
+ * (visible only while sharing a list); faces come from DiceBear's thumbs collection,
  * generated offline as SVG data-URIs (no network, no CSP concerns) and seeded
  * by the name so the same name always wears the same face.
  */
 import { createAvatar } from "@dicebear/core";
 import { thumbs } from "@dicebear/collection";
+import { readStoredSupporterCode } from "../vaultHashStorage.js";
+import { parseFourWordPasskey } from "$lib/cartridges/identityUtils.js";
 
 const ADJECTIVES = [
   "Misty",
@@ -53,6 +55,7 @@ const ANIMALS = [
 ];
 
 const STORAGE_KEY = "ziplist_user_avatar";
+const CUSTOM_NAME_KEY = "ziplist_user_avatar_custom_v1";
 // Six faces. Contrast decides the shade; SPACING decides how many.
 //
 // DiceBear "thumbs" draws white eyes and a white mouth on an opaque blob, so
@@ -89,6 +92,11 @@ export function getOrCreateAvatar() {
   // join; a fresh unpersisted name is fine.
   if (typeof window !== "undefined") {
     try {
+      const passport = parseFourWordPasskey(readStoredSupporterCode());
+      if (passport && localStorage.getItem(CUSTOM_NAME_KEY) !== "true") {
+        localStorage.setItem(STORAGE_KEY, passport.name);
+        return passport.name;
+      }
       const existing = localStorage.getItem(STORAGE_KEY);
       if (existing) {
         return existing;
@@ -105,6 +113,21 @@ export function getOrCreateAvatar() {
 
   // Fallback for SSR
   return "Guest";
+}
+
+/** Adopt the Passport name unless a collaborator name was chosen explicitly. */
+export function adoptPassportName(name) {
+  if (!name || typeof window === "undefined") return;
+  try {
+    if (localStorage.getItem(CUSTOM_NAME_KEY) === "true") return;
+    if (localStorage.getItem(STORAGE_KEY) === name) return;
+    localStorage.setItem(STORAGE_KEY, name);
+    window.dispatchEvent(
+      new CustomEvent("ziplist-avatar-changed", { detail: { avatar: name } }),
+    );
+  } catch {
+    // Anonymous collaboration stays usable without storage.
+  }
 }
 
 /**
@@ -135,6 +158,10 @@ export function rerollAvatar(currentName) {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(STORAGE_KEY, next);
+      localStorage.setItem(CUSTOM_NAME_KEY, "true");
+      window.dispatchEvent(
+        new CustomEvent("ziplist-avatar-changed", { detail: { avatar: next } }),
+      );
     } catch {
       // privacy mode — the name just won't persist
     }
@@ -154,6 +181,7 @@ export function setAvatarName(name) {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(STORAGE_KEY, finalName);
+      localStorage.setItem(CUSTOM_NAME_KEY, "true");
       window.dispatchEvent(
         new CustomEvent("ziplist-avatar-changed", {
           detail: { avatar: finalName },

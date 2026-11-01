@@ -557,14 +557,17 @@
   .lists-wrapper {
     display: grid;
     align-items: start;
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
     max-width: 100%;
+    min-width: 0;
   }
 
   .list-slide {
     grid-area: 1 / 1;
     width: 100%;
     max-width: 100%;
+    min-width: 0;
     /* The chunky theme's hard shadow is 14px of solid ink on the RIGHT only,
        so a perfectly centred card reads shoved-left — the card is centred but
        its visual mass isn't. Reserving the shadow's width here narrows the
@@ -611,6 +614,7 @@
   .list-content-wrapper {
     width: 100%;
     max-width: 600px; /* Match SingleList max-width */
+    min-width: 0;
     margin: 0 auto;
     height: 100%;
   }

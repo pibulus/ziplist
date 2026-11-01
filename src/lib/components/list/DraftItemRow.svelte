@@ -45,16 +45,6 @@
     inputNode?.focus();
   }
 
-  function togglePortalPrefix() {
-    if (isDraftPortal) {
-      draftItemText = draftItemText.replace(/^(\u2192|->)\s*/, "");
-    } else {
-      const clean = draftItemText.replace(/^##\s*/, "");
-      draftItemText = `→ ${clean}`;
-    }
-    inputNode?.focus();
-  }
-
   function selectPortalTarget(targetName) {
     draftItemText = `→ ${targetName}`;
     inputNode?.focus();
@@ -97,6 +87,16 @@
     <input
       id="draft-item-{listId}"
       class="zl-edit-input zl-draft-input"
+      type="text"
+      autocomplete="off"
+      autocorrect="on"
+      autocapitalize="sentences"
+      spellcheck="false"
+      name="zl-entry-item"
+      inputmode="text"
+      data-1p-ignore
+      data-lpignore="true"
+      data-form-type="other"
       placeholder="New item..."
       aria-label="New item text"
       bind:value={draftItemText}
@@ -151,17 +151,6 @@
       on:click|stopPropagation={toggleSectionPrefix}
     >
       § Section
-    </button>
-    <button
-      type="button"
-      class="zl-draft-tag zl-draft-syntax-chip"
-      class:is-active={isDraftPortal}
-      data-swipe-ignore="true"
-      title="Link to another list"
-      on:pointerdown|preventDefault
-      on:click|stopPropagation={togglePortalPrefix}
-    >
-      → Portal
     </button>
     {#if !isDraftSection && !isDraftPortal && offers.length === 0}
       <button

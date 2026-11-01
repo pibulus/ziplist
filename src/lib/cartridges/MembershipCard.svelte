@@ -62,19 +62,24 @@
 
   $: if (cardEl) cardEl.style.setProperty("--hovered", isHovered ? "1" : "0");
 
-  $: identity = generateMemberIdentity(vaultHash);
+  $: effectivePassportCode = passportCode || storedPassportCode;
+  $: identity = generateMemberIdentity(
+    vaultHash,
+    isPreview ? passportCode : effectivePassportCode,
+  );
   $: hasVaultHash = !identity.isFallback;
+  $: canonicalSeed = identity.syncRoomId || vaultHash;
 
   $: skin =
     shuffleSeed > 0
       ? shuffleSkinSeed(shuffleSeed)
       : skinName
-        ? selectNamedSkin(skinName, vaultHash)
-        : selectSkin(vaultHash);
+        ? selectNamedSkin(skinName, canonicalSeed)
+        : selectSkin(canonicalSeed);
   $: palette = skin.palette;
   $: avatarUri =
     (!isPreview && customAvatarUri) ||
-    buildPassportAvatar(vaultHash || "ziplist", skin.avatarStyle);
+    buildPassportAvatar(canonicalSeed || "ziplist", skin.avatarStyle);
 
   // Dark-substrate frames (terminal) force light ink so text stays legible.
   $: isDarkSubstrate = skin.choices.frame === "terminal";
@@ -113,11 +118,15 @@
     skin.varString,
   ].join("; ");
 
-  $: effectivePassportCode = passportCode || storedPassportCode;
+  // The displayed passkey IS the code. Adding it as an implicit *second*
+  // secret changes the room and strands devices paired before this card existed.
   $: resolvedPhrase = privatePhrase || $deviceSyncStore.privatePhrase || "";
   $: passportSyncUrl =
-    !isPreview && hasVaultHash && effectivePassportCode
-      ? buildDeviceSyncUrl(effectivePassportCode, resolvedPhrase)
+    !isPreview && hasVaultHash && (effectivePassportCode || identity.phrase)
+      ? buildDeviceSyncUrl(
+          effectivePassportCode || identity.phrase,
+          resolvedPhrase,
+        )
       : "";
 
   $: if (passportSyncUrl !== previousQrImageUrl) {
@@ -238,7 +247,7 @@
       }, 2200);
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
-          detail: { message: "4-word passkey copied! 🪪", type: "success" },
+          detail: { message: "4-word passkey copied", type: "success" },
         }),
       );
     } else {
@@ -246,7 +255,7 @@
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
           detail: {
-            message: "Couldn't copy automatically — select passkey manually",
+            message: "Copy unavailable — select passkey manually",
             type: "warning",
           },
         }),
@@ -267,6 +276,7 @@
     try {
       const dataUri = await compressAvatarImageFile(file, 128);
       customAvatarUri = saveCustomPassportAvatar(dataUri);
+      window.dispatchEvent(new CustomEvent("ziplist-passport-avatar-changed"));
       soundService?.play?.("bloom") || soundService?.select?.();
       hapticService?.impact?.("light") || hapticService?.selection?.();
     } catch (err) {
@@ -278,6 +288,7 @@
     if (e) e.stopPropagation();
     clearCustomPassportAvatar();
     customAvatarUri = "";
+    window.dispatchEvent(new CustomEvent("ziplist-passport-avatar-changed"));
     soundService?.play?.("bloom") || soundService?.select?.();
     hapticService?.impact?.("light") || hapticService?.selection?.();
   }
@@ -330,7 +341,7 @@
       <h3 class="passport-kicker text-[11px] font-black uppercase">
         {isPreview ? "Passport Preview" : "ZipList Passport"}
       </h3>
-      <p class="passport-name mt-1 max-w-[190px] font-black">
+      <p class="passport-name mt-1 max-w-[228px] font-black">
         {identity.name}
       </p>
     </div>
@@ -384,7 +395,9 @@
     </div>
   </div>
 
-  <div class="relative z-10 flex items-end justify-between gap-2">
+  <div
+    class="passport-bottom relative z-10 flex items-end justify-between gap-2"
+  >
     <div
       class="passport-id-chip -mx-1.5 -my-1 min-w-0 rounded-lg p-1.5 transition-all duration-150 hover:bg-[#1e1714]/5 active:scale-95"
       on:click={handleCopyCode}
@@ -407,7 +420,7 @@
           <span
             class="shadow-xs rounded bg-emerald-600 px-1 py-0.5 text-[9px] font-black text-[#fffef7]"
           >
-            Copied! ✨
+            Copied
           </span>
         {:else if !isPreview}
           <span class="text-[9px] font-semibold lowercase opacity-60"
@@ -415,10 +428,10 @@
           >
         {/if}
       </p>
-      <p
-        class="passport-member-id mt-0.5 whitespace-nowrap font-mono text-[11px] font-black tracking-tight sm:text-xs"
-      >
-        {identity.phrase || identity.memberId}
+      <p class="passport-member-id mt-0.5 font-mono font-black">
+        {isPreview
+          ? "four-words-sync-devices"
+          : identity.phrase || identity.memberId}
       </p>
     </div>
 
@@ -648,6 +661,35 @@
 
   .passport-member-id {
     color: var(--p-ink);
+    white-space: nowrap;
+    font-size: clamp(0.64rem, 2.5vw, 0.82rem);
+    letter-spacing: -0.01em;
+  }
+
+  /* The QR sits above the words, not in their only line of text. Very long
+     dictionary combinations can scroll inside their chip without wrapping. */
+  .passport-bottom .passport-id-chip {
+    width: 100%;
+    min-width: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .passport-bottom .passport-member-id {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .passport-bottom .passport-member-id::-webkit-scrollbar {
+    display: none;
+  }
+
+  .passport-bottom .passport-qr-stamp,
+  .passport-bottom .ghost-seal {
+    position: absolute;
+    right: 0;
+    bottom: 2.1rem;
   }
 
   .passport-pattern {

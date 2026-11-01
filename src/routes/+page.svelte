@@ -5,7 +5,7 @@
   const canonicalUrl = "https://ziplist.app/";
   const title = "ZipList — Talk it into a list. Tick it off.";
   const description =
-    "A warm, tactile voice checklist for groceries, errands, packing, and chores. No dates, no streaks, no pressure.";
+    "Talk groceries, errands, and chores into a checklist. Tick things off together in a live shared list, or type items by hand. Free to start, no account.";
 
   // Assembled here rather than inline in <svelte:head>: a literal
   // `<script>` in markup makes svelte-eslint-parser treat the rest of
@@ -28,7 +28,8 @@
         "@type": "Offer",
         price: "0",
         priceCurrency: PRICING.currency,
-        description: "Free voice checklist creation and live QR rooms",
+        description:
+          "Free voice checklists, 3 lists, and one live shared list at a time",
       },
       {
         "@type": "Offer",
@@ -39,7 +40,7 @@
         price: String(PRICING.currentPrice),
         priceCurrency: PRICING.currency,
         description:
-          "Lifetime Supporter Pass — 12 lists, live rooms, every device",
+          "ZipList Passport, once-off — 12 lists, private device sync, and 12 live shared lists at once",
       },
     ],
     keywords:

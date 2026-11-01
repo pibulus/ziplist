@@ -1,25 +1,20 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onDestroy } from "svelte";
   import { browser } from "$app/environment";
   import { theme, listFirstMode, isContributor, applyTheme } from "$lib";
   import { ANIMATION, THEMES } from "$lib/constants";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import {
-    getOrCreateAvatar,
-    setAvatarName,
-    getAvatarImage,
-    rerollAvatar,
-  } from "$lib/services/realtime/avatarService";
+    listPreferences,
+    setListPreference,
+  } from "$lib/services/lists/listPreferences.js";
   import ThemeMascot from "./ThemeMascot.svelte";
   import ModalCloseButton from "../modals/ModalCloseButton.svelte";
 
   export let closeModal = () => {};
 
   let selectedVibe;
-  let avatarName = "";
   let listFirstModeValue = false;
-  let avatarRerolling = false;
-  let rerollTimer = null;
   let contributorTimer = null;
 
   const unsubscribeTheme = theme.subscribe((value) => {
@@ -37,12 +32,7 @@
     { id: THEMES.LEGAL_PAD, name: "Legal Pad" },
   ];
 
-  onMount(() => {
-    avatarName = getOrCreateAvatar();
-  });
-
   onDestroy(() => {
-    if (rerollTimer) clearTimeout(rerollTimer);
     if (contributorTimer) clearTimeout(contributorTimer);
     unsubscribeTheme();
     unsubscribeListFirstMode();
@@ -90,21 +80,9 @@
     }, ANIMATION.MODAL.CLOSE_DURATION + 30);
   }
 
-  function saveAvatarName(event) {
-    avatarName = setAvatarName(event.currentTarget.value);
-    event.currentTarget.value = avatarName;
+  function changeListPreference(key, value) {
+    setListPreference(key, value);
     soundService.select();
-  }
-
-  function rerollAvatarFace() {
-    avatarName = rerollAvatar(avatarName);
-    soundService.select();
-    avatarRerolling = true;
-    if (rerollTimer) clearTimeout(rerollTimer);
-    rerollTimer = setTimeout(() => {
-      avatarRerolling = false;
-      rerollTimer = null;
-    }, 420);
   }
 </script>
 
@@ -142,7 +120,7 @@
           Options
         </h3>
         <p id="settings_modal_description" class="sr-only">
-          Adjust vibe, startup screen, and shared room handle.
+          Adjust vibe, startup screen, and list preferences.
         </p>
       </div>
 
@@ -208,7 +186,7 @@
               <span
                 class="row-sub mt-0.5 block truncate text-[11px] font-semibold leading-tight"
               >
-                Open directly on the active list
+                No big title · mic stays
               </span>
             </div>
             <button
@@ -230,48 +208,61 @@
 
           <div class="zl-divider border-t"></div>
 
-          <!-- Shared Room Face (Avatar + Handle) -->
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex min-w-0 flex-1 items-center gap-2.5">
-              {#if avatarName}
-                <button
-                  type="button"
-                  class="avatar-face-btn zl-control-border relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 bg-[#fffef7] shadow-sm transition-transform hover:scale-105 active:scale-90"
-                  class:rerolling={avatarRerolling}
-                  on:click={rerollAvatarFace}
-                  title="Tap for a new face"
-                  aria-label="Re-roll shared room avatar"
-                >
-                  <img
-                    class="h-8 w-8 rounded-full object-cover"
-                    src={getAvatarImage(avatarName)}
-                    alt=""
-                    aria-hidden="true"
-                  />
-                </button>
-              {/if}
-              <div class="min-w-0 flex-1">
-                <span
-                  class="block truncate text-sm font-black leading-tight text-[#1e1714]"
-                >
-                  Name in shared rooms
-                </span>
-                <span
-                  class="row-sub mt-0.5 block truncate text-[11px] font-semibold leading-tight"
-                >
-                  Tap avatar to re-roll
-                </span>
-              </div>
+          <div class="space-y-1.5">
+            <span class="block text-sm font-black text-[#1e1714]"
+              >New items</span
+            >
+            <div
+              class="settings-choice"
+              role="group"
+              aria-label="New item position"
+            >
+              <button
+                type="button"
+                class:chosen={$listPreferences.newItems === "top"}
+                aria-pressed={$listPreferences.newItems === "top"}
+                on:click={() => changeListPreference("newItems", "top")}
+                >Top</button
+              >
+              <button
+                type="button"
+                class:chosen={$listPreferences.newItems === "bottom"}
+                aria-pressed={$listPreferences.newItems === "bottom"}
+                on:click={() => changeListPreference("newItems", "bottom")}
+                >Bottom</button
+              >
             </div>
+          </div>
 
-            <input
-              type="text"
-              class="zl-control-border min-h-11 w-32 shrink-0 rounded-xl border-2 bg-[#fffef7] px-2.5 py-1.5 font-mono text-base font-bold text-[#1e1714] transition-colors focus:border-[#1e1714] focus:outline-none sm:w-40 sm:text-xs"
-              value={avatarName}
-              maxlength="48"
-              on:change={saveAvatarName}
-              aria-label="Handle in shared rooms"
-            />
+          <div class="zl-divider border-t"></div>
+
+          <div class="space-y-1.5">
+            <span class="block text-sm font-black text-[#1e1714]"
+              >Checked items</span
+            >
+            <div
+              class="settings-choice"
+              role="group"
+              aria-label="Checked item visibility"
+            >
+              <button
+                type="button"
+                class:chosen={$listPreferences.showChecked}
+                aria-pressed={$listPreferences.showChecked}
+                on:click={() => changeListPreference("showChecked", true)}
+                >Show</button
+              >
+              <button
+                type="button"
+                class:chosen={!$listPreferences.showChecked}
+                aria-pressed={!$listPreferences.showChecked}
+                on:click={() => changeListPreference("showChecked", false)}
+                >Hide</button
+              >
+            </div>
+            <span class="row-sub block text-[11px] font-semibold"
+              >Checked items stay saved either way</span
+            >
           </div>
         </div>
       </section>
@@ -280,7 +271,7 @@
       <button
         type="button"
         class="zl-pitch-cta zl-pitch-cta-pink flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] bg-[#ff5ca8] px-4 py-3 text-base font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition-all hover:bg-[#ff459b] hover:shadow-[3px_3px_0px_#1e1714] active:translate-y-0.5 active:bg-[#e62e84] active:shadow-[1px_1px_0px_#1e1714]"
-        title="12 colour lists, device sync, live shared rooms, and holo Passport card"
+        title="12 colour lists, device sync, shared lists, and holo Passport card"
         on:click={openContributorModal}
       >
         <span class="text-base" aria-hidden="true">✦</span>
@@ -304,6 +295,26 @@
 </dialog>
 
 <style>
+  .settings-choice {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .settings-choice button {
+    min-height: 44px;
+    border: 2px solid #1e1714;
+    border-radius: 12px;
+    background: #fffef7;
+    color: #1e1714;
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .settings-choice button.chosen {
+    background: var(--zl-cta-color, #ffcc33);
+    box-shadow: 2px 2px 0 #1e1714;
+  }
   .selected-vibe {
     box-shadow: 2px 2px 0px #1e1714;
   }
@@ -393,28 +404,11 @@
     letter-spacing: 0.04em;
   }
 
-  .avatar-face-btn.rerolling img {
-    animation: avatar-spin 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes avatar-spin {
-    0% {
-      transform: scale(0.9) rotate(0deg);
-    }
-    50% {
-      transform: scale(1.15) rotate(180deg);
-    }
-    100% {
-      transform: scale(1) rotate(360deg);
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .vibe-option,
     .preview-mascot,
     .auto-start-glyph,
-    .auto-start-glyph span,
-    .avatar-face-btn.rerolling img {
+    .auto-start-glyph span {
       transition: none !important;
       transform: none !important;
       animation: none !important;

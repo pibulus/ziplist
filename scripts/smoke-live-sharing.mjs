@@ -2,6 +2,10 @@
 
 import crypto from "node:crypto";
 import fs from "node:fs";
+import {
+  generateSyncPhrase,
+  deriveRoomIdFromPhrase,
+} from "../src/lib/services/realtime/syncPhrase.js";
 
 const DEFAULT_APP_ORIGIN = "http://localhost:3001";
 const ROOM_PATH = "/parties/main";
@@ -124,7 +128,7 @@ async function readJson(response) {
   }
 }
 
-async function createRoom({ appOrigin, token, label, itemText }) {
+async function createRoom({ appOrigin, token, label, itemText, roomId }) {
   const listData = createListData(label, itemText);
   const response = await fetch(`${appOrigin}/api/live/create`, {
     method: "POST",
@@ -133,7 +137,7 @@ async function createRoom({ appOrigin, token, label, itemText }) {
       Origin: appOrigin,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ listData }),
+    body: JSON.stringify({ listData, roomId }),
   });
 
   const payload = await readJson(response);
@@ -177,7 +181,9 @@ async function getRoom({ partyHost, roomId }) {
 
 async function createExpiredRoomDirect({ partyHost }) {
   const protocol = getPartyKitProtocol(partyHost);
-  const roomId = `zl_smoke_expired_${crypto.randomUUID()}`;
+  // Use the same allowed room-id shape as production. The old smoke-only
+  // prefix 404ed at the worker gate before expiry behavior was ever tested.
+  const roomId = `zl_${crypto.randomUUID()}`;
   const listData = createListData("expired", "Old note");
   const expiredAt = new Date(Date.now() - 60_000).toISOString();
   const createSecret = getPartyKitCreateSecret();
@@ -299,7 +305,11 @@ function waitForSocketClose(socket) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       cleanup();
-      reject(new Error("Timed out waiting for websocket close"));
+      reject(
+        new Error(
+          `Timed out waiting for websocket close (state=${socket.readyState})`,
+        ),
+      );
     }, TIMEOUT_MS);
 
     const onClose = (event) => {
@@ -536,10 +546,47 @@ async function main() {
   assertItem(finalB, "Bananas");
   assertNoItem(finalA, "Olive oil");
 
+  // Four-word live lists and encrypted Passport sync share the zl_p prefix.
+  // A plain-id room passed for months while the four-word live door silently
+  // connected as an envelope-only room and never sent INIT.
+  const phrase = generateSyncPhrase();
+  const phraseRoomId = await deriveRoomIdFromPhrase(phrase);
+  const phraseRoom = await createRoom({
+    appOrigin,
+    token,
+    label: "phrase",
+    itemText: "Shared phrase item",
+    roomId: phraseRoomId,
+  });
+  if (phraseRoom.roomId !== phraseRoomId) {
+    throw new Error("Four-word room ID changed during creation");
+  }
+  const phraseSocket = await openRoomSocket({
+    partyHost,
+    roomId: phraseRoomId,
+    avatar: "Phrase Smoke",
+  });
+  await closeSocket(phraseSocket);
+  assertItem(
+    await getRoom({ partyHost, roomId: phraseRoomId }),
+    "Shared phrase item",
+  );
+
   if (isLocalHost(partyHost.split(":")[0])) {
+    // Room lookups are deliberately capped at 12 / 10s. Exercise the expiry
+    // gate in a fresh bucket rather than treating our own test burst's 429 as
+    // a lifecycle failure.
+    await new Promise((resolve) => setTimeout(resolve, 10_500));
     const expiredRoomId = await createExpiredRoomDirect({ partyHost });
     await assertExpiredRoom({ partyHost, roomId: expiredRoomId });
-    await assertExpiredSocket({ partyHost, roomId: expiredRoomId });
+    // Wrangler's local Hibernation-DO proxy can leave an expired socket in
+    // CLOSING without finishing the TCP close handshake. Keep this gate ON by
+    // default; the explicit skip only isolates relay/expiry-GET verification.
+    if (process.env.LIVE_SMOKE_SKIP_EXPIRED_SOCKET === "1") {
+      console.log("expired websocket close=unverified (local proxy skip)");
+    } else {
+      await assertExpiredSocket({ partyHost, roomId: expiredRoomId });
+    }
   }
 
   console.log(`room_a=${roomA.roomId}`);

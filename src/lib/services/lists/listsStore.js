@@ -1,5 +1,6 @@
 import { writable, derived, get } from "svelte/store";
 import { browser } from "$app/environment";
+import { listPreferences, loadListPreferences } from "./listPreferences.js";
 import { getContributorSnapshot } from "$lib";
 import { PRODUCT_LIMITS, STORAGE_KEYS } from "$lib/constants";
 import { extractTags, normalizeTags } from "./itemTags.js";
@@ -172,18 +173,32 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette) => ({
       order: 3,
       addedAt: Date.now() - 2000,
     },
-    {
-      id: "starter-portal",
-      text: "→ Pink List",
-      checked: false,
-      tags: [],
-      order: 4,
-      addedAt: Date.now() - 1000,
-    },
   ],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 }));
+
+// Only the untouched first list differs by device; stored lists never change
+// when a browser resizes or a phone rotates.
+function starterLists() {
+  const phone = browser && window.matchMedia("(max-width: 639px)").matches;
+  if (phone) return DEFAULT_LISTS;
+  return DEFAULT_LISTS.map((list) => ({
+    ...list,
+    items: [
+      { id: "starter-click", text: "Click + to add a list" },
+      { id: "starter-type", text: "Press Enter to add another item" },
+      { id: "starter-drag", text: "Drag a row to change its place" },
+      { id: "starter-dice", text: "Tap the dice to let fate pick" },
+    ].map((item, order) => ({
+      ...item,
+      checked: false,
+      tags: [],
+      order,
+      addedAt: Date.now() - (5 - order) * 1000,
+    })),
+  }));
+}
 
 // Current schema version
 const CURRENT_VERSION = 2;
@@ -289,6 +304,12 @@ function repaintRetiredColor(list) {
 
 function normalizeListRecord(rawList, index = 0) {
   const list = repaintRetiredColor(rawList);
+  const items = Array.isArray(list?.items) ? list.items : [];
+  // Retire the old portal tutorial without deleting a real list: an untouched
+  // starter has only starter-* ids, while personal entries get random ids.
+  const migratedItems = isPristineStarterList({ ...list, items })
+    ? items.filter((item) => item.id !== "starter-portal")
+    : items;
   const timestamp = new Date().toISOString();
   const palette = getListPaletteForRecord(list, index);
   const name =
@@ -306,7 +327,7 @@ function normalizeListRecord(rawList, index = 0) {
     // Every list entering the store — from storage, an import, a live
     // snapshot — arrives already obeying the order invariant, so lists saved
     // by older builds heal on first load.
-    items: withCompletedLast(Array.isArray(list?.items) ? list.items : []),
+    items: withCompletedLast(migratedItems),
     deletedItemIds: pruneStaleTombstones(list?.deletedItemIds || {}),
     createdAt: list?.createdAt || timestamp,
     updatedAt: list?.updatedAt || list?.createdAt || timestamp,
@@ -418,6 +439,7 @@ function createListsStore() {
 
   // Initialize from localStorage or with defaults
   function initialize() {
+    loadListPreferences();
     if (!browser || _initialized) return;
     _initialized = true;
 
@@ -477,7 +499,7 @@ function createListsStore() {
 
         let finalLists;
         if (isOldSchema) {
-          finalLists = DEFAULT_LISTS.map((defaultList, index) =>
+          finalLists = starterLists().map((defaultList, index) =>
             normalizeListRecord(defaultList, index),
           );
           if (storedLists[0] && storedLists[0].items) {
@@ -521,7 +543,7 @@ function createListsStore() {
           persistToStorage();
         }
       } else {
-        const defaultLists = DEFAULT_LISTS.map((list, index) =>
+        const defaultLists = starterLists().map((list, index) =>
           normalizeListRecord(list, index),
         );
         // Initialize with defaults
@@ -835,17 +857,21 @@ function createListsStore() {
             const nowTime = Date.now();
             return {
               ...list,
-              items: withCompletedLast([
-                {
-                  id: crypto.randomUUID(),
-                  text: normalizedText,
-                  checked: false,
-                  tags,
-                  addedAt: nowTime, // entry-date sort key
-                  updatedAt: nowTime,
-                },
-                ...list.items,
-              ]),
+              items: withCompletedLast(
+                (() => {
+                  const newItem = {
+                    id: crypto.randomUUID(),
+                    text: normalizedText,
+                    checked: false,
+                    tags,
+                    addedAt: nowTime, // entry-date sort key
+                    updatedAt: nowTime,
+                  };
+                  return get(listPreferences).newItems === "bottom"
+                    ? [...list.items, newItem]
+                    : [newItem, ...list.items];
+                })(),
+              ),
               updatedAt: new Date(nowTime).toISOString(),
             };
           }
@@ -943,7 +969,11 @@ function createListsStore() {
 
             return {
               ...list,
-              items: withCompletedLast([...newItems, ...list.items]),
+              items: withCompletedLast(
+                get(listPreferences).newItems === "bottom"
+                  ? [...list.items, ...newItems]
+                  : [...newItems, ...list.items],
+              ),
               updatedAt: new Date(stamp + newItems.length).toISOString(),
             };
           }
@@ -1357,6 +1387,7 @@ function createListsStore() {
     payload,
     keyOrPassphrase = null,
     optionalSalt = null,
+    withApply = (apply) => apply(),
   ) {
     if (!payload) return { ok: false, error: "Empty payload" };
 
@@ -1385,57 +1416,59 @@ function createListsStore() {
     }
 
     let mergeResult = null;
-    update((state) => {
-      const incomingIds = new Set(bundle.lists.map((l) => l.id));
-      const reconciled = mergeCollections({
-        localLists: state.lists.filter(
-          (l) => !(isPristineStarterList(l) && incomingIds.has(l.id)),
-        ),
-        incomingLists: bundle.lists,
-        localDeletedListIds: state.deletedListIds || {},
-        incomingDeletedListIds: bundle.deletedListIds || {},
-        maxLists: getMaxListCount(),
-      });
+    withApply(() =>
+      update((state) => {
+        const incomingIds = new Set(bundle.lists.map((l) => l.id));
+        const reconciled = mergeCollections({
+          localLists: state.lists.filter(
+            (l) => !(isPristineStarterList(l) && incomingIds.has(l.id)),
+          ),
+          incomingLists: bundle.lists,
+          localDeletedListIds: state.deletedListIds || {},
+          incomingDeletedListIds: bundle.deletedListIds || {},
+          maxLists: getMaxListCount(),
+        });
 
-      // mergeCollections only sees owned lists. Joined live lists (live_*)
-      // are rooms, not collection data — they keep their carousel slot
-      // instead of vanishing on every sync.
-      const merged = new Map(
-        reconciled.lists.map((l, index) => [
-          l.id,
-          normalizeListRecord(l, index),
-        ]),
-      );
-      const normalizedLists = [];
-      for (const list of state.lists) {
-        if (list.id.startsWith("live_")) {
-          normalizedLists.push(list);
-        } else if (merged.has(list.id)) {
-          normalizedLists.push(merged.get(list.id));
-          merged.delete(list.id);
+        // mergeCollections only sees owned lists. Joined live lists (live_*)
+        // are rooms, not collection data — they keep their carousel slot
+        // instead of vanishing on every sync.
+        const merged = new Map(
+          reconciled.lists.map((l, index) => [
+            l.id,
+            normalizeListRecord(l, index),
+          ]),
+        );
+        const normalizedLists = [];
+        for (const list of state.lists) {
+          if (list.id.startsWith("live_")) {
+            normalizedLists.push(list);
+          } else if (merged.has(list.id)) {
+            normalizedLists.push(merged.get(list.id));
+            merged.delete(list.id);
+          }
         }
-      }
-      normalizedLists.push(...merged.values());
+        normalizedLists.push(...merged.values());
 
-      let activeListId = state.activeListId;
-      if (!normalizedLists.some((l) => l.id === activeListId)) {
-        activeListId = normalizedLists[0]?.id || null;
-      }
+        let activeListId = state.activeListId;
+        if (!normalizedLists.some((l) => l.id === activeListId)) {
+          activeListId = normalizedLists[0]?.id || null;
+        }
 
-      mergeResult = {
-        ok: true,
-        listsCount: normalizedLists.length,
-        overflowCount: reconciled.overflowCount,
-        hasLocalDifferences: Boolean(reconciled.hasLocalDifferences),
-      };
+        mergeResult = {
+          ok: true,
+          listsCount: normalizedLists.length,
+          overflowCount: reconciled.overflowCount,
+          hasLocalDifferences: Boolean(reconciled.hasLocalDifferences),
+        };
 
-      return {
-        ...state,
-        lists: normalizedLists,
-        deletedListIds: reconciled.deletedListIds,
-        activeListId,
-      };
-    });
+        return {
+          ...state,
+          lists: normalizedLists,
+          deletedListIds: reconciled.deletedListIds,
+          activeListId,
+        };
+      }),
+    );
 
     persistCriticalChange();
     return mergeResult;

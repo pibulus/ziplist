@@ -143,7 +143,7 @@
       }, 2500);
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
-          detail: { message: "Unlock link copied! 🔗", type: "success" },
+          detail: { message: "Unlock link copied", type: "success" },
         }),
       );
     } else {
@@ -322,7 +322,7 @@
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
           detail: {
-            message: "ZipList Passport unlocked! ★",
+            message: "ZipList Passport unlocked",
             type: "success",
           },
         }),
@@ -374,16 +374,16 @@
         <div class="space-y-1 text-center">
           <h3
             id="contributor_modal_title"
-            class="text-balance px-10 text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
+            class="whitespace-nowrap px-1 text-[clamp(1.15rem,5vw,1.55rem)] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
           >
-            ZipList Passport <span class="zl-marker">Ready</span>
+            Passport <span class="zl-marker">Ready</span>
           </h3>
           <p
             id="contributor_modal_description"
-            class="px-2 text-sm font-bold leading-snug"
+            class="whitespace-nowrap px-0 text-[clamp(0.64rem,2.6vw,0.875rem)] font-bold leading-snug"
             style:color="var(--zl-vibe-accent-text, #db2777)"
           >
-            Scan from another device or copy the link below
+            Scan on another device or copy the link
           </p>
         </div>
 
@@ -391,7 +391,7 @@
           <div class="flex flex-col items-center gap-1.5 py-1">
             <MembershipCard {vaultHash} {passportCode} />
             <p class="px-2 text-center text-[11px] font-bold text-[#525252]">
-              ✦ Tap card to shuffle skin · Tap avatar to change photo
+              Card shuffles skins · Avatar accepts a photo
             </p>
           </div>
         {/if}
@@ -405,7 +405,7 @@
               class="zl-pitch-secondary whitespace-nowrap"
               on:click={copyUnlockLink}
             >
-              {linkCopied ? "✨ Link copied!" : "🔗 Copy unlock link"}
+              {linkCopied ? "Link copied" : "Copy unlock link"}
             </button>
             <button
               type="button"
@@ -413,7 +413,7 @@
               on:click={toggleEmailForm}
               aria-expanded={showEmailForm}
             >
-              {emailSent ? "✨ Emailed to inbox!" : "✉️ Email Passport"}
+              {emailSent ? "Emailed to inbox" : "Email Passport"}
             </button>
           </div>
 
@@ -426,7 +426,7 @@
                 for="passport-email-input"
                 class="text-left text-xs font-black text-[#1e1714]"
               >
-                Send Passport & 4-word passkey (never stored):
+                Send Passport &amp; 4-word passkey by email
               </label>
               <div class="flex gap-1.5">
                 <input
@@ -587,6 +587,9 @@
           >
             {CONTRIBUTOR_COPY.tagline}
           </p>
+          <p class="pt-1 text-sm font-black text-[#1e1714]">
+            {CONTRIBUTOR_COPY.priceLine}
+          </p>
         </div>
 
         <div class="zl-pitch-copy">
@@ -595,16 +598,6 @@
               <li>{benefit}</li>
             {/each}
           </ul>
-        </div>
-
-        <!-- Interactive Holographic Card Preview -->
-        <div class="flex flex-col items-center gap-1.5 px-2 py-1 sm:px-4">
-          <div class="w-full max-w-[310px]">
-            <MembershipCard vaultHash={PREVIEW_VAULT_HASH} isPreview={true} />
-          </div>
-          <p class="text-center text-[11px] font-bold text-[#525252]">
-            ✦ Tap card to roll holo skins · Tilt to shine
-          </p>
         </div>
 
         {#if errorMessage}
@@ -630,10 +623,6 @@
                 : CONTRIBUTOR_COPY.ctaButton}
             </span>
           </button>
-
-          <p class="px-1 text-center text-sm font-semibold text-[#525252]">
-            {CONTRIBUTOR_COPY.priceLine}
-          </p>
         </div>
 
         <button
@@ -643,6 +632,16 @@
         >
           {CONTRIBUTOR_COPY.redeemButton}
         </button>
+
+        <!-- The card is the tactile bonus, not a wall between value and cost. -->
+        <div class="flex flex-col items-center gap-1.5 px-2 py-1 sm:px-4">
+          <div class="w-full max-w-[310px]">
+            <MembershipCard vaultHash={PREVIEW_VAULT_HASH} isPreview={true} />
+          </div>
+          <p class="text-center text-[11px] font-bold text-[#525252]">
+            Card shuffles skins · Tilt to shine
+          </p>
+        </div>
       {/if}
     </div>
   </div>

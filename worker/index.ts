@@ -121,9 +121,15 @@ export class ListRoom {
     private env: Env,
   ) {}
 
-  private isSyncRoom(url: URL): boolean {
+  private async isSyncRoom(url: URL): Promise<boolean> {
     const roomId = decodeURIComponent(url.pathname.split("/").pop() || "");
-    return roomId.startsWith("zl_p") || roomId.startsWith("zl_sync_");
+    if (!roomId.startsWith("zl_p") && !roomId.startsWith("zl_sync_")) {
+      return false;
+    }
+    // Four-word *shared lists* also use zl_p ids (minted before device sync).
+    // A room with listData is a live list; an envelope-only room is a private
+    // device sync relay. Prefix alone strands existing four-word share links.
+    return !(await this.getListData());
   }
 
   async alarm() {
@@ -142,7 +148,7 @@ export class ListRoom {
     }
 
     if (request.method === "GET") {
-      if (this.isSyncRoom(url)) {
+      if (await this.isSyncRoom(url)) {
         const storedEnvelope = await this.ctx.storage.get("sync_envelope");
         if (!storedEnvelope) {
           return json({ error: "No sync envelope yet" }, 404);
@@ -180,7 +186,7 @@ export class ListRoom {
 
     this.ctx.acceptWebSocket(server);
 
-    const isSync = this.isSyncRoom(url);
+    const isSync = await this.isSyncRoom(url);
 
     server.serializeAttachment({
       id: crypto.randomUUID(),

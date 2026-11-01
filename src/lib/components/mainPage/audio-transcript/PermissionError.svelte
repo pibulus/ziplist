@@ -69,17 +69,12 @@
 
 <svelte:window on:keydown={(e) => e.key === "Escape" && closeModal()} />
 
-<!-- click|self: only backdrop clicks dismiss — clicks inside the card while
-     reading the steps must not close it. Escape closes from anywhere. -->
 <div
   class="permission-error-container flex w-full justify-center"
-  on:click|self={closeModal}
-  on:keydown={(e) => e.key === "Escape" && closeModal()}
-  role="alertdialog"
-  tabindex="-1"
+  role="status"
   aria-labelledby="permission_error_title"
   aria-describedby="permission_error_description"
-  aria-live="assertive"
+  aria-live="polite"
 >
   <div class="permission-error-modal">
     <!-- Icon and title -->
@@ -128,3 +123,98 @@
     </button>
   </div>
 </div>
+
+<style>
+  .permission-error-container {
+    max-width: 30rem;
+    margin: 0 auto 1rem;
+  }
+
+  .permission-error-modal {
+    display: grid;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #1e1714;
+    border-radius: 18px;
+    background: #fbf1e4;
+    color: #1e1714;
+    box-shadow: 3px 3px 0 #1e1714;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .error-icon {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--zl-cta-color, #ffcc33) 35%, #fbf1e4);
+  }
+
+  #permission_error_description {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+
+  .error-steps {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .step-number {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    place-items: center;
+    border: 1.5px solid #1e1714;
+    border-radius: 50%;
+    background: #ffcc33;
+    font-size: 0.74rem;
+    font-weight: 900;
+  }
+
+  .step p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .dismiss-btn {
+    justify-self: end;
+    min-height: 44px;
+    padding: 0.35rem 1rem;
+    border: 2px solid #1e1714;
+    border-radius: 12px;
+    background: var(--zl-cta-color, #ffcc33);
+    color: #1e1714;
+    font-weight: 900;
+    box-shadow: 2px 2px 0 #1e1714;
+  }
+
+  .dismiss-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #1e1714;
+  }
+</style>

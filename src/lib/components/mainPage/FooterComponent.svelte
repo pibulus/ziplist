@@ -135,7 +135,7 @@
       type="button"
       class="{footerButtonClass} zl-footer-pass"
       on:click={showContributor}
-      title="ZipList Passport · 12 lists, live rooms, every device"
+      title="ZipList Passport · 12 lists, private device sync, longer sharing"
       aria-label="Unlock ZipList Passport"
     >
       Passport

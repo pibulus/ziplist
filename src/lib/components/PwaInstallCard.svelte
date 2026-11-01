@@ -1,37 +1,10 @@
-<script context="module">
-  // ═══════════════════════════════════════════════════════════════════
-  // 🏠 PwaInstallCard — SoftStack chassis kernel (vendored per app)
-  // ═══════════════════════════════════════════════════════════════════
-  // A polite install suggestion. NOT a modal — no backdrop, no focus trap,
-  // nothing blocked. It borrows the modal DNA's materials and physics
-  // (280ms pop-in with the 1.06 overshoot, 180ms pop-out via the same
-  // closing-flag choreography) but stays an ambient corner card.
-  //
-  // FAMILY PROMPT MANNERS (the contract):
-  //   · earn it first — arms only after TWO successful uses of the app
-  //     (the page calls notePwaMoment() at its "done" moment)
-  //   · at most 3 asks, ever · ≥4 days between asks · always dismissable
-  //   · never on first paint, never over the footer
-  //
-  // WIRING (2 lines per app):
-  //   +layout.svelte:  <PwaInstallCard appName="drshrink"
-  //                      tagline="Drop a file, get a smaller one."
-  //                      iconSrc="/icon-192.png" storagePrefix="drshrink" />
-  //   at the success moment:  import { notePwaMoment } from '.../PwaInstallCard.svelte';
-  //                           notePwaMoment();
-  import { writable } from "svelte/store";
-
-  // Module-level so any component can ping it without prop-drilling.
-  const momentTick = writable(0);
-
-  /** Call at the app's "job done" moment (download fired, file saved…). */
-  export function notePwaMoment() {
-    momentTick.update((n) => n + 1);
-  }
-</script>
-
 <script>
   import { onMount, onDestroy } from "svelte";
+  import { installMomentTick } from "$lib/services/pwa/installMoments.js";
+  import { getInAppBrowserName } from "$lib/services/audio/inAppBrowser.js";
+
+  // A quiet corner suggestion after two useful moments; three asks max,
+  // four days apart, and never before an actual install path exists.
 
   export let appName = "this app";
   export let tagline = "";
@@ -86,6 +59,7 @@
     try {
       if (localStorage.getItem(K.INSTALLED) === "true") return false;
       if (isStandalone()) return false;
+      if (getInAppBrowserName()) return false;
       if (num(K.MOMENTS) < MOMENTS_TO_EARN) return false;
       if (num(K.ASKS) >= MAX_ASKS) return false;
       const last = localStorage.getItem(K.LAST_ASK);
@@ -153,7 +127,7 @@
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
 
     // Each notePwaMoment() bumps the counter; crossing the threshold arms us.
-    unsubMoment = momentTick.subscribe((n) => {
+    unsubMoment = installMomentTick.subscribe((n) => {
       if (n === 0) return; // initial subscription, not a real moment
       set(K.MOMENTS, num(K.MOMENTS) + 1);
       maybeShow();

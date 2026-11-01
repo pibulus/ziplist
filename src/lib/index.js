@@ -3,6 +3,7 @@ import { derived, writable } from "svelte/store";
 import { browser } from "$app/environment";
 import { env as publicEnv } from "$env/dynamic/public";
 import * as CONSTANTS from "./constants";
+import { PRICING } from "./config/pricing.js";
 
 // Initialize store with localStorage value if available
 function createLocalStorageStore(key, initialValue) {
@@ -94,8 +95,7 @@ function isForcedContributorMode() {
   return publicEnv.PUBLIC_FORCE_CONTRIBUTOR_MODE === "true";
 }
 
-const CONTRIBUTOR_TERM_DAYS = 36500;
-const CONTRIBUTOR_TERM_MS = CONTRIBUTOR_TERM_DAYS * 24 * 60 * 60 * 1000;
+const CONTRIBUTOR_TERM_MS = PRICING.termDays * 24 * 60 * 60 * 1000;
 
 // Lifetime pass (client-side localStorage — honest framing for a $29 once-off pass, not
 // DRM). Missing stamp = legacy unlock, treated as still valid so we never lock out
@@ -119,7 +119,7 @@ export function setContributorStatus(isUnlocked, token = null) {
   if (token) {
     contributorToken.set(token);
     if (browser) {
-      // Stamp a 1-year expiry from now (the contributor pass lasts a year).
+      // Match the one-time Passport's lifetime-length term, not room retention.
       localStorage.setItem(
         CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_EXPIRES,
         String(Date.now() + CONTRIBUTOR_TERM_MS),

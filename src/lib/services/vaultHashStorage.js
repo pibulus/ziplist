@@ -1,5 +1,9 @@
 import { browser } from "$app/environment";
 import { STORAGE_KEYS } from "$lib/constants.js";
+import {
+  parseFourWordPasskey,
+  getSyncRoomId,
+} from "$lib/cartridges/identityUtils.js";
 
 function getStorage(storage) {
   if (storage) return storage;
@@ -8,6 +12,10 @@ function getStorage(storage) {
 }
 
 export function normalizeStoredSupporterCode(code) {
+  const parsed = parseFourWordPasskey(code);
+  if (parsed) {
+    return parsed.phrase;
+  }
   const clean = code?.toString().trim().toUpperCase() || "";
   const compact = clean.replace(/^ZL[-_\s]?/, "").replace(/[-_\s]/g, "");
   return /^[A-F0-9]{12}$/.test(compact)
@@ -40,6 +48,7 @@ export function readStoredSupporterCode(storage) {
 }
 
 export function isPersonalPassportCode(code) {
+  if (parseFourWordPasskey(code)) return true;
   const clean = code?.toString().trim().toUpperCase() || "";
   const compact = clean.replace(/^ZL[-_\s]?/, "").replace(/[-_\s]/g, "");
   return clean.startsWith("ZL-") || /^[A-F0-9]{12}$/.test(compact);
@@ -131,6 +140,9 @@ export function saveStoredSupporterCode(code, storage) {
         STORAGE_KEYS.SUPPORTER_PASSPORT_CODE,
         normalizedCode,
       );
+      if (browser && previousCode !== normalizedCode) {
+        window.dispatchEvent(new Event("ziplist-passport-changed"));
+      }
     } catch (error) {
       console.warn("Failed to save supporter passport code:", error);
     }
@@ -160,6 +172,10 @@ export function saveStoredSupporterCode(code, storage) {
  * Generate a deterministic hash from the supporter code (used as the passport / identity seed)
  */
 export async function getVaultHash(code) {
+  const parsed = parseFourWordPasskey(code);
+  if (parsed) {
+    return getSyncRoomId(parsed.phrase);
+  }
   const normalized = normalizeStoredSupporterCode(code);
   if (!normalized) return "";
   const encoder = new TextEncoder();

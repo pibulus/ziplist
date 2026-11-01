@@ -11,10 +11,13 @@
   );
   import { listsService } from "$lib/services/lists/listsService";
   import { geminiService } from "$lib/services/geminiService";
-  import { splitPastedList } from "$lib/services/lists/listTextFormat.js";
-  import { shareList, generateShareableUrl } from "$lib/services/share";
+  import {
+    splitPastedList,
+    listToText,
+  } from "$lib/services/lists/listTextFormat.js";
+  import { generateShareableUrl } from "$lib/services/share";
   import { tagColour } from "$lib/services/lists/itemTags";
-  import { notePwaMoment } from "$lib/components/PwaInstallCard.svelte";
+  import { notePwaMoment } from "$lib/services/pwa/installMoments.js";
   import { fade, slide } from "svelte/transition";
   import { cubicOut, backOut, quintOut } from "svelte/easing";
   import { flip } from "svelte/animate";
@@ -69,12 +72,25 @@
     getAvatarColor,
     getAvatarImage,
     getOrCreateAvatar,
+    adoptPassportName,
   } from "$lib/services/realtime/avatarService";
   import { getLiveActivityStore } from "$lib/services/realtime/liveActivityStore";
   import { getPresenceStore } from "$lib/services/realtime/presenceStore";
   import { getTypingStore } from "$lib/services/realtime/typingStore";
-  import { ANIMATION, PRODUCT_LIMITS } from "$lib/constants";
+  import { PRODUCT_LIMITS } from "$lib/constants";
   import { isContributor } from "$lib";
+  import { listPreferences } from "$lib/services/lists/listPreferences.js";
+  import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+  import {
+    buildPassportAvatar,
+    readCustomPassportAvatar,
+  } from "$lib/cartridges/passportAvatar.js";
+  import { selectSkin } from "$lib/cartridges/passportSkins.js";
+  import {
+    readStoredSupporterCode,
+    getVaultHash,
+  } from "$lib/services/vaultHashStorage.js";
+  import { setAvatarName } from "$lib/services/realtime/avatarService.js";
   import { autoFocus } from "./autoFocus.js";
   import {
     PULL_THRESHOLD,
@@ -109,6 +125,8 @@
   let isMakingLive = false;
   let presence = []; // Who's online
   let localAvatar = "";
+  let passportFace = "";
+  let defaultPassportFace = "";
   $: remotePresence = presence.filter(
     (u) => u.avatar && u.avatar !== localAvatar,
   );
@@ -208,6 +226,7 @@
 
   onMount(() => {
     localAvatar = getOrCreateAvatar();
+    refreshPassportIdentity();
     // Initialize the lists store
     listsStore.initialize();
     listsService.getAllLists();
@@ -235,6 +254,18 @@
       window.addEventListener("ziplist-heart", handleRemoteHeart);
       window.addEventListener("ziplist-item-checked", handleRemoteItemChecked);
       window.addEventListener("keydown", handleGlobalKeyDown);
+      window.addEventListener(
+        "ziplist-avatar-changed",
+        handleLocalAvatarChange,
+      );
+      window.addEventListener(
+        "ziplist-passport-avatar-changed",
+        refreshPassportFace,
+      );
+      window.addEventListener(
+        "ziplist-passport-changed",
+        refreshPassportIdentity,
+      );
       requestAnimationFrame(() => {
         hasMounted = true;
       });
@@ -274,8 +305,52 @@
         handleRemoteItemChecked,
       );
       window.removeEventListener("keydown", handleGlobalKeyDown);
+      window.removeEventListener(
+        "ziplist-avatar-changed",
+        handleLocalAvatarChange,
+      );
+      window.removeEventListener(
+        "ziplist-passport-avatar-changed",
+        refreshPassportFace,
+      );
+      window.removeEventListener(
+        "ziplist-passport-changed",
+        refreshPassportIdentity,
+      );
     }
   });
+
+  function handleLocalAvatarChange(event) {
+    localAvatar = event.detail?.avatar || getOrCreateAvatar();
+  }
+
+  function refreshPassportFace() {
+    passportFace = readCustomPassportAvatar() || defaultPassportFace;
+  }
+
+  async function refreshPassportIdentity() {
+    const code = readStoredSupporterCode();
+    if (!code) return;
+    try {
+      const hash = await getVaultHash(code);
+      if (readStoredSupporterCode() !== code) return;
+      const identity = generateMemberIdentity(hash, code);
+      const seed = identity.syncRoomId || hash;
+      defaultPassportFace = buildPassportAvatar(
+        seed,
+        selectSkin(seed).avatarStyle,
+      );
+      refreshPassportFace();
+      adoptPassportName(identity.name);
+    } catch {
+      // Shared lists still have their local fallback identity.
+    }
+  }
+
+  function saveCollaboratorName(event) {
+    localAvatar = setAvatarName(event.currentTarget.value);
+    event.currentTarget.value = localAvatar;
+  }
 
   function subscribeToLiveStores(nextListId) {
     if (!nextListId) return;
@@ -330,8 +405,12 @@
     }
     let cx = event?.clientX;
     let cy = event?.clientY;
-    if ((!cx || !cy) && event?.currentTarget?.getBoundingClientRect) {
-      const rect = event.currentTarget.getBoundingClientRect();
+    // The native checkbox is visually hidden (0×0); anchor the paper to its
+    // visible row instead of defaulting every check to the viewport centre.
+    const anchor =
+      event?.currentTarget?.closest?.(".zl-item") || event?.currentTarget;
+    if ((!cx || !cy) && anchor?.getBoundingClientRect) {
+      const rect = anchor.getBoundingClientRect();
       if (rect.width || rect.height) {
         cx = rect.left + rect.width / 2;
         cy = rect.top + rect.height / 2;
@@ -416,13 +495,8 @@
     }
   }
 
-  // Share list function
+  // Copy a plain checklist, not a static link masquerading as "Copy List".
   async function handleShareList(listToShare = list) {
-    if (isLive) {
-      await handleShareLiveList();
-      return;
-    }
-
     if (!listToShare || !listToShare.items || listToShare.items.length === 0) {
       showListStatus("Add an item before sharing.");
       soundService.locked();
@@ -430,22 +504,23 @@
     }
 
     try {
-      const result = await shareList(listToShare);
-      if (result.success) {
-        showListStatus(
-          result.urlTooLong ? "Long link copied." : "Link copied.",
-          true,
-          result.urlTooLong ? 5000 : 3000,
-        );
+      if (await copyText(listToText(listToShare))) {
+        showListStatus("List copied.", true, 3000);
         soundService.copySuccess({ force: true });
-        notePwaMoment(); // a shared list earns the install suggestion
+        if (
+          listToShare.items.some(
+            (item) => !String(item.id).startsWith("starter-"),
+          )
+        ) {
+          notePwaMoment(); // a real shared checklist earns the install suggestion
+        }
       } else {
-        showListStatus("Share needs one more try.");
+        showListStatus("Copy needs browser permission.");
         soundService.error({ force: true });
       }
     } catch (error) {
-      console.error("Failed to share list:", error);
-      showListStatus("Share needs one more try.");
+      console.error("Failed to copy list:", error);
+      showListStatus("Copy needs browser permission.");
       soundService.error({ force: true });
     }
   }
@@ -520,22 +595,11 @@
 
       showListStatus(
         copied
-          ? "Live. Link copied — or read out the words."
-          : "Live. Tap the link icon to grab the link.",
+          ? "Shared list link copied. The words work too."
+          : "Shared list ready. Link available in Share.",
         true,
       );
       soundService.success({ force: true });
-      if (copied && typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("ziplist:toast", {
-            detail: {
-              message: "Live room created & link copied!",
-              icon: "✨",
-              type: "success",
-            },
-          }),
-        );
-      }
 
       subscribeToLiveStores(list.id);
     } catch (error) {
@@ -547,8 +611,8 @@
         error?.code === "live_misconfigured" || error?.status === 503;
       showListStatus(
         isConfigFault
-          ? "Live sharing is down right now. Static share still works."
-          : "Live sharing needs one more try.",
+          ? "Shared lists are unavailable right now. Copy still works."
+          : "Shared link needs one more try.",
         false,
         5000,
       );
@@ -1565,7 +1629,10 @@
 
   function toggleShareTray() {
     shareTrayOpen = !shareTrayOpen;
-    if (shareTrayOpen) manageTrayOpen = false;
+    if (shareTrayOpen) {
+      manageTrayOpen = false;
+      shareInputMode = null;
+    }
     if (!shareTrayOpen) {
       shareInputMode = null;
       if (!isLive) syncPhrase = "";
@@ -1581,6 +1648,7 @@
   function toggleManageTray() {
     manageTrayOpen = !manageTrayOpen;
     if (manageTrayOpen) shareTrayOpen = false;
+    else shareInputMode = null;
     soundService.select();
   }
 
@@ -1598,7 +1666,8 @@
   // minted so the four-word phrase can appear in it — that phrase IS the
   // link, and closing the tray would hide it the moment it arrived.
   async function shareAsLiveRoom() {
-    await handleMakeLive();
+    if (isLive) await handleShareLiveList();
+    else await handleMakeLive();
   }
 
   async function handleStopLive() {
@@ -1611,7 +1680,7 @@
     isLive = false;
     syncPhrase = "";
     shareTrayOpen = false;
-    showListStatus("Live sharing ended.", true, 2400);
+    showListStatus("Sharing ended.", true, 2400);
     hapticService.impact("medium");
     soundService.close({ force: true });
   }
@@ -1632,7 +1701,7 @@
       new CustomEvent("ziplist-open-qr", {
         detail: {
           shareUrl: rawUrl,
-          title: isLive ? "Join Live List" : `Scan "${list.name || "List"}"`,
+          title: isLive ? "Shared list" : `Scan "${list.name || "List"}"`,
           subtitle: isLive
             ? "Scan with any phone camera to edit together in real time"
             : "Scan with any phone camera to open and save this list",
@@ -1654,7 +1723,7 @@
     const added = result?.addedCount ?? 0;
     pasteText = "";
     shareInputMode = null;
-    shareTrayOpen = false;
+    manageTrayOpen = false;
     showListStatus(
       added === 0
         ? "Those were all here already."
@@ -1694,7 +1763,7 @@
 
         pasteText = "";
         shareInputMode = null;
-        shareTrayOpen = false;
+        manageTrayOpen = false;
 
         showListStatus(
           `Magic added ${added} ${added === 1 ? "item" : "items"}${
@@ -1968,21 +2037,10 @@
       soundService.locked({ force: true });
     }
     showListStatus(
-      copied ? "Link copied" : "Couldn't copy — read the words out instead",
+      copied ? "Link copied" : "Copy unavailable · four words still work",
       copied,
       2400,
     );
-    if (copied && typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: {
-            message: "Room link copied to clipboard!",
-            icon: "🔑",
-            type: "success",
-          },
-        }),
-      );
-    }
   }
 
   function requestMove(itemId) {
@@ -2048,37 +2106,95 @@
     sortNewestFirst = !sortNewestFirst;
   }
 
-  // ── Full-clear celebration (lists with 5+ items only) ──────────────────
-  let celebrationBurst = null;
+  // One viewport canvas, not a second DOM burst inside the clipped card.
+  // The same list-colour palette climbs from a tiny check to a full-list party.
+  let confettiLoader;
+  let lastCheckAt = 0;
+  let checkStreak = 0;
 
-  function fireListCompleteCelebration() {
-    if (prefersReducedMotion) return;
+  async function celebrate(tier, origin) {
+    if (prefersReducedMotion || typeof window === "undefined") return;
     const colors = [
-      list.primaryColor || "#ffb000",
-      list.accentColor || "#ff6ac2",
-      "#ffd166",
-      "#fff6e6",
-      "#76ead7",
+      list.primaryColor || "#62c9e8",
+      list.accentColor || "#93dcf0",
+      "#ffcc33",
+      "#ff6ac2",
+      "#fbf1e4",
     ];
-    celebrationBurst = Array.from({ length: 28 }, (_, i) => ({
-      i,
-      left: 6 + Math.random() * 88,
-      dx: (Math.random() - 0.5) * 150,
-      rot: (Math.random() - 0.5) * 760,
-      delay: Math.random() * 180,
-      dur: 950 + Math.random() * 550,
-      size: 6 + Math.random() * 7,
-      color: colors[i % colors.length],
-    }));
-    const timer = setTimeout(() => {
-      celebrationBurst = null;
-      celebrationTimers.delete(timer);
-    }, 1900);
-    celebrationTimers.add(timer);
+    try {
+      confettiLoader ||= import("canvas-confetti");
+      const confetti = (await confettiLoader).default;
+      const fire = (options) =>
+        confetti({
+          origin,
+          colors: tier === "item" ? colors.slice(0, 2) : colors,
+          disableForReducedMotion: true,
+          zIndex: 90,
+          ...options,
+        });
+
+      if (tier === "item") {
+        fire({
+          particleCount: 9,
+          spread: 38,
+          startVelocity: 18,
+          decay: 0.93,
+          gravity: 0.9,
+          ticks: 175,
+          scalar: 0.67,
+        });
+      } else if (tier === "streak" || tier === "clear") {
+        fire({
+          particleCount: tier === "clear" ? 38 : 22,
+          spread: 68,
+          startVelocity: tier === "clear" ? 27 : 23,
+          decay: 0.94,
+          gravity: 0.85,
+          ticks: 230,
+          scalar: 0.82,
+        });
+      } else {
+        fire({
+          particleCount: 55,
+          spread: 76,
+          startVelocity: 32,
+          decay: 0.95,
+          gravity: 0.85,
+          ticks: 280,
+          scalar: 0.9,
+        });
+        // A quieter second volley follows the first instead of two unrelated
+        // animations clipping at the card edge at exactly the same moment.
+        scheduleCelebration(() => {
+          fire({
+            particleCount: 16,
+            angle: 72,
+            spread: 48,
+            startVelocity: 25,
+            decay: 0.95,
+            gravity: 0.9,
+            ticks: 245,
+            origin: { x: 0.12, y: 0.78 },
+          });
+          fire({
+            particleCount: 16,
+            angle: 108,
+            spread: 48,
+            startVelocity: 25,
+            decay: 0.95,
+            gravity: 0.9,
+            ticks: 245,
+            origin: { x: 0.88, y: 0.78 },
+          });
+        }, 160);
+      }
+    } catch (error) {
+      console.warn("Confetti unavailable:", error);
+    }
   }
 
   // Handle item toggle with sparkle animation
-  async function toggleItem(itemId, event) {
+  function toggleItem(itemId, event) {
     const itemToToggle = list.items.find((item) => item.id === itemId);
     const willCheckItem = itemToToggle && !itemToToggle.checked;
     const checkableItems = list.items.filter(isCheckableItem);
@@ -2095,6 +2211,14 @@
       liveListsService.broadcastItemChecked(list.id, itemId);
     }
 
+    if (willCheckItem) {
+      const now = Date.now();
+      checkStreak = now - lastCheckAt < 3500 ? checkStreak + 1 : 1;
+      lastCheckAt = now;
+    } else {
+      checkStreak = 0;
+    }
+
     // Apply haptic feedback
     if (itemToToggle) {
       hapticService.impact(itemToToggle.checked ? "light" : "medium");
@@ -2103,7 +2227,6 @@
         // Smaller lists keep the modest completion chime.
         if (checkableItems.length >= 5) {
           soundService.fanfare({ force: true });
-          fireListCompleteCelebration();
         } else {
           soundService.complete({ force: true });
         }
@@ -2118,46 +2241,12 @@
     listsService.toggleItem(itemId, list.id);
     markItemSettling(itemId);
 
-    // If checking the item (not unchecking), add sparkle animation
-    if (!itemToToggle?.checked) {
-      const origin = getConfettiOrigin(event);
-
-      const confetti = (await import("canvas-confetti")).default;
-      confetti({
-        particleCount: Math.max(
-          24,
-          Math.round(ANIMATION.CONFETTI.PIECE_COUNT * 0.7),
-        ),
-        spread: 54,
-        origin: origin,
-        colors: ["#FFB000", "#FF6AC2", "#00D4FF"], // Use app colors
-        disableForReducedMotion: true,
-      });
-
-      // Add sparkle animation after a small delay
-      scheduleCelebration(() => {
-        const remainingCheckable = list.items.filter(isCheckableItem);
-        const allCompleted =
-          remainingCheckable.length > 0 &&
-          remainingCheckable
-            .filter((i) => i.id !== itemId)
-            .every((i) => i.checked);
-
-        if (allCompleted) {
-          hapticService.notification("success");
-
-          // Extra confetti for finishing the list!
-          scheduleCelebration(() => {
-            confetti({
-              particleCount: ANIMATION.CONFETTI.PIECE_COUNT,
-              spread: 82,
-              origin: { x: 0.5, y: 0.62 },
-              colors: ["#FFB000", "#FF6AC2", "#00D4FF"],
-              disableForReducedMotion: true,
-            });
-          }, 300);
-        }
-      }, 50);
+    if (willCheckItem) {
+      if (willCompleteList) hapticService.notification("success");
+      void celebrate(
+        willCompleteList ? "list" : checkStreak >= 3 ? "streak" : "item",
+        getConfettiOrigin(event),
+      );
     }
   }
 
@@ -2212,7 +2301,7 @@
     }
   }
 
-  $: myAvatarColour = getAvatarColor(getOrCreateAvatar());
+  $: myAvatarColour = getAvatarColor(localAvatar || "Guest");
 
   // List-specific tags with counts (ranked by frequency)
   $: listTagCounts = (() => {
@@ -2303,6 +2392,12 @@
 
     hapticService.notification("success");
     soundService.clearSweep(doneItems.length);
+    if (doneItems.length >= 3) {
+      void celebrate(
+        "clear",
+        getConfettiOrigin({ currentTarget: listContainerNode }),
+      );
+    }
 
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
 
@@ -2334,7 +2429,15 @@
     if (!list.items.length) return;
 
     hapticService.impact("medium");
-    soundService.delete();
+    if (list.items.length >= 3) {
+      soundService.clearSweep(list.items.length);
+      void celebrate(
+        "clear",
+        getConfettiOrigin({ currentTarget: listContainerNode }),
+      );
+    } else {
+      soundService.delete();
+    }
 
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
 
@@ -2801,20 +2904,8 @@
     {accessibleListName}
   </span>
   <div class="card-content">
-    {#if celebrationBurst}
-      <!-- Full-clear confetti — bursts from the top of the card, palette
-           pulled from the list's own colors. Removed after ~1.9s. -->
-      <div class="zl-confetti" aria-hidden="true">
-        {#each celebrationBurst as p (p.i)}
-          <span
-            class="zl-confetti-piece"
-            style="left: {p.left}%; --dx: {p.dx}px; --rot: {p.rot}deg; --delay: {p.delay}ms; --dur: {p.dur}ms; --size: {p.size}px; background: {p.color};"
-          ></span>
-        {/each}
-      </div>
-    {/if}
     <!-- List Header with Live Collaboration Toggle -->
-    <div class="zl-list-header">
+    <div class="zl-list-header" class:is-sharing={isLive}>
       <div class="zl-list-header-main">
         {#if showListManagement && editingListName}
           <input
@@ -2877,9 +2968,11 @@
                   class="zl-live-presence"
                   on:click={tapHeart}
                   title={remotePresence.length > 0
-                    ? `Live — ${remotePresence.length} guest online. Tap for heart`
-                    : "Live list active. Tap for heart"}
-                  aria-label="Live list status"
+                    ? `${remotePresence.length} here · send a heart`
+                    : "Shared list · send a heart"}
+                  aria-label={remotePresence.length > 0
+                    ? `Send a heart · ${remotePresence.length} ${remotePresence.length === 1 ? "person" : "people"} here`
+                    : "Send a heart to this shared list"}
                 >
                   <span class="zl-live-presence-pulse" aria-hidden="true"
                   ></span>
@@ -3039,10 +3132,8 @@
           class:is-open={shareTrayOpen}
           on:click={toggleShareTray}
           aria-expanded={shareTrayOpen}
-          data-tip={isLive ? "Copy the live link" : "Share or export"}
-          aria-label={isLive
-            ? `Copy the live link for ${list.name || "this list"}`
-            : `Share or export ${list.name || "this list"}`}
+          data-tip="Share this list"
+          aria-label={`Share ${list.name || "this list"}`}
         >
           <svg
             class="zl-header-icon"
@@ -3129,41 +3220,20 @@
           </div>
         {/if}
 
-        <div class="zl-share-actions" role="group" aria-label="Send this list">
-          <button
-            type="button"
-            class="zl-share-option"
-            title={isLive
-              ? "Copy live room link"
-              : "Send a copy via text, email, or share sheet"}
-            aria-label={isLive ? "Copy live link" : "Send a copy"}
-            on:click={shareAsLink}
-          >
-            <svg
-              class="zl-pill-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path
-                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-              />
-            </svg>
-            <span>Copy</span>
-          </button>
-          {#if liveFeatureAvailable && !isLive}
+        <div
+          class="zl-share-actions"
+          class:two-options={!liveFeatureAvailable}
+          role="group"
+          aria-label="Send this list"
+        >
+          {#if liveFeatureAvailable}
             <button
               type="button"
               class="zl-share-option zl-share-live"
               disabled={isMakingLive}
               aria-busy={isMakingLive}
-              title="Open a shared live room with real-time sync"
-              aria-label="Share live"
+              title="Share a list that updates together"
+              aria-label="Share live link"
               on:click={shareAsLiveRoom}
             >
               <svg
@@ -3180,57 +3250,9 @@
                 <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
                 <path d="M7.76 16.24a6 6 0 0 1 0-8.49" />
               </svg>
-              <span>{isMakingLive ? "Connecting..." : "Live"}</span>
+              <span>{isMakingLive ? "Connecting..." : "Share Live Link"}</span>
             </button>
           {/if}
-          {#if isLive}
-            <button
-              type="button"
-              class="zl-share-option zl-share-stop"
-              title="Stop live sharing this room"
-              aria-label="Stop live sharing"
-              on:click={handleStopLive}
-            >
-              <svg
-                class="zl-pill-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.4"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
-              <span>Stop</span>
-            </button>
-          {/if}
-          <button
-            type="button"
-            class="zl-share-option"
-            class:is-active={shareInputMode === "paste"}
-            title="Paste text, notes, or recipes directly into list"
-            aria-label="Paste into list"
-            on:click={toggleShareInput}
-          >
-            <svg
-              class="zl-pill-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path
-                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-              />
-              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-            </svg>
-            <span>Paste</span>
-          </button>
           <button
             type="button"
             class="zl-share-option"
@@ -3253,7 +3275,30 @@
               <rect x="3" y="14" width="7" height="7" rx="1" />
               <path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 18v3" />
             </svg>
-            <span>QR</span>
+            <span>QR Code</span>
+          </button>
+          <button
+            type="button"
+            class="zl-share-option"
+            title="Copy a snapshot of this list"
+            on:click={shareAsLink}
+          >
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path
+                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+              />
+            </svg>
+            <span>Copy List</span>
           </button>
         </div>
 
@@ -3269,6 +3314,58 @@
           </button>
         {/if}
 
+        {#if isLive}
+          <div class="zl-collaborator-badge">
+            <img
+              src={passportFace || getAvatarImage(localAvatar)}
+              alt=""
+              aria-hidden="true"
+            />
+            <label for="zl-collaborator-name-{list.id}">Sharing as</label>
+            <input
+              id="zl-collaborator-name-{list.id}"
+              type="text"
+              value={localAvatar}
+              maxlength="48"
+              autocomplete="off"
+              on:change={saveCollaboratorName}
+              aria-label="Collaborator display name"
+            />
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Actions affect this list rather than sending it. -->
+    {#if manageTrayOpen && canManageList}
+      <div
+        class="zl-manage-tray"
+        role="group"
+        aria-label="Manage this list"
+        transition:slide={{ duration: 180, easing: cubicOut }}
+      >
+        <button
+          type="button"
+          class="zl-share-option"
+          class:is-active={shareInputMode === "paste"}
+          on:click={toggleShareInput}
+          aria-expanded={shareInputMode === "paste"}
+        >
+          <svg
+            class="zl-pill-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            ><path
+              d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+            /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></svg
+          >
+          <span>Paste Items</span>
+        </button>
         {#if shareInputMode === "paste"}
           <div class="zl-share-paste">
             <textarea
@@ -3312,19 +3409,6 @@
             </div>
           </div>
         {/if}
-      </div>
-    {/if}
-
-    <!-- List-level actions only: Duplicate, Empty, Delete.
-         Completed items have their own Reset/Clear divider in context, and
-         tapping the list title already renames inline. -->
-    {#if manageTrayOpen && canManageList}
-      <div
-        class="zl-manage-tray"
-        role="group"
-        aria-label="Manage this list"
-        transition:slide={{ duration: 180, easing: cubicOut }}
-      >
         {#if showListManagement}
           <button
             type="button"
@@ -3348,7 +3432,19 @@
                 d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"
               />
             </svg>
-            <span>Duplicate</span>
+            <span>Duplicate List</span>
+          </button>
+        {/if}
+        {#if list.items.some((item) => item.checked)}
+          <button
+            type="button"
+            class="zl-share-option"
+            on:click={() => {
+              clearDoneItems();
+              manageTrayOpen = false;
+            }}
+          >
+            <span>Clear Checked</span>
           </button>
         {/if}
         {#if list.items.length > 0}
@@ -3374,7 +3470,7 @@
               />
               <path d="m6 11 7 7" />
             </svg>
-            <span>Empty</span>
+            <span>Empty List</span>
           </button>
         {/if}
         {#if canDeleteList}
@@ -3399,7 +3495,7 @@
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
               <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
             </svg>
-            <span>Delete</span>
+            <span>Delete List</span>
           </button>
         {/if}
       </div>
@@ -3781,7 +3877,7 @@
             </li>
           {/if}
 
-          {#if (activeTagFilter ? renderedCompletedItems.length : completedItems.length) > 0}
+          {#if $listPreferences.showChecked && (activeTagFilter ? renderedCompletedItems.length : completedItems.length) > 0}
             <CompletedDivider
               count={activeTagFilter
                 ? renderedCompletedItems.length
@@ -3791,7 +3887,7 @@
             />
           {/if}
 
-          {#each renderedCompletedItems as item (item.id)}
+          {#each $listPreferences.showChecked ? renderedCompletedItems : [] as item (item.id)}
             <li
               class="zl-item"
               class:checked={item.checked}

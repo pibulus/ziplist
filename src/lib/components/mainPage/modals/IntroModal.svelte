@@ -62,7 +62,9 @@
       <!-- Feature lines: plain and centred, matching TalkType canon rhythm -->
       <div id="intro_modal_description" class="space-y-1.5 text-center">
         <p class="intro-line">Say the list out loud — it writes itself.</p>
-        <p class="intro-line">"Got the milk" — and milk ticks itself off.</p>
+        <p class="intro-line">
+          Tap to start or stop · Hold to talk, release to finish.
+        </p>
         <p class="intro-line pt-2">
           No account, no login. Lists stay on this device.
         </p>

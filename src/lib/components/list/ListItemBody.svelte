@@ -109,8 +109,16 @@
     class="zl-checkbox-wrapper zl-portal-button"
     style={portalColor ? `--portal-colour: ${portalColor}` : ""}
     on:click|stopPropagation={() => onNavigateToPortal(portalTarget)}
-    title={`Open ${portalTarget} list`}
-    aria-label={`Jump to ${portalTarget} list`}
+    title={portalMatch
+      ? `Open ${portalTarget}`
+      : isSelfPortal
+        ? `Already on ${portalTarget}`
+        : `Create and open ${portalTarget}`}
+    aria-label={portalMatch
+      ? `Open ${portalTarget} list`
+      : isSelfPortal
+        ? `Already on ${portalTarget} list`
+        : `Create and open ${portalTarget} list`}
   >
     <span class="zl-portal-badge">→</span>
   </button>
@@ -159,6 +167,16 @@
     <input
       id="edit-item-{listId}-{item.id}"
       class="zl-edit-input"
+      type="text"
+      autocomplete="off"
+      autocorrect="on"
+      autocapitalize="sentences"
+      spellcheck="false"
+      name="zl-entry-item"
+      inputmode="text"
+      data-1p-ignore
+      data-lpignore="true"
+      data-form-type="other"
       placeholder="Enter item text..."
       bind:value={editedItemText}
       on:blur={onSaveEdit}
@@ -179,16 +197,16 @@
           onStartEdit(item);
         }
       }}
-      on:keydown={(event) => {
-        if (event.key === "Enter") {
-          if (isPortal) onNavigateToPortal(portalTarget);
-          else if (!item.checked) onStartEdit(item);
-        }
-      }}
       disabled={item.checked}
       aria-label={item.checked
         ? `Completed item: ${item.text}`
-        : `Edit item: ${item.text}`}
+        : isPortal
+          ? portalMatch
+            ? `Open ${portalTarget} list`
+            : isSelfPortal
+              ? `Already on ${portalTarget} list`
+              : `Create and open ${portalTarget} list`
+          : `Edit item: ${item.text}`}
     >
       {#if isSection}
         {#if sectionTitle}

@@ -74,6 +74,30 @@ console.log("▶ Testing listMergeService LWW-Element-Set merge engine...");
   );
 }
 
+// Equal timestamps from concurrent edits must not turn a check into an uncheck.
+{
+  const ticked = {
+    id: "milk",
+    text: "Milk",
+    checked: true,
+    checkedAt: 2100,
+    completedAt: new Date(2100).toISOString(),
+    updatedAt: 2100,
+  };
+  const staleUnchecked = {
+    id: "milk",
+    text: "Milk",
+    checked: false,
+    checkedAt: 2100,
+    updatedAt: 2300,
+  };
+  assert.equal(mergeSingleItem(ticked, staleUnchecked).checked, true);
+  assert.equal(mergeSingleItem(staleUnchecked, ticked).checked, true);
+  console.log(
+    "  ✓ Equal check timestamps converge after concurrent list edits",
+  );
+}
+
 // Test 3: The Zombie Item Prevention (Tombstones suppress deleted items)
 {
   const now = 5000;

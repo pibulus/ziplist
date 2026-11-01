@@ -86,8 +86,35 @@ const { POST: emailPassPost } =
 
 const { isPersonalPassportCode, getVaultHash } =
   await import("../services/vaultHashStorage.js");
+const {
+  parseFourWordPasskey,
+  generateMemberIdentity,
+  getSyncRoomId,
+  ADJECTIVES,
+  ANIMALS,
+  VERBS,
+  PLACES,
+} = await import("../cartridges/identityUtils.js");
 
 const { dealTips, ABOUT_TIPS } = await import("../config/aboutTips.js");
+const { PRICING, CONTRIBUTOR_COPY } = await import("../config/pricing.js");
+const { getContributorPriceMoney } =
+  await import("./payments/squareProvider.js");
+const { PRODUCT_LIMITS } = await import("../constants.js");
+const { LIVE_ROOM_TIERS, LIVE_ROOM_TTL_MS } =
+  await import("../services/realtime/liveListProtocol.js");
+
+// What the page says, what Square charges, and what the relay grants are one
+// product. Catch a future annual/once-off or free/paid copy drift here.
+assert.deepEqual(getContributorPriceMoney(), { amount: 2900, currency: "AUD" });
+assert.equal(PRICING.displayPrice, "A$29");
+assert.match(CONTRIBUTOR_COPY.priceLine, /once.*No subscription/i);
+assert.equal(PRODUCT_LIMITS.FREE_MAX_LISTS, 3);
+assert.equal(PRODUCT_LIMITS.CONTRIBUTOR_MAX_LISTS, 12);
+assert.equal(PRODUCT_LIMITS.FREE_MAX_LIVE_LISTS, 1);
+assert.equal(PRODUCT_LIMITS.CONTRIBUTOR_MAX_LIVE_LISTS, 12);
+assert.equal(LIVE_ROOM_TTL_MS[LIVE_ROOM_TIERS.FREE], 7 * 86400000);
+assert.equal(LIVE_ROOM_TTL_MS[LIVE_ROOM_TIERS.SUPPORTER], 365 * 86400000);
 
 // 1. Contributor code normalization & validation
 assert.equal(
@@ -218,6 +245,31 @@ assert.equal(
   "generated passkey phrase must be 4 hyphen-separated words",
 );
 
+// The first two dictionary words always name the Passport. No single phrase
+// gets a special path; spelling/case/spacing on a second device converge.
+for (const phrase of [
+  "clever-penguin-dreams-uptown",
+  `${ADJECTIVES[8].toLowerCase()}-${ANIMALS[12].toLowerCase()}-${VERBS[5]}-${PLACES[7]}`,
+  samplePhrase,
+]) {
+  const parsedPasskey = parseFourWordPasskey(phrase);
+  assert.ok(parsedPasskey, `valid shared passkey: ${phrase}`);
+  const messyPhrase = `  ${phrase.replaceAll("-", " ").toUpperCase()}  `;
+  const identity = generateMemberIdentity(
+    await getVaultHash(messyPhrase),
+    messyPhrase,
+  );
+  assert.equal(identity.name, parsedPasskey.name);
+  assert.equal(identity.phrase, phrase);
+  assert.equal(identity.syncRoomId, getSyncRoomId(phrase));
+  assert.equal(await getVaultHash(phrase), identity.syncRoomId);
+}
+assert.equal(
+  generateMemberIdentity("", "clever-penguin-dreams-uptown").name,
+  "Clever Penguin",
+);
+assert.equal(parseFourWordPasskey("clever-penguin-notaword-uptown"), null);
+
 // 3. License store: indexing & redeeming by either 4-word passkey or ZL code
 const minted = await createLicenseForCheckout({
   id: "checkout_test_001",
@@ -284,6 +336,9 @@ const builtEmail = buildContributorEmail({
   appOrigin: "https://ziplist.app",
   hasQr: true,
 });
+assert.equal(builtEmail.subject, "ZipList Passport");
+assert.ok(!builtEmail.subject.includes(samplePhrase));
+assert.ok(!builtEmail.text.includes("Paid once"));
 assert.ok(
   builtEmail.html.includes(samplePhrase),
   "Passport email HTML must include the 4-word passkey",

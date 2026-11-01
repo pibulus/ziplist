@@ -5,47 +5,38 @@
 export const ABOUT_TIPS = [
   {
     id: "breath-categories",
-    icon: "🎙️",
     text: "Speak a whole shopping run in one breath — items split onto clean rows automatically.",
   },
   {
     id: "inline-tags",
-    icon: "🏷️",
-    text: "Type #produce or #urgent inline to tag and group items on the fly.",
+    text: "Type #produce or #gear inline to group items on the fly.",
   },
   {
     id: "pull-to-add",
-    icon: "⬇️",
     text: "Pull down at the top of any list to pop open a fresh item row.",
   },
   {
     id: "live-wave",
-    icon: "👋",
-    text: "In a live shared room, tap a peer's avatar at the top to send a quick wave.",
+    text: "The heart on a shared list sends a little pulse to everyone there.",
   },
   {
     id: "peer-bloom",
-    icon: "🌸",
     text: "Ticked rows in live rooms bloom in the colour of the person who checked them off.",
   },
   {
     id: "four-word-sync",
-    icon: "🔗",
     text: "Four words or one QR scan link a phone and laptop with end-to-end encryption.",
   },
   {
     id: "swipe-lists",
-    icon: "👆",
     text: "Swipe left or right across the list card to hop between up to 12 colour lists.",
   },
   {
     id: "walkie-talkie",
-    icon: "📻",
     text: "Tap the mic to start and stop, or hold it down like a walkie-talkie.",
   },
   {
     id: "holo-skins",
-    icon: "🪩",
     text: "Tap the Passport card to shuffle holo skins, or tap the avatar to set a custom photo.",
   },
 ];

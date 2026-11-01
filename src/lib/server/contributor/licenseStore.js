@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { env } from "$env/dynamic/private";
 import { storage } from "../storage/index.js";
 import { withStoreLock } from "../storage/storeLock.js";
+import { parseFourWordPasskey } from "$lib/cartridges/identityUtils.js";
 import {
   generateLicenseCode,
   generatePasskeyPhrase,
@@ -45,7 +46,8 @@ function codeCandidates(code) {
   if (!code) return [];
   const clean = code.toString().trim();
   const stripped = clean.replace(/^ZL[-_\s]?/i, "").replace(/[-\s_]/g, "");
-  const normalizedPhrase = normalizePasskeyPhrase(clean);
+  const normalizedPhrase =
+    parseFourWordPasskey(clean)?.phrase || normalizePasskeyPhrase(clean);
   const candidates = [
     clean,
     normalizedPhrase,
