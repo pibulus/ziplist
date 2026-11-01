@@ -216,25 +216,34 @@ export function sanitizeLiveListData(input) {
     .map(sanitizeLiveItem)
     .filter(Boolean);
 
+  // These values reach CSS custom properties in list cards. A length cap
+  // alone still permits `red; position:fixed` from a forged shared snapshot.
+  const hexColor = (value) => {
+    const color = normalizeOptionalString(
+      value,
+      LIVE_LIST_LIMITS.MAX_COLOR_VALUE_LENGTH,
+    );
+    return /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(color || "")
+      ? color
+      : undefined;
+  };
+  const glow = normalizeOptionalString(
+    input.glowColor,
+    LIVE_LIST_LIMITS.MAX_COLOR_VALUE_LENGTH,
+  );
+
   return {
     id,
     name,
-    color: normalizeOptionalString(
-      input.color,
-      LIVE_LIST_LIMITS.MAX_COLOR_VALUE_LENGTH,
-    ),
-    primaryColor: normalizeOptionalString(
-      input.primaryColor,
-      LIVE_LIST_LIMITS.MAX_COLOR_VALUE_LENGTH,
-    ),
-    accentColor: normalizeOptionalString(
-      input.accentColor,
-      LIVE_LIST_LIMITS.MAX_COLOR_VALUE_LENGTH,
-    ),
-    glowColor: normalizeOptionalString(
-      input.glowColor,
-      LIVE_LIST_LIMITS.MAX_COLOR_VALUE_LENGTH,
-    ),
+    color: /^[a-z-]{1,24}$/.test(input.color || "") ? input.color : undefined,
+    primaryColor: hexColor(input.primaryColor),
+    accentColor: hexColor(input.accentColor),
+    glowColor:
+      /^rgba\(\s*(?:\d{1,3}\s*,\s*){3}(?:0(?:\.\d+)?|1(?:\.0+)?)\s*\)$/.test(
+        glow || "",
+      )
+        ? glow
+        : undefined,
     items,
     createdAt,
     updatedAt,

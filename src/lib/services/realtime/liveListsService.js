@@ -305,21 +305,21 @@ export async function connectToLive(listId, roomId, password = null) {
       roomId,
       {
         onInit: (serverListData) => {
-          if (!serverListData) {
+          const safeData = sanitizeLiveListData(serverListData);
+          if (!safeData) {
             failReady(new Error("Live list not found."));
             return;
           }
 
           const localList = getListSnapshot(listId);
           const shouldPushLocal =
-            connection.initialized &&
-            isLocalSnapshotNewer(localList, serverListData);
+            connection.initialized && isLocalSnapshotNewer(localList, safeData);
 
           if (shouldPushLocal) {
             sendListSnapshot(listId, socket);
           } else {
             withRemoteSync(listId, () => {
-              upsertLiveList(listId, roomId, serverListData);
+              upsertLiveList(listId, roomId, safeData);
             });
           }
 

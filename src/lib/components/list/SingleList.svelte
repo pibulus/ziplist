@@ -2905,7 +2905,11 @@
   </span>
   <div class="card-content">
     <!-- List Header with Live Collaboration Toggle -->
-    <div class="zl-list-header" class:is-sharing={isLive}>
+    <div
+      class="zl-list-header"
+      class:is-sharing={isLive}
+      class:is-guest={!showListManagement}
+    >
       <div class="zl-list-header-main">
         {#if showListManagement && editingListName}
           <input
@@ -2963,6 +2967,20 @@
             {#if isLive}
               <!-- The presence pill displays remote guests when in the room, or a clean live beacon -->
               <div class="zl-live-header-pill">
+                {#if !showListManagement}
+                  <span
+                    class="zl-guest-identity"
+                    title={`Sharing as ${localAvatar}`}
+                  >
+                    <img
+                      src={passportFace || getAvatarImage(localAvatar)}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                    <span class="zl-visually-hidden">Sharing as</span>
+                    <strong>{localAvatar}</strong>
+                  </span>
+                {/if}
                 <button
                   type="button"
                   class="zl-live-presence"

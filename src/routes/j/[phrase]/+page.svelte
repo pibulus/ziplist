@@ -41,8 +41,35 @@
 </script>
 
 <svelte:head>
-  <title>Opening a live list · ZipList</title>
+  <title>A shared list · ZipList</title>
+  <meta
+    name="description"
+    content="A shared list, ready to tick together. No account needed."
+  />
   <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ZipList" />
+  <meta property="og:title" content="A shared list · ZipList" />
+  <meta
+    property="og:description"
+    content="Add items and tick together, live. No account needed."
+  />
+  <meta
+    property="og:url"
+    content={`https://ziplist.app/j/${encodeURIComponent($page.params.phrase || "")}`}
+  />
+  <meta property="og:image" content="https://ziplist.app/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ZipList shared list" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="A shared list · ZipList" />
+  <meta
+    name="twitter:description"
+    content="Add items and tick together, live. No account needed."
+  />
+  <meta name="twitter:image" content="https://ziplist.app/og-card.png" />
+  <meta name="twitter:image:alt" content="ZipList shared list" />
 </svelte:head>
 
 <div class="zl-join">

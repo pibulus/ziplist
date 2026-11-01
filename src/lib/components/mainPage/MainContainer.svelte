@@ -27,6 +27,7 @@
   import { soundService } from "$lib/services/infrastructure/soundService";
   import { hapticService } from "$lib/services/infrastructure/hapticService";
   import SwipeableLists from "../list/SwipeableLists.svelte";
+  import SavedSharedLists from "../list/SavedSharedLists.svelte";
   import PermissionError from "./audio-transcript/PermissionError.svelte";
   import RecordButtonWithTimer from "./audio-transcript/RecordButtonWithTimer.svelte";
   import { fade } from "svelte/transition";
@@ -1086,6 +1087,7 @@
 
   <!-- Swipeable lists container -->
   <div class="mt-0 w-full max-w-full sm:mt-2" id="lists-container">
+    <SavedSharedLists />
     <SwipeableLists />
   </div>
 

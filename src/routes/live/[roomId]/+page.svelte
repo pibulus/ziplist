@@ -9,6 +9,11 @@
     disconnectFromLive,
   } from "$lib/services/realtime/liveListsService";
   import { getOrCreateAvatar } from "$lib/services/realtime/avatarService";
+  import { firstVisitService } from "$lib/services/first-visit/firstVisitService.js";
+  import {
+    rememberSharedList,
+    forgetSharedList,
+  } from "$lib/services/realtime/savedSharedLists.js";
   import SingleList from "$lib/components/list/SingleList.svelte";
   import BrandMark from "$lib/components/ui/BrandMark.svelte";
   import RecordButtonWithTimer from "$lib/components/mainPage/audio-transcript/RecordButtonWithTimer.svelte";
@@ -34,6 +39,7 @@
   let listId = null;
   let avatar = "";
   let keepError = "";
+  let linkSaved = false;
   let showQr = false;
   let qrModalProps = {
     shareUrl: "",
@@ -42,6 +48,11 @@
     syncPhrase: "",
     isLive: true,
   };
+  const arrivalDuration = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : 220;
 
   // A guest's placeholder id is minted as `live_<roomId>`; an owner reopening
   // their own link binds to their real list instead. Only guests get a "keep".
@@ -108,8 +119,22 @@
       // After connection, set this as the active list
       // The list data will be populated by the onInit callback in liveListsService
       listsStore.setActiveList(listId);
+      if (listId.startsWith("live_") && !password) {
+        const shared = get(listsStore).lists.find((list) => list.id === listId);
+        linkSaved = rememberSharedList({
+          roomId,
+          name: shared?.name,
+          color: shared?.primaryColor,
+        });
+      }
+      // Joining a list IS the first use. Returning home should land in the
+      // app, not behind the first-visit pitch modal.
+      firstVisitService.markIntroAsSeen();
     } catch (err) {
       errorCode = err.code || null;
+      if (errorCode === "room_expired" || errorCode === "room_not_found") {
+        forgetSharedList(roomId);
+      }
       if (errorCode === "room_expired") {
         console.info("Live list room has expired:", roomId);
       } else {
@@ -145,7 +170,7 @@
   <meta property="og:title" content="Someone saved you a spot on their list" />
   <meta
     property="og:description"
-    content="Hop in — you'll tick things off together, live."
+    content="Add items and tick together. No account."
   />
   <meta property="og:image" content="https://ziplist.app/og-card.png" />
   <meta
@@ -161,7 +186,7 @@
   <meta name="twitter:title" content="Someone saved you a spot on their list" />
   <meta
     name="twitter:description"
-    content="Hop in — you'll tick things off together, live."
+    content="Add items and tick together. No account."
   />
   <meta name="twitter:image" content="https://ziplist.app/og-card.png" />
   <meta name="twitter:image:alt" content="ZipList shared list" />
@@ -202,38 +227,49 @@
       </button>
     </div>
   {:else}
-    <span class="live-status-sr" role="status" aria-live="polite">
-      Shared list is connected.
-    </span>
-    <div class="live-brand-row">
-      <BrandMark />
-    </div>
-    <div class="live-recorder-row">
-      <RecordButtonWithTimer
-        recording={$isRecording}
-        transcribing={$isTranscribing}
-        disabled={false}
-        recordingDuration={$recordingDuration}
-        progress={$transcriptionProgress}
-        on:click={() => audioRecorderService.toggleRecording()}
-        on:holdstart={() => audioRecorderService.handleHoldStart()}
-        on:holdend={() => audioRecorderService.handleHoldEnd()}
-      />
-    </div>
-    <SingleList {listId} showListManagement={false} />
-    <div class="live-actions">
-      {#if isGuest}
-        <button type="button" class="btn-keep" on:click={handleKeepList}>
-          Keep this list
-        </button>
-        {#if keepError}
-          <p class="keep-error" role="alert">{keepError}</p>
+    <div class="live-connected" in:fly={{ y: 8, duration: arrivalDuration() }}>
+      <span class="live-status-sr" role="status" aria-live="polite">
+        Shared list is connected.
+      </span>
+      <div class="live-brand-row live-brand-actions">
+        <BrandMark />
+        {#if isGuest}
+          <a class="make-list-link" href="/">Make a list ↗</a>
         {/if}
-      {/if}
-      <a class="live-hook" href="/">
-        {isGuest ? "or leave without keeping" : "back to my lists"}
-        <span aria-hidden="true">→</span>
-      </a>
+      </div>
+      <div class="live-recorder-row">
+        <RecordButtonWithTimer
+          recording={$isRecording}
+          transcribing={$isTranscribing}
+          disabled={false}
+          recordingDuration={$recordingDuration}
+          progress={$transcriptionProgress}
+          on:click={() => audioRecorderService.toggleRecording()}
+          on:holdstart={() => audioRecorderService.handleHoldStart()}
+          on:holdend={() => audioRecorderService.handleHoldEnd()}
+        />
+      </div>
+      <SingleList {listId} showListManagement={false} />
+      <div class="live-actions">
+        {#if isGuest}
+          <button type="button" class="btn-keep" on:click={handleKeepList}>
+            Save a copy
+          </button>
+          <p class="keep-note">A local copy, separate from this shared list.</p>
+          {#if keepError}
+            <p class="keep-error" role="alert">{keepError}</p>
+          {/if}
+        {/if}
+        <a class="live-hook" href="/">
+          {isGuest ? "My lists" : "Back to my lists"}
+          <span aria-hidden="true">→</span>
+        </a>
+        {#if linkSaved}
+          <p class="shared-return">Shared link saved here for later visits.</p>
+        {:else if isGuest}
+          <p class="shared-return">Bookmark this link to return later.</p>
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -255,6 +291,10 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+  }
+
+  .live-connected {
+    width: 100%;
   }
 
   /* The cream ground is the brand's constant — live rooms are no
@@ -375,6 +415,30 @@
     padding-inline: 0.35rem;
   }
 
+  .live-brand-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .make-list-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0.3rem 0.6rem;
+    border: 2px solid #1e1714;
+    border-radius: 999px;
+    background: #fbf1e4;
+    color: #1e1714;
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-decoration: none;
+    box-shadow: 2px 2px 0 #1e1714;
+  }
+
   .live-recorder-row {
     display: flex;
     justify-content: center;
@@ -409,7 +473,7 @@
 
   .btn-keep {
     background: var(--zl-cta-color, #ffb000);
-    color: #111111;
+    color: #1e1714;
     border: none;
     border-radius: 999px;
     padding: 0.7rem 1.6rem;
@@ -437,6 +501,19 @@
     font-size: 0.8rem;
     color: var(--zl-text-color-secondary, #666);
     text-align: center;
+  }
+
+  .keep-note,
+  .shared-return {
+    margin: 0;
+    text-align: center;
+    color: #525252;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .shared-return {
+    margin-bottom: 1rem;
   }
 
   .live-hook {

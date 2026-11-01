@@ -151,7 +151,7 @@ const DEFAULT_LISTS = LIST_COLOR_PRESETS.slice(0, 1).map((palette) => ({
     },
     {
       id: "starter-flick",
-      text: "Flick sideways to switch lists",
+      text: "Flick between lists — flick fast to spin",
       checked: false,
       tags: [],
       order: 1,
