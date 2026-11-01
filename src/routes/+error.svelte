@@ -16,7 +16,7 @@
     ? "This page went wandering"
     : "Something got tangled";
   $: blurb = isNotFound
-    ? "We looked, but there's nothing here. The link may have a typo, or it moved. No worries — your lists are right where you left them."
+    ? "Nothing here. The link may have a typo, or the page moved. The lists are safe."
     : "A little hiccup on our end. Give it another go, or head home and pick up where you left off.";
 </script>
 
