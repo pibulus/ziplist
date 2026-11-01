@@ -1532,6 +1532,46 @@
     return match?.primary || "";
   }
 
+  // ── Tidy: one considered order, chosen once ────────────────────────────
+  // Not a live view and not a rule. The model may only permute what is here;
+  // if it tries to add, drop or duplicate anything the order is ignored.
+  let isTidying = false;
+  async function tidyActiveItems() {
+    if (isTidying) return;
+    const pool = activeItems;
+    if (pool.length < 3) return;
+
+    isTidying = true;
+    try {
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: "order",
+          items: pool.map((item) => ({ id: item.id, text: item.text })),
+        }),
+      });
+      const payload = await response.json();
+      const order = Array.isArray(payload?.order) ? payload.order : null;
+      if (!order) throw new Error("no order");
+
+      const rank = new Map(order.map((id, index) => [id, index]));
+      const sorted = [...pool].sort(
+        (a, b) =>
+          (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+          (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+      );
+      listsService.reorderItems([...sorted, ...completedItems], list.id);
+      showListStatus("Tidied", true, 2400);
+      hapticService.impact("light");
+      soundService.add({ force: true });
+    } catch {
+      showListStatus("Could not tidy just now. The order is unchanged.", false);
+    } finally {
+      isTidying = false;
+    }
+  }
+
   // ── Fate: let the list decide ──────────────────────────────────────────
   // The opposite of deciding. One unchecked item, named out loud, so a stuck
   // evening has somewhere to start. Deliberately not a streak or a score.
@@ -3079,6 +3119,33 @@
       </div>
 
       <div class="zl-list-actions">
+        {#if activeItems.length >= 3}
+          <button
+            type="button"
+            class="zl-shuffle-button"
+            on:click={tidyActiveItems}
+            data-tip="Tidy the order"
+            aria-label={`Tidy the items in ${list.name || "this list"}`}
+            disabled={isTidying}
+          >
+            <svg
+              class="zl-header-icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"
+              ></path>
+              <path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"
+              ></path>
+            </svg>
+          </button>
+        {/if}
         {#if activeItems.length >= 2}
           <button
             type="button"

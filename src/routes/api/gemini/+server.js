@@ -3,6 +3,7 @@ import { env } from "$env/dynamic/private";
 import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter";
 import { transcribeWithOpenRouter } from "$lib/server/openrouterFallback";
+import { validateOrder } from "$lib/server/smartOrder.js";
 
 let genAI = null;
 let genAIKey = "";
@@ -341,6 +342,39 @@ async function transcribeWithGemini({ prompt, file, mimeType, source }) {
   }
 }
 
+// ── Smart order ───────────────────────────────────────────────────────────
+
+async function orderItems(items) {
+  const client = getGeminiClient();
+  const prompt = `Put these checklist items in a sensible working order.
+Rules:
+- Return every id exactly once, no additions, no removals, no rewrites.
+- Group things that belong together and put what blocks other work first.
+- There is no single right answer; choose the order a calm person would work through.
+Items:
+${items.map((item) => `id=${item.id} :: ${item.text}`).join("\n")}`;
+
+  const response = await client.models.generateContent({
+    model: env.GEMINI_MODEL ?? "gemini-flash-lite-latest",
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    config: {
+      ...GENERATION_CONFIG,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          order: { type: "array", items: { type: "string" } },
+        },
+        required: ["order"],
+      },
+    },
+  });
+
+  const raw = response?.text ?? "";
+  const parsed = JSON.parse(raw);
+  return parsed?.order ?? null;
+}
+
 export async function POST(event) {
   try {
     const rateLimitResponse = enforceRateLimit(event);
@@ -354,6 +388,36 @@ export async function POST(event) {
 
     if (!isOriginAllowed(event.request)) {
       return json({ error: "Request origin is not allowed" }, { status: 403 });
+    }
+
+    const contentType = event.request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const body = await event.request.json().catch(() => null);
+      if (body?.task === "order") {
+        const items = (Array.isArray(body.items) ? body.items : [])
+          .filter(
+            (item) =>
+              item &&
+              typeof item.id === "string" &&
+              typeof item.text === "string",
+          )
+          .slice(0, 120);
+        if (items.length < 2) {
+          return json({ order: items.map((item) => item.id) });
+        }
+
+        const requested = await orderItems(items);
+        const order = validateOrder(
+          requested,
+          items.map((item) => item.id),
+        );
+        if (!order) {
+          // A model that reshaped the list gets ignored, not trusted.
+          return json({ order: items.map((item) => item.id), ignored: true });
+        }
+        return json({ order });
+      }
+      return json({ error: "Unknown task" }, { status: 400 });
     }
 
     const payload = await readTranscriptionPayload(event.request);
