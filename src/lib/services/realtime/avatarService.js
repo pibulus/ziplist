@@ -10,7 +10,7 @@
 import { createAvatar } from "@dicebear/core";
 import { thumbs } from "@dicebear/collection";
 import { readStoredSupporterCode } from "../vaultHashStorage.js";
-import { parseFourWordPasskey } from "$lib/cartridges/identityUtils.js";
+import { parseFourWordPasskey } from "$lib/softstack-passport/identity.js";
 
 const ADJECTIVES = [
   "Misty",

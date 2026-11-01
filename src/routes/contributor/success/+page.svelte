@@ -3,7 +3,7 @@
   import { browser } from "$app/environment";
   import { setContributorStatus } from "$lib";
   import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
-  import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
+  import { generateMemberIdentity } from "$lib/softstack-passport/identity.js";
   import Confetti from "$lib/components/ui/effects/Confetti.svelte";
   import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
   import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";

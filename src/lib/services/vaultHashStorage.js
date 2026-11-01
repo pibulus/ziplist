@@ -3,7 +3,7 @@ import { STORAGE_KEYS } from "$lib/constants.js";
 import {
   parseFourWordPasskey,
   getSyncRoomId,
-} from "$lib/cartridges/identityUtils.js";
+} from "$lib/softstack-passport/identity.js";
 
 function getStorage(storage) {
   if (storage) return storage;

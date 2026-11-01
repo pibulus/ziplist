@@ -97,7 +97,7 @@ const {
   ANIMALS,
   VERBS,
   PLACES,
-} = await import("../cartridges/identityUtils.js");
+} = await import("../softstack-passport/identity.js");
 
 const { dealTips, ABOUT_TIPS } = await import("../config/aboutTips.js");
 const { PRICING, CONTRIBUTOR_COPY } = await import("../config/pricing.js");

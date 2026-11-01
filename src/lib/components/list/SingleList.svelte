@@ -84,8 +84,8 @@
   import {
     buildPassportAvatar,
     readCustomPassportAvatar,
-  } from "$lib/cartridges/passportAvatar.js";
-  import { selectSkin } from "$lib/cartridges/passportSkins.js";
+  } from "$lib/softstack-passport/avatar.js";
+  import { selectSkin } from "$lib/softstack-passport/skins.js";
   import {
     readStoredSupporterCode,
     getVaultHash,

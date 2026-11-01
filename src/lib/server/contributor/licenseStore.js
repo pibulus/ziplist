@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { env } from "$env/dynamic/private";
 import { storage } from "../storage/index.js";
 import { withStoreLock } from "../storage/storeLock.js";
-import { parseFourWordPasskey } from "$lib/cartridges/identityUtils.js";
+import { parseFourWordPasskey } from "$lib/softstack-passport/identity.js";
 import { PRICING } from "$lib/config/pricing.js";
 import {
   generateLicenseCode,
