@@ -1,13 +1,13 @@
 /**
  * ZipList Contributor pricing.
  *
- * Keep this boring on purpose: one clear once-off price, no fake anchor.
+ * Keep this boring on purpose: one clear yearly price, no fake anchor.
  */
 export const PRICING = {
   currentPrice: 29,
-  currency: "AUD", // Square charge currency; displayed price is 29 once-off
+  currency: "AUD", // Square charge currency; displayed price is 29 for 12 months
   productName: "ZipList Passport",
-  termDays: 36500,
+  termDays: 365,
 
   get displayPrice() {
     return `A$${this.currentPrice.toFixed(0)}`;
@@ -18,20 +18,20 @@ export const PRICING = {
 };
 
 export const CONTRIBUTOR_BENEFITS = [
-  "12 lists, up from 3",
-  "Private sync across paired devices",
-  "12 shared lists at once, up from 1",
-  "Shared links last a year between edits",
+  "Room for twelve lists instead of three",
+  "Lists that follow you between devices",
+  "Twelve live shared lists at once, not one",
+  "Shared links stay open for a year",
 ];
 
 export const CONTRIBUTOR_COPY = {
   headline: "ZipList",
   headlineHighlight: "Passport",
-  tagline: "More room. Private sync. One flat pass.",
-  ctaButton: "Grab the ZipList Passport",
+  tagline: "Your lists, everywhere they need to be.",
+  ctaButton: "Get your Passport",
   redeemButton: "Already have a Passport key?",
   get priceLine() {
-    return `${PRICING.displayPrice} once. No subscription.`;
+    return `${PRICING.displayPrice} for a year. Renew only if it earns it.`;
   },
   get finePrint() {
     return this.priceLine;

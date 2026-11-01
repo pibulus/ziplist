@@ -97,9 +97,9 @@ function isForcedContributorMode() {
 
 const CONTRIBUTOR_TERM_MS = PRICING.termDays * 24 * 60 * 60 * 1000;
 
-// Lifetime pass (client-side localStorage — honest framing for a $29 once-off pass, not
-// DRM). Missing stamp = legacy unlock, treated as still valid so we never lock out
-// existing contributors.
+// One-year pass (client-side localStorage — honest framing for a $29 yearly pass,
+// not DRM). Missing stamp = legacy unlock, treated as still valid so we never lock
+// out existing contributors.
 function contributorExpiryOk() {
   if (!browser) return true;
   const raw = localStorage.getItem(CONSTANTS.STORAGE_KEYS.CONTRIBUTOR_EXPIRES);

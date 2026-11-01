@@ -113,7 +113,11 @@ const { LIVE_ROOM_TIERS, LIVE_ROOM_TTL_MS, sanitizeLiveListData } =
 // product. Catch a future annual/once-off or free/paid copy drift here.
 assert.deepEqual(getContributorPriceMoney(), { amount: 2900, currency: "AUD" });
 assert.equal(PRICING.displayPrice, "A$29");
-assert.match(CONTRIBUTOR_COPY.priceLine, /once.*No subscription/i);
+assert.match(CONTRIBUTOR_COPY.priceLine, /year/i);
+assert.match(CONTRIBUTOR_COPY.priceLine, /renew/i);
+// A Passport expires like a passport: one payment, twelve months, and no
+// automatic charge when it lapses.
+assert.equal(PRICING.termDays, 365);
 assert.equal(PRODUCT_LIMITS.FREE_MAX_LISTS, 3);
 assert.equal(PRODUCT_LIMITS.CONTRIBUTOR_MAX_LISTS, 12);
 assert.equal(PRODUCT_LIMITS.FREE_MAX_LIVE_LISTS, 1);

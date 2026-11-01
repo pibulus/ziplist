@@ -40,7 +40,7 @@
         price: String(PRICING.currentPrice),
         priceCurrency: PRICING.currency,
         description:
-          "ZipList Passport, once-off — 12 lists, private device sync, and 12 live shared lists at once",
+          "ZipList Passport, A$29 for a year — 12 lists, private device sync, and 12 live shared lists at once",
       },
     ],
     keywords:

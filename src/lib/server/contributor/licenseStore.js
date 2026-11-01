@@ -3,6 +3,7 @@ import { env } from "$env/dynamic/private";
 import { storage } from "../storage/index.js";
 import { withStoreLock } from "../storage/storeLock.js";
 import { parseFourWordPasskey } from "$lib/cartridges/identityUtils.js";
+import { PRICING } from "$lib/config/pricing.js";
 import {
   generateLicenseCode,
   generatePasskeyPhrase,
@@ -177,6 +178,11 @@ async function createLicenseLocked(checkout) {
     amount: checkout.amount || null,
     currency: checkout.currency || null,
     createdAt: now,
+    // A real passport has an expiry date. One payment buys a year; renewal is
+    // a deliberate choice, never an automatic charge.
+    expiresAt: new Date(
+      Date.parse(now) + PRICING.termDays * 24 * 60 * 60 * 1000,
+    ).toISOString(),
     redeemedAt: null,
     lastSeenAt: null,
   };
@@ -193,6 +199,15 @@ async function createLicenseLocked(checkout) {
   };
 }
 
+export function licenseExpiresAt(license) {
+  return license?.expiresAt ? Date.parse(license.expiresAt) : null;
+}
+
+export function isLicenseExpired(license, now = Date.now()) {
+  const expiry = licenseExpiresAt(license);
+  return expiry !== null && Number.isFinite(expiry) && expiry <= now;
+}
+
 export async function redeemStoredLicense(code) {
   if (!code) return null;
 
@@ -206,7 +221,10 @@ export async function redeemStoredLicense(code) {
         candidateHash,
         store,
       );
-      if (candidateLicense?.status === "active") {
+      if (
+        candidateLicense?.status === "active" &&
+        !isLicenseExpired(candidateLicense)
+      ) {
         matchedLicense = candidateLicense;
         break;
       }

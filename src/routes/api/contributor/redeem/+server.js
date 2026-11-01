@@ -12,6 +12,8 @@ import {
 } from "$lib/server/contributorCodes.js";
 import {
   createVoucherLicense,
+  findLicenseByCode,
+  isLicenseExpired,
   issueTokenForLicense,
   redeemStoredLicense,
 } from "$lib/server/contributor/licenseStore.js";
@@ -64,6 +66,20 @@ export async function POST(event) {
         code: canonicalCode,
         phrase: canonicalPhrase,
       });
+    }
+
+    // A lapsed Passport is not a wrong code: say what happened and when.
+    const lapsed = await findLicenseByCode(rawCode);
+    if (lapsed && isLicenseExpired(lapsed)) {
+      const when = new Date(lapsed.expiresAt).toISOString().slice(0, 10);
+      return json(
+        {
+          valid: false,
+          expired: true,
+          error: `This Passport lapsed on ${when}. Renew it and the lists open again.`,
+        },
+        { status: 401 },
+      );
     }
 
     const manualCodes = getManualCodes();

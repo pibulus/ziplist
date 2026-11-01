@@ -14,6 +14,27 @@ const QR_CONTENT_ID = "ziplist-passport-qr";
 const ICON_CONTENT_ID = "ziplist-mark";
 const CARD_CONTENT_ID = "ziplist-passport-card";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+// Deterministic, locale-proof date so every inbox reads the same expiry.
+function formatExpiryDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
 
 export function isValidEmailAddress(value) {
   if (typeof value !== "string") return false;
@@ -68,8 +89,10 @@ export function buildContributorEmail({
   appOrigin = "https://ziplist.app",
   hasQr = false,
   hasCard = false,
+  expiresAt = "",
 }) {
   const derived = derivePassportIdentityFromCode(code);
+  const expiryLabel = formatExpiryDate(expiresAt);
   const cleanMemberName = memberName?.toString().trim() || "";
   const displayMemberName = cleanMemberName || derived.memberName;
   const resolvedPhrase = phrase?.toString().trim() || derived.phrase;
@@ -93,10 +116,12 @@ export function buildContributorEmail({
       ? `4-word passkey: ${resolvedPhrase}`
       : `Passport passkey: ${code}`,
     "",
-    "More room for lists, private sync, and shared lists that keep going.",
+    "Twelve lists, on every device you own.",
+    "Shared lists that stay open for a year.",
     "Free sharing stays free.",
     "",
-    "One payment. No subscription, no renewal.",
+    expiryLabel ? `Good until ${expiryLabel}.` : null,
+    "Yours for a year. Renew when it suits; nothing charges automatically.",
     "Keep this email private. The passkey opens the lists.",
   ]
     .filter((line) => line !== null)
@@ -163,9 +188,14 @@ export function buildContributorEmail({
 						<a href="${safeUrl}" style="display:block;max-width:340px;padding:18px;background:#ff6ac2;color:#1e1714;text-decoration:none;text-align:center;font-weight:900;font-size:17px;border:2px solid #1e1714;border-radius:16px;box-shadow:4px 4px 0 #1e1714;">Link this device &rarr;</a>
 					</td></tr>
 					${passportCard}
+					${
+            expiryLabel
+              ? `<tr><td align="center" style="padding:14px 0 0;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};">Good until ${expiryLabel}</td></tr>`
+              : ""
+          }
 
-					<tr><td align="center" style="padding:32px 0 0;font-size:15px;line-height:1.55;">More room for lists. Private sync.<br />Shared lists that keep going.</td></tr>
-					<tr><td align="center" style="padding:18px 0 0;font-size:13px;line-height:1.5;${muted}">Free sharing stays free.<br />One payment. No subscription, no renewal.<br />Keep this email private: the passkey opens the lists.</td></tr>
+					<tr><td align="center" style="padding:32px 0 0;font-size:15px;line-height:1.55;">Twelve lists, on every device you own.<br />Shared lists that stay open for a year.</td></tr>
+					<tr><td align="center" style="padding:18px 0 0;font-size:13px;line-height:1.5;${muted}">Free sharing stays free.<br />Yours for a year. Renew when it suits; nothing charges automatically.<br />Keep this email private: the passkey opens the lists.</td></tr>
 
 					${rule}
 
@@ -217,6 +247,7 @@ export async function sendContributorPassportEmail({
   memberName,
   appOrigin,
   appUrl,
+  expiresAt,
   idempotencyKey,
   fetchImpl = fetch,
 }) {
@@ -263,6 +294,7 @@ export async function sendContributorPassportEmail({
       appOrigin: origin,
       hasQr: Boolean(qrPng),
       hasCard: Boolean(cardPng),
+      expiresAt,
     });
 
     const attachments = [

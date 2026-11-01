@@ -30,7 +30,7 @@
     },
     {
       q: "What does it cost?",
-      a: `Free includes three lists and one live shared list at a time. ZipList Passport costs ${PRICING.displayPrice} once, with no subscription: twelve lists, private device sync, up to twelve shared lists at once, and shared links that stay open for a year after the last edit.`,
+      a: `Free includes three lists and one live shared list at a time. ZipList Passport costs ${PRICING.displayPrice} for a year, renewed only when it suits: twelve lists, private device sync, up to twelve shared lists at once, and shared links that stay open for a year after the last edit.`,
     },
     {
       q: "Can it do reminders and due dates?",
