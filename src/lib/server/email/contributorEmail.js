@@ -5,11 +5,12 @@
 import { env } from "$env/dynamic/private";
 import { generateMemberIdentity } from "$lib/cartridges/identityUtils.js";
 import { vaultHashForCode } from "$lib/server/contributor/licenseCrypto.js";
+import { ZIPLIST_EMAIL_PNG_BASE64 } from "./ziplistEmailImage.js";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const DEFAULT_FROM = "ZipList <hello@ziplist.app>";
-const RESEND_ONBOARDING_FROM = "ZipList <onboarding@resend.dev>";
 const QR_CONTENT_ID = "ziplist-passport-qr";
+const ICON_CONTENT_ID = "ziplist-mark";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isValidEmailAddress(value) {
@@ -76,22 +77,21 @@ export function buildContributorEmail({
   const subject = "ZipList Passport";
 
   const text = [
-    "Full Passport unlocked.",
-    "One ZipList Passport. No subscription.",
+    "ZipList Passport is ready.",
+    "Lists follow across linked devices.",
     "",
     displayMemberName ? `Passport identity: ${displayMemberName}` : null,
     hasQr ? "QR code attached." : null,
-    `Unlock this device: ${unlockUrl}`,
+    `Link this device: ${unlockUrl}`,
     resolvedPhrase
       ? `4-word passkey: ${resolvedPhrase}`
       : `Passport passkey: ${code}`,
     "",
-    "12 lists, private device sync, and up to 12 shared lists at once.",
-    "Free sharing stays free. Passport also keeps shared links open for a year after the last edit.",
+    "More room for lists, private sync, and shared lists that keep going.",
+    "Free sharing stays free.",
     "",
-    "Kept for good.",
-    "",
-    "Zip up a list, lickety-split.",
+    "Passport lasts one year. No auto-renewal.",
+    "Keep this email private. The passkey opens the lists.",
   ]
     .filter((line) => line !== null)
     .join("\n");
@@ -115,41 +115,44 @@ export function buildContributorEmail({
   const passkeyBlock = safePhrase
     ? `<tr><td align="center" style="padding:16px 0 0;">
 				<div style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};padding-bottom:6px;">4-Word Passkey</div>
-				<div style="display:inline-block;padding:12px 18px;background:#fff1f2;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:17px;font-weight:800;color:#1e1714;">${safePhrase}</div>
+				<div style="display:inline-block;max-width:100%;box-sizing:border-box;padding:10px 6px;background:#fff1f2;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:800;letter-spacing:-0.02em;overflow-wrap:anywhere;color:#1e1714;">${safePhrase}</div>
 			</td></tr>`
     : `<tr><td align="center" style="padding:16px 0 0;">
 				<div style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};padding-bottom:6px;">Passport Passkey</div>
 				<div style="display:inline-block;padding:12px 18px;background:#fffef7;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:800;letter-spacing:0.06em;">${safeCode}</div>
 			</td></tr>`;
+  const passportCard = `<tr><td align="center" style="padding:36px 0 0;">
+		<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:410px;border:2px solid #1e1714;border-radius:22px;background:#fbf1e4;">
+			<tr><td style="height:12px;background:#ffcc33;border-radius:20px 20px 0 0;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+			<tr><td align="center" style="padding:18px 12px 0;font-size:11px;font-weight:900;letter-spacing:0.16em;color:#ad2770;">PASSPORT</td></tr>
+			${memberBadgeBlock}
+			${qrBlock}
+			${passkeyBlock}
+			<tr><td style="height:26px;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+		</table>
+	</td></tr>`;
 
   const html = `<!doctype html>
 <html>
-	<body style="margin:0;padding:32px 16px;background:#fbf0d9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1e1714;-webkit-font-smoothing:antialiased;">
-		<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:420px;margin:0 auto;">
-			<tr><td style="background:#fffaef;border:2px solid #1e1714;border-radius:24px;padding:34px 28px 24px;box-shadow:4px 4px 0 #1e1714;">
+	<body style="margin:0;padding:0;background:#fffef7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1e1714;-webkit-font-smoothing:antialiased;">
+		<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:540px;margin:0 auto;">
+			<tr><td style="padding:48px 22px 60px;">
 				<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+					<tr><td align="center"><img src="cid:${ICON_CONTENT_ID}" width="76" height="76" alt="ZipList mascot" style="display:block;width:76px;height:76px;" /></td></tr>
 					<tr><td align="center" style="font-size:12px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#db2777;">ZipList Passport</td></tr>
-					<tr><td align="center" style="padding:10px 0 0;font-size:28px;line-height:1.1;font-weight:900;letter-spacing:-0.02em;">Full Passport unlocked.</td></tr>
-                    <tr><td align="center" style="padding:8px 0 0;font-size:14px;line-height:1.5;${muted}">One ZipList Passport. No subscription.</td></tr>
-					${memberBadgeBlock}
-
-					${rule}
-
-					${qrBlock}
-					<tr><td align="center" style="padding:16px 0 0;">
-						<a href="${safeUrl}" style="display:inline-block;padding:13px 24px;background:#ffb000;color:#1e1714;text-decoration:none;font-weight:900;font-size:15px;border:2px solid #1e1714;border-radius:16px;box-shadow:3px 3px 0 #1e1714;">Unlock this device</a>
+					<tr><td align="center" style="padding:18px 0 0;font-size:34px;line-height:1.12;font-weight:900;letter-spacing:-0.03em;">Passport ready.</td></tr>
+					<tr><td align="center" style="padding:12px 0 0;font-size:16px;line-height:1.55;${muted}">Lists follow across linked devices.</td></tr>
+					<tr><td align="center" style="padding:28px 0 0;">
+						<a href="${safeUrl}" style="display:block;max-width:340px;padding:18px;background:#ff6ac2;color:#1e1714;text-decoration:none;text-align:center;font-weight:900;font-size:17px;border:2px solid #1e1714;border-radius:16px;box-shadow:4px 4px 0 #1e1714;">Link this device &rarr;</a>
 					</td></tr>
-					${passkeyBlock}
+					${passportCard}
+
+					<tr><td align="center" style="padding:32px 0 0;font-size:15px;line-height:1.55;">More room for lists. Private sync.<br />Shared lists that keep going.</td></tr>
+					<tr><td align="center" style="padding:18px 0 0;font-size:13px;line-height:1.5;${muted}">Free sharing stays free.<br />Passport lasts one year. No auto-renewal.<br />Keep this email private: the passkey opens the lists.</td></tr>
 
 					${rule}
 
-                    <tr><td style="padding:22px 0 0;font-size:15px;font-weight:900;color:#db2777;">12 lists, private device sync, up to 12 shared lists.</td></tr>
-                    <tr><td style="padding:8px 0 0;font-size:14px;line-height:1.55;">Free sharing stays free. Passport also keeps shared links open for a year after the last edit.</td></tr>
-                    <tr><td style="padding:14px 0 0;font-size:13px;line-height:1.5;${muted}">Kept for good.</td></tr>
-
-					${rule}
-
-					<tr><td style="padding:20px 0 0;font-size:14px;line-height:1.35;font-weight:900;color:#db2777;text-align:center;">
+					<tr><td style="padding:20px 0 0;font-size:12px;line-height:1.35;font-weight:900;color:#ad2770;text-align:center;">
 						Zip up a list, lickety-split.
 					</td></tr>
 				</table>
@@ -197,6 +200,7 @@ export async function sendContributorPassportEmail({
   memberName,
   appOrigin,
   appUrl,
+  idempotencyKey,
   fetchImpl = fetch,
 }) {
   if (!isContributorEmailConfigured()) {
@@ -224,7 +228,14 @@ export async function sendContributorPassportEmail({
       hasQr: Boolean(qrPng),
     });
 
-    const attachments = [];
+    const attachments = [
+      {
+        filename: "ziplist-mark.png",
+        content: ZIPLIST_EMAIL_PNG_BASE64,
+        content_type: "image/png",
+        content_id: ICON_CONTENT_ID,
+      },
+    ];
     if (qrPng) {
       attachments.push({
         filename: "ziplist-passport-qr.png",
@@ -237,45 +248,14 @@ export async function sendContributorPassportEmail({
     const headers = {
       Authorization: `Bearer ${env.RESEND_API_KEY.trim()}`,
       "Content-Type": "application/json",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     };
 
-    const payloadBody = attachments.length
-      ? { ...message, attachments }
-      : { ...message };
-
-    let response = await fetchImpl(RESEND_ENDPOINT, {
+    const response = await fetchImpl(RESEND_ENDPOINT, {
       method: "POST",
       headers,
-      body: JSON.stringify(payloadBody),
+      body: JSON.stringify({ ...message, attachments }),
     });
-
-    if (
-      !response.ok &&
-      response.status === 403 &&
-      message.from !== RESEND_ONBOARDING_FROM
-    ) {
-      const firstDetail = await response.text().catch(() => "");
-      if (firstDetail.includes("domain is not verified")) {
-        console.warn(
-          "[ContributorEmail] Custom sender domain not verified yet; retrying via onboarding@resend.dev",
-        );
-        response = await fetchImpl(RESEND_ENDPOINT, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            ...payloadBody,
-            from: RESEND_ONBOARDING_FROM,
-          }),
-        });
-      } else {
-        console.error(
-          "[ContributorEmail] Resend rejected the email:",
-          response.status,
-          firstDetail,
-        );
-        return { sent: false, error: firstDetail };
-      }
-    }
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");

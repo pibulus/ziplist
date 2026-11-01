@@ -8,6 +8,7 @@ import {
 import {
   getCheckoutById,
   getCheckoutByProviderOrderId,
+  markCheckoutEmailSent,
   markCheckoutPaidById,
 } from "$lib/server/payments/paymentStore.js";
 import { createLicenseForCheckout } from "$lib/server/contributor/licenseStore.js";
@@ -84,15 +85,26 @@ export async function POST(event) {
     // Log loudly instead so a paid-but-no-license checkout can be recovered.
     try {
       const { code, phrase } = await createLicenseForCheckout(paidCheckout);
-      if (payment.buyer_email_address && code) {
+      if (
+        payment.buyer_email_address &&
+        code &&
+        !paidCheckout.codeEmailSentAt
+      ) {
         const appUrl = env.PUBLIC_APP_URL?.trim() || "https://ziplist.app";
         try {
-          await sendContributorPassportEmail({
+          const result = await sendContributorPassportEmail({
             to: payment.buyer_email_address,
             code,
             phrase,
             appUrl,
+            idempotencyKey: `ziplist-passport/${paidCheckout.id}`,
           });
+          if (result.sent) await markCheckoutEmailSent(paidCheckout.id);
+          else
+            console.warn(
+              "[SquareWebhook] Passport email not accepted for checkout",
+              paidCheckout.id,
+            );
         } catch (emailErr) {
           console.error(
             "[SquareWebhook] Failed to send contributor passport email:",

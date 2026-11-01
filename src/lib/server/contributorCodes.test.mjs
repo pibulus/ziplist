@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
+import { writeFileSync } from "node:fs";
 
 // Set up test environment before importing server modules
 process.env.ZIPLIST_STORAGE_ADAPTER = "memory";
@@ -80,6 +81,8 @@ const {
   isValidEmailAddress,
   sendContributorPassportEmail,
 } = await import("./email/contributorEmail.js");
+const { ZIPLIST_EMAIL_PNG_BASE64 } =
+  await import("./email/ziplistEmailImage.js");
 
 const { POST: emailPassPost } =
   await import("../../routes/api/contributor/email-pass/+server.js");
@@ -100,8 +103,10 @@ const { dealTips, ABOUT_TIPS } = await import("../config/aboutTips.js");
 const { PRICING, CONTRIBUTOR_COPY } = await import("../config/pricing.js");
 const { getContributorPriceMoney } =
   await import("./payments/squareProvider.js");
+const { saveCheckout, getCheckoutById, markCheckoutEmailSent } =
+  await import("./payments/paymentStore.js");
 const { PRODUCT_LIMITS } = await import("../constants.js");
-const { LIVE_ROOM_TIERS, LIVE_ROOM_TTL_MS } =
+const { LIVE_ROOM_TIERS, LIVE_ROOM_TTL_MS, sanitizeLiveListData } =
   await import("../services/realtime/liveListProtocol.js");
 
 // What the page says, what Square charges, and what the relay grants are one
@@ -115,6 +120,17 @@ assert.equal(PRODUCT_LIMITS.FREE_MAX_LIVE_LISTS, 1);
 assert.equal(PRODUCT_LIMITS.CONTRIBUTOR_MAX_LIVE_LISTS, 12);
 assert.equal(LIVE_ROOM_TTL_MS[LIVE_ROOM_TIERS.FREE], 7 * 86400000);
 assert.equal(LIVE_ROOM_TTL_MS[LIVE_ROOM_TIERS.SUPPORTER], 365 * 86400000);
+const safeShared = sanitizeLiveListData({
+  id: "list-test",
+  name: "Groceries",
+  items: [],
+  primaryColor: "#62c9e8",
+  accentColor: "red; position:fixed",
+  glowColor: "rgba(98, 201, 232, 0.28)",
+});
+assert.equal(safeShared.primaryColor, "#62c9e8");
+assert.equal(safeShared.accentColor, undefined);
+assert.equal(safeShared.glowColor, "rgba(98, 201, 232, 0.28)");
 
 // 1. Contributor code normalization & validation
 assert.equal(
@@ -355,8 +371,23 @@ assert.ok(
   builtEmail.html.includes("cid:ziplist-passport-qr"),
   "Passport email HTML must include inline cid:ziplist-passport-qr image",
 );
+assert.ok(builtEmail.html.includes("cid:ziplist-mark"));
+assert.ok(builtEmail.html.includes("#ff6ac2"), "Passport CTA uses brand pink");
+if (process.env.ZL_MAIL_PREVIEW) {
+  const { default: QRCode } = await import("qrcode");
+  const qr = await QRCode.toDataURL(`https://ziplist.app/u/${sampleCode}`);
+  writeFileSync(
+    process.env.ZL_MAIL_PREVIEW,
+    builtEmail.html
+      .replace(
+        "cid:ziplist-mark",
+        `data:image/png;base64,${ZIPLIST_EMAIL_PNG_BASE64}`,
+      )
+      .replace("cid:ziplist-passport-qr", qr),
+  );
+}
 
-// Test Resend 403 domain fallback & inline QR attachment in sendContributorPassportEmail
+// An unverified domain must fail closed; never use a generic onboarding sender.
 process.env.RESEND_API_KEY = "re_test_dummy_key";
 const sentPayloads = [];
 const fallbackResult = await sendContributorPassportEmail({
@@ -364,35 +395,43 @@ const fallbackResult = await sendContributorPassportEmail({
   code: sampleCode,
   phrase: samplePhrase,
   appOrigin: "https://ziplist.app",
+  idempotencyKey: "ziplist-passport/checkout_test_001",
   fetchImpl: async (_url, options) => {
+    assert.equal(
+      options.headers["Idempotency-Key"],
+      "ziplist-passport/checkout_test_001",
+    );
     const body = JSON.parse(options.body);
     sentPayloads.push(body);
-    if (sentPayloads.length === 1) {
-      return new Response(
-        JSON.stringify({ message: "The ziplist.app domain is not verified" }),
-        { status: 403 },
-      );
-    }
-    return new Response(JSON.stringify({ id: "email_123" }), { status: 200 });
+    return new Response(
+      JSON.stringify({ message: "The ziplist.app domain is not verified" }),
+      { status: 403 },
+    );
   },
 });
-assert.equal(fallbackResult.sent, true);
+assert.equal(fallbackResult.sent, false);
+assert.equal(sentPayloads.length, 1);
 assert.equal(
-  sentPayloads.length,
-  2,
-  "should retry once when primary domain is not verified",
+  sentPayloads[0].attachments.map((item) => item.content_id).join(","),
+  "ziplist-mark,ziplist-passport-qr",
+  "dispatched payload must attach the mascot and inline QR PNG",
 );
-assert.equal(
-  sentPayloads[1].from,
-  "ZipList <onboarding@resend.dev>",
-  "retry should use onboarding@resend.dev sender fallback",
-);
-assert.equal(
-  Array.isArray(sentPayloads[1].attachments) &&
-    sentPayloads[1].attachments.length,
-  1,
-  "dispatched payload must attach inline QR PNG",
-);
+const acceptedEmail = await sendContributorPassportEmail({
+  to: "pablo@example.com",
+  code: sampleCode,
+  phrase: samplePhrase,
+  appOrigin: "https://ziplist.app",
+  fetchImpl: async () =>
+    new Response(JSON.stringify({ id: "email_123" }), { status: 200 }),
+});
+assert.equal(acceptedEmail.sent, true);
+await saveCheckout({
+  id: "checkout-email-test",
+  providerOrderId: "order-email-test",
+});
+assert.equal(await markCheckoutEmailSent("checkout-email-test"), true);
+assert.equal(await markCheckoutEmailSent("checkout-email-test"), false);
+assert.ok((await getCheckoutById("checkout-email-test")).codeEmailSentAt);
 const badEmailRes = await emailPassPost({
   request: new Request("https://ziplist.app/api/contributor/email-pass", {
     method: "POST",

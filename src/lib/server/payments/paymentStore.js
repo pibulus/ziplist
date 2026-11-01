@@ -11,7 +11,9 @@ async function readStore() {
 }
 
 async function writeStore(data) {
-  await storage.set(STORE_KEY, data);
+  const saved = await storage.set(STORE_KEY, data);
+  if (saved === false)
+    throw new Error("Contributor checkout store write failed");
 }
 
 export async function saveCheckout(checkout) {
@@ -43,6 +45,20 @@ export async function saveCheckout(checkout) {
 export async function getCheckoutById(id) {
   const store = await readStore();
   return store.checkouts.find((checkout) => checkout.id === id) || null;
+}
+
+// Stamp only after Resend accepts the message. Its idempotency key covers
+// concurrent webhook retries; this durable stamp covers deliveries after 24h.
+export async function markCheckoutEmailSent(id) {
+  return withStoreLock(STORE_KEY, async () => {
+    const store = await readStore();
+    const checkout = store.checkouts.find((candidate) => candidate.id === id);
+    if (!checkout || checkout.codeEmailSentAt) return false;
+    checkout.codeEmailSentAt = new Date().toISOString();
+    checkout.updatedAt = checkout.codeEmailSentAt;
+    await writeStore(store);
+    return true;
+  });
 }
 
 export async function getCheckoutByProviderOrderId(providerOrderId) {
