@@ -97,7 +97,7 @@
       data-1p-ignore
       data-lpignore="true"
       data-form-type="other"
-      placeholder="New item..."
+      placeholder="New item… (#tag to group)"
       aria-label="New item text"
       bind:value={draftItemText}
       bind:this={inputNode}

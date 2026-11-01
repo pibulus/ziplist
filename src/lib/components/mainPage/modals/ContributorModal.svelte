@@ -57,6 +57,47 @@
   let emailSent = false;
   let emailInputEl;
 
+  let passportExpiry = null;
+
+  // The token already carries the term. Showing it costs nothing and turns
+  // "a year" from a claim on a sales page into a date on this device.
+  function readPassportExpiry() {
+    if (!browser) return null;
+    try {
+      const token = getContributorTokenSnapshot();
+      const payload = token?.split(".")[1];
+      if (!payload) return null;
+      const json = JSON.parse(
+        atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+      );
+      return json?.exp ? new Date(json.exp * 1000) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  const MONTH_NAMES = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  $: passportExpiryLabel = passportExpiry
+    ? `${passportExpiry.getUTCDate()} ${MONTH_NAMES[passportExpiry.getUTCMonth()]} ${passportExpiry.getUTCFullYear()}`
+    : "";
+  $: passportDaysLeft = passportExpiry
+    ? Math.ceil((passportExpiry.getTime() - Date.now()) / 86400000)
+    : null;
+
   let syncPhraseInput = "";
   let syncPhraseSaved = false;
 
@@ -74,6 +115,7 @@
 
   onMount(() => {
     if (!browser) return;
+    passportExpiry = readPassportExpiry();
     const storedCode = readStoredSupporterCode();
     if (storedCode) {
       passportCode = storedCode;
@@ -403,6 +445,16 @@
             <p class="px-2 text-center text-[11px] font-bold text-[#525252]">
               Card shuffles skins · Avatar accepts a photo
             </p>
+            {#if passportExpiryLabel}
+              <p
+                class="px-2 text-center text-[11px] font-black uppercase tracking-[0.08em]"
+                style:color="var(--zl-vibe-accent-text, #db2777)"
+              >
+                {passportDaysLeft > 0
+                  ? `Good until ${passportExpiryLabel}`
+                  : `Lapsed ${passportExpiryLabel}`}
+              </p>
+            {/if}
           </div>
         {/if}
 
