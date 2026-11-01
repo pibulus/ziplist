@@ -60,12 +60,20 @@
   <meta name="robots" content={robots} />
   {#if canonical}
     <link rel="canonical" href={canonical} />
-    {#if hreflangEn && hreflangEs}
-      <!-- Only claim a translation pair when one exists. A page with no
-           Spanish twin pointing at /es tells Google the wrong thing. -->
-      <link rel="alternate" hreflang="en" href={hreflangEn} />
-      <link rel="alternate" hreflang="es" href={hreflangEs} />
-      <link rel="alternate" hreflang="x-default" href={hreflangEn} />
+    {#if hreflangEn || hreflangEs}
+      <!-- Only claim the languages that exist. An English-only page emits en
+           and x-default; pointing it at /es tells Google the wrong thing. -->
+      {#if hreflangEn}
+        <link rel="alternate" hreflang="en" href={hreflangEn} />
+      {/if}
+      {#if hreflangEs}
+        <link rel="alternate" hreflang="es" href={hreflangEs} />
+      {/if}
+      <link
+        rel="alternate"
+        hreflang="x-default"
+        href={hreflangEn || hreflangEs}
+      />
     {/if}
   {/if}
 
