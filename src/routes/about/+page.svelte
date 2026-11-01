@@ -128,6 +128,16 @@
       everyone can edit together. No due dates, no streaks, no nagging.
     </p>
   </section>
+  <section class="zl-prose-section" aria-label="Why lists at all">
+    <h2>Why a list at all</h2>
+    <p>
+      People have been writing things down for a thousand years, and almost none
+      of the survivors were task lists.
+      <a href="/lists">The infinity of lists</a> is the short version: what Sei Shōnagon,
+      Leonardo, Franklin and Joan Didion were actually doing, and why the tick feels
+      the way it does.
+    </p>
+  </section>
 </VerticalPage>
 
 <style>
