@@ -12,10 +12,10 @@
 
   $: status = $page.status;
   $: isNotFound = status === 404;
-  $: heading = isNotFound ? "Oops." : "Oops.";
+  $: heading = isNotFound ? "Uh-oh." : "Uh-oh.";
   $: blurb = isNotFound
-    ? "Nothing here. Maybe the link is a little off, maybe the page moved. Either way, it's okay."
-    : "Something isn't working right now. Not your fault.";
+    ? "Nothing here. Maybe somewhere else."
+    : "Something's off.";
 </script>
 
 <svelte:head>
