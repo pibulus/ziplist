@@ -14,8 +14,8 @@
   $: isNotFound = status === 404;
   $: heading = isNotFound ? "Oops." : "Oops.";
   $: blurb = isNotFound
-    ? "Nothing here. A typo, or the page moved. Everything is fine."
-    : "Something took a wrong turn. Give it another go in a moment.";
+    ? "Nothing here. Maybe the link is a little off, maybe the page moved. Either way, it's okay."
+    : "Something isn't working right now. Not your fault.";
 </script>
 
 <svelte:head>
