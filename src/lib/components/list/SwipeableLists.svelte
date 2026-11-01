@@ -371,7 +371,11 @@
       soundService.locked({ force: true });
       hapticService.impact("light");
       if (result.reason === "max-lists") {
-        window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
+        window.dispatchEvent(
+          new CustomEvent("ziplist-open-contributor", {
+            detail: { reason: "max-lists" },
+          }),
+        );
       }
     }
   }

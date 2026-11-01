@@ -9,6 +9,7 @@
   import {
     CONTRIBUTOR_BENEFITS,
     CONTRIBUTOR_COPY,
+    CONTRIBUTOR_REASONS,
   } from "$lib/config/pricing.js";
   import { ANIMATION } from "$lib/constants.js";
   import ModalCloseButton from "./ModalCloseButton.svelte";
@@ -29,6 +30,9 @@
   import { generateSyncPhrase } from "$lib/services/realtime/syncPhrase.js";
 
   export let closeModal = () => {};
+  export let reason = "";
+
+  $: reasonNote = CONTRIBUTOR_REASONS[reason] || "";
 
   const PREVIEW_VAULT_HASH =
     "000000100000000f000000000000000000000000000000000000000000000000";
@@ -587,9 +591,17 @@
           >
             {CONTRIBUTOR_COPY.tagline}
           </p>
-          <p class="pt-1 text-sm font-black text-[#1e1714]">
-            {CONTRIBUTOR_COPY.priceLine}
+          <p class="pt-1 text-sm font-black leading-tight text-[#1e1714]">
+            {CONTRIBUTOR_COPY.priceHeadline}
+            <span class="block pt-0.5 text-[11px] font-bold text-[#525252]">
+              {CONTRIBUTOR_COPY.priceSuffix}
+            </span>
           </p>
+          {#if reasonNote}
+            <p class="pt-2 text-xs font-bold leading-snug text-[#525252]">
+              {reasonNote}
+            </p>
+          {/if}
         </div>
 
         <div class="zl-pitch-copy">
@@ -623,6 +635,11 @@
                 : CONTRIBUTOR_COPY.ctaButton}
             </span>
           </button>
+          <p
+            class="text-center text-[11px] font-bold leading-snug text-[#525252]"
+          >
+            Passport arrives by email about a minute after payment.
+          </p>
         </div>
 
         <button

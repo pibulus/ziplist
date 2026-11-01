@@ -624,7 +624,11 @@
 
   function requestContributorUnlock() {
     if (typeof window === "undefined") return;
-    window.dispatchEvent(new CustomEvent("ziplist-open-contributor"));
+    window.dispatchEvent(
+      new CustomEvent("ziplist-open-contributor", {
+        detail: { reason: "max-live-lists" },
+      }),
+    );
   }
 
   function startEditingListName() {

@@ -189,7 +189,10 @@
     modalService.closeModal();
   }
 
-  async function openContributorModal() {
+  let contributorReason = "";
+
+  async function openContributorModal(event) {
+    contributorReason = event?.detail?.reason || "";
     if (modalService.isModalOpen()) {
       modalService.closeModal();
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -1122,6 +1125,7 @@
 {#if ContributorModal}
   <svelte:component
     this={ContributorModal}
+    reason={contributorReason}
     closeModal={closeContributorModal}
     on:close={closeContributorModal}
   />

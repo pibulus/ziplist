@@ -18,11 +18,18 @@ export const PRICING = {
 };
 
 export const CONTRIBUTOR_BENEFITS = [
+  "Twelve live lists at once, not one",
+  "Every list on every device you own",
   "Room for twelve lists instead of three",
-  "Lists that follow you between devices",
-  "Twelve live shared lists at once, not one",
-  "Shared links stay open for a year",
+  "Shared links that stay open for a year",
 ];
+
+// What someone just bumped into, said back to them. The pitch is the same
+// Passport; only the first line changes, so the shop opens where the hunger is.
+export const CONTRIBUTOR_REASONS = {
+  "max-lists": "That was the third list. Passport holds twelve.",
+  "max-live-lists": "One live list at a time for free. Passport runs twelve.",
+};
 
 export const CONTRIBUTOR_COPY = {
   headline: "ZipList",
@@ -30,8 +37,12 @@ export const CONTRIBUTOR_COPY = {
   tagline: "Your lists, everywhere they need to be.",
   ctaButton: "Get your Passport",
   redeemButton: "Already have a Passport key?",
+  get priceHeadline() {
+    return `${PRICING.displayPrice} for a year.`;
+  },
+  priceSuffix: "Renew only if it earns it.",
   get priceLine() {
-    return `${PRICING.displayPrice} for a year. Renew only if it earns it.`;
+    return `${this.priceHeadline} ${this.priceSuffix}`;
   },
   get finePrint() {
     return this.priceLine;
