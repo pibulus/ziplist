@@ -254,6 +254,12 @@
     }
   }
 
+  function handleLeaveDeviceSync() {
+    deviceSyncStore.disableSync();
+    syncPhraseInput = "";
+    syncPhraseSaved = false;
+  }
+
   function handleRollSyncPhrase() {
     const nextPhrase = generateSyncPhrase();
     syncPhraseInput = nextPhrase;
@@ -496,6 +502,16 @@
                 >
                   {syncPhraseSaved ? "Saved ✓" : "Apply"}
                 </button>
+                {#if $deviceSyncStore.privatePhrase}
+                  <button
+                    type="button"
+                    class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[1px_1px_0px_#1e1714] hover:bg-[#fafaf9]"
+                    on:click={handleLeaveDeviceSync}
+                    title="Stop syncing this device and forget the phrase here"
+                  >
+                    Leave
+                  </button>
+                {/if}
               </div>
             </div>
           </details>
