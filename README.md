@@ -98,6 +98,31 @@ SQUARE_WEBHOOK_SIGNATURE_KEY=your_square_webhook_signature_key
 SQUARE_WEBHOOK_NOTIFICATION_URL=https://ziplist.app/api/square/webhook
 ```
 
+`SQUARE_WEBHOOK_SIGNATURE_KEY` and `RESEND_API_KEY` are both required for a
+purchase to produce a Passport: without the signature key the webhook answers
+503 and no license is issued; without Resend the license is issued but the
+email is skipped. `SQUARE_ENVIRONMENT=sandbox` points the provider at
+`connect.squareupsandbox.com`; anything else uses production.
+
+### Verifying checkout without buying anything
+
+`npm run smoke:square` drives the real sandbox end to end: it starts a checkout
+through the app, opens the payment link's order, pays it with Square's sandbox
+test nonce, delivers the real payment event to the webhook with a valid HMAC
+signature, and asserts a license is issued. It replays the event once to prove
+the send is idempotent. No money moves, no email is sent, and the script
+refuses to run unless `SQUARE_ENVIRONMENT=sandbox`.
+
+```bash
+set -a; . ~/.config/fleet/keys.env; set +a   # sandbox Square keys live here
+PUBLIC_APP_URL=http://localhost:3001 \
+SQUARE_WEBHOOK_NOTIFICATION_URL=http://localhost:3001/api/square/webhook \
+CONTRIBUTOR_LICENSE_SECRET=local-smoke-secret-at-least-32-chars \
+  npm run dev
+# then, in another shell with the same SQUARE_* environment:
+npm run smoke:square
+```
+
 ## How It's Built
 
 ```

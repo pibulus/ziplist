@@ -19,7 +19,8 @@
     "prepare": "svelte-kit sync || echo ''",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
-    "lighthouse": "npm run build && lhci autorun"
+    "lighthouse": "npm run build && lhci autorun",
+    "smoke:square": "node scripts/verify-square-sandbox.mjs"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
