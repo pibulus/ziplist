@@ -88,6 +88,7 @@
   {description}
   {faqs}
   canonical={canonicalUrl}
+  hreflangEn={canonicalUrl}
   heading="The infinity of lists"
   lede="Humanity makes lists because humanity does not want to die."
   faqHeading="Why this works"
