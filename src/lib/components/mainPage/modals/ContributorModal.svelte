@@ -14,7 +14,6 @@
   import { ANIMATION } from "$lib/constants.js";
   import ModalCloseButton from "./ModalCloseButton.svelte";
   import { Mascot } from "$lib/components/ui";
-  import SyncPresence from "$lib/components/ui/SyncPresence.svelte";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import { hapticService } from "$lib/services/infrastructure";
   import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
@@ -24,10 +23,7 @@
     saveStoredSupporterCode,
     getVaultHash,
   } from "$lib/services/vaultHashStorage.js";
-  import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";
-  import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
-  import { generateSyncPhrase } from "$lib/services/realtime/syncPhrase.js";
 
   export let closeModal = () => {};
   export let reason = "";
@@ -47,9 +43,6 @@
   let showConfetti = false;
   let passportCode = "";
   let vaultHash = "";
-  let linkCopied = false;
-  let linkCopiedTimer = null;
-
   let showEmailForm = false;
   let emailInput = "";
   let emailError = "";
@@ -98,9 +91,6 @@
     ? Math.ceil((passportExpiry.getTime() - Date.now()) / 86400000)
     : null;
 
-  let syncPhraseInput = "";
-  let syncPhraseSaved = false;
-
   $: if (browser && $isContributor && !passportCode) {
     passportCode = readStoredSupporterCode() || "";
   }
@@ -125,7 +115,6 @@
         })
         .catch(() => {});
     }
-    syncPhraseInput = $deviceSyncStore.privatePhrase || "";
   });
 
   function claimStorageKey(checkoutId) {
@@ -169,40 +158,6 @@
       emailError = "";
       emailSent = false;
     }, ANIMATION.MODAL.CLOSE_DURATION);
-  }
-
-  async function copyUnlockLink() {
-    const targetCode = passportCode || readStoredSupporterCode();
-    if (!targetCode) return;
-    const syncUrl = buildDeviceSyncUrl(
-      targetCode,
-      $deviceSyncStore.privatePhrase,
-    );
-    const success = await copyTextToClipboard(syncUrl);
-    if (success) {
-      linkCopied = true;
-      soundService?.copySuccess?.({ force: true });
-      hapticService?.impact?.("light");
-      if (linkCopiedTimer) clearTimeout(linkCopiedTimer);
-      linkCopiedTimer = setTimeout(() => {
-        linkCopied = false;
-      }, 2500);
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: { message: "Unlock link copied", type: "success" },
-        }),
-      );
-    } else {
-      soundService?.locked?.();
-      window.dispatchEvent(
-        new CustomEvent("ziplist:toast", {
-          detail: {
-            message: "Auto-copy blocked — select link manually",
-            type: "warning",
-          },
-        }),
-      );
-    }
   }
 
   async function toggleEmailForm() {
@@ -266,49 +221,6 @@
     } finally {
       isSendingEmail = false;
     }
-  }
-
-  function handleSaveSyncPhrase() {
-    const trimmed = syncPhraseInput.trim();
-    if (!trimmed) {
-      deviceSyncStore.pairWithPhrase("");
-      syncPhraseSaved = true;
-      setTimeout(() => (syncPhraseSaved = false), 2000);
-      return;
-    }
-    if (
-      trimmed.includes("#") ||
-      trimmed.includes("?") ||
-      trimmed.startsWith("ZL-")
-    ) {
-      void deviceSyncStore.pairWithLink(trimmed);
-      syncPhraseInput = $deviceSyncStore.privatePhrase || "";
-      syncPhraseSaved = true;
-      setTimeout(() => (syncPhraseSaved = false), 2000);
-      return;
-    }
-    const ok = deviceSyncStore.pairWithPhrase(trimmed);
-    if (ok) {
-      syncPhraseInput = $deviceSyncStore.privatePhrase || trimmed;
-      syncPhraseSaved = true;
-      soundService?.select?.();
-      setTimeout(() => (syncPhraseSaved = false), 2000);
-    }
-  }
-
-  function handleLeaveDeviceSync() {
-    deviceSyncStore.disableSync();
-    syncPhraseInput = "";
-    syncPhraseSaved = false;
-  }
-
-  function handleRollSyncPhrase() {
-    const nextPhrase = generateSyncPhrase();
-    syncPhraseInput = nextPhrase;
-    deviceSyncStore.pairWithPhrase(nextPhrase);
-    syncPhraseSaved = true;
-    soundService?.select?.();
-    setTimeout(() => (syncPhraseSaved = false), 2000);
   }
 
   async function handleCheckout() {
@@ -409,17 +321,15 @@
     </form>
 
     <div
-      class="zl-modal-scroll-area min-h-0 space-y-3 overflow-y-auto overflow-x-hidden pb-1 pr-1 sm:space-y-3.5"
+      class="zl-modal-scroll-area zl-passport-scroll min-h-0 space-y-3 overflow-y-auto overflow-x-hidden pb-1 pr-1 sm:space-y-3.5"
     >
-      {#if view === "redeem" || !$isContributor}
-        <div class="flex justify-center pt-0.5">
-          <div
-            class="animate-zl-pulse-slow zl-pitch-hero h-14 w-14 sm:h-16 sm:w-16"
-          >
-            <Mascot interactive={false} aura={false} float={false} />
-          </div>
+      <div class="flex justify-center pt-0.5">
+        <div
+          class="animate-zl-pulse-slow zl-pitch-hero h-14 w-14 sm:h-16 sm:w-16"
+        >
+          <Mascot interactive={false} aura={false} float={false} />
         </div>
-      {/if}
+      </div>
 
       {#if $isContributor && view !== "redeem"}
         <!-- 1. Unlocked Passport Holder State -->
@@ -435,16 +345,13 @@
             class="whitespace-nowrap px-0 text-[clamp(0.64rem,2.6vw,0.875rem)] font-bold leading-snug"
             style:color="var(--zl-vibe-accent-text, #db2777)"
           >
-            Scan on another device or copy the link
+            Scan the card to link another device
           </p>
         </div>
 
         {#if vaultHash}
           <div class="flex flex-col items-center gap-1.5 py-1">
             <MembershipCard {vaultHash} {passportCode} />
-            <p class="px-2 text-center text-[11px] font-bold text-[#525252]">
-              Card shuffles skins · Avatar accepts a photo
-            </p>
             {#if passportExpiryLabel}
               <p
                 class="px-2 text-center text-[11px] font-black uppercase tracking-[0.08em]"
@@ -458,26 +365,15 @@
           </div>
         {/if}
 
-        <SyncPresence />
-
         <div class="space-y-2.5 pt-1 text-center">
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              class="zl-pitch-secondary whitespace-nowrap"
-              on:click={copyUnlockLink}
-            >
-              {linkCopied ? "Link copied" : "Copy unlock link"}
-            </button>
-            <button
-              type="button"
-              class="zl-pitch-secondary whitespace-nowrap"
-              on:click={toggleEmailForm}
-              aria-expanded={showEmailForm}
-            >
-              {emailSent ? "Emailed to inbox" : "Email Passport"}
-            </button>
-          </div>
+          <button
+            type="button"
+            class="zl-passport-gold-btn"
+            on:click={toggleEmailForm}
+            aria-expanded={showEmailForm}
+          >
+            {emailSent ? "Passport emailed" : "Email Passport"}
+          </button>
 
           {#if showEmailForm}
             <form
@@ -504,7 +400,7 @@
                 <button
                   type="submit"
                   disabled={isSendingEmail || !emailInput.trim()}
-                  class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#ff5ca8] px-3.5 py-2 text-xs font-black text-[#fffef7] shadow-[2px_2px_0px_#1e1714] transition hover:bg-[#ff6eb3] disabled:opacity-50"
+                  class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] px-3.5 py-2 text-xs font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition hover:bg-[#ffd04a] active:bg-[#f2ac00] disabled:opacity-50"
                 >
                   {isSendingEmail ? "Sending..." : "Send"}
                 </button>
@@ -519,54 +415,6 @@
               {/if}
             </form>
           {/if}
-
-          <details
-            class="zl-usage-details zl-control-border rounded-2xl border-2 bg-[#fffdf5] px-3.5 py-1 text-left"
-          >
-            <summary class="text-xs font-black text-[#1e1714]">
-              Device sync phrase & manual pairing
-            </summary>
-            <div class="space-y-2 pb-2.5 pt-1 text-xs text-[#525252]">
-              <p class="leading-relaxed">
-                Optional 4-word room phrase for end-to-end encrypted list sync
-                across devices. Leave blank to use the Passport key alone.
-              </p>
-              <div class="flex flex-wrap items-center gap-1.5">
-                <input
-                  type="text"
-                  bind:value={syncPhraseInput}
-                  placeholder="four-word-sync-phrase"
-                  aria-label="4-word device sync phrase"
-                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 font-mono text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
-                />
-                <button
-                  type="button"
-                  class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[1px_1px_0px_#1e1714] hover:bg-[#fafaf9]"
-                  on:click={handleRollSyncPhrase}
-                  title="Roll a fresh 4-word sync phrase"
-                >
-                  🎲 Roll
-                </button>
-                <button
-                  type="button"
-                  class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#ffcc33] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[1px_1px_0px_#1e1714]"
-                  on:click={handleSaveSyncPhrase}
-                >
-                  {syncPhraseSaved ? "Saved ✓" : "Apply"}
-                </button>
-                {#if $deviceSyncStore.privatePhrase}
-                  <button
-                    type="button"
-                    class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[1px_1px_0px_#1e1714] hover:bg-[#fafaf9]"
-                    on:click={handleLeaveDeviceSync}
-                    title="Stop syncing this device and forget the phrase here"
-                  >
-                    Leave
-                  </button>
-                {/if}
-              </div>
-            </div>
-          </details>
         </div>
       {:else if view === "redeem"}
         <!-- 2. Redeem State -->
@@ -763,5 +611,53 @@
       width: var(--mascot-size-sm);
       height: var(--mascot-size-sm);
     }
+  }
+
+  /* One chunky action, gold like the Save pill. The card is the copy action. */
+  .zl-passport-gold-btn {
+    display: flex;
+    width: 100%;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #1e1714;
+    border-radius: 1rem;
+    background: #ffbe0b;
+    color: #1e1714;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    box-shadow: 3px 3px 0 #1e1714;
+    transition:
+      background-color 150ms ease,
+      transform 150ms ease,
+      box-shadow 150ms ease;
+  }
+
+  .zl-passport-gold-btn:hover {
+    background: #ffd04a;
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 #1e1714;
+  }
+
+  .zl-passport-gold-btn:active {
+    background: #f2ac00;
+    transform: translateY(1px);
+    box-shadow: 1px 1px 0 #1e1714;
+  }
+
+  .zl-passport-gold-btn:focus-visible {
+    outline: 2px solid #ff6ac2;
+    outline-offset: 3px;
+  }
+
+  /* The Passport panel fits; if a short phone scrolls, no bar cuts the card. */
+  .zl-passport-scroll {
+    scrollbar-width: none;
+    scrollbar-gutter: auto;
+  }
+
+  .zl-passport-scroll::-webkit-scrollbar {
+    display: none;
   }
 </style>
