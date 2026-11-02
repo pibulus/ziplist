@@ -13,7 +13,7 @@
   $: status = $page.status;
   $: isNotFound = status === 404;
   $: heading = isNotFound ? "Uh-oh." : "Uh-oh.";
-  $: blurb = isNotFound ? "Nothing here. Maybe soon." : "Something seems up.";
+  $: blurb = isNotFound ? "Nothing here! Eep." : "Something seems up.";
 </script>
 
 <svelte:head>
