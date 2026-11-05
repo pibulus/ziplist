@@ -12,6 +12,8 @@ import { PRICING } from "$lib/config/pricing.js";
 
 const TOKEN_ALG = "HS256";
 const TOKEN_VERSION = 1;
+// This app's stamp on a SoftStack passport. Verification only accepts it.
+const PASSPORT_STAMP = "ziplist";
 
 // Server-side token lifetime. Mirrors the client lifetime pass.
 const TOKEN_TTL_SECONDS = PRICING.termDays * 24 * 60 * 60;
@@ -161,6 +163,18 @@ export function verifyContributorToken(token, secret = getContributorSecret()) {
   if (
     typeof body?.exp === "number" &&
     body.exp <= Math.floor(Date.now() / 1000)
+  ) {
+    return null;
+  }
+
+  // Every app signs with the same shared passport secret, so the signature alone
+  // would let one app's token open all four gates. Tokens carry a `stamps` claim
+  // naming their app; a stamped token must name this one. Tokens issued before
+  // stamps existed have none and stay valid.
+  if (
+    Array.isArray(body?.stamps) &&
+    body.stamps.length > 0 &&
+    !body.stamps.includes(PASSPORT_STAMP)
   ) {
     return null;
   }
