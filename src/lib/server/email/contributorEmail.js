@@ -3,7 +3,10 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { env } from "$env/dynamic/private";
-import { generateMemberIdentity } from "$lib/softstack-passport/index.js";
+import {
+  generateMemberIdentity,
+  parseFourWordPasskey,
+} from "$lib/softstack-passport/index.js";
 import { vaultHashForCode } from "$lib/server/contributor/licenseCrypto.js";
 import { ZIPLIST_EMAIL_PNG_BASE64 } from "./ziplistEmailImage.js";
 import { renderPassportCardPng } from "./passportCard.js";
@@ -70,11 +73,14 @@ export function buildUnlockLink(appOrigin, phraseOrCode) {
 
 export function derivePassportIdentityFromCode(code, phrase = "") {
   const hash = vaultHashForCode(code);
-  if (!hash) return { memberName: "", phrase: "" };
-  const identity = generateMemberIdentity(hash, code, { phrase });
+  const cleanPhrase = parseFourWordPasskey(phrase)?.phrase || "";
+  if (!hash) return { memberName: "", phrase: cleanPhrase };
+  const identity = generateMemberIdentity(hash, code, { phrase: cleanPhrase });
+  // Never invent a hash-derived phrase when no stored phrase was passed,
+  // because phrase → SS- code is one-way and a derived phrase would not unlock `code`.
   return {
     memberName: identity.isFallback ? "" : identity.name,
-    phrase: identity.isFallback ? "" : identity.phrase,
+    phrase: cleanPhrase,
   };
 }
 
@@ -95,9 +101,11 @@ export function buildContributorEmail({
   const expiryLabel = formatExpiryDate(expiresAt);
   const cleanMemberName = memberName?.toString().trim() || "";
   const displayMemberName = cleanMemberName || derived.memberName;
-  const resolvedPhrase = phrase?.toString().trim() || derived.phrase;
-  const unlockKey = resolvedPhrase || code;
-  const unlockUrl = buildUnlockLink(appOrigin, unlockKey);
+  const resolvedPhrase = derived.phrase;
+  const cleanOrigin = (appOrigin || "https://ziplist.app").replace(/\/+$/, "");
+  const unlockUrl = resolvedPhrase
+    ? buildUnlockLink(cleanOrigin, resolvedPhrase)
+    : cleanOrigin;
   // Subjects appear on lock screens and mail previews. Keep the recovery key
   // inside the message, never in the notification-sized subject line.
   const subject = "ZipList Passport";
@@ -114,7 +122,7 @@ export function buildContributorEmail({
     `Link this device: ${unlockUrl}`,
     resolvedPhrase
       ? `4-word passkey: ${resolvedPhrase}`
-      : `Passport passkey: ${code}`,
+      : `Passport ID: ${code} (enter your four words in the app to restore)`,
     "",
     "Twelve lists, on every device you own.",
     "Shared lists that stay open for a year.",
@@ -149,8 +157,9 @@ export function buildContributorEmail({
 				<div style="display:inline-block;max-width:100%;box-sizing:border-box;padding:10px 6px;background:#fff1f2;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:800;letter-spacing:-0.02em;overflow-wrap:anywhere;color:#1e1714;">${safePhrase}</div>
 			</td></tr>`
     : `<tr><td align="center" style="padding:16px 0 0;">
-				<div style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};padding-bottom:6px;">Passport Passkey</div>
+				<div style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;${muted};padding-bottom:6px;">Passport ID</div>
 				<div style="display:inline-block;padding:12px 18px;background:#fffef7;border:2px solid #1e1714;border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:800;letter-spacing:0.06em;">${safeCode}</div>
+				<div style="padding-top:8px;font-size:12px;${muted}">Enter your four words in the app to restore.</div>
 			</td></tr>`;
   // The buyer's actual card, drawn from the same seeded skin they see in the
   // app. The HTML reproduction below is the fallback so a purchase never loses
@@ -265,9 +274,11 @@ export async function sendContributorPassportEmail({
 
   try {
     const derived = derivePassportIdentityFromCode(code, phrase);
-    const resolvedPhrase = phrase || derived.phrase;
+    const resolvedPhrase = derived.phrase;
     const resolvedName = memberName || derived.memberName;
-    const unlockUrl = buildUnlockLink(origin, resolvedPhrase || code);
+    const unlockUrl = resolvedPhrase
+      ? buildUnlockLink(origin, resolvedPhrase)
+      : origin;
 
     // Their own card first; the standalone QR only stands in when the card
     // cannot be drawn, so the passkey and door always reach them.

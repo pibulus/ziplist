@@ -93,13 +93,12 @@
     (!isPreview && customAvatarUri) ||
     buildPassportAvatar(vaultHash || "ziplist", skin.avatarStyle);
 
-  // The displayed passkey IS the code. Adding it as an implicit *second*
-  // secret changes the room and strands devices paired before this card existed.
+  // The 4-word passkey is the root credential; never fall back to a bare SS- code in the QR.
   $: resolvedPhrase = privatePhrase || $deviceSyncStore.privatePhrase || "";
   $: passportSyncUrl =
-    !isPreview && hasVaultHash && (identity.phrase || effectivePassportCode)
+    !isPreview && hasVaultHash && (passportPhrase || identity.phrase)
       ? buildDeviceSyncUrl(
-          identity.phrase || effectivePassportCode,
+          passportPhrase || identity.phrase,
           resolvedPhrase,
         )
       : "";

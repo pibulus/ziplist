@@ -458,7 +458,7 @@ const fallbackResult = await sendContributorPassportEmail({
     const body = JSON.parse(options.body);
     sentPayloads.push(body);
     return new Response(
-      JSON.stringify({ message: "The ziplist.app domain is not verified" }),
+      JSON.stringify({ message: "Simulated Resend upstream failure (test mock)" }),
       { status: 403 },
     );
   },

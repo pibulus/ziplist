@@ -8,6 +8,8 @@ import {
   normalizeCode,
   normalizePassphrase,
   parseFourWordPasskey,
+  PASSKEY_INDEX_ITERATIONS,
+  passkeyIndexSalt,
   phraseFromHash,
   phraseInput,
 } from "$lib/softstack-passport/index.js";
@@ -110,7 +112,13 @@ export function hashPasskeyPhrase(phrase, secret = getContributorSecret()) {
   const normalized = normalizePassphrase(phrase);
   if (!normalized) return "";
   return crypto
-    .pbkdf2Sync(kdfInput(normalized), secret, 100_000, 32, "sha256")
+    .pbkdf2Sync(
+      kdfInput(normalized),
+      passkeyIndexSalt(secret),
+      PASSKEY_INDEX_ITERATIONS,
+      32,
+      "sha256",
+    )
     .toString("hex");
 }
 

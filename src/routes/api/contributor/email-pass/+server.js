@@ -80,6 +80,8 @@ export async function POST(event) {
     }
 
     const rawCode = normalizeContributorCode(body?.code);
+    const explicitPhrase =
+      typeof body?.phrase === "string" ? body.phrase.trim() : "";
     let canonicalCode = "";
     let canonicalPhrase = "";
     let licenseExpiry = "";
@@ -91,8 +93,17 @@ export async function POST(event) {
         canonicalCode = generateLicenseCode(matchedLicense.checkoutId);
         canonicalPhrase = generatePasskeyPhrase(matchedLicense.checkoutId);
       } else if (rawCode) {
-        canonicalCode = rawCode;
-        canonicalPhrase = generatePasskeyPhrase(rawCode);
+        const activeLicense = await redeemLicenseByPasskey(rawCode).catch(
+          () => null,
+        );
+        if (activeLicense?.checkoutId) {
+          licenseExpiry = activeLicense.expiresAt || "";
+          canonicalCode = generateLicenseCode(activeLicense.checkoutId);
+          canonicalPhrase = generatePasskeyPhrase(activeLicense.checkoutId);
+        } else {
+          canonicalCode = rawCode;
+          canonicalPhrase = explicitPhrase;
+        }
       }
     } else if (rawCode) {
       const activeLicense = await redeemLicenseByPasskey(rawCode);
