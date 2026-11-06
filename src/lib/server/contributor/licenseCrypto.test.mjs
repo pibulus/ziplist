@@ -109,4 +109,17 @@ const expired = signToken({
 });
 assert.equal(verifyContributorToken(expired, STAMP_SECRET), null);
 
+// Malformed or empty stamps claims fail closed instead of slipping through as legacy.
+for (const badStamps of [[], "ziplist", {}, null]) {
+  const malformed = signToken({
+    sub: "malformed-stamps",
+    tier: "supporter",
+    stamps: badStamps,
+    v: 1,
+    iat: nowSec,
+    exp: nowSec + 3600,
+  });
+  assert.equal(verifyContributorToken(malformed, STAMP_SECRET), null);
+}
+
 console.log("contributor licenseCrypto: stamp scoping ok");

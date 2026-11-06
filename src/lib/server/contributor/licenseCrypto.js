@@ -169,12 +169,11 @@ export function verifyContributorToken(token, secret = getContributorSecret()) {
 
   // Every app signs with the same shared passport secret, so the signature alone
   // would let one app's token open all four gates. Tokens carry a `stamps` claim
-  // naming their app; a stamped token must name this one. Tokens issued before
-  // stamps existed have none and stay valid.
+  // naming their app; any present `stamps` claim must be an array naming this
+  // app. Legacy tokens with no `stamps` key stay valid.
   if (
-    Array.isArray(body?.stamps) &&
-    body.stamps.length > 0 &&
-    !body.stamps.includes(PASSPORT_STAMP)
+    body?.stamps !== undefined &&
+    (!Array.isArray(body.stamps) || !body.stamps.includes(PASSPORT_STAMP))
   ) {
     return null;
   }
