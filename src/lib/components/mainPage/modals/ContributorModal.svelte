@@ -430,7 +430,7 @@
             class="text-sm font-bold leading-snug"
             style="color: var(--zl-vibe-accent-text, #db2777);"
           >
-            Works with a 4-word passkey or a ZL-XXXX code.
+            Works with a 4-word passkey or an SS-XXXX code.
           </p>
         </div>
 
