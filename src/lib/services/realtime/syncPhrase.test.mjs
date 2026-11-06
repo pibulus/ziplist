@@ -6,35 +6,42 @@
  */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import {
+  WORDS,
+  ADJECTIVES,
+  NOUNS,
+  VERBS,
+  PLACES,
+  PASSPHRASE_ENTROPY_BITS,
+  SYNC_PHRASE_COMBINATIONS,
+} from "./syncPhrase.js";
 
-const src = readFileSync(new URL("./syncPhrase.js", import.meta.url), "utf8");
+const BANKS = [ADJECTIVES, NOUNS, VERBS, PLACES];
 
-const bankOf = (name) =>
-  (
-    src
-      .match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`))[1]
-      .match(/"[a-z]+"/g) || []
-  ).map((w) => w.slice(1, -1));
+// Unified 4,096-word SoftStack Passport bank (4096^4 = 48 bits).
+assert.equal(WORDS.length, 4096, "unified bank must have 4,096 words");
+assert.equal(new Set(WORDS).size, 4096, "unified bank must have no duplicates");
+for (const word of WORDS) {
+  assert.match(word, /^[a-z]{3,12}$/, `unusable word: ${word}`);
+}
 
-const BANKS = ["ADJECTIVES", "NOUNS", "VERBS", "PLACES"].map(bankOf);
-
-// Every word is typeable and survives normalizeSyncPhrase's [^a-z] strip.
+// Legacy 4-slot exports remain populated and disjoint.
 for (const bank of BANKS) {
   for (const word of bank) {
     assert.match(word, /^[a-z]{3,12}$/, `unusable word: ${word}`);
   }
   assert.equal(new Set(bank).size, bank.length, "duplicate word in a bank");
 }
+const allSlots = BANKS.flat();
+assert.equal(new Set(allSlots).size, allSlots.length, "a word appears in two slot banks");
 
-// A word in two banks is legal but miserable to say aloud and to debug.
-const all = BANKS.flat();
-assert.equal(new Set(all).size, all.length, "a word appears in two banks");
-
-const combinations = BANKS.reduce((t, b) => t * b.length, 1);
 assert.ok(
-  combinations >= 268_435_456,
-  `keyspace shrank to ${combinations.toLocaleString()} — banks must not lose words`,
+  PASSPHRASE_ENTROPY_BITS >= 44,
+  `passphrase entropy (${PASSPHRASE_ENTROPY_BITS} bits) must be >= 44 bits`,
+);
+assert.ok(
+  SYNC_PHRASE_COMBINATIONS >= 4096 ** 4,
+  `keyspace shrank to ${SYNC_PHRASE_COMBINATIONS.toLocaleString()}`,
 );
 
 // THE IMPORTANT ONE. Room id = SHA-256("ziplist:sync:v1:" + phrase), sliced.
@@ -57,7 +64,7 @@ assert.equal(
 );
 assert.equal(
   "bouncy-muffin-salutes-underfoot".split("-").length,
-  BANKS.length,
+  4,
   "legacy phrase no longer parses",
 );
 
@@ -65,6 +72,6 @@ assert.equal(
 assert.match(roomIdOf("zzzz-yyyy-xxxx-wwww"), /^zl_p[0-9a-f]{32}$/);
 
 console.log(
-  `syncPhrase: ${combinations.toLocaleString()} combinations ` +
-    `(${Math.log2(combinations).toFixed(1)} bits), legacy phrases still resolve`,
+  `syncPhrase: ${SYNC_PHRASE_COMBINATIONS.toLocaleString()} combinations ` +
+    `(${PASSPHRASE_ENTROPY_BITS.toFixed(1)} bits), legacy phrases still resolve`,
 );

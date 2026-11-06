@@ -1,11 +1,15 @@
 import crypto from "crypto";
 import { env } from "$env/dynamic/private";
 import {
-  CODE_NAMESPACE,
+  codeInput,
   formatCode,
-  generateMemberIdentity,
   idInput,
+  kdfInput,
   normalizeCode,
+  normalizePassphrase,
+  parseFourWordPasskey,
+  phraseFromHash,
+  phraseInput,
 } from "$lib/softstack-passport/index.js";
 import { normalizeContributorCode } from "../contributorCodes.js";
 import { PRICING } from "$lib/config/pricing.js";
@@ -25,18 +29,25 @@ const MIN_SECRET_LENGTH = 32;
 export function getContributorSecret() {
   // Only the dedicated secret — no fallback to unrelated cookie/auth secrets,
   // which would silently let one credential sign contributor licenses.
-  // One shared passport secret across TalkType, ZipList and QRBuddy.
-  const secret =
-    env.SOFTSTACK_PASSPORT_SECRET?.trim() ||
-    env.CONTRIBUTOR_LICENSE_SECRET?.trim();
-
-  if (!secret || secret.length < MIN_SECRET_LENGTH) {
-    throw new Error(
-      `CONTRIBUTOR_LICENSE_SECRET must be set to at least ${MIN_SECRET_LENGTH} characters`,
-    );
+  // One shared passport secret across TalkType, ZipList, QRBuddy and ProMapper.
+  const canonical = env.SOFTSTACK_PASSPORT_SECRET?.trim();
+  if (canonical && canonical.length >= MIN_SECRET_LENGTH) {
+    return canonical;
   }
 
-  return secret;
+  const isProd =
+    (process.env.NODE_ENV === "production" || env.NETLIFY === "true") &&
+    !process.env.VITEST;
+  if (!isProd) {
+    const legacy = env.CONTRIBUTOR_LICENSE_SECRET?.trim();
+    if (legacy && legacy.length >= MIN_SECRET_LENGTH) {
+      return legacy;
+    }
+  }
+
+  throw new Error(
+    `SOFTSTACK_PASSPORT_SECRET must be set to at least ${MIN_SECRET_LENGTH} characters`,
+  );
 }
 
 function base64url(value) {
@@ -59,20 +70,8 @@ export function hashSensitiveValue(value, secret = getContributorSecret()) {
   return hmacHex(value, secret).toLowerCase();
 }
 
-export function generateLicenseCode(seed, secret = getContributorSecret()) {
-  const digest = hmacHex(`${CODE_NAMESPACE}${seed}`, secret);
-  return formatCode(digest.slice(0, 12));
-}
-
 export function normalizePasskeyPhrase(value) {
-  return (value ?? "")
-    .toString()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .join("-");
+  return normalizePassphrase(value);
 }
 
 export function vaultHashForCode(code) {
@@ -86,10 +85,33 @@ export function generatePasskeyPhrase(seed, secret = getContributorSecret()) {
   if (!cleanSeed) {
     throw new Error("Passkey phrase seed is required");
   }
-  const canonicalCode = normalizeCode(cleanSeed) ||
-    generateLicenseCode(cleanSeed, secret);
-  const vaultHash = vaultHashForCode(canonicalCode);
-  return generateMemberIdentity(vaultHash, canonicalCode).phrase;
+  const parsed = parseFourWordPasskey(cleanSeed);
+  if (parsed) {
+    return parsed.phrase;
+  }
+  const digest = hmacHex(phraseInput(cleanSeed), secret).toLowerCase();
+  return phraseFromHash(digest);
+}
+
+export function generateLicenseCode(seed, secret = getContributorSecret()) {
+  const cleanSeed = seed?.toString().trim() || "";
+  if (!cleanSeed) {
+    throw new Error("License code seed is required");
+  }
+  const parsed = parseFourWordPasskey(cleanSeed);
+  const phrase = parsed
+    ? parsed.phrase
+    : generatePasskeyPhrase(cleanSeed, secret);
+  const digest = hmacHex(codeInput(phrase), secret);
+  return formatCode(digest.slice(0, 12));
+}
+
+export function hashPasskeyPhrase(phrase, secret = getContributorSecret()) {
+  const normalized = normalizePassphrase(phrase);
+  if (!normalized) return "";
+  return crypto
+    .pbkdf2Sync(kdfInput(normalized), secret, 100_000, 32, "sha256")
+    .toString("hex");
 }
 
 export function licenseIdForCheckout(

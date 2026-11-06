@@ -72,10 +72,11 @@ export function buildUnlockUrl(codeOrOptions = {}, baseUrlArg = "") {
   const normalizedCode = code?.toString().trim();
   if (!normalizedCode) return "";
 
-  return new URL(
-    `/u/${encodeURIComponent(normalizedCode)}`,
-    getZipListBaseUrl(appBaseUrl || baseUrl),
-  ).toString();
+  const url = new URL("/", getZipListBaseUrl(appBaseUrl || baseUrl));
+  const fragment = new URLSearchParams();
+  fragment.set("unlock", normalizedCode);
+  url.hash = fragment.toString();
+  return url.toString();
 }
 
 /**

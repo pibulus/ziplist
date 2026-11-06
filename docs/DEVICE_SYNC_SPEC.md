@@ -21,22 +21,28 @@ against the deployed relay remains a release gate.
 
 ---
 
-## The Passport code is the secret
+## The 4-word passkey is the secret
 
-`deviceSyncStore.js` derives a room id **and** AES-GCM key from the saved
-Passport code (plus the optional private sync phrase, when set) using PBKDF2
-and HKDF. The room id has the `zl_p` prefix. The relay sees that id and sealed
-envelopes, never the code or plaintext. A four-word Passport passkey is
-**speakable, not high-entropy**; encryption does not make a guessed passkey
-unguessable. The optional phrase changes the secret and must match on every
-paired device.
+The 4-word Passport passkey (`PASSKEY_WORDS`, 4,096 curated words = **48.0 bits
+of entropy**, `281,474,976,710,656` combinations) is the **root credential**.
+The `SS-XXXX-XXXX-XXXX` code is a one-way public handle derived from the passkey
+(`HMAC-SHA256(SOFTSTACK_PASSPORT_SECRET, "softstack-passport-code:" + phrase)`)
+and never unlocks a license on its own.
 
-The Passport card's QR and copy-link carry `#code=<passkey>` and an optional
-`&sync=<private phrase>` in the URL fragment. The recipient redeems the code
-before syncing; an unlicensed phrase does not grant paid access. On iOS an
-installed PWA has different storage from Safari, so the link must be opened
-in the intended app or the key entered there. There is **no random `#k` key**
-in the current pairing flow.
+`deviceSyncStore.js` derives a room id **and** AES-GCM key from the unlocked
+Passport (plus the optional private sync phrase, when set) using PBKDF2 (100k
+rounds) and HKDF. The room id has the `zl_p` prefix. The relay sees that id and
+sealed envelopes, never the passkey, code, or plaintext. The optional private
+phrase changes the secret and must match on every paired device.
+
+The resting Passport card masks the 4 words (`••••• ••••• ••••• •••••`) and
+shows a ghost seal instead of a QR code so screenshots leak nothing. Tapping
+reveals the words (auto-hides after 10s) or opens a pairing QR carrying
+`#code=<4-word-passkey>` (auto-hides after 60s) in the URL fragment. The
+recipient redeems the 4-word passkey before syncing; a bare `SS-` code is
+rejected. On iOS an installed PWA has different storage from Safari, so the link
+must be opened in the intended app or the 4 words entered there. There is **no
+random `#k` key** in the current pairing flow.
 
 Four-word **shared-list** links also use `zl_p` room ids, but contain list
 snapshots rather than sync envelopes. `worker/index.ts` distinguishes the

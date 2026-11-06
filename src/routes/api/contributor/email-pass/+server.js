@@ -9,7 +9,7 @@ import {
 } from "$lib/server/contributor/licenseCrypto.js";
 import {
   findLicenseByCode,
-  redeemStoredLicense,
+  redeemLicenseByPasskey,
 } from "$lib/server/contributor/licenseStore.js";
 import {
   isContributorEmailConfigured,
@@ -95,7 +95,7 @@ export async function POST(event) {
         canonicalPhrase = generatePasskeyPhrase(rawCode);
       }
     } else if (rawCode) {
-      const activeLicense = await redeemStoredLicense(rawCode);
+      const activeLicense = await redeemLicenseByPasskey(rawCode);
       if (activeLicense?.checkoutId) {
         licenseExpiry = activeLicense.expiresAt || "";
         canonicalCode = generateLicenseCode(activeLicense.checkoutId);

@@ -8,7 +8,7 @@
     if (browser) {
       const code = $page.params.code;
       if (code) {
-        goto(`/?unlock=${encodeURIComponent(code)}`, { replaceState: true });
+        goto(`/#unlock=${encodeURIComponent(code)}`, { replaceState: true });
       } else {
         goto("/", { replaceState: true });
       }

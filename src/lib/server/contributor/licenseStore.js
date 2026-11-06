@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { env } from "$env/dynamic/private";
 import { storage } from "../storage/index.js";
 import { withStoreLock } from "../storage/storeLock.js";
@@ -8,6 +8,7 @@ import {
   generateLicenseCode,
   generatePasskeyPhrase,
   hashContributorCode,
+  hashPasskeyPhrase,
   issueContributorToken,
   licenseIdForCheckout,
   normalizePasskeyPhrase,
@@ -15,9 +16,57 @@ import {
 
 const STORE_KEY = "contributor-licenses";
 const VOUCHER_MINTS_KEY = "voucher-mints";
+const PASSKEY_LOCKOUT_WINDOW_MS = 15 * 60_000;
+const PASSKEY_LOCKOUT_MAX = 5;
 
 function passkeyKey(phraseHash) {
   return `passkey:${phraseHash}`;
+}
+
+function passkeyLockoutKey(rawPhrase) {
+  const normalized = normalizePasskeyPhrase(rawPhrase);
+  if (!normalized) return "";
+  const digest = createHash("sha256")
+    .update(`passkey-lockout:${normalized}`)
+    .digest("hex");
+  return `passkey-lockout:${digest}`;
+}
+
+export async function isPasskeyLockedOut(rawPhrase) {
+  const key = passkeyLockoutKey(rawPhrase);
+  if (!key) return false;
+  const entry = await storage.get(key);
+  if (!entry) return false;
+  if (Date.now() - (entry.windowStart || 0) > PASSKEY_LOCKOUT_WINDOW_MS) {
+    return false;
+  }
+  return (entry.count || 0) >= PASSKEY_LOCKOUT_MAX;
+}
+
+export async function recordPasskeyFailure(rawPhrase) {
+  const key = passkeyLockoutKey(rawPhrase);
+  if (!key) return null;
+  return withStoreLock(key, async () => {
+    const now = Date.now();
+    const data = await storage.get(key);
+    const expired =
+      !data || now - (data.windowStart || 0) > PASSKEY_LOCKOUT_WINDOW_MS;
+    const next = expired
+      ? { count: 1, windowStart: now }
+      : { count: (data.count || 0) + 1, windowStart: data.windowStart };
+    await storage.set(key, next);
+    return next;
+  });
+}
+
+export async function clearPasskeyFailures(rawPhrase) {
+  const key = passkeyLockoutKey(rawPhrase);
+  if (!key) return;
+  await withStoreLock(key, async () => {
+    const data = await storage.get(key);
+    if (!data || data.count === 0) return;
+    await storage.set(key, { count: 0, windowStart: Date.now() });
+  });
 }
 
 async function readStore() {
@@ -111,6 +160,21 @@ export async function findLicenseByCode(code) {
   if (!code) return null;
   const store = await readStore();
 
+  const parsed = parseFourWordPasskey(code);
+  if (parsed) {
+    const kdfMatched = await lookupStoredLicenseByHash(
+      hashPasskeyPhrase(parsed.phrase),
+      store,
+    );
+    if (kdfMatched) return publicLicense(kdfMatched);
+    const legacyMatched = await lookupStoredLicenseByHash(
+      hashContributorCode(parsed.phrase),
+      store,
+    );
+    if (legacyMatched) return publicLicense(legacyMatched);
+    return null;
+  }
+
   for (const candidate of codeCandidates(code)) {
     const candidateHash = hashContributorCode(candidate);
     const matched = await lookupStoredLicenseByHash(candidateHash, store);
@@ -140,9 +204,9 @@ async function createLicenseLocked(checkout) {
 
   if (existing) {
     const canonicalSeed = existing.checkoutId || checkout.id;
-    const code = generateLicenseCode(canonicalSeed);
     const phrase = generatePasskeyPhrase(canonicalSeed);
-    const phraseHash = hashContributorCode(phrase);
+    const code = generateLicenseCode(phrase);
+    const phraseHash = hashPasskeyPhrase(phrase);
 
     if (
       existing.phraseHash !== phraseHash ||
@@ -161,9 +225,9 @@ async function createLicenseLocked(checkout) {
     };
   }
 
-  const code = generateLicenseCode(checkout.id);
   const phrase = generatePasskeyPhrase(checkout.id);
-  const phraseHash = hashContributorCode(phrase);
+  const code = generateLicenseCode(phrase);
+  const phraseHash = hashPasskeyPhrase(phrase);
   const now = new Date().toISOString();
   const license = {
     id: licenseIdForCheckout(checkout.id),
@@ -215,18 +279,43 @@ export async function redeemStoredLicense(code) {
     const store = await readStore();
     let matchedLicense = null;
 
-    for (const candidate of codeCandidates(code)) {
-      const candidateHash = hashContributorCode(candidate);
-      const candidateLicense = await lookupStoredLicenseByHash(
-        candidateHash,
+    const parsed = parseFourWordPasskey(code);
+    if (parsed) {
+      const kdfCandidate = await lookupStoredLicenseByHash(
+        hashPasskeyPhrase(parsed.phrase),
         store,
       );
       if (
-        candidateLicense?.status === "active" &&
-        !isLicenseExpired(candidateLicense)
+        kdfCandidate?.status === "active" &&
+        !isLicenseExpired(kdfCandidate)
       ) {
-        matchedLicense = candidateLicense;
-        break;
+        matchedLicense = kdfCandidate;
+      } else {
+        const legacyCandidate = await lookupStoredLicenseByHash(
+          hashContributorCode(parsed.phrase),
+          store,
+        );
+        if (
+          legacyCandidate?.status === "active" &&
+          !isLicenseExpired(legacyCandidate)
+        ) {
+          matchedLicense = legacyCandidate;
+        }
+      }
+    } else {
+      for (const candidate of codeCandidates(code)) {
+        const candidateHash = hashContributorCode(candidate);
+        const candidateLicense = await lookupStoredLicenseByHash(
+          candidateHash,
+          store,
+        );
+        if (
+          candidateLicense?.status === "active" &&
+          !isLicenseExpired(candidateLicense)
+        ) {
+          matchedLicense = candidateLicense;
+          break;
+        }
       }
     }
 
@@ -240,7 +329,7 @@ export async function redeemStoredLicense(code) {
 
     if (matchedLicense.checkoutId) {
       const phrase = generatePasskeyPhrase(matchedLicense.checkoutId);
-      const phraseHash = hashContributorCode(phrase);
+      const phraseHash = hashPasskeyPhrase(phrase);
       matchedLicense.phraseHash = phraseHash;
       store.passkeys[passkeyKey(phraseHash)] = matchedLicense.codeHash;
       await indexPasskey(phraseHash, matchedLicense.codeHash);
@@ -249,6 +338,12 @@ export async function redeemStoredLicense(code) {
     await writeStore(store);
     return publicLicense(matchedLicense);
   });
+}
+
+export async function redeemLicenseByPasskey(rawPhrase) {
+  const parsed = parseFourWordPasskey(rawPhrase);
+  if (!parsed) return null;
+  return redeemStoredLicense(parsed.phrase);
 }
 
 export function issueTokenForLicense(license) {

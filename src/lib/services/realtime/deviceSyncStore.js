@@ -457,8 +457,10 @@ function createDeviceSyncStore() {
     const code =
       hashParams.get("code") ||
       hashParams.get("unlock") ||
+      hashParams.get("phrase") ||
       queryParams.get("code") ||
       queryParams.get("unlock") ||
+      queryParams.get("phrase") ||
       "";
     const privatePhrase =
       hashParams.get("sync") || queryParams.get("sync") || "";
@@ -503,7 +505,7 @@ function createDeviceSyncStore() {
       if (!res.ok || !payload.valid) {
         return false;
       }
-      const canonicalCode = payload.code || code;
+      const canonicalCode = payload.phrase || payload.code || code;
       const token = payload.token || null;
       saveStoredSupporterCode(canonicalCode);
       setContributorStatus(true, token);
@@ -532,10 +534,12 @@ function createDeviceSyncStore() {
     const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
     url.searchParams.delete("code");
     url.searchParams.delete("unlock");
+    url.searchParams.delete("phrase");
     url.searchParams.delete("sync");
     url.searchParams.delete("k");
     hashParams.delete("code");
     hashParams.delete("unlock");
+    hashParams.delete("phrase");
     hashParams.delete("sync");
     hashParams.delete("k");
     const nextHash = hashParams.toString();

@@ -64,6 +64,7 @@ const {
   generateLicenseCode,
   generatePasskeyPhrase,
   hashContributorCode,
+  hashPasskeyPhrase,
   normalizePasskeyPhrase,
   vaultHashForCode,
 } = await import("./contributor/licenseCrypto.js");
@@ -74,6 +75,10 @@ const {
   findLicenseByCode,
   lookupCodeHashByPasskey,
   redeemStoredLicense,
+  redeemLicenseByPasskey,
+  isPasskeyLockedOut,
+  recordPasskeyFailure,
+  clearPasskeyFailures,
 } = await import("./contributor/licenseStore.js");
 
 const {
@@ -253,11 +258,17 @@ assert.equal(
 );
 
 const samplePhrase = generatePasskeyPhrase("checkout_test_001");
-const phraseFromCanonicalCode = generatePasskeyPhrase(sampleCode);
+const codeFromPhrase = generateLicenseCode(samplePhrase);
 assert.equal(
+  codeFromPhrase,
+  sampleCode,
+  "generateLicenseCode must derive identical SS- code from 4-word phrase or checkout seed",
+);
+const phraseFromCanonicalCode = generatePasskeyPhrase(sampleCode);
+assert.notEqual(
   samplePhrase,
   phraseFromCanonicalCode,
-  "generatePasskeyPhrase must derive identical 4-word phrase from checkout seed or canonical ZL code",
+  "SS- code must be a one-way derivation from phrase and never reverse-derive the phrase",
 );
 assert.equal(
   samplePhrase.split("-").length,
@@ -299,12 +310,12 @@ const minted = await createLicenseForCheckout({
 assert.equal(minted.code, sampleCode);
 assert.equal(minted.phrase, samplePhrase);
 
-const phraseHash = hashContributorCode(samplePhrase);
+const phraseHash = hashPasskeyPhrase(samplePhrase);
 const indexedCodeHash = await lookupCodeHashByPasskey(phraseHash);
 assert.equal(
   indexedCodeHash,
   hashContributorCode(sampleCode),
-  "passkey index should map phraseHash back to license codeHash",
+  "passkey index should map PBKDF2 phraseHash back to license codeHash",
 );
 
 const foundByCode = await findLicenseByCode(sampleCode);
@@ -319,14 +330,33 @@ assert.ok(
 );
 assert.equal(foundByPasskey.id, foundByCode.id);
 
-const redeemedByPasskey = await redeemStoredLicense(
+const redeemedByCode = await redeemLicenseByPasskey(sampleCode);
+assert.equal(
+  redeemedByCode,
+  null,
+  "redeemLicenseByPasskey must reject bare SS- codes",
+);
+
+const redeemedByPasskey = await redeemLicenseByPasskey(
   samplePhrase.replace(/-/g, " "),
 );
 assert.ok(
   redeemedByPasskey,
-  "redeemStoredLicense should succeed when given the 4-word passkey",
+  "redeemLicenseByPasskey should succeed when given the 4-word passkey",
 );
 assert.equal(redeemedByPasskey.checkoutId, "checkout_test_001");
+
+// Per-phrase lockout after 5 misses
+const missPhrase = "clever-penguin-dreams-uptown";
+await clearPasskeyFailures(missPhrase);
+for (let i = 0; i < 4; i++) {
+  await recordPasskeyFailure(missPhrase);
+  assert.equal(await isPasskeyLockedOut(missPhrase), false);
+}
+await recordPasskeyFailure(missPhrase);
+assert.equal(await isPasskeyLockedOut(missPhrase), true);
+await clearPasskeyFailures(missPhrase);
+assert.equal(await isPasskeyLockedOut(missPhrase), false);
 
 // Voucher slot cap test
 process.env.CONTRIBUTOR_VOUCHER_LIMIT = "2";
@@ -368,8 +398,8 @@ assert.ok(
   "Passport email plain text must include the 4-word passkey",
 );
 assert.ok(
-  builtEmail.html.includes("/u/"),
-  "Passport email HTML must include /u/ short unlock door",
+  builtEmail.html.includes("/#unlock="),
+  "Passport email HTML must include /#unlock= fragment door with the 4-word passkey",
 );
 assert.ok(
   builtEmail.html.includes("cid:ziplist-passport-qr"),

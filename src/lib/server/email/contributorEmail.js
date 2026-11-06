@@ -63,15 +63,15 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
-export function buildUnlockLink(appOrigin, code) {
+export function buildUnlockLink(appOrigin, phraseOrCode) {
   const origin = (appOrigin || "https://ziplist.app").replace(/\/+$/, "");
-  return `${origin}/u/${encodeURIComponent(code)}`;
+  return `${origin}/#unlock=${encodeURIComponent(phraseOrCode)}`;
 }
 
-export function derivePassportIdentityFromCode(code) {
+export function derivePassportIdentityFromCode(code, phrase = "") {
   const hash = vaultHashForCode(code);
   if (!hash) return { memberName: "", phrase: "" };
-  const identity = generateMemberIdentity(hash, code);
+  const identity = generateMemberIdentity(hash, code, { phrase });
   return {
     memberName: identity.isFallback ? "" : identity.name,
     phrase: identity.isFallback ? "" : identity.phrase,
@@ -91,12 +91,12 @@ export function buildContributorEmail({
   hasCard = false,
   expiresAt = "",
 }) {
-  const derived = derivePassportIdentityFromCode(code);
+  const derived = derivePassportIdentityFromCode(code, phrase);
   const expiryLabel = formatExpiryDate(expiresAt);
   const cleanMemberName = memberName?.toString().trim() || "";
   const displayMemberName = cleanMemberName || derived.memberName;
   const resolvedPhrase = phrase?.toString().trim() || derived.phrase;
-  const unlockKey = code || resolvedPhrase;
+  const unlockKey = resolvedPhrase || code;
   const unlockUrl = buildUnlockLink(appOrigin, unlockKey);
   // Subjects appear on lock screens and mail previews. Keep the recovery key
   // inside the message, never in the notification-sized subject line.
@@ -264,10 +264,10 @@ export async function sendContributorPassportEmail({
   );
 
   try {
-    const derived = derivePassportIdentityFromCode(code);
+    const derived = derivePassportIdentityFromCode(code, phrase);
     const resolvedPhrase = phrase || derived.phrase;
     const resolvedName = memberName || derived.memberName;
-    const unlockUrl = buildUnlockLink(origin, code);
+    const unlockUrl = buildUnlockLink(origin, resolvedPhrase || code);
 
     // Their own card first; the standalone QR only stands in when the card
     // cannot be drawn, so the passkey and door always reach them.

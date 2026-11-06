@@ -1,5 +1,6 @@
 import { env } from "$env/dynamic/private";
 import { json } from "@sveltejs/kit";
+import { normalizeCode } from "$lib/softstack-passport/index.js";
 import { enforceRateLimit } from "$lib/server/rateLimiter.js";
 import {
   generateLicenseCode,
@@ -11,12 +12,18 @@ import {
   parseContributorCodes,
 } from "$lib/server/contributorCodes.js";
 import {
+  clearPasskeyFailures,
   createVoucherLicense,
   findLicenseByCode,
   isLicenseExpired,
+  isPasskeyLockedOut,
   issueTokenForLicense,
-  redeemStoredLicense,
+  recordPasskeyFailure,
+  redeemLicenseByPasskey,
 } from "$lib/server/contributor/licenseStore.js";
+
+const REDEEM_RATE_WINDOW_MS = 15 * 60_000;
+const REDEEM_RATE_LIMIT = 10;
 
 function getManualCodes() {
   return parseContributorCodes(
@@ -26,7 +33,11 @@ function getManualCodes() {
 }
 
 export async function POST(event) {
-  const rateResponse = await enforceRateLimit(event);
+  const rateResponse = await enforceRateLimit(event, {
+    bucket: "contributor-redeem",
+    windowMs: REDEEM_RATE_WINDOW_MS,
+    max: REDEEM_RATE_LIMIT,
+  });
   if (rateResponse) return rateResponse;
 
   let body;
@@ -34,30 +45,53 @@ export async function POST(event) {
     body = await event.request.json();
   } catch {
     return json(
-      { valid: false, error: "Enter a 4-word passkey or code to unlock." },
+      { valid: false, error: "Enter a 4-word passkey to unlock." },
       { status: 400 },
     );
   }
 
   try {
-    const rawCode = body?.code?.toString().trim() || "";
+    const rawCode = (body?.phrase ?? body?.code ?? "").toString().trim();
     const normalizedCode = normalizeContributorCode(rawCode);
 
-    if (!normalizedCode) {
+    if (!rawCode || !normalizedCode) {
       return json(
-        { valid: false, error: "Enter a 4-word passkey or code to unlock." },
+        { valid: false, error: "Enter a 4-word passkey to unlock." },
         { status: 400 },
       );
     }
 
-    const license = await redeemStoredLicense(rawCode);
+    // Bare SS-/ZL- display IDs are public identifiers, never credentials.
+    if (normalizeCode(rawCode)) {
+      return json(
+        {
+          valid: false,
+          error:
+            "Enter a 4-word passkey to unlock. The SS- display ID is not a passkey.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (await isPasskeyLockedOut(rawCode)) {
+      return json(
+        {
+          valid: false,
+          error: "Too many attempts for this passkey. Try again in 15 minutes.",
+        },
+        { status: 429 },
+      );
+    }
+
+    const license = await redeemLicenseByPasskey(rawCode);
     if (license) {
-      const canonicalCode = license.checkoutId
-        ? generateLicenseCode(license.checkoutId)
-        : normalizedCode;
+      await clearPasskeyFailures(rawCode);
       const canonicalPhrase = license.checkoutId
         ? generatePasskeyPhrase(license.checkoutId)
-        : generatePasskeyPhrase(canonicalCode);
+        : generatePasskeyPhrase(rawCode);
+      const canonicalCode = license.checkoutId
+        ? generateLicenseCode(license.checkoutId)
+        : generateLicenseCode(canonicalPhrase);
 
       return json({
         valid: true,
@@ -82,6 +116,18 @@ export async function POST(event) {
       );
     }
 
+    const wordCount = rawCode.split(/[\s_-]+/).filter(Boolean).length;
+    if (wordCount >= 2) {
+      await recordPasskeyFailure(rawCode);
+      return json(
+        {
+          valid: false,
+          error: "Check the 4-word passkey and try once more.",
+        },
+        { status: 401 },
+      );
+    }
+
     const manualCodes = getManualCodes();
     if (manualCodes.length === 0) {
       return json(
@@ -95,10 +141,11 @@ export async function POST(event) {
     }
 
     if (!isContributorCodeValid(normalizedCode, manualCodes)) {
+      await recordPasskeyFailure(rawCode);
       return json(
         {
           valid: false,
-          error: "Check the passkey or code and try once more.",
+          error: "Check the 4-word passkey and try once more.",
         },
         { status: 401 },
       );

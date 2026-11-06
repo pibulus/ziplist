@@ -272,7 +272,9 @@
         return;
       }
 
-      const personalCode = saveStoredSupporterCode(payload.code || code.trim());
+      const personalCode = saveStoredSupporterCode(
+        payload.phrase || payload.code || code.trim(),
+      );
       setContributorStatus(true, payload.token || null);
       passportCode = personalCode;
       vaultHash = await getVaultHash(personalCode);
@@ -430,7 +432,7 @@
             class="text-sm font-bold leading-snug"
             style="color: var(--zl-vibe-accent-text, #db2777);"
           >
-            Works with a 4-word passkey or an SS-XXXX code.
+            Works with a 4-word passkey.
           </p>
         </div>
 
@@ -442,7 +444,7 @@
             for="contributor-code-input"
             class="text-sm font-bold text-[#1e1714]"
           >
-            4-word passkey or Passport code
+            4-word passkey
           </label>
           <input
             id="contributor-code-input"

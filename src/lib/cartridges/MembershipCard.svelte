@@ -36,6 +36,7 @@
 
   export let vaultHash = "";
   export let passportCode = "";
+  export let passportPhrase = "";
   // Optional: override private sync phrase; falls back to deviceSyncStore.privatePhrase
   export let privatePhrase = "";
   // Optional: force a named skin (e.g. 'hacker') for preview/dev.
@@ -57,6 +58,10 @@
   let squishTimer = null;
   let idCopied = false;
   let idCopiedTimer = null;
+  let revealed = false;
+  let revealTimer = null;
+  let showQr = false;
+  let qrTimer = null;
   let passportQrImageUrl = "";
   let previousQrUrl = "";
 
@@ -72,7 +77,9 @@
     Math.min(max, Math.max(min, value));
 
   $: effectivePassportCode = passportCode || storedPassportCode;
-  $: identity = generateMemberIdentity(vaultHash, effectivePassportCode);
+  $: identity = generateMemberIdentity(vaultHash, effectivePassportCode, {
+    phrase: passportPhrase,
+  });
   $: hasVaultHash = !identity.isFallback;
 
   // One coordinate in the modular axis space, deterministic from the hash.
@@ -90,9 +97,9 @@
   // secret changes the room and strands devices paired before this card existed.
   $: resolvedPhrase = privatePhrase || $deviceSyncStore.privatePhrase || "";
   $: passportSyncUrl =
-    !isPreview && hasVaultHash && (effectivePassportCode || identity.phrase)
+    !isPreview && hasVaultHash && (identity.phrase || effectivePassportCode)
       ? buildDeviceSyncUrl(
-          effectivePassportCode || identity.phrase,
+          identity.phrase || effectivePassportCode,
           resolvedPhrase,
         )
       : "";
@@ -123,6 +130,8 @@
     qrUrl: passportSyncUrl,
     qrImageUrl: passportQrImageUrl,
     reducedMotion,
+    revealed,
+    showQr,
   });
 
   function writePointerVars(x, y) {
@@ -222,6 +231,8 @@
       cancelAnimationFrame(rafId);
     if (squishTimer) clearTimeout(squishTimer);
     if (idCopiedTimer) clearTimeout(idCopiedTimer);
+    if (revealTimer) clearTimeout(revealTimer);
+    if (qrTimer) clearTimeout(qrTimer);
     if (cardEl) {
       cardEl.removeEventListener("pointermove", handlePointerMove);
       cardEl.removeEventListener("pointerenter", handlePointerEnter);
@@ -307,6 +318,28 @@
     hapticService?.impact?.("light") || hapticService?.selection?.();
   }
 
+  function toggleReveal() {
+    if (isPreview) return;
+    revealed = !revealed;
+    if (revealTimer) clearTimeout(revealTimer);
+    if (revealed) {
+      revealTimer = setTimeout(() => {
+        revealed = false;
+      }, 10000);
+    }
+  }
+
+  function toggleQr() {
+    if (isPreview) return;
+    showQr = !showQr;
+    if (qrTimer) clearTimeout(qrTimer);
+    if (showQr) {
+      qrTimer = setTimeout(() => {
+        showQr = false;
+      }, 60000);
+    }
+  }
+
   function handleClick(e) {
     const target = e.target;
     if (!(target instanceof Element)) return;
@@ -321,7 +354,17 @@
       return;
     }
     if (target.closest(".avatar-input")) return;
-    // The QR stamp is an anchor; let it navigate.
+    if (target.closest("[data-passport-qr-toggle]")) {
+      e.stopPropagation();
+      toggleQr();
+      return;
+    }
+    if (target.closest("[data-passport-reveal]")) {
+      e.stopPropagation();
+      toggleReveal();
+      return;
+    }
+    // The QR stamp is an anchor when revealed; let it navigate.
     if (target.closest(".passport-qr-stamp")) return;
     if (target.closest(".passport-id-chip")) {
       e.stopPropagation();
@@ -342,7 +385,13 @@
     if (e.key !== "Enter" && e.key !== " ") return;
     const target = e.target;
     if (!(target instanceof Element)) return;
-    if (target.matches(".passport-id-chip")) {
+    if (target.matches("[data-passport-qr-toggle]")) {
+      e.preventDefault();
+      toggleQr();
+    } else if (target.matches("[data-passport-reveal]")) {
+      e.preventDefault();
+      toggleReveal();
+    } else if (target.matches(".passport-id-chip")) {
       e.preventDefault();
       handleCopyCode();
     } else if (target.matches(".passport-card")) {

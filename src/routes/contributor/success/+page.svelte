@@ -30,14 +30,20 @@
   let failedPolls = 0;
   const MAX_TRANSIENT_FAILURES = 4;
 
-  $: identity = generateMemberIdentity(vaultHash);
+  $: identity = generateMemberIdentity(vaultHash, contributorCode, {
+    phrase: contributorPhrase,
+  });
   $: displayPasskey =
     contributorPhrase ||
     (!identity.isFallback ? identity.phrase : "") ||
     contributorCode;
-  $: unlockUrl = contributorCode
-    ? buildDeviceSyncUrl(contributorCode, $deviceSyncStore.privatePhrase)
-    : "";
+  $: unlockUrl =
+    contributorPhrase || contributorCode
+      ? buildDeviceSyncUrl(
+          contributorPhrase || contributorCode,
+          $deviceSyncStore.privatePhrase,
+        )
+      : "";
 
   function claimStorageKey(id) {
     return `ziplist_checkout_claim_${id}`;
@@ -88,9 +94,10 @@
 
       status = "paid";
       message = "ZipList Passport is active on this device.";
-      const savedCode = payload.code
-        ? saveStoredSupporterCode(payload.code)
-        : "";
+      const savedCode =
+        payload.phrase || payload.code
+          ? saveStoredSupporterCode(payload.phrase || payload.code)
+          : "";
       contributorCode = savedCode || payload.code || "";
       contributorPhrase = payload.phrase || "";
       setContributorStatus(true, payload.token || null);
@@ -214,7 +221,11 @@
     {#if contributorCode}
       {#if vaultHash}
         <div class="w-full max-w-[310px]">
-          <MembershipCard {vaultHash} passportCode={contributorCode} />
+          <MembershipCard
+            {vaultHash}
+            passportCode={contributorCode}
+            passportPhrase={contributorPhrase}
+          />
         </div>
       {/if}
 
