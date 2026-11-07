@@ -14,6 +14,7 @@ plans live under `docs/archive/`.
 - `TRANSCRIPTION.md` - Single-pass Gemini audio transcription, parser, and item-completion flow.
 - `LIVE_SHARING.md` - Cloudflare Durable Object live-list architecture and deploy notes.
 - `DEVICE_SYNC_SPEC.md` - End-to-end encrypted (`AES-GCM`) multi-list Device Sync protocol, field-level merge, and verification commands.
+- `OPS-KEYS.md` - Fleet API key and production environment rules.
 
 ## Archive
 

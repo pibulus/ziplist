@@ -2,11 +2,11 @@
   import { onDestroy, onMount } from "svelte";
   import { browser } from "$app/environment";
   import { setContributorStatus } from "$lib";
-  import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
+  import MembershipCard from "$lib/components/ui/MembershipCard.svelte";
   import { generateMemberIdentity } from "$lib/softstack-passport/identity.js";
-  import Confetti from "$lib/components/ui/effects/Confetti.svelte";
+  import Confetti from "$lib/components/ui/Confetti.svelte";
   import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
-  import { buildDeviceSyncUrl } from "$lib/services/qrHandshakeService.js";
+  import { buildDeviceSyncUrl } from "$lib/services/realtime/qrHandshakeService.js";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
   import {
     getVaultHash,

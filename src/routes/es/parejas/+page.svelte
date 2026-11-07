@@ -19,7 +19,7 @@
   const faqs = [
     {
       q: "¿Cómo compartimos una lista en pareja sin crear cuentas?",
-      a: 'Tocas el botón "QR this list" para crear una sala en vivo. Tu pareja escanea el código con su cámara y se conectan al instante en tiempo real. Cero correos, cero registros, cero contraseñas.',
+      a: "Tocas el botón de código QR para crear una sala en vivo. Tu pareja escanea el código con su cámara y se conectan al instante en tiempo real. Cero correos, cero registros, cero contraseñas.",
     },
     {
       q: "¿Podemos tachar pendientes al mismo tiempo en extremos opuestos del supermercado?",

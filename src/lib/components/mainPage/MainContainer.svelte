@@ -4,7 +4,7 @@
   import { browser } from "$app/environment";
   import ContentContainer from "./ContentContainer.svelte";
   import FooterComponent from "./FooterComponent.svelte";
-  import { geminiService } from "$lib/services/geminiService";
+  import { geminiService } from "$lib/services/transcription/geminiService";
   import { modalService } from "$lib/services/modals";
   import { wireTypewriterGlobally } from "$lib/services/infrastructure/typewriterWiring";
   import { transcriptionService } from "$lib/services/transcription/transcriptionService.js";

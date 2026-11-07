@@ -16,11 +16,11 @@ instead of reaching into those details directly.
 - `modals/` - Dialog open/close helpers.
 - `pwa/` - Install prompt, installed-device setup, persistent storage, and wake
   lock helpers.
-- `realtime/` - PartyKit live-list client bridge, protocol, presence, typing,
-  and anonymous avatar names.
+- `realtime/` - PartyKit/Cloudflare Worker live-list client bridge, protocol, presence, typing,
+  anonymous avatar names, and QR/device-sync handshake URLs.
 - `share/` - Static snapshot share/import URL generation.
-- `transcription/` - Recording-to-text orchestration.
-- Root files - Gemini wrappers, prompt templates, and parser helpers.
+- `transcription/` - Recording-to-text orchestration, Gemini API wrappers, prompt templates, and parser helpers.
+- `vaultHashStorage.js` - Supporter code and vault hash persistence.
 
 Theme application lives in `src/lib/index.js` (`applyTheme()`), not in a
 service directory.

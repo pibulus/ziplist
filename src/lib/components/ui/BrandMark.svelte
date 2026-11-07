@@ -5,9 +5,11 @@
 -->
 <script>
   import ThemeMascot from "../mainPage/settings/ThemeMascot.svelte";
+
+  export let href = "/";
 </script>
 
-<a class="zl-brandmark" href="/" aria-label="Open ZipList">
+<a class="zl-brandmark" {href} aria-label="Open ZipList">
   <span class="zl-brandmark-icon" aria-hidden="true">
     <ThemeMascot theme="highlighter" size="22px" />
   </span>

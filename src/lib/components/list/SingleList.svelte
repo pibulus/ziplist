@@ -10,7 +10,7 @@
     LIST_COLOR_PRESETS.map((p) => p.defaultName),
   );
   import { listsService } from "$lib/services/lists/listsService";
-  import { geminiService } from "$lib/services/geminiService";
+  import { geminiService } from "$lib/services/transcription/geminiService";
   import {
     splitPastedList,
     listToText,

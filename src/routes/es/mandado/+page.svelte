@@ -23,7 +23,7 @@
     },
     {
       q: "¿Podemos usar la misma lista mi pareja y yo en el súper?",
-      a: '¡Sí! Presionas el botón "QR this list" y tu pareja escanea el código con su cámara. Ambos teléfonos se sincronizan al instante en vivo sin tener que crear cuentas ni contraseñas.',
+      a: "¡Sí! Presionas el botón de código QR y tu pareja escanea el código con su cámara. Ambos teléfonos se sincronizan al instante en vivo sin tener que crear cuentas ni contraseñas.",
     },
     {
       q: "¿Tengo que descargar una app de la App Store?",

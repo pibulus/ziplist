@@ -1,5 +1,5 @@
-import { geminiService } from "../geminiService";
-import { listParser } from "../listParser.js"; // Import the listParser
+import { geminiService } from "./geminiService";
+import { listParser } from "./listParser.js"; // Import the listParser
 import { listsService } from "../lists/listsService"; // Import the listsService
 import { listsStore } from "../lists/listsStore";
 import { get } from "svelte/store";

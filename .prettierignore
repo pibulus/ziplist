@@ -1,2 +1,4 @@
 # Bundled font payloads: one long base64 line, not source to format
-**/fonts/fontData.js
+**/fontData.js
+# Vendored SoftStack Passport cartridge (verified by byte-exact SHA-256 in passportParity.test.mjs)
+src/lib/softstack-passport/**

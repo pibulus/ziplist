@@ -1,6 +1,7 @@
 # 🔑 API Keys for this app — DO NOT hand-edit keys
 
 This app's Gemini key is managed by the **fleet key system**, not by editing files here.
+Production runs on **Netlify Edge** (`DEPLOY_TARGET=netlify`), with `adapter-node` kept as the Pi/Chonk fallback lane (`/etc/ziplist.env`).
 
 ## The one law
 

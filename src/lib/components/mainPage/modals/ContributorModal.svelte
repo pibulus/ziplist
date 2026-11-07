@@ -16,8 +16,8 @@
   import { Mascot } from "$lib/components/ui";
   import { soundService } from "$lib/services/infrastructure/soundService";
   import { hapticService } from "$lib/services/infrastructure";
-  import MembershipCard from "$lib/cartridges/MembershipCard.svelte";
-  import Confetti from "$lib/components/ui/effects/Confetti.svelte";
+  import MembershipCard from "$lib/components/ui/MembershipCard.svelte";
+  import Confetti from "$lib/components/ui/Confetti.svelte";
   import {
     readStoredSupporterCode,
     saveStoredSupporterCode,

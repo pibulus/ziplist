@@ -2,7 +2,7 @@
  * Bridges Passport import links with trusted local QR rendering.
  */
 
-import { normalizeSyncPhrase } from "./realtime/syncPhrase.js";
+import { normalizeSyncPhrase } from "./syncPhrase.js";
 
 const DEFAULT_QR_SIZE = 256;
 

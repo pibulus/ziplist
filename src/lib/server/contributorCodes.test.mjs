@@ -74,7 +74,6 @@ const {
   createVoucherLicense,
   findLicenseByCode,
   lookupCodeHashByPasskey,
-  redeemStoredLicense,
   redeemLicenseByPasskey,
   isPasskeyLockedOut,
   recordPasskeyFailure,
@@ -458,7 +457,9 @@ const fallbackResult = await sendContributorPassportEmail({
     const body = JSON.parse(options.body);
     sentPayloads.push(body);
     return new Response(
-      JSON.stringify({ message: "Simulated Resend upstream failure (test mock)" }),
+      JSON.stringify({
+        message: "Simulated Resend upstream failure (test mock)",
+      }),
       { status: 403 },
     );
   },

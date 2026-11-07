@@ -36,7 +36,7 @@
         price: String(PRICING.currentPrice),
         priceCurrency: PRICING.currency,
         description:
-          "Pase Vitalicio — 12 listas, salas en vivo, todos tus dispositivos",
+          "Pasaporte ZipList, A$29 por un año — 12 listas, sincronización privada entre dispositivos y 12 salas compartidas en vivo",
       },
     ],
     keywords:

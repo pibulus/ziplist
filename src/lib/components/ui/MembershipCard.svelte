@@ -26,10 +26,10 @@
   import {
     buildDeviceSyncUrl,
     renderQrDataUrl,
-  } from "$lib/services/qrHandshakeService.js";
+  } from "$lib/services/realtime/qrHandshakeService.js";
   import { readStoredSupporterCode } from "$lib/services/vaultHashStorage.js";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
-  import Confetti from "$lib/components/ui/effects/Confetti.svelte";
+  import Confetti from "$lib/components/ui/Confetti.svelte";
   import { soundService } from "$lib/services/infrastructure/soundService.js";
   import { hapticService } from "$lib/services/infrastructure/hapticService.js";
   import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
@@ -97,10 +97,7 @@
   $: resolvedPhrase = privatePhrase || $deviceSyncStore.privatePhrase || "";
   $: passportSyncUrl =
     !isPreview && hasVaultHash && (passportPhrase || identity.phrase)
-      ? buildDeviceSyncUrl(
-          passportPhrase || identity.phrase,
-          resolvedPhrase,
-        )
+      ? buildDeviceSyncUrl(passportPhrase || identity.phrase, resolvedPhrase)
       : "";
 
   $: if (passportSyncUrl !== previousQrUrl) {
@@ -400,6 +397,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   bind:this={hostEl}
   style="display: contents"
@@ -407,6 +405,7 @@
   on:change={handleChange}
   on:keydown={handleKeydown}
 >
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   {@html markup}
 </div>
 

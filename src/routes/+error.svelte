@@ -91,23 +91,6 @@
     margin: 0 auto 0.9rem;
   }
 
-  .zl-error-icon {
-    align-items: center;
-    background: rgba(255, 255, 255, 0.82);
-    border: 2px solid rgba(255, 176, 0, 0.42);
-    border-radius: 24px;
-    box-shadow:
-      0 10px 24px rgba(255, 176, 0, 0.16),
-      inset 0 0 0 2px rgba(255, 255, 255, 0.72);
-    color: #c26d00;
-    display: inline-flex;
-    font-size: 2.6rem;
-    height: 5rem;
-    justify-content: center;
-    margin-bottom: 1.25rem;
-    width: 5rem;
-  }
-
   .zl-error-card h2 {
     font-family: "Space Mono", monospace;
     font-size: 1.5rem;

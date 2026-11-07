@@ -15,10 +15,7 @@ import { generateMemberIdentity } from "$lib/softstack-passport/index.js";
 import { selectSkin } from "$lib/softstack-passport/skins.js";
 import { buildPassportAvatar } from "$lib/softstack-passport/avatar.js";
 import { vaultHashForCode } from "$lib/server/contributor/licenseCrypto.js";
-import {
-  JETBRAINS_MONO_BASE64,
-  POPPINS_BOLD_BASE64,
-} from "./fonts/fontData.js";
+import { JETBRAINS_MONO_BASE64, POPPINS_BOLD_BASE64 } from "./fontData.js";
 
 // 342×216 CSS px (the card's own aspect) at 3× for a crisp retina email image.
 const WIDTH = 1026;

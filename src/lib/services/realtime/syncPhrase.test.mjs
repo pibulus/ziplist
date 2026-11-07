@@ -25,15 +25,19 @@ for (const word of WORDS) {
   assert.match(word, /^[a-z]{3,12}$/, `unusable word: ${word}`);
 }
 
-// Legacy 4-slot exports remain populated and disjoint.
+// Legacy 4-slot exports remain populated and disjoint (ADJECTIVES/NOUNS use Title Case for display).
 for (const bank of BANKS) {
   for (const word of bank) {
-    assert.match(word, /^[a-z]{3,12}$/, `unusable word: ${word}`);
+    assert.match(word, /^[A-Za-z]{3,12}$/, `unusable word: ${word}`);
   }
   assert.equal(new Set(bank).size, bank.length, "duplicate word in a bank");
 }
-const allSlots = BANKS.flat();
-assert.equal(new Set(allSlots).size, allSlots.length, "a word appears in two slot banks");
+const allSlots = BANKS.flat().map((w) => w.toLowerCase());
+assert.equal(
+  new Set(allSlots).size,
+  allSlots.length,
+  "a word appears in two slot banks",
+);
 
 assert.ok(
   PASSPHRASE_ENTROPY_BITS >= 44,

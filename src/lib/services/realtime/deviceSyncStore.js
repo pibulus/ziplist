@@ -27,7 +27,7 @@ import {
   clearStoredSupporterCode,
   getVaultHash,
 } from "../vaultHashStorage.js";
-import { buildDeviceSyncUrl } from "../qrHandshakeService.js";
+import { buildDeviceSyncUrl } from "./qrHandshakeService.js";
 
 function toast(message, type = "success") {
   if (!browser) return;

@@ -112,7 +112,7 @@
     <!-- The hero is hidden in list-first mode; the letterhead keeps the
          page named without bringing the whole title back -->
     <div class="listfirst-brand">
-      <BrandMark />
+      <BrandMark href={ogLocale === "es_LA" ? "/es" : "/"} />
     </div>
   {/if}
 
