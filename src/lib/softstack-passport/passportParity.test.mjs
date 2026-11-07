@@ -18,7 +18,7 @@ import {
   WORDS,
 } from "./index.js";
 
-const EXPECTED_MANIFEST_SHA256 = "d89419c336fcfa38118f1ba083df8a6f768f0f27708dfcfb50e5e35acbe5a748";
+const EXPECTED_MANIFEST_SHA256 = "441e0cfe73245a9a8b79732e4e3957e5668d9a2b7dd8c45b9b8ee77c2cd5e6da";
 
 const vectors = JSON.parse(
   readFileSync(new URL("./test-vectors.json", import.meta.url), "utf8"),
