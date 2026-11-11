@@ -95,8 +95,10 @@
     passportCode = readStoredSupporterCode() || "";
   }
 
-  $: if (passportCode && !vaultHash) {
-    getVaultHash(passportCode)
+  $: hashSeed = passportCode || ($isContributor ? "contributor-active" : "");
+
+  $: if (hashSeed && !vaultHash) {
+    getVaultHash(hashSeed)
       .then((h) => {
         vaultHash = h;
       })

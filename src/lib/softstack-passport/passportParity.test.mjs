@@ -18,7 +18,7 @@ import {
   WORDS,
 } from "./index.js";
 
-const EXPECTED_MANIFEST_SHA256 = "441e0cfe73245a9a8b79732e4e3957e5668d9a2b7dd8c45b9b8ee77c2cd5e6da";
+const EXPECTED_MANIFEST_SHA256 = "ef1d0be5b027325fdf6eb854ec034d392fcd9aa6a6dddb5a52b7c124f614e7c2";
 
 const vectors = JSON.parse(
   readFileSync(new URL("./test-vectors.json", import.meta.url), "utf8"),
@@ -88,8 +88,19 @@ const resting = renderMembershipCard({
 assert.match(resting, /data-passport-name="Quiet Tapir"/);
 assert.match(resting, /data-passport-masked="true"/);
 assert.ok(!resting.includes(vectors.phrase), "Resting card leaked passphrase");
-assert.ok(!resting.includes("data:image/png;base64,AAAA"), "Resting card rendered QR");
+assert.ok(resting.includes("passport-qr-stamp"), "Resting card missing QR stamp");
+assert.ok(resting.includes("data:image/png;base64,AAAA"), "Resting card missing QR image");
 assert.match(resting, />••••• ••••• ••••• •••••<\/p>/);
+
+const qrHidden = renderMembershipCard({
+  identity,
+  skin,
+  appName: "ZipList",
+  showQr: false,
+  qrUrl: "https://ziplist.app/#sync=test",
+  qrImageUrl: "data:image/png;base64,AAAA",
+});
+assert.ok(!qrHidden.includes("data:image/png;base64,AAAA"), "Explicit showQr: false rendered QR");
 
 const html = renderMembershipCard({
   identity,

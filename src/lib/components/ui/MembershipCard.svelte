@@ -8,7 +8,10 @@
    * storage). Keep it that way: a visual change belongs in the shared module.
    */
   import { afterUpdate, onMount } from "svelte";
-  import { generateMemberIdentity } from "$lib/softstack-passport/index.js";
+  import {
+    generateMemberIdentity,
+    parseFourWordPasskey,
+  } from "$lib/softstack-passport/index.js";
   import {
     selectSkin,
     selectNamedSkin,
@@ -60,7 +63,7 @@
   let idCopiedTimer = null;
   let revealed = false;
   let revealTimer = null;
-  let showQr = false;
+  let showQr = true;
   let qrTimer = null;
   let passportQrImageUrl = "";
   let previousQrUrl = "";
@@ -77,8 +80,10 @@
     Math.min(max, Math.max(min, value));
 
   $: effectivePassportCode = passportCode || storedPassportCode;
+  $: effectivePhrase =
+    passportPhrase || parseFourWordPasskey(effectivePassportCode)?.phrase || "";
   $: identity = generateMemberIdentity(vaultHash, effectivePassportCode, {
-    phrase: passportPhrase,
+    phrase: effectivePhrase,
   });
   $: hasVaultHash = !identity.isFallback;
 
@@ -93,27 +98,24 @@
     (!isPreview && customAvatarUri) ||
     buildPassportAvatar(vaultHash || "ziplist", skin.avatarStyle);
 
-  // The 4-word passkey is the root credential; never fall back to a bare SS- code in the QR.
+  // The 4-word passkey is the root credential; preview/fallback cards encode the public app URL.
   $: resolvedPhrase = privatePhrase || $deviceSyncStore.privatePhrase || "";
   $: passportSyncUrl =
-    !isPreview && hasVaultHash && (passportPhrase || identity.phrase)
-      ? buildDeviceSyncUrl(passportPhrase || identity.phrase, resolvedPhrase)
+    !isPreview && hasVaultHash && (effectivePhrase || identity.phrase)
+      ? buildDeviceSyncUrl(effectivePhrase || identity.phrase, resolvedPhrase)
       : "";
+  $: qrTargetUrl = passportSyncUrl || "https://ziplist.app";
 
-  $: if (passportSyncUrl !== previousQrUrl) {
-    previousQrUrl = passportSyncUrl;
-    if (passportSyncUrl) {
-      renderQrDataUrl(passportSyncUrl, { size: 256 })
-        .then((dataUrl) => {
-          passportQrImageUrl = dataUrl;
-        })
-        .catch((error) => {
-          console.warn("[MembershipCard] Local QR render failed:", error);
-          passportQrImageUrl = "";
-        });
-    } else {
-      passportQrImageUrl = "";
-    }
+  $: if (qrTargetUrl !== previousQrUrl) {
+    previousQrUrl = qrTargetUrl;
+    renderQrDataUrl(qrTargetUrl, { size: 256 })
+      .then((dataUrl) => {
+        passportQrImageUrl = dataUrl;
+      })
+      .catch((error) => {
+        console.warn("[MembershipCard] Local QR render failed:", error);
+        passportQrImageUrl = "";
+      });
   }
 
   $: markup = renderMembershipCard({
@@ -360,8 +362,9 @@
       toggleReveal();
       return;
     }
-    // The QR stamp is an anchor when revealed; let it navigate.
-    if (target.closest(".passport-qr-stamp")) return;
+    // The QR stamp is an anchor on active cards; let it navigate.
+    if (!isPreview && passportSyncUrl && target.closest(".passport-qr-stamp"))
+      return;
     if (target.closest(".passport-id-chip")) {
       e.stopPropagation();
       handleCopyCode();
