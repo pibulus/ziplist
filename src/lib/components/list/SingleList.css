@@ -309,16 +309,21 @@
 }
 
 .zl-list-title-heading {
+  display: flex;
   flex: 1 1 auto;
   margin: 0;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   width: auto;
 }
 
 .zl-list-title-trigger {
   min-height: 44px;
+  min-width: 0;
   width: auto;
   max-width: 100%;
+  overflow: hidden;
   border: none;
   border-radius: 999px;
   background: transparent;
@@ -333,7 +338,7 @@
 .zl-list-title-trigger:hover,
 .zl-list-title-trigger:focus-visible {
   background: rgba(255, 255, 255, 0.38);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(30, 23, 20, 0.06);
   outline: none;
 }
 
@@ -345,6 +350,7 @@
   letter-spacing: 0;
   color: var(--zl-text-color-primary);
   display: block;
+  min-width: 0;
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
@@ -419,18 +425,19 @@
 }
 
 .zl-list-title-input {
-  width: min(100%, 22rem);
+  width: 100%;
+  max-width: 100%;
   min-height: 48px;
   border-radius: 18px;
   border: var(--zl-edit-input-border, 2px solid rgba(201, 120, 255, 0.3));
   background: rgba(255, 255, 255, 0.9);
   color: var(--zl-text-color-primary);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 24px rgba(30, 23, 20, 0.08);
   font-family: "Space Mono", monospace;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: 0;
-  padding: 0.75rem 1rem;
+  padding: 0.65rem 0.95rem;
   outline: none;
   transition: var(--zl-transition-fast);
 }
@@ -675,9 +682,47 @@
   margin-left: 0;
 }
 
-/* Keep a floor for the owner title when the presence stack grows. */
-.zl-list-title {
-  min-width: 4.5rem;
+@keyframes zl-dice-roll {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  35% {
+    transform: rotate(-22deg) scale(0.88);
+  }
+  72% {
+    transform: rotate(195deg) scale(1.14);
+  }
+  100% {
+    transform: rotate(180deg) scale(1);
+  }
+}
+
+.zl-dice-button.is-rolling .zl-header-icon {
+  animation: zl-dice-roll 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes zl-fate-spotlight {
+  0% {
+    transform: scale(0.985);
+  }
+  45% {
+    transform: scale(1.015);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.zl-item.fate-picked {
+  background: color-mix(
+    in srgb,
+    var(--zl-cta-color, #ffb000) 20%,
+    var(--zl-item-bg, #fffef7)
+  );
+  box-shadow:
+    inset 0 0 0 2px #1e1714,
+    3px 3px 0 #1e1714;
+  animation: zl-fate-spotlight 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .zl-undo-toast {
@@ -2206,12 +2251,15 @@
 
 /* Touch devices: no hover to reveal the handle/action button, so it rests
    awake — still quiet, but clearly there. */
-/* Four 44px controls need their own rail on small phones; forcing them into
-   the title row silently clipped the card even when document overflow was 0. */
-@media (max-width: 360px) {
+/* Header layout on tight phones & live-sharing cards:
+   With the ghost-icon trio (Dice, Share, ⋯) capped at 3×44px, standard cards
+   fit comfortably on one line down to 330px. When live-sharing is active on
+   phones, give the owner's list title the full first row (just like guest view)
+   so the title and live presence pill never collide. */
+@media (max-width: 330px) {
   .zl-list-header {
     flex-wrap: wrap;
-    gap: 0.1rem;
+    gap: 0.2rem;
   }
 
   .zl-list-header-main,
@@ -2221,23 +2269,44 @@
   }
 
   .zl-list-actions {
-    justify-content: space-between;
+    justify-content: flex-end;
   }
 }
 
-@media (max-width: 480px) {
-  .zl-list-header.is-sharing {
-    flex-wrap: wrap;
+@media (max-width: 520px) {
+  .zl-list-header.is-sharing:not(.is-guest) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.35rem;
+    row-gap: 0.25rem;
   }
 
-  .zl-list-header.is-sharing .zl-list-header-main,
-  .zl-list-header.is-sharing .zl-list-actions {
-    flex: 1 1 100%;
+  .zl-list-header.is-sharing:not(.is-guest) .zl-list-header-main,
+  .zl-list-header.is-sharing:not(.is-guest) .zl-list-title-row {
+    display: contents;
+  }
+
+  .zl-list-header.is-sharing:not(.is-guest) .zl-list-title-heading,
+  .zl-list-header.is-sharing:not(.is-guest) .zl-list-title-input {
+    grid-column: 1 / -1;
     width: 100%;
   }
 
-  .zl-list-header.is-sharing .zl-list-actions {
-    justify-content: space-between;
+  .zl-list-header.is-sharing:not(.is-guest) .zl-live-header-pill {
+    grid-column: 1;
+    justify-self: start;
+    min-width: 0;
+  }
+
+  .zl-list-header.is-sharing:not(.is-guest) .zl-list-actions {
+    grid-column: 2;
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .zl-list-actions {
+    gap: 0.1rem;
   }
 }
 
@@ -2253,6 +2322,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .zl-item.settling:not(.touch-placeholder),
+  .zl-item.fate-picked,
+  .zl-dice-button.is-rolling .zl-header-icon,
   .animate-pop,
   .zl-share-notification {
     animation: none;
@@ -2562,6 +2633,26 @@ body.zl-touch-dragging {
   border-bottom: 2px dashed rgba(30, 23, 20, 0.12);
 }
 
+.zl-order-strip {
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 0.45rem;
+  padding-bottom: 0.55rem;
+  margin-bottom: 0.05rem;
+  border-bottom: 1.5px dashed rgba(30, 23, 20, 0.12);
+}
+
+.zl-order-pill {
+  padding-inline: 0.45rem;
+  white-space: nowrap;
+}
+
+.zl-share-option.is-active {
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 24%, #fffdf5);
+  box-shadow: 1px 1px 0 #1e1714;
+}
+
 .zl-manage-tray > .zl-share-option {
   flex: 1 1 calc(50% - 0.5rem);
   min-width: 0;
@@ -2605,6 +2696,13 @@ body.zl-touch-dragging {
   opacity: 1;
   background: rgba(30, 23, 20, 0.08);
   border-radius: 10px;
+}
+
+.zl-share-button.is-live {
+  opacity: 1;
+  color: #1e1714;
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 20%, #fffdf5);
+  border-radius: 11px;
 }
 
 .zl-share-paste {
@@ -2718,15 +2816,18 @@ body.zl-touch-dragging {
   box-shadow: 1.5px 1.5px 0 #1e1714;
 }
 
-/* Inline item action bar: Move / Delete in Neo-Toybrut pills */
+/* Inline item action bar: Edit / Move / Delete in Neo-Toybrut pills */
 .zl-item-tray {
   grid-column: 1 / -1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.45rem 0 0.1rem;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 0.45rem;
+  padding: 0.5rem 0 0.15rem;
+  margin-top: 0.15rem;
   border-top: 1.5px dashed rgba(30, 23, 20, 0.2);
+  scroll-margin-bottom: 5.5rem;
 }
 
 .zl-item-tray-actions {
@@ -2734,32 +2835,40 @@ body.zl-touch-dragging {
   align-items: center;
   justify-content: flex-end;
   width: 100%;
-  gap: 0.5rem;
+  gap: 0.42rem;
 }
 
 .zl-item-tray-btn {
   flex: 1 1 0;
-  max-width: 148px;
-  height: 44px;
-  min-height: 44px;
+  min-width: 0;
+  max-width: 168px;
+  height: 42px;
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0 0.85rem;
+  gap: 0.35rem;
+  padding: 0 0.65rem;
   border-radius: 12px;
   border: 2px solid #1e1714;
   background: #fffdf5;
   color: #1e1714;
   box-shadow: 1.5px 1.5px 0 #1e1714;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.15s ease,
     background-color 0.15s ease;
+}
+
+.zl-item-tray-btn.zl-item-tray-move-direct {
+  flex: 1.35 1 0;
+  max-width: 196px;
+  background: color-mix(in srgb, var(--target-colour, #62c9e8) 18%, #fffdf5);
 }
 
 .zl-item-tray-btn:hover,
@@ -2768,6 +2877,11 @@ body.zl-touch-dragging {
   transform: translateY(-1px);
   box-shadow: 2.5px 2.5px 0 #1e1714;
   outline: none;
+}
+
+.zl-item-tray-btn.zl-item-tray-move-direct:hover,
+.zl-item-tray-btn.zl-item-tray-move-direct:focus-visible {
+  background: color-mix(in srgb, var(--target-colour, #62c9e8) 30%, #fffdf5);
 }
 
 .zl-item-tray-btn:active {
@@ -2786,53 +2900,100 @@ body.zl-touch-dragging {
 }
 
 .zl-tray-icon {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 
-/* Move panel */
+/* Move panel: stacked header + 2-column grid so target pills never crush on phones */
 .zl-item-move-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 0.45rem;
+  padding: 0.05rem 0;
+  scroll-margin-bottom: 5.5rem;
+}
+
+.zl-item-move-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  gap: 0.45rem;
-  padding: 0.1rem 0;
+  gap: 0.5rem;
+  padding: 0 0.1rem;
 }
 
 .zl-item-move-label {
-  font-size: 0.72rem;
+  font-family: "Space Mono", monospace;
+  font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  opacity: 0.7;
-  flex-shrink: 0;
+  color: #1e1714;
+  opacity: 0.72;
+}
+
+.zl-item-move-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 32px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(30, 23, 20, 0.35);
+  background: #fffdf5;
+  color: #1e1714;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.zl-item-move-back:hover,
+.zl-item-move-back:focus-visible {
+  border-color: #1e1714;
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 16%, #fffdf5);
+  outline: none;
+}
+
+.zl-item-move-back:active {
+  transform: scale(0.96);
 }
 
 .zl-item-move-targets {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.42rem;
+  width: 100%;
+}
+
+@media (max-width: 340px) {
+  .zl-item-move-targets {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .zl-item-move-pill {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  height: 44px;
-  min-height: 44px;
-  padding: 0 0.75rem;
+  gap: 0.42rem;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0.35rem 0.65rem;
   border-radius: 12px;
   border: 2px solid #1e1714;
-  background: color-mix(in srgb, var(--target-colour, #6c85e9) 18%, #fffdf5);
+  background: color-mix(in srgb, var(--target-colour, #62c9e8) 18%, #fffdf5);
   color: #1e1714;
   box-shadow: 1.5px 1.5px 0 #1e1714;
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 800;
+  text-align: left;
   cursor: pointer;
   transition:
     transform 0.15s ease,
@@ -2844,50 +3005,46 @@ body.zl-touch-dragging {
 .zl-item-move-pill:focus-visible {
   transform: translateY(-1px);
   box-shadow: 2.5px 2.5px 0 #1e1714;
-  background: color-mix(in srgb, var(--target-colour, #6c85e9) 30%, #fffdf5);
+  background: color-mix(in srgb, var(--target-colour, #62c9e8) 32%, #fffdf5);
   outline: none;
 }
 
-.zl-item-move-pill .zl-target-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid #1e1714;
-  background: var(--target-colour, #6c85e9);
-  flex-shrink: 0;
-}
-
-.zl-item-move-cancel {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  border: 2px solid #1e1714;
-  background: #fffdf5;
-  color: #1e1714;
-  box-shadow: 1.5px 1.5px 0 #1e1714;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 900;
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
-}
-
-.zl-item-move-cancel:hover,
-.zl-item-move-cancel:focus-visible {
-  background: color-mix(in srgb, var(--zl-caution-color, #ff8a7a) 20%, #fffdf5);
-  transform: translateY(-1px);
-  box-shadow: 2.5px 2.5px 0 #1e1714;
-  outline: none;
-}
-
-.zl-item-move-cancel:active {
+.zl-item-move-pill:active {
   transform: translate(1px, 1px);
   box-shadow: 0.5px 0.5px 0 #1e1714;
+}
+
+.zl-target-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid #1e1714;
+  background: var(--target-colour, #62c9e8);
+  flex-shrink: 0;
+}
+
+.zl-target-name {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.zl-target-arrow {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  opacity: 0.55;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.zl-item-move-pill:hover .zl-target-arrow,
+.zl-item-move-pill:focus-visible .zl-target-arrow {
+  transform: translateX(2px);
+  opacity: 0.95;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3365,46 +3522,108 @@ body.zl-touch-dragging {
   }
 }
 
-/* Share has three equally weighted actions; list management uses the same
-   tap targets but can wrap when labels need room. */
-.zl-share-actions {
+/* Share tray: full-width Live List hero + 2-column QR / Copy secondary row */
+.zl-share-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.16rem;
+  width: 100%;
+  min-height: 50px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 14px;
+  box-shadow: 2px 2px 0 #1e1714;
+}
+
+.zl-share-hero.is-live-active {
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 42%, #fffdf5);
+}
+
+.zl-share-hero-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.85rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.zl-share-hero-sub {
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.74;
+  line-height: 1.15;
+}
+
+.zl-share-secondary {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.zl-share-actions.two-options {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.48rem;
 }
 
-.zl-share-actions > .zl-share-option {
+.zl-share-secondary > .zl-share-option {
   min-width: 0;
-  padding-inline: 0.25rem;
-  flex-direction: column;
-  gap: 0.2rem;
-  font-size: clamp(0.62rem, 2.6vw, 0.78rem);
-  text-align: center;
-  line-height: 1.2;
+  padding-inline: 0.5rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.zl-live-footer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding-top: 0.15rem;
+}
+
+.zl-live-footer-row .zl-collaborator-badge {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
+.zl-live-footer-row .zl-share-stop {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.74rem;
 }
 
 /* The words are the link, so they're a button, not a caption. */
 .zl-share-phrase {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
   width: 100%;
   margin: 0;
-  padding: 0.6rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 14px;
   border: 2px dashed
-    color-mix(in srgb, var(--zl-primary-color, #a970ea) 38%, transparent);
+    color-mix(
+      in srgb,
+      var(--zl-item-accent, #a970ea) 52%,
+      rgba(30, 23, 20, 0.25)
+    );
   background: color-mix(
     in srgb,
-    var(--zl-primary-color, #a970ea) 8%,
+    var(--zl-item-accent, #a970ea) 10%,
     var(--zl-item-bg, #fffef7)
   );
   cursor: pointer;
   text-align: center;
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.zl-share-phrase-kicker {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1e1714;
+  opacity: 0.62;
 }
 
 .zl-share-phrase:hover {
@@ -3417,10 +3636,10 @@ body.zl-touch-dragging {
 
 .zl-share-phrase code {
   font-family: "Space Mono", monospace;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.01em;
-  color: color-mix(in srgb, var(--zl-primary-color, #a970ea) 72%, #1e1714);
+  color: #1e1714;
 }
 
 @media (prefers-reduced-motion: reduce) {

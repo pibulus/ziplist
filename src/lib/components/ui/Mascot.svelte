@@ -154,6 +154,8 @@
            blink scaleY animation applies. Geometry = canonical ZipList dude. -->
       <svg
         class="mascot-svg"
+        width="132"
+        height="138"
         viewBox="96 56 832 872"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"

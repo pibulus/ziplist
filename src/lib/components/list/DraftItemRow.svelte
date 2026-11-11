@@ -15,6 +15,8 @@
   export let suggestedTags = [];
   /** Other lists in the deck — offered as 1-tap portal targets when drafting a portal. */
   export let moveTargets = [];
+  /** When true, omits the outer <li> wrapper so a parent keyed {#each} owns the animated <li>. */
+  export let bare = false;
 
   $: isDraftSection = /^##\s*/.test(draftItemText);
   $: isDraftPortal = /^(\u2192|->)\s*/.test(draftItemText);
@@ -73,12 +75,7 @@
   }
 </script>
 
-<li
-  class="zl-item editing zl-draft-item"
-  in:fly={{ y: 20, duration: 220, delay: staggerDelay }}
-  out:fly={{ y: -12, duration: 180 }}
-  role="listitem"
->
+{#snippet draftBody()}
   <div class="zl-checkbox-wrapper zl-draft-checkbox" aria-hidden="true">
     <span class="zl-checkbox-custom"></span>
   </div>
@@ -94,6 +91,7 @@
       spellcheck="false"
       name="zl-entry-item"
       inputmode="text"
+      enterkeyhint="next"
       data-1p-ignore
       data-lpignore="true"
       data-form-type="other"
@@ -193,4 +191,17 @@
       {/each}
     {/if}
   </div>
-</li>
+{/snippet}
+
+{#if bare}
+  {@render draftBody()}
+{:else}
+  <li
+    class="zl-item editing zl-draft-item"
+    in:fly={{ y: 20, duration: 220, delay: staggerDelay }}
+    out:fly={{ y: -12, duration: 180 }}
+    role="listitem"
+  >
+    {@render draftBody()}
+  </li>
+{/if}

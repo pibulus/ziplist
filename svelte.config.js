@@ -12,6 +12,10 @@ const adapter =
 const config = {
   kit: {
     adapter,
+    // Inline small critical component stylesheets (PageLayout, Mascot,
+    // BrandMark, AppSuffix) directly into prerendered HTML so first paint
+    // never waits on half a dozen tiny render-blocking CSS round-trips.
+    inlineStyleThreshold: 12288,
   },
 };
 

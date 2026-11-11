@@ -27,10 +27,15 @@ function isPrivateRoute(pathname) {
 }
 
 self.addEventListener("install", (event) => {
+  // Wait for every build asset (CSS + JS) to land in the new cache BEFORE
+  // skipping waiting — otherwise the new SW claims open clients and purges
+  // the previous cache while stylesheets are still in flight.
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS)),
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
+      .then(() => self.skipWaiting()),
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -43,9 +48,9 @@ self.addEventListener("activate", (event) => {
             .filter((key) => key !== CACHE_NAME)
             .map((key) => caches.delete(key)),
         ),
-      ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {

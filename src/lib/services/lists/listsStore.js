@@ -51,12 +51,12 @@ export const LIST_COLOR_PRESETS = [
     glowColor: "rgba(255, 176, 0, 0.3)",
   },
   {
-    id: "list-mint",
-    defaultName: "Mint List",
-    color: "mint",
-    primaryColor: "#4fd1c5",
-    accentColor: "#80e8de",
-    glowColor: "rgba(79, 209, 197, 0.28)",
+    id: "list-sage",
+    defaultName: "Sage List",
+    color: "sage",
+    primaryColor: "#52c785",
+    accentColor: "#86efac",
+    glowColor: "rgba(82, 199, 133, 0.28)",
   },
   {
     id: "list-lavender",
@@ -75,36 +75,20 @@ export const LIST_COLOR_PRESETS = [
     glowColor: "rgba(255, 138, 122, 0.28)",
   },
   {
-    id: "list-peach",
-    defaultName: "Peach List",
-    color: "peach",
-    primaryColor: "#ff9f68",
-    accentColor: "#ffc19e",
-    glowColor: "rgba(255, 159, 104, 0.28)",
+    id: "list-mint",
+    defaultName: "Mint List",
+    color: "mint",
+    primaryColor: "#4fd1c5",
+    accentColor: "#80e8de",
+    glowColor: "rgba(79, 209, 197, 0.28)",
   },
   {
-    id: "list-sage",
-    defaultName: "Sage List",
-    color: "sage",
-    primaryColor: "#52c785",
-    accentColor: "#86efac",
-    glowColor: "rgba(82, 199, 133, 0.28)",
-  },
-  {
-    id: "list-indigo",
-    defaultName: "Indigo List",
-    color: "indigo",
-    primaryColor: "#6366f1",
-    accentColor: "#818cf8",
-    glowColor: "rgba(99, 102, 241, 0.28)",
-  },
-  {
-    id: "list-rose",
-    defaultName: "Rose List",
-    color: "rose",
-    primaryColor: "#fb7185",
-    accentColor: "#fda4af",
-    glowColor: "rgba(251, 113, 133, 0.28)",
+    id: "list-orchid",
+    defaultName: "Orchid List",
+    color: "orchid",
+    primaryColor: "#d946ef",
+    accentColor: "#e879f9",
+    glowColor: "rgba(217, 70, 239, 0.28)",
   },
   {
     id: "list-lime",
@@ -115,12 +99,28 @@ export const LIST_COLOR_PRESETS = [
     glowColor: "rgba(163, 230, 53, 0.28)",
   },
   {
-    id: "list-orchid",
-    defaultName: "Orchid List",
-    color: "orchid",
-    primaryColor: "#d946ef",
-    accentColor: "#e879f9",
-    glowColor: "rgba(217, 70, 239, 0.28)",
+    id: "list-indigo",
+    defaultName: "Indigo List",
+    color: "indigo",
+    primaryColor: "#6366f1",
+    accentColor: "#818cf8",
+    glowColor: "rgba(99, 102, 241, 0.28)",
+  },
+  {
+    id: "list-peach",
+    defaultName: "Peach List",
+    color: "peach",
+    primaryColor: "#ff9f68",
+    accentColor: "#ffc19e",
+    glowColor: "rgba(255, 159, 104, 0.28)",
+  },
+  {
+    id: "list-rose",
+    defaultName: "Rose List",
+    color: "rose",
+    primaryColor: "#fb7185",
+    accentColor: "#fda4af",
+    glowColor: "rgba(251, 113, 133, 0.28)",
   },
 ];
 
@@ -262,6 +262,64 @@ export function getItemDedupeKey(text) {
 
 function getListPaletteForIndex(index = 0) {
   return LIST_COLOR_PRESETS[index % LIST_COLOR_PRESETS.length];
+}
+
+function findPresetIndexForList(list) {
+  if (!list) return -1;
+  const colorSlug = String(list.color || "")
+    .trim()
+    .toLowerCase();
+  if (colorSlug) {
+    const byColor = LIST_COLOR_PRESETS.findIndex(
+      (palette) => palette.color === colorSlug,
+    );
+    if (byColor !== -1) return byColor;
+  }
+  const primaryHex = String(list.primaryColor || "")
+    .trim()
+    .toLowerCase();
+  if (primaryHex) {
+    const byHex = LIST_COLOR_PRESETS.findIndex(
+      (palette) => palette.primaryColor.toLowerCase() === primaryHex,
+    );
+    if (byHex !== -1) return byHex;
+  }
+  if (list.id) {
+    return LIST_COLOR_PRESETS.findIndex((palette) => palette.id === list.id);
+  }
+  return -1;
+}
+
+/**
+ * Pick the next list colour in sequence without repeating any colour already
+ * worn by an active list. Indexing by `state.lists.length` broke the moment a
+ * middle list was deleted: `[Blue, Pink, Yellow]` minus `Pink` left length 2,
+ * so the next `+` minted a second `Yellow` right beside the first. Advancing
+ * from the rightmost list's preset index and skipping occupied colours keeps
+ * the sequence moving forward around all 12 hues with zero twin tabs.
+ */
+export function pickNextListPalette(existingLists = []) {
+  const total = LIST_COLOR_PRESETS.length;
+  const lists = Array.isArray(existingLists) ? existingLists : [];
+  const usedColors = new Set();
+  let lastPaletteIndex = -1;
+
+  for (const item of lists) {
+    const idx = findPresetIndexForList(item);
+    if (idx !== -1) {
+      usedColors.add(LIST_COLOR_PRESETS[idx].color);
+      lastPaletteIndex = idx;
+    }
+  }
+
+  for (let step = 1; step <= total; step += 1) {
+    const candidate = LIST_COLOR_PRESETS[(lastPaletteIndex + step) % total];
+    if (!usedColors.has(candidate.color)) {
+      return candidate;
+    }
+  }
+
+  return LIST_COLOR_PRESETS[(lastPaletteIndex + 1) % total];
 }
 
 function getListPaletteForRecord(list, index = 0) {
@@ -670,7 +728,7 @@ function createListsStore() {
         return state;
       }
 
-      const palette = getListPaletteForIndex(state.lists.length);
+      const palette = pickNextListPalette(state.lists);
       const resolvedName = getUniqueListName(
         name?.trim() ? name : palette.defaultName,
         state.lists,
@@ -727,9 +785,26 @@ function createListsStore() {
         return state;
       }
 
+      const otherLists = state.lists.filter((list) => list.id !== listId);
+      const sourceIndex = findPresetIndexForList(source);
+      const colorTaken =
+        sourceIndex === -1 ||
+        otherLists.some((list) => findPresetIndexForList(list) === sourceIndex);
+      const assignedPalette = colorTaken
+        ? pickNextListPalette(otherLists)
+        : null;
+
       const timestamp = new Date().toISOString();
       const newList = {
         ...source,
+        ...(assignedPalette
+          ? {
+              color: assignedPalette.color,
+              primaryColor: assignedPalette.primaryColor,
+              accentColor: assignedPalette.accentColor,
+              glowColor: assignedPalette.glowColor,
+            }
+          : {}),
         id: generateListId(),
         items: Array.isArray(source.items) ? source.items : [],
         isLive: false,
@@ -820,7 +895,7 @@ function createListsStore() {
   }
 
   // Add an item to a specific list (or active list by default)
-  function addItem(text, listId = null) {
+  function addItem(text, listId = null, options = {}) {
     // Tags come off the RAW text: normalizeItemText strips trailing punctuation
     // and would happily mangle a hashtag on the way past.
     const vocab = getAllTags();
@@ -849,29 +924,51 @@ function createListsStore() {
               return list;
             }
 
+            const nowTime = Date.now();
+            const newItem = {
+              id: crypto.randomUUID(),
+              text: normalizedText,
+              checked: false,
+              tags,
+              addedAt: nowTime, // entry-date sort key
+              updatedAt: nowTime,
+            };
             const nextCount = list.items.length + 1;
             result = createSuccessResult({
+              itemId: newItem.id,
               addedCount: 1,
               message: getLongListNudge(list.items.length, nextCount),
             });
-            const nowTime = Date.now();
+
+            const insertPosition =
+              options?.position === "top" || options?.position === "bottom"
+                ? options.position
+                : get(listPreferences).newItems;
+            const afterItemId = options?.afterItemId ?? null;
+
+            let nextItems = null;
+            if (afterItemId !== null) {
+              const anchorIdx = list.items.findIndex(
+                (item) => !item.checked && item.id === afterItemId,
+              );
+              if (anchorIdx !== -1) {
+                nextItems = [
+                  ...list.items.slice(0, anchorIdx + 1),
+                  newItem,
+                  ...list.items.slice(anchorIdx + 1),
+                ];
+              }
+            }
+            if (!nextItems) {
+              nextItems =
+                insertPosition === "bottom"
+                  ? [...list.items, newItem]
+                  : [newItem, ...list.items];
+            }
+
             return {
               ...list,
-              items: withCompletedLast(
-                (() => {
-                  const newItem = {
-                    id: crypto.randomUUID(),
-                    text: normalizedText,
-                    checked: false,
-                    tags,
-                    addedAt: nowTime, // entry-date sort key
-                    updatedAt: nowTime,
-                  };
-                  return get(listPreferences).newItems === "bottom"
-                    ? [...list.items, newItem]
-                    : [newItem, ...list.items];
-                })(),
-              ),
+              items: withCompletedLast(nextItems),
               updatedAt: new Date(nowTime).toISOString(),
             };
           }
@@ -1280,8 +1377,24 @@ function createListsStore() {
         updatedAt = new Date().toISOString();
       }
 
+      const seedPalette =
+        existingIndex === -1 && !merged.color && !merged.primaryColor
+          ? pickNextListPalette(state.lists)
+          : null;
       const normalizedList = normalizeListRecord(
-        { ...merged, ...stamped, updatedAt },
+        {
+          ...merged,
+          ...(seedPalette
+            ? {
+                color: seedPalette.color,
+                primaryColor: seedPalette.primaryColor,
+                accentColor: seedPalette.accentColor,
+                glowColor: seedPalette.glowColor,
+              }
+            : {}),
+          ...stamped,
+          updatedAt,
+        },
         existingIndex === -1 ? state.lists.length : existingIndex,
       );
 

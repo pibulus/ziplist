@@ -444,6 +444,8 @@
         aria-label="Previous list"
       >
         <svg
+          width="20"
+          height="20"
           aria-hidden="true"
           viewBox="0 0 24 24"
           fill="none"
@@ -457,6 +459,13 @@
       </button>
     {/if}
     <div class="pagination-dots">
+      {#if lists.length === 0}
+        <span
+          class="dot is-boot-dot active"
+          style="--dot-primary: #62c9e8; --dot-accent: #93dcf0"
+          aria-hidden="true"
+        ></span>
+      {/if}
       {#each lists as list, i}
         <button
           type="button"
@@ -489,6 +498,8 @@
         aria-label="Next list"
       >
         <svg
+          width="20"
+          height="20"
           aria-hidden="true"
           viewBox="0 0 24 24"
           fill="none"
@@ -504,6 +515,27 @@
   </div>
 
   <div class="lists-wrapper" bind:this={wrapperEl} style="--tilt: {tilt}deg;">
+    {#if lists.length === 0}
+      <div
+        class="list-slide active"
+        style="--list-primary: #62c9e8; --list-accent: #93dcf0; --sx: 0%; --away: 0"
+        aria-hidden="true"
+      >
+        <div class="list-content-wrapper">
+          <div class="zl-card-boot-shell">
+            <div class="zl-boot-header">
+              <span class="zl-boot-dot"></span>
+              <span class="zl-boot-line"></span>
+            </div>
+            <div class="zl-boot-rows">
+              <div class="zl-boot-row"></div>
+              <div class="zl-boot-row"></div>
+              <div class="zl-boot-row is-short"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {/if}
     {#each lists as list, i (list.id)}
       {@const sx = slideX(i, x)}
       {@const isMovingDeck = isSwiping || spinning || rafId !== null}
@@ -627,6 +659,86 @@
     width: 100%;
     height: 0;
     pointer-events: none;
+  }
+
+  /* Calm Soft Neo-Toybrut paper shell rendered during SSR before localStorage
+     hydrates — prevents a naked "+" button floating in empty air and eliminates
+     the card pop-in jump on load. */
+  .zl-card-boot-shell {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: min(540px, calc(100vw - 2rem));
+    min-height: 290px;
+    margin: 1rem auto 2rem;
+    padding: 1.35rem;
+    border-radius: var(--zl-card-border-radius, 28px);
+    border: var(--zl-card-border-width, 3px) solid
+      var(--zl-card-border-color, #1e1714);
+    background-color: var(--zl-card-bg-gradient-color-start, #fff9f0);
+    box-shadow:
+      inset 0 10px 0 0 var(--list-primary, #62c9e8),
+      var(--zl-card-box-shadow, 8px 8px 0 #1e1714);
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .zl-boot-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(30, 23, 20, 0.1);
+  }
+
+  .zl-boot-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #62c9e8;
+    border: 2px solid rgba(30, 23, 20, 0.75);
+    flex-shrink: 0;
+  }
+
+  .zl-boot-line {
+    width: 5rem;
+    height: 0.7rem;
+    border-radius: 999px;
+    background: rgba(30, 23, 20, 0.08);
+  }
+
+  .zl-boot-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .zl-boot-row {
+    height: 52px;
+    border-radius: 18px;
+    border: 2px solid rgba(30, 23, 20, 0.08);
+    background: rgba(255, 254, 247, 0.65);
+  }
+
+  .zl-boot-row.is-short {
+    width: 82%;
+  }
+
+  @media (max-width: 480px) {
+    .zl-card-boot-shell {
+      max-width: 100%;
+      min-height: 250px;
+      margin-top: 0.25rem;
+      margin-bottom: 0.35rem;
+      padding: 0.75rem 0.65rem 0.95rem;
+      border-radius: 18px;
+    }
+
+    .zl-boot-row {
+      height: 48px;
+      border-radius: 14px;
+    }
   }
 
   .pagination-dots {

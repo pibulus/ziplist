@@ -56,28 +56,36 @@ export class FirstVisitService {
       this.pendingIntroResolve = resolve;
       this.introTimer = setTimeout(() => {
         this.introTimer = null;
-        const modal = document.getElementById(modalId);
-        if (modal) {
-          this.log("Opening intro modal on first visit");
+        const openWhenStyled = () => {
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            this.log("Opening intro modal on first visit");
 
-          // Set up event listener to handle modal close
-          const handleClose = () => {
-            this.log("Intro modal closed, marking intro as seen");
-            this.markIntroAsSeen();
-            this.clearIntroModalListener();
+            // Set up event listener to handle modal close
+            const handleClose = () => {
+              this.log("Intro modal closed, marking intro as seen");
+              this.markIntroAsSeen();
+              this.clearIntroModalListener();
+              this.pendingIntroResolve = null;
+              resolve(true);
+            };
+
+            this.introModal = modal;
+            this.introCloseHandler = handleClose;
+            modal.addEventListener("close", handleClose, { once: true });
+            modalService.openModal(modalId);
+          } else {
+            console.error("Intro modal element not found");
+            this.log("Intro modal element not found");
             this.pendingIntroResolve = null;
-            resolve(true);
-          };
+            resolve(false);
+          }
+        };
 
-          this.introModal = modal;
-          this.introCloseHandler = handleClose;
-          modal.addEventListener("close", handleClose, { once: true });
-          modalService.openModal(modalId);
+        if (document.readyState === "complete") {
+          openWhenStyled();
         } else {
-          console.error("Intro modal element not found");
-          this.log("Intro modal element not found");
-          this.pendingIntroResolve = null;
-          resolve(false);
+          window.addEventListener("load", openWhenStyled, { once: true });
         }
       }, delay);
     });

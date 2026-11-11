@@ -39,6 +39,17 @@
   let showMoveTargets = false;
   $: if (!isMoving) showMoveTargets = false;
 
+  function revealTray(node) {
+    const timer = setTimeout(() => {
+      node.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+    }, 180);
+    return {
+      destroy() {
+        clearTimeout(timer);
+      },
+    };
+  }
+
   /* Every tagged item wears its colour-coded #tag chips right on the row so
      categories are scannable at rest, and tapping any chip filters the list
      by that tag (lighting up .is-active). Shared with the edit ghost so a
@@ -142,8 +153,15 @@
         ? 'animate-pop'
         : ''}"
     >
-      <svg class="zl-check-svg" viewBox="0 0 24 24" aria-hidden="true">
-        <path class="zl-check-path" d="M5 13l4.2 4.2L19 7" />
+      <svg
+        class="zl-check-svg"
+        width="16"
+        height="16"
+        fill="none"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path class="zl-check-path" fill="none" d="M5 13l4.2 4.2L19 7" />
       </svg>
     </span>
   </label>
@@ -174,6 +192,7 @@
       spellcheck="false"
       name="zl-entry-item"
       inputmode="text"
+      enterkeyhint="next"
       data-1p-ignore
       data-lpignore="true"
       data-form-type="other"
@@ -289,6 +308,8 @@
       {#if isMoving}
         <svg
           class="zl-item-handle-icon"
+          width="20"
+          height="20"
           viewBox="0 0 20 20"
           fill="none"
           stroke="currentColor"
@@ -301,6 +322,8 @@
       {:else if !item.checked && activeItemsCount > 1}
         <svg
           class="zl-item-handle-icon"
+          width="20"
+          height="20"
           viewBox="0 0 20 20"
           fill="currentColor"
           aria-hidden="true"
@@ -315,6 +338,8 @@
       {:else}
         <svg
           class="zl-item-handle-icon"
+          width="20"
+          height="20"
           viewBox="0 0 20 20"
           fill="currentColor"
           aria-hidden="true"
@@ -333,17 +358,18 @@
 {#if isMoving}
   <div
     class="zl-item-tray"
+    use:revealTray
     transition:slide={{ duration: 200, easing: cubicOut }}
   >
     {#if !showMoveTargets}
       <div class="zl-item-tray-actions">
-        {#if isPortal}
+        {#if !item.checked}
           <button
             type="button"
             class="zl-item-tray-btn zl-item-tray-edit"
             data-swipe-ignore="true"
-            title="Edit portal target"
-            aria-label="Edit portal target"
+            title={isPortal ? "Edit portal target" : "Edit item"}
+            aria-label={isPortal ? "Edit portal target" : `Edit ${item.text}`}
             on:click|stopPropagation={() => {
               onRequestMove(null);
               onStartEdit(item);
@@ -351,6 +377,8 @@
           >
             <svg
               class="zl-tray-icon"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -368,7 +396,23 @@
           </button>
         {/if}
 
-        {#if moveTargets.length > 0}
+        {#if moveTargets.length === 1}
+          {@const singleTarget = moveTargets[0]}
+          <button
+            type="button"
+            class="zl-item-tray-btn zl-item-tray-move zl-item-tray-move-direct"
+            data-swipe-ignore="true"
+            style={singleTarget.primary
+              ? `--target-colour: ${singleTarget.primary}`
+              : ""}
+            title={`Move to ${singleTarget.name}`}
+            aria-label={`Move ${item.text} to ${singleTarget.name}`}
+            on:click|stopPropagation={() => onMoveTo(item.id, singleTarget.id)}
+          >
+            <span class="zl-target-dot" aria-hidden="true"></span>
+            <span class="zl-target-name">To {singleTarget.name}</span>
+          </button>
+        {:else if moveTargets.length > 1}
           <button
             type="button"
             class="zl-item-tray-btn zl-item-tray-move"
@@ -379,6 +423,8 @@
           >
             <svg
               class="zl-tray-icon"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -406,6 +452,8 @@
         >
           <svg
             class="zl-tray-icon"
+            width="15"
+            height="15"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -426,9 +474,23 @@
     {:else}
       <div
         class="zl-item-move-panel"
+        use:revealTray
         transition:slide={{ duration: 150, easing: cubicOut }}
       >
-        <span class="zl-item-move-label">Move to</span>
+        <div class="zl-item-move-header">
+          <span class="zl-item-move-label">Move to list</span>
+          <button
+            type="button"
+            class="zl-item-move-back"
+            data-swipe-ignore="true"
+            title="Back to item actions"
+            aria-label="Back to item actions"
+            on:click|stopPropagation={() => (showMoveTargets = false)}
+          >
+            <span aria-hidden="true">←</span>
+            <span>Back</span>
+          </button>
+        </div>
         <div class="zl-item-move-targets">
           {#each moveTargets as target (target.id)}
             <button
@@ -442,19 +504,10 @@
             >
               <span class="zl-target-dot" aria-hidden="true"></span>
               <span class="zl-target-name">{target.name}</span>
+              <span class="zl-target-arrow" aria-hidden="true">→</span>
             </button>
           {/each}
         </div>
-        <button
-          type="button"
-          class="zl-item-move-cancel"
-          data-swipe-ignore="true"
-          title="Back"
-          aria-label="Cancel move"
-          on:click|stopPropagation={() => (showMoveTargets = false)}
-        >
-          ✕
-        </button>
       </div>
     {/if}
   </div>

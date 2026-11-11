@@ -45,6 +45,8 @@
            on iOS that was visibly off-centre in the circle. -->
       <svg
         class="modal-close-glyph"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"

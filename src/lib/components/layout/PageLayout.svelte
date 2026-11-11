@@ -385,14 +385,14 @@
     }
   }
 
-  /* Desktop layout - start from top */
+  /* Desktop layout - start from top with room for the active list card above the fold */
   @media (min-width: 1024px) {
     .page-shell {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      /* HERO-SPEC.md: family-standard desktop top padding (talktype gold) */
-      padding-top: 15vh !important;
+      gap: 0.9rem;
+      padding-top: clamp(1.25rem, 3.5vh, 3.25rem) !important;
       padding-bottom: 10vh !important;
     }
 

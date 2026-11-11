@@ -366,6 +366,8 @@
     ].includes(state);
   }
 
+  let discardingCurrentTake = false;
+
   function stopActiveRecording() {
     if (isStoppingRecording) return;
     isStoppingRecording = true;
@@ -378,6 +380,33 @@
       return;
     }
 
+    resetRecordingSession();
+    audioActions.updateState(AudioStates.IDLE);
+  }
+
+  function discardActiveRecording() {
+    if (isStoppingRecording) return;
+    discardingCurrentTake = true;
+    isStoppingRecording = true;
+    isHolding = false;
+    holdReleasedWhilePending = false;
+    soundService.close({ force: true });
+    hapticService.impact("light");
+
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      audioActions.updateState(AudioStates.STOPPING);
+      try {
+        mediaRecorder.stop();
+      } catch {
+        discardingCurrentTake = false;
+        resetRecordingSession();
+        audioActions.updateState(AudioStates.IDLE);
+      }
+      wakeLockService.release();
+      return;
+    }
+
+    discardingCurrentTake = false;
     resetRecordingSession();
     audioActions.updateState(AudioStates.IDLE);
   }
@@ -705,6 +734,15 @@
         };
 
         recorder.onstop = async () => {
+          if (discardingCurrentTake) {
+            discardingCurrentTake = false;
+            audioChunks = [];
+            resetRecordingSession();
+            audioActions.updateState(AudioStates.IDLE);
+            uiActions.setScreenReaderMessage("Recording discarded.");
+            return;
+          }
+
           audioActions.updateState(AudioStates.PROCESSING); // Indicate processing starts
           broadcastLiveVoiceActivity({
             active: true,
@@ -1000,6 +1038,14 @@
      the top, so every landing page shipped two of every og/twitter tag and
      three canonicals. One emitter now; the route supplies the values. */
   export let seo = {};
+
+  $: if (browser) {
+    if ($listFirstMode === "true") {
+      document.documentElement.setAttribute("data-list-first", "true");
+    } else {
+      document.documentElement.removeAttribute("data-list-first");
+    }
+  }
 </script>
 
 <PageLayout {...seo} listFirst={$listFirstMode === "true"}>
@@ -1013,7 +1059,7 @@
 
   <!-- RecordButtonWithTimer above the List with TalkType canon button-section spacing -->
   <div
-    class="button-section relative flex w-full flex-col items-center justify-center pb-4 pt-2"
+    class="button-section relative flex w-full flex-col items-center justify-center pb-3 pt-1"
     class:list-first-record-button={$listFirstMode === "true"}
   >
     <div
@@ -1028,6 +1074,7 @@
         recordingDuration={$recordingDuration}
         progress={$transcriptionProgress}
         on:click={handleToggleRecording}
+        on:discard={discardActiveRecording}
         on:holdstart={handleHoldStart}
         on:holdend={handleHoldEnd}
         on:preload={preloadSpeechModel}

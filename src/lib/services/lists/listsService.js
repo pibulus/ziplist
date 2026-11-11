@@ -259,10 +259,11 @@ export class ListsService {
    * Add a single item to the active list
    * @param {string} text - Item text
    * @param {string} [listId] - Optional list ID
+   * @param {Object} [options] - Optional placement hints ({ position, afterItemId })
    */
-  addItem(text, listId = null) {
+  addItem(text, listId = null, options = {}) {
     if (!text) return false;
-    return listsStore.addItem(text, listId);
+    return listsStore.addItem(text, listId, options);
   }
 
   /**

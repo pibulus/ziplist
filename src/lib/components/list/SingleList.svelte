@@ -112,6 +112,8 @@
   let draftItemActive = false;
   let draftItemText = "";
   let draftInputNode = null;
+  let draftAfterItemId = null;
+  let isCommittingDraft = false;
   let editingListName = false;
   let editedListName = "";
   let shareStatus = null; // To track share operation status
@@ -157,6 +159,10 @@
   let touchDragAutoScrollFrame = null;
   let touchDragListenersAttached = false;
   let shareStatusTimer = null;
+  let fatePickedItemId = null;
+  let fatePickTimer = null;
+  let diceRolling = false;
+  let diceRollTimer = null;
   const celebrationTimers = new Set();
 
   // Props
@@ -178,6 +184,11 @@
     if (nextListId) {
       unsubscribe = listsStore.subscribe((state) => {
         allLists = state.lists || [];
+        if (state.activeListId && state.activeListId !== nextListId) {
+          movingItemId = null;
+          shareTrayOpen = false;
+          manageTrayOpen = false;
+        }
         const foundList = allLists.find((l) => l.id === nextListId);
         if (foundList) list = foundList;
       });
@@ -202,12 +213,15 @@
       liveListsService.broadcastItemFocus(previousListIdentity, null);
       draftItemActive = false;
       draftItemText = "";
+      draftAfterItemId = null;
       editingItemId = null;
       editedItemText = "";
+      movingItemId = null;
       // Clear drag state so a mid-drag list switch doesn't leave a phantom indicator
       draggedItemId = null;
       dragOverItemId = null;
       dragOverPosition = "before";
+      fatePickedItemId = null;
     }
     previousListIdentity = list.id;
     isLive = liveListsService.isLive(list.id);
@@ -287,6 +301,8 @@
     }
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
     if (shareStatusTimer) clearTimeout(shareStatusTimer);
+    if (fatePickTimer) clearTimeout(fatePickTimer);
+    if (diceRollTimer) clearTimeout(diceRollTimer);
     clearCelebrationTimers();
     clearTouchDragLongPressTimer();
     stopTouchDragAutoScroll();
@@ -681,6 +697,37 @@
     ? sortedItems.filter((item) => item.tags?.includes(activeTagFilter))
     : sortedItems;
   $: renderedActiveItems = filteredSortedItems.filter((item) => !item.checked);
+  $: inlineDraftAnchorId =
+    draftItemActive &&
+    draftAfterItemId !== null &&
+    renderedActiveItems.some((item) => item.id === draftAfterItemId)
+      ? draftAfterItemId
+      : null;
+  $: renderedActiveEntries = (() => {
+    const entries = renderedActiveItems.map((item, index) => ({
+      id: item.id,
+      isDraft: false,
+      item,
+      step:
+        renderedActiveItems.length > 1
+          ? index / (renderedActiveItems.length - 1)
+          : 0,
+    }));
+    if (inlineDraftAnchorId) {
+      const anchorIdx = entries.findIndex(
+        (entry) => entry.id === inlineDraftAnchorId,
+      );
+      if (anchorIdx !== -1) {
+        entries.splice(anchorIdx + 1, 0, {
+          id: "__inline_draft__",
+          isDraft: true,
+          item: null,
+          step: entries[anchorIdx].step,
+        });
+      }
+    }
+    return entries;
+  })();
   $: renderedCompletedItems = filteredSortedItems.filter(
     (item) => item.checked,
   );
@@ -862,17 +909,17 @@
   }
 
   function registerItemNode(node, itemId) {
-    itemNodes.set(itemId, node);
+    if (itemId) itemNodes.set(itemId, node);
 
     return {
       update(nextItemId) {
         if (nextItemId === itemId) return;
-        itemNodes.delete(itemId);
+        if (itemId) itemNodes.delete(itemId);
         itemId = nextItemId;
-        itemNodes.set(itemId, node);
+        if (itemId) itemNodes.set(itemId, node);
       },
       destroy() {
-        itemNodes.delete(itemId);
+        if (itemId) itemNodes.delete(itemId);
       },
     };
   }
@@ -1572,13 +1619,42 @@
     }
   }
 
+  $: checkableActiveItems = activeItems.filter(isCheckableItem);
+
   // ── Fate: let the list decide ──────────────────────────────────────────
   // The opposite of deciding. One unchecked item, named out loud, so a stuck
   // evening has somewhere to start. Deliberately not a streak or a score.
   function pickOneForMe() {
-    const pool = activeItems;
+    const pool = checkableActiveItems;
     if (pool.length < 2) return;
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    const candidates =
+      pool.length > 1 && fatePickedItemId
+        ? pool.filter((candidate) => candidate.id !== fatePickedItemId)
+        : pool;
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+
+    diceRolling = false;
+    if (diceRollTimer) clearTimeout(diceRollTimer);
+    requestAnimationFrame(() => {
+      diceRolling = true;
+      diceRollTimer = setTimeout(() => {
+        diceRolling = false;
+        diceRollTimer = null;
+      }, 420);
+    });
+
+    fatePickedItemId = chosen.id;
+    if (fatePickTimer) clearTimeout(fatePickTimer);
+    fatePickTimer = setTimeout(() => {
+      fatePickedItemId = null;
+      fatePickTimer = null;
+    }, 5200);
+
+    itemNodes.get(chosen.id)?.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "nearest",
+    });
+
     showListStatus(`Fate picks: ${chosen.text}`, true, 5200);
     hapticService.impact("medium");
     soundService.add({ force: true });
@@ -1688,6 +1764,7 @@
     if (shareTrayOpen) {
       manageTrayOpen = false;
       shareInputMode = null;
+      movingItemId = null;
     }
     if (!shareTrayOpen) {
       shareInputMode = null;
@@ -1703,8 +1780,12 @@
 
   function toggleManageTray() {
     manageTrayOpen = !manageTrayOpen;
-    if (manageTrayOpen) shareTrayOpen = false;
-    else shareInputMode = null;
+    if (manageTrayOpen) {
+      shareTrayOpen = false;
+      movingItemId = null;
+    } else {
+      shareInputMode = null;
+    }
     soundService.select();
   }
 
@@ -2320,8 +2401,10 @@
     if (item.checked) return;
     if (performance.now() - lastTouchDragCommitTime < 320) return;
     clearDraftActivity();
+    movingItemId = null;
     draftItemActive = false;
     draftItemText = "";
+    draftAfterItemId = null;
     editingItemId = item.id;
     const tagSuffix = item.tags?.length
       ? ` ${item.tags.map((t) => `#${t}`).join(" ")}`
@@ -2401,9 +2484,17 @@
   }
 
   function handleEditItemKeyDown(event) {
+    if (event.isComposing || event.keyCode === 229) return;
     if (event.key === "Enter") {
+      event.preventDefault();
+      const currentId = editingItemId;
+      const hadText = Boolean(editedItemText.trim());
       saveItemEdit();
+      if (hadText && currentId !== null) {
+        void startDraftItem({ afterItemId: currentId });
+      }
     } else if (event.key === "Escape") {
+      event.preventDefault();
       cancelItemEdit();
     } else if (event.key === "Backspace" && (event.metaKey || event.ctrlKey)) {
       // Cmd/Ctrl+Backspace while editing deletes the whole item.
@@ -2827,72 +2918,99 @@
     if (commits) startDraftItem();
   }
 
-  async function startDraftItem() {
+  async function startDraftItem({ afterItemId = null } = {}) {
     hapticService.selection();
     soundService.select();
     clearItemFocus();
+    movingItemId = null;
     editingItemId = null;
     editedItemText = "";
+    draftAfterItemId = afterItemId;
     draftItemActive = true;
     draftItemText = "";
     broadcastDraftActivity({ text: "", mode: "typing" });
 
     await tick();
-    draftInputNode?.scrollIntoView({ block: "center", behavior: "smooth" });
-    draftInputNode?.focus();
+    draftInputNode?.focus({ preventScroll: true });
+    draftInputNode?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   // Returns true when an item was actually committed, so callers (e.g. Enter
   // for rapid-fire adds) know whether to keep the draft open for the next one.
-  function saveDraftItem({ keepAdding = false } = {}) {
+  async function saveDraftItem(options = {}) {
+    const keepAdding =
+      options !== null &&
+      typeof options === "object" &&
+      options.keepAdding === true;
+
+    if (isCommittingDraft && !keepAdding) {
+      return false;
+    }
+
     const rawTrimmed = draftItemText.trim();
     const newText = /^(?:##|\u2192|->)\s*$/.test(rawTrimmed) ? "" : rawTrimmed;
     let didAdd = false;
 
-    if (newText) {
-      const result = listsService.addItem(newText, list.id);
-      if (!result.ok) {
-        showListStatus(result.message || "That item needs one more try.");
-        hapticService.notification("warning");
-        soundService.locked();
-        if (!keepAdding) {
-          draftItemActive = false;
-          draftItemText = "";
-          clearDraftActivity();
+    isCommittingDraft = true;
+    try {
+      if (newText) {
+        const result = listsService.addItem(newText, list.id, {
+          afterItemId: draftAfterItemId,
+          position: "bottom",
+        });
+        if (!result?.ok) {
+          showListStatus(result?.message || "That item needs one more try.");
+          hapticService.notification("warning");
+          soundService.locked();
+          if (!keepAdding) {
+            draftItemActive = false;
+            draftAfterItemId = null;
+            draftItemText = "";
+            clearDraftActivity();
+          }
+          return false;
         }
-        return false;
+
+        if (result.message) {
+          showListStatus(result.message, true);
+        }
+        if (draftAfterItemId !== null && result.itemId) {
+          draftAfterItemId = result.itemId;
+        }
+        soundService.add({ force: true });
+        didAdd = true;
       }
 
-      if (result.message) {
-        showListStatus(result.message, true);
+      hapticService.selection();
+
+      // Rapid-fire: a committed Enter clears the field, keeps the draft row
+      // open directly beneath the item just typed, and restores focus after
+      // the DOM updates so keyboard list-making flows uninterrupted.
+      if (keepAdding && didAdd) {
+        draftItemText = "";
+        broadcastDraftActivity({ text: "", mode: "typing" });
+        await tick();
+        draftInputNode?.focus({ preventScroll: true });
+        draftInputNode?.scrollIntoView({
+          block: "nearest",
+          behavior: "smooth",
+        });
+        return true;
       }
-      soundService.add({ force: true });
-      didAdd = true;
-    }
 
-    hapticService.selection();
-
-    // Rapid-fire: a committed Enter clears the field but keeps the draft row
-    // open and focused so you can keep piling items in without re-reaching for
-    // the button. An empty Enter (nothing to add) closes out like before.
-    if (keepAdding && didAdd) {
+      draftItemActive = false;
+      draftAfterItemId = null;
       draftItemText = "";
-      broadcastDraftActivity({ text: "", mode: "typing" });
-      draftInputNode?.focus();
-      // Each add pushes the draft row one item lower — keep it above the
-      // open keyboard instead of letting it drift under it.
-      draftInputNode?.scrollIntoView({ block: "center", behavior: "smooth" });
-      return true;
+      clearDraftActivity();
+      return didAdd;
+    } finally {
+      isCommittingDraft = false;
     }
-
-    draftItemActive = false;
-    draftItemText = "";
-    clearDraftActivity();
-    return didAdd;
   }
 
   function cancelDraftItem() {
     draftItemActive = false;
+    draftAfterItemId = null;
     draftItemText = "";
     clearDraftActivity();
     hapticService.selection();
@@ -2900,10 +3018,13 @@
   }
 
   function handleDraftItemKeyDown(event) {
+    if (event.isComposing || event.keyCode === 229) return;
     if (event.key === "Enter") {
+      event.preventDefault();
       // Keep the draft open on Enter for rapid-fire adds; blur/Escape close it.
-      saveDraftItem({ keepAdding: true });
+      void saveDraftItem({ keepAdding: true });
     } else if (event.key === "Escape") {
+      event.preventDefault();
       cancelDraftItem();
     }
   }
@@ -3083,233 +3204,137 @@
                     >
                   {/each}
                 </button>
-                {#if showListManagement}
-                  <!-- The QR button that used to sit here was a SECOND caller
-                       of qrThisList — the share tray's QR pill is the first,
-                       same function, no arguments, identical behaviour. Going
-                       live silently added a duplicate entry point to a header
-                       that already had six controls. Removed, not relocated:
-                       the share tray is where sharing lives. -->
-                  <button
-                    type="button"
-                    class="zl-live-stop-btn"
-                    on:click|stopPropagation={handleStopLive}
-                    title="Stop live sharing"
-                    aria-label="Stop live sharing for this list"
-                  >
-                    <svg
-                      class="zl-header-icon"
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                {/if}
               </div>
             {/if}
           </div>
         {/if}
       </div>
 
-      <div class="zl-list-actions">
-        {#if activeItems.length >= 3}
-          <button
-            type="button"
-            class="zl-shuffle-button"
-            on:click={tidyActiveItems}
-            data-tip="Tidy the order"
-            aria-label={`Tidy the items in ${list.name || "this list"}`}
-            disabled={isTidying}
-          >
-            <svg
-              class="zl-header-icon"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+      {#if !editingListName}
+        <div class="zl-list-actions">
+          {#if checkableActiveItems.length >= 2}
+            <button
+              type="button"
+              class="zl-shuffle-button zl-dice-button"
+              class:is-rolling={diceRolling}
+              on:click={pickOneForMe}
+              data-tip="Let fate pick one"
+              aria-label={`Pick a random item from ${list.name || "this list"}`}
             >
-              <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"
-              ></path>
-              <path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"
-              ></path>
-            </svg>
-          </button>
-        {/if}
-        {#if activeItems.length >= 2}
-          <button
-            type="button"
-            class="zl-shuffle-button"
-            on:click={pickOneForMe}
-            data-tip="Pick one for me"
-            aria-label={`Pick one item from ${list.name || "this list"}`}
-          >
-            <svg
-              class="zl-header-icon"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
-              <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"></circle>
-              <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"></circle>
-              <circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"></circle>
-              <circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"></circle>
-            </svg>
-          </button>
-        {/if}
-        {#if activeItems.length >= 3}
-          <button
-            type="button"
-            class="zl-shuffle-button"
-            on:click={shuffleActiveItems}
-            data-tip="Shuffle the order"
-            aria-label={`Shuffle the items in ${list.name || "this list"}`}
-          >
-            <svg
-              class="zl-header-icon"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle
-                cx="8.5"
-                cy="8.5"
-                r="1.5"
-                fill="currentColor"
-                stroke="none"
-              ></circle>
-              <circle
-                cx="15.5"
-                cy="15.5"
-                r="1.5"
-                fill="currentColor"
-                stroke="none"
-              ></circle>
-              <circle
-                cx="15.5"
-                cy="8.5"
-                r="1.5"
-                fill="currentColor"
-                stroke="none"
-              ></circle>
-              <circle
-                cx="8.5"
-                cy="15.5"
-                r="1.5"
-                fill="currentColor"
-                stroke="none"
-              ></circle>
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"
-              ></circle>
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="zl-sort-button"
-            class:is-reversed={sortNewestFirst}
-            on:click={sortItemsByAdded}
-            data-tip={sortNewestFirst ? "Newest first" : "Oldest first"}
-            aria-label={`Sort ${list.name || "this list"} ${
-              sortNewestFirst ? "newest first" : "oldest first"
-            }`}
-          >
-            <svg
-              class="zl-header-icon"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
-              ></path>
-              <path d="M3 3v5h5"></path>
-              <path d="M12 7v5l4 2"></path>
-            </svg>
-          </button>
-        {/if}
+              <svg
+                class="zl-header-icon"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="4.5"></rect>
+                <circle
+                  cx="8.25"
+                  cy="8.25"
+                  r="1.35"
+                  fill="currentColor"
+                  stroke="none"
+                ></circle>
+                <circle
+                  cx="15.75"
+                  cy="8.25"
+                  r="1.35"
+                  fill="currentColor"
+                  stroke="none"
+                ></circle>
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="1.35"
+                  fill="currentColor"
+                  stroke="none"
+                ></circle>
+                <circle
+                  cx="8.25"
+                  cy="15.75"
+                  r="1.35"
+                  fill="currentColor"
+                  stroke="none"
+                ></circle>
+                <circle
+                  cx="15.75"
+                  cy="15.75"
+                  r="1.35"
+                  fill="currentColor"
+                  stroke="none"
+                ></circle>
+              </svg>
+            </button>
+          {/if}
 
-        <button
-          type="button"
-          class="zl-share-button"
-          class:is-open={shareTrayOpen}
-          on:click={toggleShareTray}
-          aria-expanded={shareTrayOpen}
-          data-tip="Share this list"
-          aria-label={`Share ${list.name || "this list"}`}
-        >
-          <svg
-            class="zl-header-icon"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path
-              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
-            ></path>
-            <path
-              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
-            ></path>
-          </svg>
-        </button>
-
-        <!-- Only appears when there is something to unmake. A ⋯ that opens
-             an empty drawer is worse than no ⋯. -->
-        {#if canManageList}
           <button
             type="button"
-            class="zl-manage-button"
-            class:is-open={manageTrayOpen}
-            on:click={toggleManageTray}
-            aria-expanded={manageTrayOpen}
-            data-tip="List options"
-            aria-label={`List options for ${list.name || "this list"}`}
+            class="zl-share-button"
+            class:is-open={shareTrayOpen}
+            class:is-live={isLive}
+            on:click={toggleShareTray}
+            aria-expanded={shareTrayOpen}
+            data-tip={isLive ? "Live sharing options" : "Share this list"}
+            aria-label={`Share ${list.name || "this list"}`}
           >
             <svg
               class="zl-header-icon"
+              width="18"
+              height="18"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="none"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <circle cx="5" cy="12" r="1.9"></circle>
-              <circle cx="12" cy="12" r="1.9"></circle>
-              <circle cx="19" cy="12" r="1.9"></circle>
+              <path
+                d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+              ></path>
+              <path
+                d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+              ></path>
             </svg>
           </button>
-        {/if}
-      </div>
+
+          <!-- Only appears when there is something to manage or order. -->
+          {#if canManageList}
+            <button
+              type="button"
+              class="zl-manage-button"
+              class:is-open={manageTrayOpen}
+              on:click={toggleManageTray}
+              aria-expanded={manageTrayOpen}
+              data-tip="List options"
+              aria-label={`List options for ${list.name || "this list"}`}
+            >
+              <svg
+                class="zl-header-icon"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                stroke="none"
+              >
+                <circle cx="5" cy="12" r="1.9"></circle>
+                <circle cx="12" cy="12" r="1.9"></circle>
+                <circle cx="19" cy="12" r="1.9"></circle>
+              </svg>
+            </button>
+          {/if}
+        </div>
+      {/if}
     </div>
 
     <!-- Getting a list in or out lives WITH the list, not in app Options —
@@ -3348,24 +3373,24 @@
           </div>
         {/if}
 
-        <div
-          class="zl-share-actions"
-          class:two-options={!liveFeatureAvailable}
-          role="group"
-          aria-label="Send this list"
-        >
-          {#if liveFeatureAvailable}
-            <button
-              type="button"
-              class="zl-share-option zl-share-live"
-              disabled={isMakingLive}
-              aria-busy={isMakingLive}
-              title="Share a list that updates together"
-              aria-label="Share live link"
-              on:click={shareAsLiveRoom}
-            >
+        {#if liveFeatureAvailable}
+          <button
+            type="button"
+            class="zl-share-option zl-share-live zl-share-hero"
+            class:is-live-active={isLive}
+            disabled={isMakingLive}
+            aria-busy={isMakingLive}
+            title={isLive
+              ? "Copy or send the live room link"
+              : "Start a live list everyone can edit together"}
+            aria-label={isLive ? "Share live link" : "Start live list"}
+            on:click={shareAsLiveRoom}
+          >
+            <span class="zl-share-hero-main">
               <svg
                 class="zl-pill-icon"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -3378,9 +3403,41 @@
                 <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
                 <path d="M7.76 16.24a6 6 0 0 1 0-8.49" />
               </svg>
-              <span>{isMakingLive ? "Connecting..." : "Share Live Link"}</span>
-            </button>
-          {/if}
+              <span>
+                {isMakingLive
+                  ? "Connecting..."
+                  : isLive
+                    ? "Share Live Link"
+                    : "Start Live List"}
+              </span>
+            </span>
+            <span class="zl-share-hero-sub">
+              {isLive
+                ? "Room open · edits sync live"
+                : "Edit together in real time"}
+            </span>
+          </button>
+        {/if}
+
+        {#if syncPhrase}
+          <!-- The words ARE the link. Say them down the phone, or let someone
+               type them in on another device — same room either way. -->
+          <button
+            type="button"
+            class="zl-share-phrase"
+            on:click={copyPhraseLink}
+            title="Tap to copy live room link"
+          >
+            <span class="zl-share-phrase-kicker">Room words · tap to copy</span>
+            <code>{syncPhrase}</code>
+          </button>
+        {/if}
+
+        <div
+          class="zl-share-secondary"
+          role="group"
+          aria-label="Send snapshot or QR code"
+        >
           <button
             type="button"
             class="zl-share-option"
@@ -3390,6 +3447,8 @@
           >
             <svg
               class="zl-pill-icon"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -3413,6 +3472,8 @@
           >
             <svg
               class="zl-pill-icon"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -3426,39 +3487,40 @@
                 d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
               />
             </svg>
-            <span>Copy List</span>
+            <span>Copy Text</span>
           </button>
         </div>
 
-        {#if syncPhrase}
-          <!-- The words ARE the link. Say them down the phone, or let someone
-               type them in on another device — same room either way. -->
-          <button
-            type="button"
-            class="zl-share-phrase"
-            on:click={copyPhraseLink}
-          >
-            <code>{syncPhrase}</code>
-          </button>
-        {/if}
-
         {#if isLive}
-          <div class="zl-collaborator-badge">
-            <img
-              src={passportFace || getAvatarImage(localAvatar)}
-              alt=""
-              aria-hidden="true"
-            />
-            <label for="zl-collaborator-name-{list.id}">Sharing as</label>
-            <input
-              id="zl-collaborator-name-{list.id}"
-              type="text"
-              value={localAvatar}
-              maxlength="48"
-              autocomplete="off"
-              on:change={saveCollaboratorName}
-              aria-label="Collaborator display name"
-            />
+          <div class="zl-live-footer-row">
+            <div class="zl-collaborator-badge">
+              <img
+                src={passportFace || getAvatarImage(localAvatar)}
+                alt=""
+                aria-hidden="true"
+              />
+              <label for="zl-collaborator-name-{list.id}">As</label>
+              <input
+                id="zl-collaborator-name-{list.id}"
+                type="text"
+                value={localAvatar}
+                maxlength="48"
+                autocomplete="off"
+                on:change={saveCollaboratorName}
+                aria-label="Collaborator display name"
+              />
+            </div>
+            {#if showListManagement}
+              <button
+                type="button"
+                class="zl-share-option zl-share-stop"
+                on:click={handleStopLive}
+                title="End live sharing for this list"
+                aria-label="End live sharing for this list"
+              >
+                <span>End Live</span>
+              </button>
+            {/if}
           </div>
         {/if}
       </div>
@@ -3472,6 +3534,94 @@
         aria-label="Manage this list"
         transition:slide={{ duration: 180, easing: cubicOut }}
       >
+        {#if checkableActiveItems.length >= 2}
+          <div class="zl-order-strip" role="group" aria-label="Order items">
+            {#if activeItems.length >= 3}
+              <button
+                type="button"
+                class="zl-share-option zl-order-pill"
+                on:click={tidyActiveItems}
+                disabled={isTidying}
+                aria-busy={isTidying}
+                title="Group and order items thoughtfully"
+                aria-label={`Tidy the items in ${list.name || "this list"}`}
+              >
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"
+                  ></path>
+                  <path
+                    d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"
+                  ></path>
+                </svg>
+                <span>{isTidying ? "Tidying..." : "Tidy"}</span>
+              </button>
+            {/if}
+            <button
+              type="button"
+              class="zl-share-option zl-order-pill"
+              on:click={shuffleActiveItems}
+              title="Shuffle unchecked items"
+              aria-label={`Shuffle the items in ${list.name || "this list"}`}
+            >
+              <svg
+                class="zl-pill-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M16 3h5v5"></path>
+                <path d="M4 20 21 3"></path>
+                <path d="M21 16v5h-5"></path>
+                <path d="M15 15l6 6"></path>
+                <path d="M4 4l5 5"></path>
+              </svg>
+              <span>Shuffle</span>
+            </button>
+            <button
+              type="button"
+              class="zl-share-option zl-order-pill"
+              class:is-active={sortNewestFirst}
+              on:click={sortItemsByAdded}
+              title={sortNewestFirst
+                ? "Sort newest added first"
+                : "Sort oldest added first"}
+              aria-label={`Sort ${list.name || "this list"} ${
+                sortNewestFirst ? "newest first" : "oldest first"
+              }`}
+            >
+              <svg
+                class="zl-pill-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m3 16 4 4 4-4"></path>
+                <path d="M7 20V4"></path>
+                <path d="m21 8-4-4-4 4"></path>
+                <path d="M17 4v16"></path>
+              </svg>
+              <span>{sortNewestFirst ? "Newest" : "Oldest"}</span>
+            </button>
+          </div>
+        {/if}
         <button
           type="button"
           class="zl-share-option"
@@ -3861,79 +4011,111 @@
           aria-label={`${list.name || "List"} items`}
           in:fade={{ duration: 200 }}
         >
-          {#each renderedActiveItems as item, index (item.id)}
-            {@const itemPortalColor = resolvePortalColor(item)}
+          {#each renderedActiveEntries as entry (entry.id)}
+            {@const item = entry.item}
+            {@const itemPortalColor = item ? resolvePortalColor(item) : ""}
             <li
               class="zl-item"
-              style="--zl-item-step: {renderedActiveItems.length > 1
-                ? index / (renderedActiveItems.length - 1)
-                : 0}{itemPortalColor
+              style="--zl-item-step: {entry.step}{itemPortalColor
                 ? `; --portal-colour: ${itemPortalColor}`
                 : ''}"
-              class:checked={item.checked}
-              class:section-divider={!item.checked &&
-                (/^##\s*/.test(item.text) || item.text.trim() === "---")}
-              class:pure-divider={!item.checked &&
-                (item.text.trim() === "##" || item.text.trim() === "---")}
-              class:portal-item={!item.checked &&
-                /^(\u2192|->)\s+/.test(item.text)}
-              class:editing={editingItemId === item.id}
-              class:dragging={draggedItemId === item.id}
-              class:drag-over={dragOverItemId === item.id}
-              class:drag-over-after={dragOverItemId === item.id &&
+              class:zl-draft-item={entry.isDraft}
+              class:checked={Boolean(item?.checked)}
+              class:section-divider={Boolean(
+                item &&
+                !item.checked &&
+                (/^##\s*/.test(item.text) || item.text.trim() === "---"),
+              )}
+              class:pure-divider={Boolean(
+                item &&
+                !item.checked &&
+                (item.text.trim() === "##" || item.text.trim() === "---"),
+              )}
+              class:portal-item={Boolean(
+                item && !item.checked && /^(\u2192|->)\s+/.test(item.text),
+              )}
+              class:editing={entry.isDraft || editingItemId === item?.id}
+              class:dragging={!entry.isDraft && draggedItemId === item?.id}
+              class:drag-over={!entry.isDraft && dragOverItemId === item?.id}
+              class:drag-over-after={!entry.isDraft &&
+                dragOverItemId === item?.id &&
                 dragOverPosition === "after"}
-              class:just-edited={recentlyEditedItems.has(item.id)}
-              class:settling={settlingItemIds.has(item.id)}
-              class:touch-placeholder={touchDragItemId === item.id}
-              draggable={!item.checked &&
+              class:just-edited={Boolean(
+                item && recentlyEditedItems.has(item.id),
+              )}
+              class:fate-picked={!entry.isDraft &&
+                fatePickedItemId === item?.id}
+              class:settling={Boolean(item && settlingItemIds.has(item.id))}
+              class:touch-placeholder={!entry.isDraft &&
+                touchDragItemId === item?.id}
+              draggable={Boolean(
+                item &&
+                !item.checked &&
                 editingItemId !== item.id &&
-                !touchDragItemId}
-              on:touchstart={(e) => handleRowTouchStart(e, item)}
-              on:dragstart={(e) => handleDragStart(e, item.id)}
+                !touchDragItemId,
+              )}
+              on:touchstart={(e) => item && handleRowTouchStart(e, item)}
+              on:dragstart={(e) => item && handleDragStart(e, item.id)}
               on:dragend={handleDragEnd}
-              on:dragover={(e) => handleDragOver(e, item.id)}
-              on:drop={(e) => handleDrop(e, item.id)}
+              on:dragover={(e) => item && handleDragOver(e, item.id)}
+              on:drop={(e) => item && handleDrop(e, item.id)}
               animate:flip={{
                 duration: touchDragItemId ? 220 : 260,
                 easing: quintOut,
               }}
               in:itemIn
               out:itemOut
-              aria-grabbed={getItemGrabbedState(item.id)}
-              aria-dropeffect="move"
+              aria-grabbed={item ? getItemGrabbedState(item.id) : undefined}
+              aria-dropeffect={item ? "move" : undefined}
               role="listitem"
-              use:registerItemNode={item.id}
+              use:registerItemNode={item ? item.id : null}
             >
-              <ListItemBody
-                listId={list.id}
-                {item}
-                isEditing={editingItemId === item.id}
-                bind:editedItemText
-                showDropIndicator={dragOverItemId === item.id}
-                {dragOverPosition}
-                activeItemsCount={activeItems.length}
-                isTouchActive={touchDragItemId === item.id}
-                isSettling={settlingItemIds.has(item.id)}
-                currentListName={list.name || ""}
-                onToggle={toggleItem}
-                onPressCheckbox={pressCheckbox}
-                onStartEdit={startEditingItem}
-                onSaveEdit={saveItemEdit}
-                onEditKeyDown={handleEditItemKeyDown}
-                onTyping={handleEditTyping}
-                onReorderKeyDown={handleReorderKeyDown}
-                onTouchGrabStart={handleTouchGrabStart}
-                onDelete={deleteItem}
-                remoteFocus={remoteFocusByItem.get(item.id) || null}
-                checkedBloom={checkedBlooms.get(item.id) || null}
-                {moveTargets}
-                isMoving={movingItemId === item.id}
-                onRequestMove={requestMove}
-                onMoveTo={moveItemToList}
-                onNavigateToPortal={handlePortalClick}
-                onFilterTag={toggleActiveTagFilter}
-                {activeTagFilter}
-              />
+              {#if entry.isDraft}
+                <DraftItemRow
+                  bare
+                  listId={list.id}
+                  bind:draftItemText
+                  bind:inputNode={draftInputNode}
+                  staggerDelay={0}
+                  onSaveDraft={saveDraftItem}
+                  onDraftKeyDown={handleDraftItemKeyDown}
+                  onTyping={handleDraftTyping}
+                  onCancelDraft={cancelDraftItem}
+                  {suggestedTags}
+                  {moveTargets}
+                />
+              {:else}
+                <ListItemBody
+                  listId={list.id}
+                  {item}
+                  isEditing={editingItemId === item.id}
+                  bind:editedItemText
+                  showDropIndicator={dragOverItemId === item.id}
+                  {dragOverPosition}
+                  activeItemsCount={activeItems.length}
+                  isTouchActive={touchDragItemId === item.id}
+                  isSettling={settlingItemIds.has(item.id)}
+                  currentListName={list.name || ""}
+                  onToggle={toggleItem}
+                  onPressCheckbox={pressCheckbox}
+                  onStartEdit={startEditingItem}
+                  onSaveEdit={saveItemEdit}
+                  onEditKeyDown={handleEditItemKeyDown}
+                  onTyping={handleEditTyping}
+                  onReorderKeyDown={handleReorderKeyDown}
+                  onTouchGrabStart={handleTouchGrabStart}
+                  onDelete={deleteItem}
+                  remoteFocus={remoteFocusByItem.get(item.id) || null}
+                  checkedBloom={checkedBlooms.get(item.id) || null}
+                  {moveTargets}
+                  isMoving={movingItemId === item.id}
+                  onRequestMove={requestMove}
+                  onMoveTo={moveItemToList}
+                  onNavigateToPortal={handlePortalClick}
+                  onFilterTag={toggleActiveTagFilter}
+                  {activeTagFilter}
+                />
+              {/if}
             </li>
           {/each}
 
@@ -3955,7 +4137,7 @@
             />
           {/each}
 
-          {#if draftItemActive}
+          {#if draftItemActive && !inlineDraftAnchorId}
             <DraftItemRow
               listId={list.id}
               bind:draftItemText
@@ -3968,7 +4150,7 @@
               {suggestedTags}
               {moveTargets}
             />
-          {:else}
+          {:else if !draftItemActive}
             <li
               class="zl-add-row"
               role="listitem"
@@ -4025,6 +4207,7 @@
               class:drag-over-after={dragOverItemId === item.id &&
                 dragOverPosition === "after"}
               class:just-edited={recentlyEditedItems.has(item.id)}
+              class:fate-picked={fatePickedItemId === item.id}
               class:settling={settlingItemIds.has(item.id)}
               class:touch-placeholder={touchDragItemId === item.id}
               draggable={!item.checked &&
@@ -4198,6 +4381,8 @@
               <div class="zl-item-more-button grab-indicator touch-active">
                 <svg
                   class="zl-item-handle-icon"
+                  width="20"
+                  height="20"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                   aria-hidden="true"

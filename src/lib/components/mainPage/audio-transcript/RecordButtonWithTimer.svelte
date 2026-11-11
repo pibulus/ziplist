@@ -4,11 +4,15 @@
     ZIPLIST_CTA_START,
     ZIPLIST_CTA_ADD,
     getRandomFromArray,
+    COPY_MESSAGES,
   } from "$lib/constants";
   import { activeListItems } from "$lib/services/lists/listsStore";
-  import { waveformData } from "$lib/services/infrastructure";
-  import { onMount, onDestroy } from "svelte";
-  import { createEventDispatcher } from "svelte";
+  import {
+    waveformData,
+    uiActions,
+    soundService,
+  } from "$lib/services/infrastructure";
+  import { onMount, onDestroy, tick, createEventDispatcher } from "svelte";
 
   export let recording = false;
   export let transcribing = false;
@@ -22,110 +26,127 @@
   // waveform glyph and goes round, so it can tuck into a corner instead.
   export let compact = false;
 
+  const dispatch = createEventDispatcher();
+
   let recordButtonElement;
-  const WAVE_BAR_COUNT = 12;
-  const PULSE_FADE_RATE = 0.05;
-  const WAVE_FADE_RATE = 0.9;
-  const AUDIO_LEVEL_SENSITIVITY_FACTOR = 35;
-  const PULSE_SMOOTHING_FACTOR_OLD = 0.8;
-  const PULSE_SMOOTHING_FACTOR_NEW = 0.2;
-  const waveBars = Array.from({ length: WAVE_BAR_COUNT }, (_, index) => index);
-
-  let audioLevel = 0;
-  let animationFrameId;
+  let transcribingWrapper;
   let pressAnimationTimeout = null;
-  let pulseIntensity = 0;
-  let waveformLevels = Array(WAVE_BAR_COUNT).fill(0);
-  const unsubscribeWaveform = waveformData.subscribe((data) => {
-    if (data && data.length) {
-      const sum = data.reduce((acc, val) => acc + val, 0);
-      audioLevel = sum / data.length;
+  let animationFrameId = null;
+  let hydrated = false;
 
-      const step = Math.floor(data.length / waveformLevels.length);
-      waveformLevels = waveformLevels.map((_, i) => {
-        const dataIndex = i * step;
-        return Math.min(100, data[dataIndex] || 0);
-      });
-      startVisualization();
+  // Compact 3-bar live voice meter fed from waveformData
+  let meterTarget = [0.22, 0.34, 0.22];
+  let meterLevels = [0.22, 0.34, 0.22];
+
+  const unsubscribeWaveform = waveformData.subscribe((data) => {
+    if (data && data.length >= 6) {
+      const third = Math.max(1, Math.floor(data.length / 3));
+      const bandAvg = (start, end) => {
+        let sum = 0;
+        let count = 0;
+        for (let i = start; i < end && i < data.length; i++) {
+          sum += data[i] || 0;
+          count++;
+        }
+        return count > 0 ? sum / count : 0;
+      };
+      const b0 = Math.min(1, Math.max(0.2, bandAvg(0, third) / 110));
+      const b1 = Math.min(1, Math.max(0.28, bandAvg(third, third * 2) / 95));
+      const b2 = Math.min(
+        1,
+        Math.max(0.2, bandAvg(third * 2, data.length) / 110),
+      );
+      meterTarget = [b0, b1, b2];
+      startMeterLoop();
+    } else if (!recording) {
+      meterTarget = [0.22, 0.34, 0.22];
     }
   });
 
-  function updateVisualization() {
+  function updateMeter() {
     if (!recording) {
-      pulseIntensity = Math.max(0, pulseIntensity - PULSE_FADE_RATE);
-      waveformLevels = waveformLevels.map((level) => level * WAVE_FADE_RATE);
-    } else {
-      const targetIntensity = Math.min(
-        1,
-        audioLevel / AUDIO_LEVEL_SENSITIVITY_FACTOR,
-      );
-      pulseIntensity =
-        pulseIntensity * PULSE_SMOOTHING_FACTOR_OLD +
-        targetIntensity * PULSE_SMOOTHING_FACTOR_NEW;
-    }
-
-    if (recordButtonElement) {
-      recordButtonElement.style.setProperty(
-        "--pulse-intensity",
-        pulseIntensity.toString(),
-      );
-
-      waveformLevels.forEach((level, i) => {
-        recordButtonElement.style.setProperty(`--wave-level-${i}`, `${level}%`);
-      });
-    }
-
-    // Settled and idle: stop burning frames. This loop used to run for the
-    // whole life of the tab — a style recalc every frame, forever — which is
-    // exactly the kind of thing that makes a laptop fan spin on an idle list.
-    // Restarted by fresh waveform data or the recording flag flipping on.
-    if (
-      !recording &&
-      pulseIntensity <= 0.001 &&
-      waveformLevels.every((level) => level < 0.5)
-    ) {
       animationFrameId = null;
       return;
     }
 
-    animationFrameId = requestAnimationFrame(updateVisualization);
+    meterLevels = meterLevels.map(
+      (prev, i) => prev * 0.68 + meterTarget[i] * 0.32,
+    );
+
+    if (recordButtonElement) {
+      recordButtonElement.style.setProperty(
+        "--meter-0",
+        meterLevels[0].toFixed(3),
+      );
+      recordButtonElement.style.setProperty(
+        "--meter-1",
+        meterLevels[1].toFixed(3),
+      );
+      recordButtonElement.style.setProperty(
+        "--meter-2",
+        meterLevels[2].toFixed(3),
+      );
+    }
+
+    animationFrameId = requestAnimationFrame(updateMeter);
   }
 
-  function startVisualization() {
-    if (animationFrameId == null && typeof window !== "undefined") {
-      animationFrameId = requestAnimationFrame(updateVisualization);
+  function startMeterLoop() {
+    if (
+      animationFrameId == null &&
+      typeof window !== "undefined" &&
+      recording
+    ) {
+      animationFrameId = requestAnimationFrame(updateMeter);
     }
   }
 
-  $: if (recording) startVisualization();
+  $: if (recording) startMeterLoop();
 
-  let hasActiveList = false;
-  const currentStartPhrase = ZIPLIST_CTA_START;
-  const currentAddPhrase = ZIPLIST_CTA_ADD;
+  // Starter items ("Tap + up top...") are the interactive manual, not a list
+  // the user recorded — keep "Talk a list" until real user items exist so a
+  // brand-new visitor never sees the CTA snap to "Add more" on hydration.
+  function itemsIncludeUserContent(items) {
+    return (
+      Array.isArray(items) &&
+      items.some(
+        (item) =>
+          item &&
+          typeof item.text === "string" &&
+          !String(item.id || "").startsWith("starter-"),
+      )
+    );
+  }
 
-  const unsubscribe = activeListItems.subscribe((items) => {
-    const wasActiveList = hasActiveList;
-    hasActiveList = items && items.length > 0;
+  let hasActiveList =
+    typeof document !== "undefined" &&
+    document.documentElement.hasAttribute("data-has-items");
 
-    if (!recording && wasActiveList !== hasActiveList) {
-      buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
+  const unsubscribeItems = activeListItems.subscribe((items) => {
+    const nextHasItems = itemsIncludeUserContent(items);
+    hasActiveList = nextHasItems;
+    if (typeof document !== "undefined") {
+      if (nextHasItems) {
+        document.documentElement.setAttribute("data-has-items", "true");
+      } else {
+        document.documentElement.removeAttribute("data-has-items");
+      }
     }
   });
 
   onMount(() => {
-    buttonLabel = hasActiveList ? currentAddPhrase : currentStartPhrase;
-    startVisualization();
+    hydrated = true;
+    startMeterLoop();
   });
 
   onDestroy(() => {
     if (unsubscribeWaveform) unsubscribeWaveform();
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    if (unsubscribe) unsubscribe();
+    if (unsubscribeItems) unsubscribeItems();
     clearPressAnimationTimeout();
+    clearHoldTimer();
   });
 
-  // talktype's pattern: one tracked press timeout, cleared on re-press and
-  // on destroy — never a raw setTimeout that can outlive the component.
   function clearPressAnimationTimeout() {
     if (pressAnimationTimeout) {
       clearTimeout(pressAnimationTimeout);
@@ -148,60 +169,112 @@
     }
   }
 
-  function getTimeRemaining() {
-    return ANIMATION.RECORDING.LIMIT - recordingDuration;
-  }
-  $: timeRemaining = getTimeRemaining();
-  $: isWarning = timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
-  $: isDanger = timeRemaining <= ANIMATION.RECORDING.DANGER_THRESHOLD;
-  $: isAlmostDone = timeRemaining <= ANIMATION.RECORDING.ALMOST_DONE_THRESHOLD;
-  $: secondsLeft = Math.max(0, Math.ceil(timeRemaining));
-
-  function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
+  function formatDuration(seconds) {
+    const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+    const minutes = Math.floor(safeSeconds / 60);
+    const secs = safeSeconds % 60;
     return `${minutes}:${secs.toString().padStart(2, "0")}`;
   }
 
-  const LISTENING_PHRASES = [
-    "Listening...",
-    "Taking notes...",
-    "Capturing that...",
-    "All ears...",
-    "Catching your list...",
-  ];
-
-  let currentListeningPhrase = "Listening...";
-  let previousRecordingState = false;
-
-  $: {
-    if (recording && !previousRecordingState) {
-      currentListeningPhrase = getRandomFromArray(LISTENING_PHRASES);
-    }
-    previousRecordingState = recording;
+  function formatCountdown(seconds) {
+    const safeSeconds = Math.max(0, Math.ceil(Number(seconds) || 0));
+    const minutes = Math.floor(safeSeconds / 60);
+    const secs = safeSeconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
   }
 
-  $: buttonLabel = recording
-    ? currentListeningPhrase
-    : hasActiveList
-      ? currentAddPhrase
-      : currentStartPhrase;
-  $: recordButtonAriaLabel = recording
-    ? `${buttonLabel}. Stop recording. ${formatTime(recordingDuration)} recorded`
-    : hasActiveList
-      ? `${buttonLabel}. Tap or hold to talk · Add to list`
-      : `${buttonLabel}. Tap or hold to talk · Create a new list`;
+  $: maxDuration = Math.max(1, ANIMATION.RECORDING.LIMIT || 60);
+  $: safeDuration = Math.max(0, Number(recordingDuration) || 0);
+  $: timeRemaining = recording
+    ? Math.max(0, maxDuration - safeDuration)
+    : maxDuration;
+  $: progressRatio = recording
+    ? Math.min(1, Math.max(0, safeDuration / maxDuration))
+    : 0;
+  $: progressPercentage = progressRatio * 100;
+  $: progressWidth = `${progressPercentage.toFixed(1)}%`;
+  $: isWarning =
+    recording && timeRemaining <= ANIMATION.RECORDING.WARNING_THRESHOLD;
+  $: isDanger =
+    recording && timeRemaining <= ANIMATION.RECORDING.DANGER_THRESHOLD;
+  $: secondsLeft = Math.max(0, Math.ceil(timeRemaining));
+  $: elapsedLabel = formatDuration(safeDuration);
+  $: remainingLabel = formatCountdown(timeRemaining);
+  $: durationSummary = `${elapsedLabel} of ${formatDuration(maxDuration)}`;
 
-  $: baseButtonClasses = compact
-    ? "record-button record-button-compact duration-400 rounded-full transition-all ease-out flex items-center justify-center font-bold shadow-md text-black select-none touch-manipulation"
-    : "record-button duration-400 w-[90%] rounded-full transition-all ease-out sm:w-[85%] mx-auto h-[64px] min-w-[280px] max-w-[420px] px-6 flex items-center justify-center text-center text-xl font-bold shadow-md sm:px-8 sm:text-xl md:text-2xl text-black select-none touch-manipulation";
+  // TalkType timer feedback pattern: count UP calmly during normal speech so
+  // the filling bar reads as progress rather than pressure, then flip to
+  // remaining time inside the warning window when time genuinely runs short.
+  $: liveTimerLabel = isWarning ? `${remainingLabel} left` : elapsedLabel;
+  $: compactTimerLabel = isWarning ? `${secondsLeft}s` : elapsedLabel;
+
+  // Screen-reader + gentle audio nudge on threshold crossings
+  let wasWarning = false;
+  let wasDanger = false;
+  $: {
+    if (recording) {
+      if (isDanger && !wasDanger) {
+        uiActions.setScreenReaderMessage(
+          `Recording stops in ${secondsLeft} seconds.`,
+        );
+      } else if (isWarning && !wasWarning) {
+        uiActions.setScreenReaderMessage(
+          `${secondsLeft} seconds of recording time left.`,
+        );
+        soundService?.play?.("warn");
+      }
+      wasWarning = isWarning;
+      wasDanger = isDanger;
+    } else {
+      wasWarning = false;
+      wasDanger = false;
+    }
+  }
+
+  // Keep keyboard focus anchored when swapping between record button and
+  // transcribing bar so focus never drops to <body> mid-flow.
+  let restoreFocusToButton = false;
+  $: void handleTranscribingFocusSwap(transcribing);
+
+  async function handleTranscribingFocusSwap(isTranscribingNow) {
+    if (typeof document === "undefined") return;
+    if (isTranscribingNow) {
+      restoreFocusToButton = document.activeElement === recordButtonElement;
+      if (restoreFocusToButton) {
+        await tick();
+        transcribingWrapper?.focus({ preventScroll: true });
+      }
+    } else if (restoreFocusToButton) {
+      restoreFocusToButton = false;
+      await tick();
+      recordButtonElement?.focus({ preventScroll: true });
+    }
+  }
+
+  let copyMessage = COPY_MESSAGES[0];
+  let previousClipboardSuccess = false;
+  $: {
+    if (clipboardSuccess && !previousClipboardSuccess) {
+      copyMessage = getRandomFromArray(COPY_MESSAGES) || "Copied!";
+    }
+    previousClipboardSuccess = clipboardSuccess;
+  }
+
+  $: idlePhrase = hasActiveList ? ZIPLIST_CTA_ADD : ZIPLIST_CTA_START;
+  $: buttonLabel = recording ? `Done · ${liveTimerLabel}` : idlePhrase;
+  $: showClipboardSuccess = clipboardSuccess && !recording;
+  $: showAmbientPulse = !recording && !showClipboardSuccess;
+
+  $: recordButtonAriaLabel = recording
+    ? `Finish recording and add to list. ${durationSummary}${isWarning ? `, ${secondsLeft} seconds left` : ""}`
+    : hasActiveList
+      ? `${ZIPLIST_CTA_ADD}. Tap or hold to talk`
+      : `${ZIPLIST_CTA_START}. Tap or hold to talk`;
 
   // ── Push-to-talk (hybrid) ─────────────────────────────────────────────
   // Quick tap keeps the classic toggle. Press-and-hold past HOLD_MS turns
   // the button into a walkie-talkie: holdstart begins recording, release
-  // fires holdend (parent stops). Pointer capture keeps the release on the
-  // button even when the thumb drifts; the click that browsers fire after
-  // a completed hold is swallowed so it can't re-toggle.
+  // fires holdend (parent stops).
   const HOLD_MS = 250;
   let holdTimer = null;
   let holdActive = false;
@@ -224,7 +297,7 @@
       /* capture is best-effort */
     }
     clearHoldTimer();
-    if (recording) return; // already live: release resolves as a normal tap-stop
+    if (recording) return;
     holdTimer = setTimeout(() => {
       holdTimer = null;
       holdActive = true;
@@ -241,57 +314,77 @@
     }
   }
 
-  $: clipboardSuccessClasses = clipboardSuccess
-    ? "notification-pulse border border-purple-200 bg-purple-50"
-    : "";
+  function handleDiscard(event) {
+    event?.stopPropagation?.();
+    clearHoldTimer();
+    holdActive = false;
+    swallowNextClick = false;
+    dispatch("discard");
+  }
 
-  $: progressStyle = recording
-    ? `--progress: ${Math.min((recordingDuration / ANIMATION.RECORDING.LIMIT) * 100, 100)}%`
-    : "";
-
-  $: baseStyle = compact
-    ? `width: 64px; height: 64px; min-width: 64px; min-height: 64px; padding: 0; transform-origin: center center; position: relative; ${progressStyle}`
-    : `min-width: min(260px, 88vw); min-height: 62px; transform-origin: center center; position: relative; ${progressStyle}`;
-  const dispatch = createEventDispatcher();
+  $: safeTranscribeProgress = Math.max(0, Math.min(100, Number(progress) || 0));
+  $: visualTranscribeRatio = Math.max(safeTranscribeProgress, 16) / 100;
 </script>
 
 <div class="fixed-button-container" class:compact-container={compact}>
   {#if transcribing}
     <div
-      class="progress-container overflow-hidden rounded-full shadow-md shadow-black/10 {compact
-        ? 'h-[64px] w-[64px]'
-        : 'mx-auto h-[64px] w-[75%] max-w-[420px] sm:h-[64px] sm:w-[85%]'}"
-      role="progressbar"
-      aria-label="List-making progress"
-      aria-valuenow={progress}
-      aria-valuemin="0"
-      aria-valuemax="100"
-      aria-valuetext={`Making list ${Math.round(progress)} percent complete`}
+      bind:this={transcribingWrapper}
+      tabindex="-1"
+      class="transcribing-focus-anchor"
+      aria-label="Making list"
     >
       <div
-        class="progress-bar flex h-full items-center justify-center transition-all duration-300"
-        style="width: {progress}%;"
+        class="transcribing-pill {compact
+          ? 'transcribing-compact'
+          : 'mx-auto h-[60px] w-[88%] max-w-[400px] sm:h-[64px] sm:w-[85%]'}"
+        role="progressbar"
+        aria-label="List-making progress"
+        aria-valuenow={Math.round(safeTranscribeProgress)}
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuetext={`Making list ${Math.round(safeTranscribeProgress)} percent complete`}
       >
+        <div
+          class="transcribing-fill"
+          style="--progress-ratio: {visualTranscribeRatio};"
+          aria-hidden="true"
+        ></div>
         {#if !compact}
-          <span class="relative z-10 font-bold text-white">Ziplisting...</span>
+          <span class="transcribing-label">Ziplisting</span>
         {/if}
+        <span
+          class="processing-dots {!compact ? 'ml-2' : ''}"
+          aria-hidden="true"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
       </div>
     </div>
   {:else}
     <button
       bind:this={recordButtonElement}
-      class="{baseButtonClasses} {clipboardSuccessClasses}"
-      class:pulse-subtle={!recording && !clipboardSuccess}
+      type="button"
+      class="record-button touch-manipulation select-none {compact
+        ? 'record-button-compact'
+        : 'mx-auto flex h-[60px] w-[88%] min-w-[260px] max-w-[400px] items-center justify-center sm:h-[64px] sm:w-[85%]'} {recording &&
+      !compact
+        ? 'px-2.5'
+        : !compact
+          ? 'px-6 sm:px-8'
+          : ''}"
+      class:pulse-subtle={showAmbientPulse}
       class:pulse-calm={hasActiveList}
+      class:notification-pulse={showClipboardSuccess}
       class:recording-active={recording}
-      class:audio-reactive={recording}
-      class:recording-warning={isWarning && recording}
-      class:recording-danger={isDanger && recording}
-      style={baseStyle}
+      class:recording-warning={isWarning}
+      class:recording-danger={isDanger}
+      class:is-hydrated={hydrated}
       data-record-button
       on:click={() => {
         if (swallowNextClick) {
-          // This click is the tail of a completed hold — already handled.
           swallowNextClick = false;
           return;
         }
@@ -300,10 +393,7 @@
       on:pointerdown={handlePointerDown}
       on:pointerup={handlePointerRelease}
       on:pointercancel={handlePointerRelease}
-      on:mouseenter={() => {
-        dispatch("preload");
-        // Don't update phrases on hover to prevent flicker
-      }}
+      on:mouseenter={() => dispatch("preload")}
       disabled={disabled || transcribing}
       title={recording ? "Tap or release to finish" : "Tap or hold to talk"}
       aria-label={recordButtonAriaLabel}
@@ -311,43 +401,32 @@
       aria-busy={disabled || transcribing}
     >
       {#if recording}
-        <div class="wave-visualization" aria-hidden="true">
-          {#each waveBars as i}
-            <div
-              class="wave-bar"
-              style="--index: {i}; --height: var(--wave-level-{i}, 0%);"
-            ></div>
-          {/each}
-        </div>
-      {/if}
-
-      <!-- The limit already had warning and danger states, but they differ by
-           0.17 alpha on a gradient tail — correct instinct (no stressful red,
-           per the house palette) executed so quietly that nothing reads as a
-           warning at all. And the seconds themselves only ever reached an
-           sr-only span, so a sighted recording simply stopped dead.
-
-           A number is the smallest thing that actually answers "how long have
-           I got". It stays away until the last ten seconds: a stopwatch
-           running for the whole minute is a nag, and most recordings never
-           come near the limit. Bare numeral, no label, no imperative — it
-           states a fact and gets out of the way. -->
-      {#if recording && isWarning}
         <span
-          class="recording-countdown"
-          class:is-almost-done={isAlmostDone}
-          aria-hidden="true"
+          class="recording-progress-track"
+          class:is-vertical={compact}
+          class:is-empty={progressRatio === 0}
+          style:--progress={progressWidth}
+          role="progressbar"
+          aria-label="Recording time elapsed"
+          aria-valuenow={Math.round(progressPercentage)}
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuetext={durationSummary}
         >
-          {secondsLeft}
+          <span class="recording-progress-fill" aria-hidden="true"></span>
         </span>
       {/if}
 
       {#if compact}
-        <!-- The glyph carries the meaning here; the button's aria-label
-             carries the words. Same stroke language as the card header. -->
-        {#if !recording}
+        {#if recording}
+          <span class="compact-timer tabular-nums" aria-hidden="true">
+            {compactTimerLabel}
+          </span>
+        {:else}
           <svg
             class="compact-glyph relative z-10"
+            width="26"
+            height="26"
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -366,76 +445,176 @@
         <span class="sr-only">
           {buttonLabel}
           {#if recording}
-            {formatTime(recordingDuration)} of {formatTime(
-              ANIMATION.RECORDING.LIMIT,
-            )}
+            {durationSummary}
           {/if}
         </span>
-      {:else}
-        <span
-          class="cta-text relative inline-flex w-full items-center justify-center whitespace-nowrap transition-all duration-300 ease-out"
-          style="letter-spacing: 0.02em;"
-        >
+      {:else if showClipboardSuccess}
+        <span class="button-content relative z-10 gap-1.5 font-extrabold">
+          {copyMessage}
+        </span>
+      {:else if recording}
+        <span class="button-content is-live-take relative z-10 w-full">
+          <!-- Audio-reactive voice badge on the left balances the discard X on
+               the right so "Done · 0:12" stays dead-centre while showing live
+               mic activity without covering the filling bar. -->
+          <span class="voice-meter-dot" aria-hidden="true">
+            <span class="voice-meter-bar bar-0"></span>
+            <span class="voice-meter-bar bar-1"></span>
+            <span class="voice-meter-bar bar-2"></span>
+          </span>
+
+          <span class="done-label">
+            <span class="done-word">Done</span>
+            <span class="done-dot" aria-hidden="true">·</span>
+            <span class="done-time tabular-nums">{liveTimerLabel}</span>
+          </span>
+
           <span
-            class="scale-100 transform opacity-100 transition-all duration-300 ease-out"
+            role="button"
+            tabindex="0"
+            class="discard-dot"
+            on:pointerdown|stopPropagation
+            on:click|stopPropagation={handleDiscard}
+            on:keydown|stopPropagation={(e) =>
+              (e.key === "Enter" || e.key === " ") && handleDiscard(e)}
+            aria-label="Discard recording"
+            title="Discard recording"
           >
-            <span class="button-content relative z-10">
-              <span class="relative flex w-full items-center justify-center">
-                <span
-                  class="cta__label relative z-10 inline-flex items-center justify-center gap-2 rounded-lg px-1 py-0.5"
-                  class:text-shadow-recording={recording}
-                  style="font-size: clamp(1.05rem, 0.4vw + 1rem, 1.2rem); letter-spacing: .02em; text-align: center; width: 100%;"
-                >
-                  {#if !recording}
-                    <!-- Says "this is a microphone" before anyone reads a
-                         word. Hidden while recording, where the waveform and
-                         timer already say what is happening. -->
-                    <svg
-                      class="cta__glyph"
-                      aria-hidden="true"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <rect x="9" y="2" width="6" height="11" rx="3"></rect>
-                      <path d="M5 10v1a7 7 0 0 0 14 0v-1"></path>
-                      <line x1="12" y1="19" x2="12" y2="22"></line>
-                    </svg>
-                  {/if}
-                  {buttonLabel}
-                </span>
-                <span class="sr-only">
-                  {#if recording}
-                    {formatTime(recordingDuration)} of {formatTime(
-                      ANIMATION.RECORDING.LIMIT,
-                    )}
-                  {/if}
-                </span>
-              </span>
-            </span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M7 7l10 10M17 7L7 17" />
+            </svg>
           </span>
         </span>
-      {/if}
-
-      {#if recording}
-        <div class="recording-indicator" aria-hidden="true"></div>
+      {:else}
+        <span class="button-content relative z-10 w-full">
+          <span class="cta__label">
+            <svg
+              class="cta__glyph"
+              width="20"
+              height="20"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="2" width="6" height="11" rx="3"></rect>
+              <path d="M5 10v1a7 7 0 0 0 14 0v-1"></path>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+            </svg>
+            {#if hydrated}
+              <span>{idlePhrase}</span>
+            {:else}
+              <span class="cta-phrase-start">{ZIPLIST_CTA_START}</span>
+              <span class="cta-phrase-add">{ZIPLIST_CTA_ADD}</span>
+            {/if}
+          </span>
+        </span>
       {/if}
     </button>
   {/if}
 </div>
 
 <style>
-  /* Compact (list-first) variant — a round glyph button that tucks into a
-     corner instead of a full-width pill lying across the list. Everything
-     else about the button (states, pulse, waveform, hold-to-talk) is
-     unchanged; only its shape and label are. */
+  /* Pre-hydration CTA phrase sync: app.html sets html[data-has-items="true"]
+     synchronously from localStorage, so returning visitors see "Add more" and
+     new visitors see "Talk a list" before JS hydrates — zero text snap. */
+  .cta-phrase-add {
+    display: none;
+  }
+
+  :global(html[data-has-items="true"])
+    .record-button:not(.is-hydrated)
+    .cta-phrase-start {
+    display: none;
+  }
+
+  :global(html[data-has-items="true"])
+    .record-button:not(.is-hydrated)
+    .cta-phrase-add {
+    display: inline;
+  }
+
+  .fixed-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 68px;
+    position: relative;
+    margin: 0.45rem 0 0.65rem;
+    z-index: 5;
+  }
+
+  .fixed-button-container.compact-container {
+    width: auto;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+  }
+
+  /* Base button styling — Soft Neo-Toybrut (TalkType sibling parity):
+     warm near-black ink (#1e1714, never stark #000), flat brand yellow,
+     crisp offset shadow, tactile hover lift and press squish. */
+  .record-button {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: 9999px;
+    border: 2.5px solid #1e1714;
+    background-color: var(--zl-cta-color, #ffb000);
+    color: #1e1714;
+    font-weight: 800;
+    box-shadow: 3px 3px 0px #1e1714;
+    transform-origin: center center;
+    --meter-0: 0.24;
+    --meter-1: 0.38;
+    --meter-2: 0.24;
+    transition:
+      transform 0.16s cubic-bezier(0.25, 0.1, 0.25, 1),
+      box-shadow 0.16s cubic-bezier(0.25, 0.1, 0.25, 1),
+      background-color 0.16s cubic-bezier(0.25, 0.1, 0.25, 1),
+      border-color 0.2s ease;
+  }
+
+  /* Chunky Neo-Toybrut idle styling — explicitly :not(.recording-active) so
+     the live timer track and fill are NEVER overridden by chunky mode! */
+  :global(html.mode-neo-brutalist)
+    .record-button:not(.recording-active):not(.record-button-compact) {
+    border-radius: 18px;
+    border: 2.5px solid #1e1714;
+    box-shadow: 4px 4px 0px #1e1714;
+  }
+
+  :global(html.mode-neo-brutalist)
+    .record-button.recording-active:not(.record-button-compact) {
+    border-radius: 18px;
+  }
+
   .record-button-compact {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
     padding: 0;
+    border-radius: 9999px;
     aspect-ratio: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .compact-glyph {
@@ -443,176 +622,67 @@
     height: 26px;
   }
 
-  /* Sized against the label rather than in px, so it tracks the CTA's
-     clamp() as the button scales. flex-shrink:0 keeps it a mic and not an
-     oval when the text is long. */
-  .cta__glyph {
-    width: 1.1em;
-    height: 1.1em;
-    flex-shrink: 0;
-    opacity: 0.9;
-  }
-
-  /* Base button styling */
-  .record-button {
+  .compact-timer {
     position: relative;
-    overflow: hidden;
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
-    background-size: 100% 100%;
-    background-position: 0% 0%;
-    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-    transition-property:
-      transform, box-shadow, background-image, background-position;
-
-    /* Flat brand yellow — the voice button is the same in every theme,
-       like the cream ground. Juice comes from motion and glow. */
-    background-color: var(--zl-cta-color, #ffb000);
-
-    /* Better default shadow */
-    box-shadow:
-      0 4px 6px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2),
-      0 2px 4px -1px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    z-index: 10;
+    font-family: "Space Mono", monospace;
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #1e1714;
+    text-shadow: 0 1px 0 rgba(255, 254, 247, 0.72);
   }
 
-  /* Spring Bounce Animation */
-  @keyframes springBounce {
-    0% {
-      transform: scale(1);
-    }
-    30% {
-      transform: scale(1.25);
-    }
-    50% {
-      transform: scale(0.9);
-    }
-    70% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-    }
+  .cta__label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: clamp(1.05rem, 0.4vw + 0.98rem, 1.22rem);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    color: #1e1714;
   }
 
-  /* Neo-brutalist button override */
-  :global(html.mode-neo-brutalist) .record-button {
-    background-image: none;
-    background-color: var(--zl-cta-color, #ffb000);
-    border: 3px solid #000000;
-    box-shadow: 6px 6px 0px 0px #000000;
-    border-radius: 16px; /* Less rounded */
-    color: #000000;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+  .cta__glyph {
+    width: 1.12em;
+    height: 1.12em;
+    flex-shrink: 0;
+    opacity: 0.92;
   }
 
-  :global(html.mode-neo-brutalist) .record-button:hover:not(:disabled) {
-    transform: translate(-2px, -2px) scale(1.05);
-    box-shadow: 8px 8px 0px 0px #000000;
-    background-image: none;
-    background-color: #ffc107; /* Slightly lighter amber */
-    filter: brightness(1.1);
-  }
-
-  :global(html.mode-neo-brutalist) .record-button:active:not(:disabled) {
-    animation: springBounce 0.4s linear;
-    transform: translate(2px, 2px) scale(0.95);
-    box-shadow: 2px 2px 0px 0px #000000;
-  }
-
-  /* Focus state */
+  /* Focus ring */
   .record-button:focus {
     outline: none;
-    box-shadow:
-      0 0 0 3px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.4),
-      0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
-  /* Enhanced focus ring for keyboard navigation */
   .record-button:focus-visible {
     outline: 3px solid var(--zl-cta-color, #ffb000);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
 
-  /* Hover state — same gradient, just brighter and lifted. One color
-     story per theme; juice comes from motion and light, not a new hue. */
-  .record-button:hover:not(:disabled) {
-    transform: translateY(-1px) scale(1.02);
-    box-shadow:
-      0 6px 10px -2px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.25),
-      0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-
+  /* Idle hover & active tactile states */
   .record-button:not(.recording-active):hover:not(:disabled) {
-    filter: saturate(1.08) brightness(1.04);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.3);
+    transform: translate(-1px, -2px);
+    background-color: #ffc226;
+    box-shadow: 5px 5px 0px #1e1714;
   }
 
-  /* Audio visualization pulse effect - Enhanced */
-  .record-button {
-    position: relative;
-    --pulse-intensity: 0;
-  }
-
-  .record-button::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: inherit;
-    background: radial-gradient(
-      circle at center,
-      rgba(
-        var(--zl-cta-color-rgb, 255, 176, 0),
-        calc(0.5 * var(--pulse-intensity))
-      ),
-      rgba(
-        var(--zl-cta-color-rgb, 255, 176, 0),
-        calc(0.55 * var(--pulse-intensity))
-      ),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0)
-    );
-    opacity: calc(0.9 * var(--pulse-intensity));
-    z-index: 1; /* Increased z-index to make it more visible */
-    transition: opacity 0.1s ease-out;
-    pointer-events: none;
-  }
-
-  /* Enhanced glow effect during recording */
-  .recording-active::before {
-    box-shadow:
-      0 0 calc(20px * var(--pulse-intensity)) calc(8px * var(--pulse-intensity))
-        rgba(
-          var(--zl-cta-color-rgb, 255, 176, 0),
-          calc(0.4 * var(--pulse-intensity))
-        ),
-      0 0 calc(15px * var(--pulse-intensity)) calc(5px * var(--pulse-intensity))
-        rgba(
-          var(--zl-cta-color-rgb, 255, 176, 0),
-          calc(0.6 * var(--pulse-intensity))
-        );
-  }
-
-  /* Active/pressed state */
-  .record-button:active:not(:disabled) {
-    transform: translateY(1px) scale(0.98);
-    box-shadow:
-      0 2px 4px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.15),
-      0 1px 2px -1px rgba(0, 0, 0, 0.1),
-      inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Non-recording active effect — press darkens, no palette swap */
   .record-button:not(.recording-active):active:not(:disabled) {
-    filter: saturate(1.1) brightness(0.94);
+    transform: translate(2px, 2px);
+    background-color: #f59e0b;
+    box-shadow: 1px 1px 0px #1e1714;
   }
 
-  /* Button press animation */
-  .button-press {
-    animation: button-press 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  .record-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  /* Programmatic press bounce */
+  :global(.button-press) {
+    animation: button-press 0.36s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
 
   @keyframes button-press {
@@ -620,8 +690,8 @@
       transform: scale(1);
     }
     35% {
-      transform: scale(0.98);
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      transform: translate(1px, 1px) scale(0.98);
+      box-shadow: 1.5px 1.5px 0px #1e1714;
     }
     75% {
       transform: scale(1.01);
@@ -631,288 +701,243 @@
     }
   }
 
-  /* Subtle breathing glow for button — 4.8s matches the fleet's idle
-     breathe (talktype/daysay) so every app inhales at the same pace.
-
-     Swiping between lists flips hasActiveList, which used to add/remove
-     this class outright: the animation restarted from frame 0 AND the
-     glow box-shadow hard-cut to the base shadow's totally different
-     shape. That snap is what read as "the button resets" on every list
-     change. Now the animation runs continuously in both states and only
-     its AMPLITUDE changes (--breathe-glow / --breathe-lift), so an empty
-     list breathes big to invite a first recording and a populated list
-     settles to a calm idle — and the change between them eases instead
-     of snapping. */
+  /* Subtle arrival invitation — breathes once, then rests at zero idle GPU cost */
   .pulse-subtle {
-    --breathe-glow: 1;
-    --breathe-lift: 1;
-    animation: button-breathe 4.8s ease-in-out infinite;
-    transform-origin: center;
-    transition:
-      --breathe-glow 0.45s ease-out,
-      --breathe-lift 0.45s ease-out;
+    animation: button-idle-float 2.2s ease-in-out 0.45s 1;
   }
 
-  /* The glow lives on ::after so the shadow is PAINTED ONCE and breathed
-     with opacity (compositable), instead of animating box-shadow on the
-     button — which repainted the glow region every frame for the life of
-     the tab. Same 4.8s breath, same amplitude dial via --breathe-glow. */
-  .pulse-subtle::after {
+  .pulse-subtle.pulse-calm {
+    animation: none;
+  }
+
+  .pulse-subtle:hover,
+  .pulse-subtle:active,
+  .pulse-subtle:global(.button-press) {
+    animation: none;
+  }
+
+  @keyframes button-idle-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-1.5px);
+    }
+  }
+
+  /* Clipboard notification state */
+  .notification-pulse {
+    background-color: #f5f3ff !important;
+    border-color: #1e1714 !important;
+    box-shadow: 3px 3px 0px #1e1714;
+  }
+
+  /* ── Whole-button Recording Timer Fill (TalkType Architecture) ─────────── */
+  .recording-active {
+    --record-progress-fill: linear-gradient(
+      90deg,
+      #fbbf24 0%,
+      #fb923c 68%,
+      #f472b6 100%
+    );
+    --record-progress-track: linear-gradient(
+      90deg,
+      rgba(255, 250, 235, 0.98),
+      rgba(254, 243, 199, 0.88) 55%,
+      rgba(253, 230, 138, 0.52)
+    );
+    background-color: #fffbeb;
+    background-image: none;
+    border: 2.5px solid #1e1714;
+    box-shadow:
+      3px 3px 0px #1e1714,
+      0 8px 20px -6px rgba(251, 146, 60, 0.42);
+  }
+
+  .recording-active:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      4px 4px 0px #1e1714,
+      0 10px 22px -6px rgba(251, 146, 60, 0.48);
+  }
+
+  .recording-active:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: 1.5px 1.5px 0px #1e1714;
+  }
+
+  .recording-active:not(.recording-danger) {
+    animation: recording-glow-breathe 2.6s ease-in-out infinite;
+  }
+
+  /* Warning window (last 15s): warm amber-coral shift, never harsh alarm red */
+  .recording-warning {
+    --record-progress-fill: linear-gradient(
+      90deg,
+      #fb923c 0%,
+      #f97316 55%,
+      #fb7185 100%
+    );
+    --record-progress-track: linear-gradient(
+      90deg,
+      rgba(255, 244, 230, 0.98),
+      rgba(255, 228, 205, 0.72)
+    );
+  }
+
+  /* Final countdown (last 6s): warm coral-rose + gentle urgency pulse */
+  .recording-danger {
+    --record-progress-fill: linear-gradient(
+      90deg,
+      #f97316 0%,
+      #fb7185 58%,
+      #ec4899 100%
+    );
+    --record-progress-track: linear-gradient(
+      90deg,
+      rgba(255, 236, 240, 0.98),
+      rgba(254, 205, 211, 0.68)
+    );
+    animation: recording-danger-pulse 1.1s ease-in-out infinite;
+  }
+
+  @keyframes recording-glow-breathe {
+    0%,
+    100% {
+      box-shadow:
+        3px 3px 0px #1e1714,
+        0 6px 16px -6px rgba(251, 146, 60, 0.36);
+    }
+    50% {
+      box-shadow:
+        3px 3px 0px #1e1714,
+        0 10px 24px -4px rgba(251, 146, 60, 0.56);
+    }
+  }
+
+  @keyframes recording-danger-pulse {
+    0%,
+    100% {
+      box-shadow:
+        3px 3px 0px #1e1714,
+        0 0 12px 1px rgba(251, 113, 133, 0.34);
+    }
+    50% {
+      box-shadow:
+        3px 3px 0px #1e1714,
+        0 0 22px 5px rgba(244, 114, 182, 0.55);
+    }
+  }
+
+  .recording-progress-track {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    background: var(--record-progress-track);
+    pointer-events: none;
+  }
+
+  .recording-progress-track::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+  }
+
+  /* Plain width (or height for compact circle) — smooth, compositor-safe,
+     never blinks on iOS Safari at small percentages. */
+  .recording-progress-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--progress, 0%);
+    background: var(--record-progress-fill);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      2px 0 14px rgba(251, 146, 60, 0.34);
+  }
+
+  .recording-progress-track.is-vertical .recording-progress-fill {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--progress, 0%);
+    background: linear-gradient(0deg, #fbbf24 0%, #fb923c 65%, #f472b6 100%);
+  }
+
+  .recording-warning
+    .recording-progress-track.is-vertical
+    .recording-progress-fill {
+    background: linear-gradient(0deg, #fb923c 0%, #f97316 55%, #fb7185 100%);
+  }
+
+  .recording-danger
+    .recording-progress-track.is-vertical
+    .recording-progress-fill {
+    background: linear-gradient(0deg, #f97316 0%, #fb7185 58%, #ec4899 100%);
+  }
+
+  /* Flowing light band across the filled portion so a live take visibly moves */
+  .recording-progress-fill::before {
     content: "";
     position: absolute;
     inset: 0;
-    border-radius: inherit;
-    box-shadow: 0 0 20px 6px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
-    opacity: calc(0.55 * var(--breathe-glow));
-    animation: button-breathe-glow 4.8s ease-in-out infinite;
-    will-change: opacity;
-    pointer-events: none;
-  }
-
-  @keyframes button-breathe-glow {
-    0%,
-    100% {
-      opacity: calc(0.55 * var(--breathe-glow));
-    }
-    50% {
-      opacity: var(--breathe-glow);
-    }
-  }
-
-  /* Already has items: same breath, dialled down — no restart, no snap. */
-  .pulse-subtle.pulse-calm {
-    --breathe-glow: 0.42;
-    --breathe-lift: 0.3;
-  }
-
-  @property --breathe-glow {
-    syntax: "<number>";
-    inherits: false;
-    initial-value: 1;
-  }
-
-  @property --breathe-lift {
-    syntax: "<number>";
-    inherits: false;
-    initial-value: 1;
-  }
-
-  /* Transform-only on the button itself — compositable. The shadow half of
-     the old keyframes moved to ::after / button-breathe-glow above. */
-  @keyframes button-breathe {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(calc(1 + 0.02 * var(--breathe-lift)));
-    }
-  }
-
-  /* Notification pulse animation */
-  .notification-pulse {
-    animation: notification-glow 2.5s ease-in-out infinite;
-    transform-origin: center;
-    box-shadow:
-      0 0 15px 3px rgba(139, 92, 246, 0.2),
-      0 0 5px 1px rgba(139, 92, 246, 0.1);
     background-image: linear-gradient(
-      to bottom,
-      rgba(250, 245, 255, 0.9),
-      rgba(237, 233, 254, 0.9)
+      100deg,
+      rgba(255, 255, 255, 0) 25%,
+      rgba(255, 255, 255, 0.48) 50%,
+      rgba(255, 255, 255, 0) 75%
     );
-    border: 1px solid rgba(167, 139, 250, 0.3);
+    background-size: 60% 100%;
+    background-repeat: no-repeat;
+    background-position: -150% 0;
+    animation: record-fill-sheen 3.4s ease-in-out infinite;
   }
 
-  @keyframes notification-glow {
-    0%,
-    100% {
-      box-shadow:
-        0 0 10px 1px rgba(139, 92, 246, 0.2),
-        0 0 3px 0px rgba(139, 92, 246, 0.1);
-      transform: scale(1);
-    }
-    50% {
-      box-shadow:
-        0 0 18px 4px rgba(139, 92, 246, 0.3),
-        0 0 8px 2px rgba(139, 92, 246, 0.15);
-      transform: scale(1.003);
-    }
-  }
-
-  /* Progress bar styling */
-  .progress-container {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    background-color: rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.18);
-  }
-
-  .progress-bar {
+  /* Leading-edge glint */
+  .recording-progress-track:not(.is-vertical) .recording-progress-fill::after {
+    content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    transition: width 0.3s ease;
-    animation: pulse-glow 1.5s infinite ease-in-out;
-    background-color: var(--zl-cta-color, #ffb000);
-  }
-
-  @keyframes pulse-glow {
-    0% {
-      box-shadow: inset 0 0 5px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
-    }
-    50% {
-      box-shadow: inset 0 0 15px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.8);
-    }
-    100% {
-      box-shadow: inset 0 0 5px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.5);
-    }
-  }
-
-  /* Whole-button progress indicator - Enhanced with softer, pinker gradient */
-  .recording-active {
-    position: relative;
-    overflow: hidden;
-
-    /* Filled portion is the theme primary; the tail is the same shade
-       faded — progress reads as depth, not a second color story. */
-    background-image:
-      linear-gradient(
-        to right,
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9),
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.9) var(--progress, 0%),
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.38)
-          calc(var(--progress, 0%) + 0.5%),
-        rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.24) 100%
-      ),
-      /* Subtle noise texture overlay */
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
-
-    background-size: 100% 100%;
-    box-shadow:
-      0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.35),
-      inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2),
-      0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
-    border: 1px solid rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.3);
-    /* Smoother & faster transitions for clearer state changes */
-    transition:
-      background-image 0.3s ease-out,
-      box-shadow 0.3s ease-out,
-      border 0.3s ease-out,
-      transform 0.2s ease;
-  }
-
-  /* Audio reactive styling */
-  .audio-reactive {
-    z-index: 1;
-  }
-
-  .audio-reactive .cta-text,
-  .audio-reactive .cta__label {
-    position: relative;
-    z-index: 5; /* Increased z-index for text to appear above effects */
-  }
-
-  /* Appears at 10s, sits on the button's shoulder so it never fights the
-     wave bars or the label. Urgency comes from size and motion, never hue —
-     the house palette has no red in it. */
-  .recording-countdown {
-    position: absolute;
-    top: -0.4rem;
-    right: -0.4rem;
-    z-index: 3;
-    min-width: 1.6rem;
-    padding: 0.1rem 0.3rem;
-    border-radius: 999px;
-    border: 2px solid #1e1714;
-    background: #fffef7;
-    color: #1e1714;
-    font-family: "Space Mono", monospace;
-    font-size: 0.82rem;
-    font-weight: 800;
-    line-height: 1.4;
-    text-align: center;
-    box-shadow: 1.5px 1.5px 0 #1e1714;
-    pointer-events: none;
-    animation: countdown-tick 1s steps(1) infinite;
-  }
-
-  /* Last three seconds: the same numeral, just insistent. */
-  .recording-countdown.is-almost-done {
-    animation: countdown-urgent 0.5s ease-in-out infinite alternate;
-  }
-
-  @keyframes countdown-tick {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    8% {
-      transform: scale(1.14);
-    }
-  }
-
-  @keyframes countdown-urgent {
-    from {
-      transform: scale(1);
-    }
-    to {
-      transform: scale(1.18);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .recording-countdown,
-    .recording-countdown.is-almost-done {
-      animation: none;
-    }
-  }
-
-  /* Time-limit states signal through the theme's own accent + pulse
-     intensity — no stressful red, no off-palette hues. */
-  .recording-warning {
-    background-image: linear-gradient(
-      to right,
-      rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.45) 100%
+    top: 8px;
+    bottom: 8px;
+    right: -1px;
+    width: 2.5px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.88) 24%,
+      rgba(255, 255, 255, 0.88) 76%,
+      rgba(255, 255, 255, 0)
     );
     box-shadow:
-      0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.3),
-      inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2),
-      0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
+      0 0 8px rgba(255, 255, 255, 0.65),
+      0 0 12px rgba(244, 114, 182, 0.3);
   }
 
-  .recording-danger {
-    background-image: linear-gradient(
-      to right,
-      rgb(var(--zl-cta-color-rgb, 255, 176, 0)) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.7) var(--progress, 0%),
-      rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.62) 100%
-    );
-    box-shadow:
-      0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.28),
-      inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22),
-      0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
-    animation: danger-pulse 1s infinite alternate ease-in-out;
+  .recording-progress-track.is-empty .recording-progress-fill::after {
+    display: none;
   }
 
-  @keyframes danger-pulse {
+  @keyframes record-fill-sheen {
     0% {
-      box-shadow:
-        0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.28),
-        inset 0 0 10px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.22),
-        0 0 20px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.2);
+      background-position: -150% 0;
     }
+    65%,
     100% {
-      box-shadow:
-        0 4px 15px -1px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.38),
-        inset 0 0 15px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.26),
-        0 0 25px rgba(var(--zl-cta-color-rgb, 255, 176, 0), 0.24);
+      background-position: 250% 0;
     }
   }
 
+  /* ── Live-take 3-column layout: [voice meter] [Done · time] [discard ✕] ── */
   .button-content {
     position: relative;
     display: inline-flex;
@@ -920,177 +945,233 @@
     justify-content: center;
   }
 
-  /* Enhanced text visibility when recording */
-  .text-shadow-recording {
-    text-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.2),
-      0 0 1px rgba(0, 0, 0, 0.1);
-    font-weight: 700;
-    letter-spacing: 0.01em;
+  .button-content.is-live-take {
+    display: grid;
+    grid-template-columns: 2.4rem minmax(0, 1fr) 2.4rem;
+    align-items: center;
+    column-gap: 0.5rem;
   }
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .animate-fadeIn {
-    animation: fadeIn 0.3s ease-in-out;
-  }
-
-  /* Responsive adjustments for mobile.
-     :not(.record-button-compact) matters: these are !important, so without
-     the guard they beat the compact variant's inline 64px sizing and the
-     round button silently inflates back into a 248px-wide pill on exactly
-     the screens the compact variant exists for. */
-  @media (max-width: 640px) {
-    .fixed-button-container:not(.compact-container) .record-button {
-      width: 72% !important;
-      max-width: 320px !important;
-      min-width: 248px !important;
-      min-height: 56px !important;
-      padding: 0.85rem 1.2rem !important;
-    }
-
-    .fixed-button-container:not(.compact-container) .progress-container {
-      width: 72% !important;
-      max-width: 320px !important;
-      min-width: 248px !important;
-      height: 56px !important;
-    }
-
-    .fixed-button-container:not(.compact-container) {
-      height: 58px;
-      margin: 0.25rem 0 0.45rem;
-    }
-
-    .button-content {
-      font-size: 0.95em;
-    }
-
-    .timer-display {
-      font-size: 0.9em;
-    }
-  }
-
-  /* Wave visualization styles - Enhanced for better visibility */
-  .wave-visualization {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70%;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: flex-end;
-    padding: 0 20px;
+  .voice-meter-dot {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(30, 23, 20, 0.24);
+    background: rgba(255, 254, 247, 0.72);
     pointer-events: none;
-    z-index: 3; /* Increased z-index to appear above the pulse glow */
-    overflow: hidden;
   }
 
-  .wave-bar {
-    width: 5px; /* Slightly wider for better visibility */
-    height: var(--height, 0%);
-    max-height: 80%;
-    background: linear-gradient(
-      to top,
-      rgba(255, 255, 255, 0.95),
-      rgba(255, 255, 255, 0.4)
-    );
-    border-radius: 2px 2px 0 0;
-    transition: height 0.05s ease-out;
-    animation: wave-animation 0.5s infinite alternate ease-in-out;
-    animation-delay: calc(var(--index) * 0.1s);
-    opacity: 0.9; /* Higher opacity for better visibility */
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6); /* Enhanced glow around bars */
-    transform-origin: bottom;
+  .voice-meter-bar {
+    width: 3.5px;
+    height: 16px;
+    border-radius: 9999px;
+    background: #1e1714;
+    transform-origin: center;
+    transition: transform 60ms linear;
   }
 
-  @keyframes wave-animation {
-    0% {
-      transform: scaleY(0.95);
-    }
-    100% {
-      transform: scaleY(1.05);
-    }
+  .voice-meter-bar.bar-0 {
+    transform: scaleY(var(--meter-0, 0.28));
   }
 
-  /* Fixed button container for consistent spacing and positioning */
-  .fixed-button-container {
+  .voice-meter-bar.bar-1 {
+    transform: scaleY(var(--meter-1, 0.45));
+  }
+
+  .voice-meter-bar.bar-2 {
+    transform: scaleY(var(--meter-2, 0.28));
+  }
+
+  .done-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.42rem;
+    line-height: 1;
+    white-space: nowrap;
+    color: #1e1714;
+    font-weight: 900;
+    text-shadow: 0 1px 0 rgba(255, 254, 247, 0.55);
+  }
+
+  .done-word,
+  .done-time {
+    font-size: clamp(1rem, 0.35vw + 0.92rem, 1.14rem);
+    line-height: 1;
+  }
+
+  .done-time {
+    font-family: "Space Mono", monospace;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .done-dot {
+    opacity: 0.45;
+    line-height: 1;
+  }
+
+  .discard-dot {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 2px solid #1e1714;
+    background: rgba(255, 254, 247, 0.95);
+    box-shadow: 1.5px 1.5px 0px #1e1714;
+    color: #1e1714;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .discard-dot:hover {
+    transform: scale(1.07) rotate(90deg);
+    background: #ffe4e6;
+    color: #9f1239;
+  }
+
+  .discard-dot:active {
+    transform: scale(0.92);
+  }
+
+  .discard-dot:focus-visible {
+    outline: 2px solid #1e1714;
+    outline-offset: 2px;
+  }
+
+  /* ── Transcribing pill (Soft Neo-Toybrut, matches TalkType) ────────────── */
+  .transcribing-focus-anchor {
+    outline: none;
+    width: 100%;
     display: flex;
     justify-content: center;
-    width: 100%;
-    height: 70px; /* Fixed height to prevent layout shifts */
+  }
+
+  .transcribing-pill {
     position: relative;
-    margin: 1rem 0;
-    z-index: 5; /* Ensure it stays on top during transitions */
+    overflow: hidden;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 2.5px solid #1e1714;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(254, 243, 199, 0.96),
+        rgba(251, 191, 36, 0.28)
+      ),
+      #fde68a;
+    box-shadow: 3px 3px 0px #1e1714;
   }
 
-  /* Compact shrink-wraps to the button. The 100%/70px/1rem defaults above
-     exist to hold a stable lane in the hero flow; the corner FAB has no
-     lane to hold. */
-  .fixed-button-container.compact-container {
-    width: auto;
-    height: auto;
-    margin: 0;
+  :global(html.mode-neo-brutalist)
+    .transcribing-pill:not(.transcribing-compact) {
+    border-radius: 18px;
   }
 
-  /* Recording indicator - more noticeable pulsing dot */
-  .recording-indicator {
+  .transcribing-compact {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+  }
+
+  .transcribing-fill {
     position: absolute;
-    top: 50%;
-    right: 28px;
-    transform: translateY(-50%);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: linear-gradient(145deg, #f9a8d4, #ec4899);
-    box-shadow: 0 0 12px rgba(236, 72, 153, 0.9);
-    animation: recording-pulse 1.5s infinite ease-in-out;
-    z-index: 10;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #fbbf24 0%, #fb923c 65%, #fda4af 100%);
+    transform: scaleX(var(--progress-ratio, 0.16));
+    transform-origin: left center;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  @keyframes recording-pulse {
+  .transcribing-label {
+    position: relative;
+    z-index: 10;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e1714;
+  }
+
+  .processing-dots {
+    position: relative;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.32rem;
+  }
+
+  .processing-dots span {
+    width: 0.48rem;
+    height: 0.48rem;
+    border-radius: 9999px;
+    background: rgba(30, 23, 20, 0.82);
+    animation: dot-breathe 1.1s ease-in-out infinite;
+  }
+
+  .processing-dots span:nth-child(2) {
+    animation-delay: 0.14s;
+  }
+
+  .processing-dots span:nth-child(3) {
+    animation-delay: 0.28s;
+  }
+
+  @keyframes dot-breathe {
     0%,
     100% {
-      opacity: 1;
-      transform: translateY(-50%) scale(1);
-      box-shadow: 0 0 8px rgba(236, 72, 153, 0.9);
+      opacity: 0.35;
+      transform: scale(0.82);
     }
     50% {
-      opacity: 1;
-      transform: translateY(-50%) scale(1.4);
-      box-shadow: 0 0 15px rgba(236, 72, 153, 1);
+      opacity: 0.92;
+      transform: scale(1);
     }
   }
 
-  /* Fleet standard (talktype/daysay honor this — so do we): motion is
-     decoration, never information. Kill every animation on request. */
+  @media (max-width: 640px) {
+    .fixed-button-container:not(.compact-container) {
+      min-height: 60px;
+      margin: 0.2rem 0 0.4rem;
+    }
+
+    .fixed-button-container:not(.compact-container) .record-button,
+    .fixed-button-container:not(.compact-container) .transcribing-pill {
+      width: 84%;
+      max-width: 340px;
+      min-width: 248px;
+      height: 58px;
+      min-height: 58px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .pulse-subtle,
-    .button-press,
-    .notification-pulse,
+    :global(.button-press),
+    .recording-active,
     .recording-danger,
-    .progress-bar,
-    .wave-bar,
-    .recording-indicator {
+    .recording-progress-fill::before,
+    .processing-dots span {
       animation: none !important;
     }
 
-    /* No breath, so no amplitude to ease between either — and no glow
-       layer, matching the old behavior where killing the animation
-       dropped the breathe shadow entirely. */
-    .pulse-subtle {
-      transition: none !important;
-    }
-
-    .pulse-subtle::after {
-      display: none;
+    .transcribing-fill {
+      transition-duration: 0ms !important;
     }
   }
 </style>
