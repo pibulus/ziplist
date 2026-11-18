@@ -41,11 +41,6 @@ export const uiState = writable({
   screenReaderMessage: "",
 });
 
-// User options
-export const userPreferences = writable({
-  promptStyle: "standard",
-});
-
 // Derived stores for easier consumption
 export const isRecording = derived(
   audioState,

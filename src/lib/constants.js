@@ -25,13 +25,10 @@ export const STORAGE_KEYS = {
   // Application Settings
   THEME: "ziplist-vibe",
   FIRST_VISIT: "hasSeenZiplistIntro",
-  // AUTO_RECORD and SOUND_CUES lived here until 2026-07-31. Their settings were
-  // removed; the keys outlived them by a few hours, one being written with
-  // nothing reading it and the other read with nothing able to write it. Both
-  // are gone rather than left looking live. Old values in localStorage are
-  // simply ignored.
+  // AUTO_RECORD, SOUND_CUES, and PROMPT_STYLE lived here earlier; voice rewrite
+  // tones (Pirate/Sparkle/Quill) belonged to TalkType prose dictation, not a
+  // checklist pocket tool. Old values in localStorage are simply ignored.
   LIST_FIRST_MODE: "ziplist-list-first-mode",
-  PROMPT_STYLE: "ziplist-prompt-style",
   DEBUG_MODE: "ziplist-debug-mode",
   CHUNKY_MODE: "ziplist-chunky-mode",
   CONTRIBUTOR: "ziplist-contributor",
@@ -62,18 +59,6 @@ export const STORAGE_KEYS = {
   // user who declined Firefox's prompt isn't asked again on every save.
   DURABLE_STORAGE_ASKED: "ziplist-durable-storage-asked",
 };
-
-// Prompt Styles
-export const PROMPT_STYLES = {
-  STANDARD: "standard",
-  SURLY_PIRATE: "surlyPirate",
-  LEET_SPEAK: "leetSpeak",
-  SPARKLE_POP: "sparklePop",
-  CODE_WHISPERER: "codeWhisperer",
-  QUILL_AND_INK: "quillAndInk",
-};
-
-export const DEFAULT_PROMPT_STYLE = PROMPT_STYLES.STANDARD;
 
 // Product limits: keep ZipList focused on quick, graspable lists.
 // Contributor gates VOLUME, never FEATURES (2026-07-21): every feature —

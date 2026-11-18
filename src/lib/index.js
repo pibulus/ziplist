@@ -4,6 +4,11 @@ import { browser } from "$app/environment";
 import { env as publicEnv } from "$env/dynamic/public";
 import * as CONSTANTS from "./constants";
 import { PRICING } from "./config/pricing.js";
+import { healPoisonedPassportStorage } from "./services/vaultHashStorage.js";
+
+if (browser) {
+  healPoisonedPassportStorage();
+}
 
 // Initialize store with localStorage value if available
 function createLocalStorageStore(key, initialValue) {
@@ -73,12 +78,6 @@ export const hasSeenIntro = createLocalStorageStore(
 export const listFirstMode = createLocalStorageStore(
   CONSTANTS.STORAGE_KEYS.LIST_FIRST_MODE,
   "false",
-);
-
-// Store for prompt style preference
-export const promptStyle = createLocalStorageStore(
-  CONSTANTS.STORAGE_KEYS.PROMPT_STYLE,
-  CONSTANTS.DEFAULT_PROMPT_STYLE,
 );
 
 export const contributor = createLocalStorageStore(

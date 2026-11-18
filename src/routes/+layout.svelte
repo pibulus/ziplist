@@ -11,8 +11,7 @@
 
   if (browser) {
     onMount(async () => {
-      deviceSyncStore.init();
-      const handled = deviceSyncStore.handleIncomingUrl();
+      const handled = deviceSyncStore.init();
       if (handled) {
         // A paired device already knows ZipList from the other one. Child
         // onMounts run first, so the intro's timer is already pending here.

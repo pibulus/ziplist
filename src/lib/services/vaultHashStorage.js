@@ -11,7 +11,40 @@ function getStorage(storage) {
   return localStorage;
 }
 
+function isJwtLike(value) {
+  if (typeof value !== "string") return false;
+  const parts = value.trim().split(".");
+  return (
+    parts.length === 3 &&
+    parts.every((part) => part.length > 0 && /^[A-Za-z0-9_-]+$/.test(part))
+  );
+}
+
+/**
+ * Rejects URLs (poisoned by the pre-13e65e4 cold-boot bug) and raw JWTs so
+ * neither can ever masquerade as a Passport code or 4-word passkey.
+ */
+export function isBogusPassportValue(value) {
+  if (typeof value !== "string") return true;
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  if (
+    /^https?:/i.test(trimmed) ||
+    trimmed.includes("://") ||
+    trimmed.includes("/")
+  ) {
+    return true;
+  }
+  if (isJwtLike(trimmed)) {
+    return true;
+  }
+  return false;
+}
+
 export function normalizeStoredSupporterCode(code) {
+  if (isBogusPassportValue(code)) {
+    return "";
+  }
   const parsed = parseFourWordPasskey(code);
   if (parsed) {
     return parsed.phrase;
@@ -37,17 +70,67 @@ export function readStoredSupporterCode(storage) {
   const targetStorage = getStorage(storage);
   if (!targetStorage) return "";
   try {
-    return normalizeStoredSupporterCode(
-      targetStorage.getItem(STORAGE_KEYS.SUPPORTER_PASSPORT_CODE) ||
-        targetStorage.getItem(STORAGE_KEYS.CONTRIBUTOR_TOKEN) ||
-        "",
-    );
+    const raw =
+      targetStorage.getItem(STORAGE_KEYS.SUPPORTER_PASSPORT_CODE) || "";
+    const normalized = normalizeStoredSupporterCode(raw);
+    if (raw && !normalized) {
+      targetStorage.removeItem(STORAGE_KEYS.SUPPORTER_PASSPORT_CODE);
+    }
+    return normalized;
   } catch {
     return "";
   }
 }
 
+/**
+ * Evicts URL strings written by the old cold-boot pairing bug from both
+ * SUPPORTER_PASSPORT_CODE and CONTRIBUTOR_TOKEN, and resets zombie contributor
+ * flags when neither a valid Passport code nor a valid JWT remains.
+ */
+export function healPoisonedPassportStorage(storage) {
+  const targetStorage = getStorage(storage);
+  if (!targetStorage) return false;
+  let healed = false;
+  try {
+    const rawCode =
+      targetStorage.getItem(STORAGE_KEYS.SUPPORTER_PASSPORT_CODE) || "";
+    if (rawCode && !normalizeStoredSupporterCode(rawCode)) {
+      targetStorage.removeItem(STORAGE_KEYS.SUPPORTER_PASSPORT_CODE);
+      healed = true;
+    }
+
+    const rawToken =
+      targetStorage.getItem(STORAGE_KEYS.CONTRIBUTOR_TOKEN) || "";
+    if (
+      rawToken &&
+      (/^https?:/i.test(rawToken.trim()) ||
+        rawToken.includes("://") ||
+        rawToken.includes("/"))
+    ) {
+      targetStorage.removeItem(STORAGE_KEYS.CONTRIBUTOR_TOKEN);
+      healed = true;
+    }
+
+    const validCode = readStoredSupporterCode(targetStorage);
+    const remainingToken =
+      targetStorage.getItem(STORAGE_KEYS.CONTRIBUTOR_TOKEN) || "";
+    const hasValidToken = isJwtLike(remainingToken);
+    const isMarkedContributor =
+      targetStorage.getItem(STORAGE_KEYS.CONTRIBUTOR) === "true";
+
+    if (isMarkedContributor && !validCode && !hasValidToken) {
+      targetStorage.setItem(STORAGE_KEYS.CONTRIBUTOR, "false");
+      targetStorage.removeItem(STORAGE_KEYS.CONTRIBUTOR_EXPIRES);
+      healed = true;
+    }
+  } catch {
+    // Ignore blocked storage
+  }
+  return healed;
+}
+
 export function isPersonalPassportCode(code) {
+  if (isBogusPassportValue(code)) return false;
   if (parseFourWordPasskey(code)) return true;
   const clean = code?.toString().trim().toUpperCase() || "";
   const compact = clean.replace(/^ZL[-_\s]?/, "").replace(/[-_\s]/g, "");

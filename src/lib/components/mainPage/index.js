@@ -4,7 +4,7 @@ import FooterComponent from "./FooterComponent.svelte";
 import AnimatedTitle from "./AnimatedTitle.svelte";
 import RecordButtonWithTimer from "./audio-transcript/RecordButtonWithTimer.svelte";
 import PermissionError from "./audio-transcript/PermissionError.svelte";
-import { AboutModal, ExtensionModal, IntroModal } from "./modals";
+import { AboutModal, IntroModal } from "./modals";
 
 export {
   MainContainer,
@@ -14,6 +14,5 @@ export {
   RecordButtonWithTimer,
   PermissionError,
   AboutModal,
-  ExtensionModal,
   IntroModal,
 };

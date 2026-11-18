@@ -17,12 +17,15 @@
   import { soundService } from "$lib/services/infrastructure/soundService";
   import { hapticService } from "$lib/services/infrastructure";
   import MembershipCard from "$lib/components/ui/MembershipCard.svelte";
+  import SyncPresence from "$lib/components/ui/SyncPresence.svelte";
   import Confetti from "$lib/components/ui/Confetti.svelte";
+  import { parseFourWordPasskey } from "$lib/softstack-passport/identity.js";
   import {
     readStoredSupporterCode,
     saveStoredSupporterCode,
     getVaultHash,
   } from "$lib/services/vaultHashStorage.js";
+  import { extractPairingInput } from "$lib/services/realtime/qrHandshakeService.js";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
 
   export let closeModal = () => {};
@@ -32,7 +35,7 @@
 
   const PREVIEW_VAULT_HASH =
     "000000100000000f000000000000000000000000000000000000000000000000";
-  const MAX_PASSPORT_CODE_LENGTH = 64;
+  const MAX_PASSPORT_CODE_LENGTH = 160;
 
   let code = "";
   let errorMessage = "";
@@ -49,6 +52,14 @@
   let isSendingEmail = false;
   let emailSent = false;
   let emailInputEl;
+
+  let showWordsForm = false;
+  let wordsInput = "";
+  let wordsError = "";
+  let wordsBusy = false;
+  let wordsInputEl;
+  let justSynced = false;
+  let confirmingDisconnect = false;
 
   let passportExpiry = null;
 
@@ -95,28 +106,48 @@
     passportCode = readStoredSupporterCode() || "";
   }
 
+  $: parsedPhrase = parseFourWordPasskey(passportCode)?.phrase || "";
+  $: hasPasskey = Boolean(parsedPhrase);
+
   $: hashSeed = passportCode || ($isContributor ? "contributor-active" : "");
 
-  $: if (hashSeed && !vaultHash) {
+  $: if (hashSeed) {
     getVaultHash(hashSeed)
       .then((h) => {
         vaultHash = h;
       })
       .catch(() => {});
+  } else {
+    vaultHash = "";
   }
 
-  onMount(() => {
+  function refreshStoredPassport() {
     if (!browser) return;
     passportExpiry = readPassportExpiry();
     const storedCode = readStoredSupporterCode();
-    if (storedCode) {
-      passportCode = storedCode;
-      getVaultHash(storedCode)
+    passportCode = storedCode || "";
+    const seed = storedCode || ($isContributor ? "contributor-active" : "");
+    if (seed) {
+      getVaultHash(seed)
         .then((h) => {
           vaultHash = h;
         })
         .catch(() => {});
+    } else {
+      vaultHash = "";
     }
+  }
+
+  onMount(() => {
+    if (!browser) return;
+    refreshStoredPassport();
+    window.addEventListener("ziplist-passport-changed", refreshStoredPassport);
+    return () => {
+      window.removeEventListener(
+        "ziplist-passport-changed",
+        refreshStoredPassport,
+      );
+    };
   });
 
   function claimStorageKey(checkoutId) {
@@ -159,6 +190,11 @@
       emailInput = "";
       emailError = "";
       emailSent = false;
+      showWordsForm = false;
+      wordsInput = "";
+      wordsError = "";
+      justSynced = false;
+      confirmingDisconnect = false;
     }, ANIMATION.MODAL.CLOSE_DURATION);
   }
 
@@ -167,9 +203,109 @@
     emailSent = false;
     showEmailForm = !showEmailForm;
     if (showEmailForm) {
+      showWordsForm = false;
       await tick();
       emailInputEl?.focus();
     }
+  }
+
+  async function toggleWordsForm() {
+    wordsError = "";
+    showWordsForm = !showWordsForm;
+    if (showWordsForm) {
+      showEmailForm = false;
+      await tick();
+      wordsInputEl?.focus();
+    }
+  }
+
+  async function redeemAndLink(rawInput) {
+    const extracted = extractPairingInput(rawInput);
+    const candidateCode = extracted?.code || rawInput.trim();
+    const candidateSyncPhrase = extracted?.phrase || "";
+
+    if (!candidateCode) {
+      return { ok: false, error: "Enter a 4-word passkey to unlock." };
+    }
+
+    const response = await fetch("/api/contributor/redeem", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ code: candidateCode }),
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || !payload.valid) {
+      return {
+        ok: false,
+        error: payload.error || "Check the 4-word passkey and try once more.",
+      };
+    }
+
+    const personalCode = saveStoredSupporterCode(
+      payload.phrase || payload.code || candidateCode,
+    );
+    setContributorStatus(true, payload.token || null);
+    if (candidateSyncPhrase) {
+      deviceSyncStore.pairWithPhrase(candidateSyncPhrase);
+    }
+    passportCode = personalCode;
+    passportExpiry = readPassportExpiry();
+    vaultHash = await getVaultHash(personalCode);
+    await deviceSyncStore.enableSync();
+
+    return { ok: true };
+  }
+
+  async function handleWordsRestore() {
+    if (!browser || wordsBusy) return;
+    const raw = wordsInput.trim();
+    if (!raw) return;
+
+    wordsBusy = true;
+    wordsError = "";
+
+    try {
+      const result = await redeemAndLink(raw);
+      if (!result.ok) {
+        wordsError = result.error;
+        return;
+      }
+
+      wordsInput = "";
+      showWordsForm = false;
+      justSynced = true;
+      showConfetti = true;
+      soundService?.fanfare?.({ force: true });
+      hapticService?.notification?.("success");
+      window.dispatchEvent(
+        new CustomEvent("ziplist:toast", {
+          detail: {
+            message: "Devices linked! ✨",
+            type: "success",
+          },
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to link 4-word passkey:", error);
+      wordsError = "Passkey check needs one more try in a moment.";
+    } finally {
+      wordsBusy = false;
+    }
+  }
+
+  function handleDisconnectPassport() {
+    if (!browser) return;
+    deviceSyncStore.disableSync();
+    setContributorStatus(false, null);
+    passportCode = "";
+    vaultHash = "";
+    passportExpiry = null;
+    confirmingDisconnect = false;
+    justSynced = false;
+    soundService?.select?.();
   }
 
   async function handleEmailPassport() {
@@ -192,7 +328,11 @@
       const response = await fetch("/api/contributor/email-pass", {
         method: "POST",
         headers,
-        body: JSON.stringify({ email: targetEmail, code: targetCode }),
+        body: JSON.stringify({
+          email: targetEmail,
+          code: targetCode,
+          phrase: parseFourWordPasskey(targetCode)?.phrase || "",
+        }),
       });
       const payload = await response.json().catch(() => ({}));
 
@@ -259,28 +399,12 @@
     errorMessage = "";
 
     try {
-      const response = await fetch("/api/contributor/redeem", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: code.trim() }),
-      });
-      const payload = await response.json().catch(() => ({}));
-
-      if (!response.ok || !payload.valid) {
-        errorMessage =
-          payload.error || "Check the Passport key and try once more.";
+      const result = await redeemAndLink(code);
+      if (!result.ok) {
+        errorMessage = result.error;
         return;
       }
 
-      const personalCode = saveStoredSupporterCode(
-        payload.phrase || payload.code || code.trim(),
-      );
-      setContributorStatus(true, payload.token || null);
-      passportCode = personalCode;
-      vaultHash = await getVaultHash(personalCode);
-      await deviceSyncStore.enableSync();
       showConfetti = true;
       soundService?.fanfare?.({ force: true });
       hapticService?.notification?.("success");
@@ -342,20 +466,34 @@
             id="contributor_modal_title"
             class="whitespace-nowrap px-1 text-[clamp(1.15rem,5vw,1.55rem)] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
           >
-            Passport <span class="zl-marker">Ready</span>
+            {#if justSynced}
+              🎉 Devices <span class="zl-marker">Linked!</span>
+            {:else}
+              Passport <span class="zl-marker">Ready</span>
+            {/if}
           </h3>
           <p
             id="contributor_modal_description"
-            class="whitespace-nowrap px-0 text-[clamp(0.64rem,2.6vw,0.875rem)] font-bold leading-snug"
+            class="px-2 text-xs font-bold leading-snug sm:text-sm"
             style:color="var(--zl-vibe-accent-text, #db2777)"
           >
-            Scan the card to link another device
+            {#if justSynced}
+              Lists stay in sync across screens.
+            {:else if hasPasskey}
+              Scan the QR stamp or tap the 4-word passkey to copy
+            {:else}
+              Enter the 4-word passkey below to link another device
+            {/if}
           </p>
         </div>
 
         {#if vaultHash}
           <div class="flex flex-col items-center gap-1.5 py-1">
-            <MembershipCard {vaultHash} {passportCode} />
+            <MembershipCard
+              {vaultHash}
+              {passportCode}
+              passportPhrase={parsedPhrase}
+            />
             {#if passportExpiryLabel}
               <p
                 class="px-2 text-center text-[11px] font-black uppercase tracking-[0.08em]"
@@ -369,56 +507,208 @@
           </div>
         {/if}
 
-        <div class="space-y-2.5 pt-1 text-center">
-          <button
-            type="button"
-            class="zl-passport-gold-btn"
-            on:click={toggleEmailForm}
-            aria-expanded={showEmailForm}
-          >
-            {emailSent ? "Passport emailed" : "Email Passport"}
-          </button>
+        <SyncPresence aloneLabel="Ready to link another device" />
 
-          {#if showEmailForm}
+        <div class="space-y-2.5 pt-1 text-center">
+          {#if hasPasskey}
+            <button
+              type="button"
+              class="zl-passport-gold-btn"
+              on:click={toggleEmailForm}
+              aria-expanded={showEmailForm}
+            >
+              {emailSent ? "Passport emailed" : "Email Passport"}
+            </button>
+
+            {#if showEmailForm}
+              <form
+                class="mx-auto flex max-w-sm flex-col gap-2 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] p-3 shadow-[3px_3px_0px_#1e1714]"
+                on:submit|preventDefault={handleEmailPassport}
+              >
+                <label
+                  for="passport-email-input"
+                  class="text-left text-xs font-black text-[#1e1714]"
+                >
+                  Send Passport &amp; 4-word passkey by email
+                </label>
+                <div class="flex gap-1.5">
+                  <input
+                    id="passport-email-input"
+                    bind:this={emailInputEl}
+                    bind:value={emailInput}
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    autocomplete="email"
+                    class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSendingEmail || !emailInput.trim()}
+                    class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] px-3.5 py-2 text-xs font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition hover:bg-[#ffd04a] active:bg-[#f2ac00] disabled:opacity-50"
+                  >
+                    {isSendingEmail ? "Sending..." : "Send"}
+                  </button>
+                </div>
+                {#if emailError}
+                  <p
+                    class="text-left text-xs font-bold text-[#8f3a28]"
+                    aria-live="polite"
+                  >
+                    {emailError}
+                  </p>
+                {/if}
+              </form>
+            {/if}
+
+            <button
+              type="button"
+              class="min-h-11 w-full rounded-xl border-[1.5px] border-[#1e1714]/25 bg-[#f6efe2] px-4 py-2.5 text-sm font-extrabold text-[#1e1714] transition-colors hover:border-[#1e1714]/45 hover:bg-[#efe5d2] active:scale-[0.99]"
+              aria-expanded={showWordsForm}
+              on:click={toggleWordsForm}
+            >
+              Use a different passkey
+            </button>
+          {:else}
+            <button
+              type="button"
+              class="min-h-12 w-full rounded-2xl border-2 border-[#1e1714] bg-[#ff5ca8] px-4 py-3 text-base font-black text-[#1e1714] shadow-[3px_3px_0_#1e1714] transition-all hover:-translate-y-0.5 hover:bg-[#ff459b] hover:shadow-[4px_4px_0_#1e1714] active:translate-y-0.5 active:bg-[#e62e84] active:shadow-[1px_1px_0_#1e1714]"
+              aria-expanded={showWordsForm}
+              on:click={toggleWordsForm}
+            >
+              Link 4-word passkey
+            </button>
+          {/if}
+
+          {#if showWordsForm}
             <form
               class="mx-auto flex max-w-sm flex-col gap-2 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] p-3 shadow-[3px_3px_0px_#1e1714]"
-              on:submit|preventDefault={handleEmailPassport}
+              on:submit|preventDefault={handleWordsRestore}
             >
               <label
-                for="passport-email-input"
+                for="passport-words-input"
                 class="text-left text-xs font-black text-[#1e1714]"
               >
-                Send Passport &amp; 4-word passkey by email
+                4-word passkey from another device:
               </label>
               <div class="flex gap-1.5">
                 <input
-                  id="passport-email-input"
-                  bind:this={emailInputEl}
-                  bind:value={emailInput}
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  autocomplete="email"
+                  id="passport-words-input"
+                  bind:this={wordsInputEl}
+                  bind:value={wordsInput}
+                  type="text"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  spellcheck="false"
+                  placeholder="e.g. velvet octopus drifts by"
+                  maxlength={MAX_PASSPORT_CODE_LENGTH}
                   class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
                 />
                 <button
                   type="submit"
-                  disabled={isSendingEmail || !emailInput.trim()}
-                  class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] px-3.5 py-2 text-xs font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition hover:bg-[#ffd04a] active:bg-[#f2ac00] disabled:opacity-50"
+                  disabled={wordsBusy || !wordsInput.trim()}
+                  class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#ff5ca8] px-3.5 py-2 text-xs font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition hover:bg-[#ff459b] active:bg-[#e62e84] disabled:opacity-50"
                 >
-                  {isSendingEmail ? "Sending..." : "Send"}
+                  {wordsBusy ? "Checking..." : "Link"}
                 </button>
               </div>
-              {#if emailError}
+              {#if wordsError}
                 <p
                   class="text-left text-xs font-bold text-[#8f3a28]"
                   aria-live="polite"
                 >
-                  {emailError}
+                  {wordsError}
                 </p>
               {/if}
             </form>
           {/if}
+
+          {#if !hasPasskey && passportCode}
+            <button
+              type="button"
+              class="zl-passport-gold-btn"
+              on:click={toggleEmailForm}
+              aria-expanded={showEmailForm}
+            >
+              {emailSent ? "Passport emailed" : "Email Passport"}
+            </button>
+
+            {#if showEmailForm}
+              <form
+                class="mx-auto flex max-w-sm flex-col gap-2 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] p-3 shadow-[3px_3px_0px_#1e1714]"
+                on:submit|preventDefault={handleEmailPassport}
+              >
+                <label
+                  for="passport-email-fallback-input"
+                  class="text-left text-xs font-black text-[#1e1714]"
+                >
+                  Send Passport &amp; 4-word passkey by email
+                </label>
+                <div class="flex gap-1.5">
+                  <input
+                    id="passport-email-fallback-input"
+                    bind:this={emailInputEl}
+                    bind:value={emailInput}
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    autocomplete="email"
+                    class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSendingEmail || !emailInput.trim()}
+                    class="min-h-11 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] px-3.5 py-2 text-xs font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition hover:bg-[#ffd04a] active:bg-[#f2ac00] disabled:opacity-50"
+                  >
+                    {isSendingEmail ? "Sending..." : "Send"}
+                  </button>
+                </div>
+                {#if emailError}
+                  <p
+                    class="text-left text-xs font-bold text-[#8f3a28]"
+                    aria-live="polite"
+                  >
+                    {emailError}
+                  </p>
+                {/if}
+              </form>
+            {/if}
+          {/if}
+
+          <!-- Quiet device disconnect so no browser ever stays stuck on an old pass -->
+          <div class="pt-1">
+            {#if confirmingDisconnect}
+              <div
+                class="flex flex-wrap items-center justify-between gap-2 rounded-xl border-[1.5px] border-[#1e1714]/25 bg-[#fffef7] px-3 py-2 text-xs font-bold text-[#44403c]"
+              >
+                <span>Disconnect this browser? Local lists stay here.</span>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    class="rounded-lg border border-[#1e1714]/30 bg-[#f6efe2] px-2.5 py-1 text-xs font-extrabold text-[#1e1714] hover:bg-[#efe5d2]"
+                    on:click={() => (confirmingDisconnect = false)}
+                  >
+                    Keep
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-lg border border-[#1e1714] bg-amber-200 px-2.5 py-1 text-xs font-black text-[#1e1714] hover:bg-amber-300"
+                    on:click={handleDisconnectPassport}
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <button
+                type="button"
+                class="text-xs font-bold text-[#525252] underline decoration-[#1e1714]/25 underline-offset-2 transition hover:text-[#1e1714]"
+                on:click={() => (confirmingDisconnect = true)}
+              >
+                Disconnect this device
+              </button>
+            {/if}
+          </div>
         </div>
       {:else if view === "redeem"}
         <!-- 2. Redeem State -->
@@ -434,7 +724,7 @@
             class="text-sm font-bold leading-snug"
             style="color: var(--zl-vibe-accent-text, #db2777);"
           >
-            Works with a 4-word passkey.
+            Works with a 4-word passkey or sync link.
           </p>
         </div>
 
@@ -453,7 +743,7 @@
             bind:this={codeInput}
             bind:value={code}
             type="text"
-            placeholder="velvet-octopus-drifts-by"
+            placeholder="velvet octopus drifts by"
             class="zl-passport-code-input"
             aria-describedby="passport-code-hint"
             autocomplete="off"
@@ -482,7 +772,7 @@
             id="passport-code-hint"
             class="text-center text-xs leading-relaxed text-[#525252]"
           >
-            Spaces or hyphens both work. Unlocks this device immediately.
+            Spaces, hyphens, or a pasted sync link all work.
           </p>
         </form>
 

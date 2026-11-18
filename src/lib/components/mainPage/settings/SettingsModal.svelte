@@ -1,16 +1,9 @@
 <script>
   import { onDestroy } from "svelte";
   import { browser } from "$app/environment";
-  import {
-    theme,
-    listFirstMode,
-    promptStyle,
-    isContributor,
-    applyTheme,
-  } from "$lib";
-  import { ANIMATION, PROMPT_STYLES, THEMES } from "$lib/constants";
+  import { theme, listFirstMode, isContributor, applyTheme } from "$lib";
+  import { ANIMATION, THEMES } from "$lib/constants";
   import { soundService } from "$lib/services/infrastructure/soundService";
-  import { promptManager } from "$lib/services/transcription/promptManager";
   import {
     listPreferences,
     setListPreference,
@@ -21,7 +14,6 @@
   export let closeModal = () => {};
 
   let selectedVibe;
-  let selectedVoiceStyle = PROMPT_STYLES.STANDARD;
   let listFirstModeValue = false;
   let contributorTimer = null;
 
@@ -33,10 +25,6 @@
     listFirstModeValue = value === "true";
   });
 
-  const unsubscribePromptStyle = promptStyle.subscribe((value) => {
-    if (value) selectedVoiceStyle = value;
-  });
-
   const vibeOptions = [
     { id: THEMES.HIGHLIGHTER, name: "Highlighter" },
     { id: THEMES.STICKY_NOTE, name: "Sticky Note" },
@@ -44,24 +32,10 @@
     { id: THEMES.LEGAL_PAD, name: "Legal Pad" },
   ];
 
-  const voiceStyleOptions = [
-    { id: PROMPT_STYLES.STANDARD, name: "Plain", hint: "Clean wording" },
-    { id: PROMPT_STYLES.SPARKLE_POP, name: "Sparkle", hint: "Bubbly flair" },
-    { id: PROMPT_STYLES.SURLY_PIRATE, name: "Pirate", hint: "Salty attitude" },
-    { id: PROMPT_STYLES.QUILL_AND_INK, name: "Quill", hint: "Proper ink" },
-  ];
-
-  // If the stored style isn't one of the four surfaced styles, sync from promptManager
-  if (browser) {
-    const activeStyle = promptManager.getCurrentStyle();
-    if (activeStyle) selectedVoiceStyle = activeStyle;
-  }
-
   onDestroy(() => {
     if (contributorTimer) clearTimeout(contributorTimer);
     unsubscribeTheme();
     unsubscribeListFirstMode();
-    unsubscribePromptStyle();
   });
 
   function changeVibe(vibeId) {
@@ -73,21 +47,6 @@
       window.dispatchEvent(
         new CustomEvent("ziplist-setting-changed", {
           detail: { setting: "theme", value: vibeId },
-        }),
-      );
-    }
-  }
-
-  function changeVoiceStyle(styleId) {
-    selectedVoiceStyle = styleId;
-    soundService.select();
-    promptManager.setStyle(styleId);
-    promptStyle.set(styleId);
-
-    if (browser) {
-      window.dispatchEvent(
-        new CustomEvent("ziplist-setting-changed", {
-          detail: { setting: "promptStyle", value: styleId },
         }),
       );
     }
@@ -152,7 +111,7 @@
     <div
       class="zl-modal-scroll-area min-h-0 space-y-3 overflow-y-auto overflow-x-hidden pb-1 pr-0.5"
     >
-      <!-- Header (TalkType canon: small mascot circle + Options title) -->
+      <!-- Header (small mascot circle + Options title) -->
       <div class="flex items-center gap-2">
         <div
           class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1e1714]/15 bg-gradient-to-br from-[#fffef7] to-pink-50"
@@ -166,7 +125,7 @@
           Options
         </h3>
         <p id="settings_modal_description" class="sr-only">
-          Adjust vibe, voice style, startup screen, and list preferences.
+          Adjust vibe, startup screen, and list preferences.
         </p>
       </div>
 
@@ -198,43 +157,6 @@
               >
                 {vibe.name}
               </span>
-            </button>
-          {/each}
-        </div>
-      </section>
-
-      <!-- Voice Style Section -->
-      <section
-        class="settings-section space-y-1.5"
-        aria-labelledby="settings_voice_title"
-      >
-        <div class="flex items-baseline justify-between gap-2">
-          <h4 id="settings_voice_title" class="settings-section-title">
-            Voice Style
-          </h4>
-          <span class="text-[11px] font-semibold text-[#525252]">
-            {voiceStyleOptions.find((opt) => opt.id === selectedVoiceStyle)
-              ?.hint || "Spoken item tone"}
-          </span>
-        </div>
-        <div
-          class="grid grid-cols-4 gap-1.5"
-          role="group"
-          aria-label="Spoken item voice style"
-        >
-          {#each voiceStyleOptions as styleOpt}
-            <button
-              type="button"
-              class="voice-option flex min-h-[40px] items-center justify-center rounded-xl border-2 px-1 py-1.5 text-[12px] tracking-tight transition-all duration-150 {selectedVoiceStyle ===
-              styleOpt.id
-                ? 'selected-voice border-[#1e1714] bg-[var(--zl-cta-color,#ffcc33)] font-black text-[#1e1714]'
-                : 'zl-control-border bg-[#fffdf5] font-bold text-[#3f3a36] hover:border-[#1e1714]/50'}"
-              on:click={() => changeVoiceStyle(styleOpt.id)}
-              title={styleOpt.hint}
-              aria-label={`${styleOpt.name} voice style: ${styleOpt.hint}`}
-              aria-pressed={selectedVoiceStyle === styleOpt.id}
-            >
-              <span class="whitespace-nowrap">{styleOpt.name}</span>
             </button>
           {/each}
         </div>
@@ -363,7 +285,7 @@
         </div>
       </section>
 
-      <!-- Bottom Passport CTA (TalkType parity) -->
+      <!-- Bottom Passport CTA -->
       <button
         type="button"
         class="zl-pitch-cta zl-pitch-cta-pink flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] bg-[#ff5ca8] px-4 py-2.5 text-sm font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition-all hover:bg-[#ff459b] hover:shadow-[3px_3px_0px_#1e1714] active:translate-y-0.5 active:bg-[#e62e84] active:shadow-[1px_1px_0px_#1e1714]"
@@ -431,8 +353,7 @@
     color: #1e1714;
   }
 
-  .selected-vibe,
-  .selected-voice {
+  .selected-vibe {
     box-shadow: 2px 2px 0px #1e1714;
   }
 
@@ -443,14 +364,12 @@
     white-space: nowrap;
   }
 
-  .vibe-option,
-  .voice-option {
+  .vibe-option {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .vibe-option:active,
-  .voice-option:active {
+  .vibe-option:active {
     box-shadow: none !important;
   }
 
@@ -522,7 +441,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .vibe-option,
-    .voice-option,
     .preview-mascot,
     .auto-start-glyph,
     .auto-start-glyph span {

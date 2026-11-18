@@ -67,6 +67,7 @@ const {
   hashPasskeyPhrase,
   normalizePasskeyPhrase,
   vaultHashForCode,
+  issueContributorToken,
 } = await import("./contributor/licenseCrypto.js");
 
 const {
@@ -91,8 +92,19 @@ const { ZIPLIST_EMAIL_PNG_BASE64 } =
 const { POST: emailPassPost } =
   await import("../../routes/api/contributor/email-pass/+server.js");
 
-const { isPersonalPassportCode, getVaultHash } =
-  await import("../services/vaultHashStorage.js");
+const {
+  isPersonalPassportCode,
+  getVaultHash,
+  normalizeStoredSupporterCode,
+  readStoredSupporterCode,
+  healPoisonedPassportStorage,
+} = await import("../services/vaultHashStorage.js");
+const { extractPairingInput } =
+  await import("../services/realtime/qrHandshakeService.js");
+const { promptManager } =
+  await import("../services/transcription/promptManager.js");
+const { promptTemplates } =
+  await import("../services/transcription/promptTemplates.js");
 const {
   parseFourWordPasskey,
   generateMemberIdentity,
@@ -529,6 +541,7 @@ assert.equal(
 // 5. Personal Passport code detection & About tips dealer
 assert.equal(isPersonalPassportCode(sampleCode), true);
 assert.equal(isPersonalPassportCode("SHARED-VOUCHER"), false);
+assert.equal(isPersonalPassportCode("https://ziplist.app/"), false);
 
 const deal1 = dealTips({ deck: [] });
 assert.equal(deal1.hand.length, 3, "dealTips should deal 3 tips per open");
@@ -538,6 +551,86 @@ assert.equal(
   "remaining deck should have total - 3 tips",
 );
 
+// 6. Poisoned storage self-healing & pairing input parsing
+function makeMockStorage(initial = {}) {
+  const map = new Map(Object.entries(initial));
+  return {
+    getItem: (k) => (map.has(k) ? map.get(k) : null),
+    setItem: (k, v) => map.set(k, String(v)),
+    removeItem: (k) => map.delete(k),
+  };
+}
+
+assert.equal(normalizeStoredSupporterCode("HTTPS://ZIPLIST.APP/"), "");
+assert.equal(
+  normalizeStoredSupporterCode("eyJhbGciOiJIUzI1NiJ9.eyJ2IjoxfQ.sig_part"),
+  "",
+);
+
+const poisonedStorage = makeMockStorage({
+  "ziplist-supporter-passport-code": "HTTPS://ZIPLIST.APP/",
+  "ziplist-contributor-token": "HTTPS://ZIPLIST.APP/",
+  "ziplist-contributor": "true",
+  "ziplist-contributor-expires": String(Date.now() + 86400000),
+});
+assert.equal(healPoisonedPassportStorage(poisonedStorage), true);
+assert.equal(poisonedStorage.getItem("ziplist-supporter-passport-code"), null);
+assert.equal(poisonedStorage.getItem("ziplist-contributor-token"), null);
+assert.equal(poisonedStorage.getItem("ziplist-contributor"), "false");
+assert.equal(poisonedStorage.getItem("ziplist-contributor-expires"), null);
+
+const issuedToken = issueContributorToken({
+  tier: "contributor",
+  stamps: ["ziplist"],
+});
+const healthyStorage = makeMockStorage({
+  "ziplist-supporter-passport-code": samplePhrase,
+  "ziplist-contributor-token": issuedToken,
+  "ziplist-contributor": "true",
+});
+assert.equal(healPoisonedPassportStorage(healthyStorage), false);
+assert.equal(readStoredSupporterCode(healthyStorage), samplePhrase);
+assert.equal(healthyStorage.getItem("ziplist-contributor"), "true");
+
+const tokenOnlyStorage = makeMockStorage({
+  "ziplist-contributor-token": issuedToken,
+  "ziplist-contributor": "true",
+});
+assert.equal(
+  readStoredSupporterCode(tokenOnlyStorage),
+  "",
+  "readStoredSupporterCode must never fall back to reading raw JWT token",
+);
+assert.equal(healPoisonedPassportStorage(tokenOnlyStorage), false);
+assert.equal(tokenOnlyStorage.getItem("ziplist-contributor"), "true");
+
+assert.equal(extractPairingInput("https://ziplist.app/"), null);
+assert.equal(extractPairingInput("https://ziplist.app/passport"), null);
+assert.deepEqual(
+  extractPairingInput(
+    "https://ziplist.app/#code=clever-penguin-dreams-uptown&sync=mossy-otter",
+  ),
+  { code: "clever-penguin-dreams-uptown", phrase: "mossy-otter" },
+);
+assert.deepEqual(
+  extractPairingInput("https://ziplist.app/u/clever-penguin-dreams-uptown"),
+  { code: "clever-penguin-dreams-uptown", phrase: "" },
+);
+assert.deepEqual(extractPairingInput("  clever penguin dreams uptown  "), {
+  code: "clever penguin dreams uptown",
+  phrase: "",
+});
+
+// 7. Checklist transcription prompt stays plain (no TalkType rewrite personas)
+assert.deepEqual(Object.keys(promptTemplates), ["standard"]);
+assert.deepEqual(Object.keys(promptTemplates.standard), ["transcribeAudio"]);
+const renderedPrompt = promptManager.getPrompt("transcribeAudio", {
+  existingItemsContext: "The current list is empty.",
+  existingTagsContext: "",
+});
+assert.match(renderedPrompt, /listening ear inside ZipList/);
+assert.doesNotMatch(renderedPrompt, /matey|Victorian|l33t/i);
+
 console.log(
-  "✓ contributor codes, 4-word passkeys, license lookup, and email-pass tests passed",
+  "✓ contributor codes, 4-word passkeys, self-healing storage, pairing parser, and prompt tests passed",
 );

@@ -36,13 +36,6 @@
     dispatch("showContributor");
   }
 
-  /* Extension is parked — not ready to be advertised yet. Restoring means
-     uncommenting this and its <button> below.
-  function showExtension() {
-    dispatch("showExtension");
-  }
-  */
-
   async function shareApp() {
     soundService.select();
 
@@ -111,7 +104,6 @@
   >
     Options
   </button>
-  <!-- Extension button parked with its handler above. -->
   <button
     type="button"
     class={footerButtonClass}

@@ -10,12 +10,6 @@ export const geminiService = {
   // Expose the preload function for hover-based preloading
   preloadModel,
 
-  // Get/set prompt style functions
-  getPromptStyle: promptManager.getCurrentStyle,
-  setPromptStyle: promptManager.setStyle,
-  getAvailableStyles: promptManager.getAvailableStyles,
-  subscribeToStyleChanges: promptManager.subscribe,
-
   async transcribeAudio(audioBlob, existingItems = [], existingTags = []) {
     try {
       if (import.meta.env.DEV) {

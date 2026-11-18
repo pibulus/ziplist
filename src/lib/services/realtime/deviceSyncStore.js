@@ -27,7 +27,10 @@ import {
   clearStoredSupporterCode,
   getVaultHash,
 } from "../vaultHashStorage.js";
-import { buildDeviceSyncUrl } from "./qrHandshakeService.js";
+import {
+  buildDeviceSyncUrl,
+  extractPairingInput,
+} from "./qrHandshakeService.js";
 
 function toast(message, type = "success") {
   if (!browser) return;
@@ -426,71 +429,8 @@ function createDeviceSyncStore() {
     return true;
   }
 
-  /**
-   * Parse pairing text from URL or pasted string.
-   * Supports:
-   * 1. New TalkType canon format: /#code=<code>&sync=<phrase>
-   * 2. Legacy format: /?sync=<phrase>#k=<key>&code=<code>
-   */
   function parsePairingLink(text) {
-    const value = (text ?? "").toString().trim();
-    if (!value) return null;
-
-    // Check for fragment parameters (#code=... or #k=...)
-    const hashAt = value.indexOf("#");
-    const queryAt = value.indexOf("?");
-
-    let hashParams = new URLSearchParams();
-    let queryParams = new URLSearchParams();
-
-    if (hashAt !== -1) {
-      hashParams = new URLSearchParams(value.slice(hashAt + 1));
-    }
-    if (queryAt !== -1) {
-      const queryPart =
-        hashAt !== -1 && hashAt > queryAt
-          ? value.slice(queryAt + 1, hashAt)
-          : value.slice(queryAt + 1);
-      queryParams = new URLSearchParams(queryPart);
-    }
-
-    const code =
-      hashParams.get("code") ||
-      hashParams.get("unlock") ||
-      hashParams.get("phrase") ||
-      queryParams.get("code") ||
-      queryParams.get("unlock") ||
-      queryParams.get("phrase") ||
-      "";
-    const privatePhrase =
-      hashParams.get("sync") || queryParams.get("sync") || "";
-
-    if (code) {
-      return {
-        code: code.trim().toUpperCase(),
-        phrase: privatePhrase ? normalizeSyncPhrase(privatePhrase) : "",
-      };
-    }
-
-    // If the input looks like a URL or path without code/unlock query/hash params,
-    // never treat the URL itself as a bare Passport code.
-    if (
-      /^https?:\/\//i.test(value) ||
-      value.includes("://") ||
-      value.includes("/")
-    ) {
-      return null;
-    }
-
-    // Bare code or 4-word passkey entered directly (e.g. "ZL-XXXX-XXXX" or "velvet-octopus-drifts-by")
-    if (value.startsWith("ZL-") || value.length >= 8) {
-      return {
-        code: value.toUpperCase(),
-        phrase: "",
-      };
-    }
-
-    return null;
+    return extractPairingInput(text);
   }
 
   async function applyPairing({ code, phrase }) {
@@ -527,7 +467,7 @@ function createDeviceSyncStore() {
   function handleIncomingUrl() {
     if (!browser) return false;
     const pairing = parsePairingLink(window.location.href);
-    if (!pairing || !pairing.code) return false;
+    if (!pairing || (!pairing.code && !pairing.phrase)) return false;
 
     // Clean address bar so code doesn't stay in browser history
     const url = new URL(window.location.href);
@@ -550,7 +490,11 @@ function createDeviceSyncStore() {
       url.pathname + (url.search || "") + (url.hash || ""),
     );
 
-    void applyPairing(pairing);
+    if (pairing.code) {
+      void applyPairing(pairing);
+    } else if (pairing.phrase) {
+      setPrivatePhrase(pairing.phrase);
+    }
     return true;
   }
 
@@ -587,6 +531,11 @@ function createDeviceSyncStore() {
     toast("Sync off on this device");
   }
 
+  let hashListenerBound = false;
+  function onHashChange() {
+    handleIncomingUrl();
+  }
+
   return {
     subscribe,
     connect,
@@ -600,11 +549,14 @@ function createDeviceSyncStore() {
     setPrivatePhrase,
     syncNow: () => pushLocalEnvelope(),
     init: () => {
-      if (!browser) return;
+      if (!browser) return false;
       refreshStoreState();
 
-      handleIncomingUrl();
-      window.addEventListener("hashchange", () => handleIncomingUrl());
+      const handled = handleIncomingUrl();
+      if (!hashListenerBound) {
+        window.addEventListener("hashchange", onHashChange);
+        hashListenerBound = true;
+      }
 
       if (contributorUnsubscribe) contributorUnsubscribe();
       contributorUnsubscribe = isContributor.subscribe((unlocked) => {
@@ -614,6 +566,7 @@ function createDeviceSyncStore() {
           disconnect();
         }
       });
+      return handled;
     },
   };
 }

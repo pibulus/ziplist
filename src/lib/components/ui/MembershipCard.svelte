@@ -214,17 +214,27 @@
   $: if (cardEl) cardEl.classList.toggle("is-copied", idCopied);
   $: if (cardEl) cardEl.classList.toggle("is-squishing", isSquishing);
 
-  onMount(() => {
+  function refreshStoredCode() {
     storedPassportCode = readStoredSupporterCode();
+  }
+
+  onMount(() => {
+    refreshStoredCode();
     customAvatarUri = readCustomPassportAvatar(undefined, AVATAR_KEY);
     reducedMotion =
       typeof window !== "undefined" &&
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (typeof window !== "undefined") {
+      window.addEventListener("ziplist-passport-changed", refreshStoredCode);
+    }
     return cleanup;
   });
 
   function cleanup() {
+    if (typeof window !== "undefined") {
+      window.removeEventListener("ziplist-passport-changed", refreshStoredCode);
+    }
     if (rafId !== null && typeof cancelAnimationFrame === "function")
       cancelAnimationFrame(rafId);
     if (squishTimer) clearTimeout(squishTimer);

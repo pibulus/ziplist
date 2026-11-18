@@ -1,5 +1,5 @@
 /**
- * Bridges Passport import links with trusted local QR rendering.
+ * Bridges Passport import links with trusted local QR rendering and pairing input parsing.
  */
 
 import { normalizeSyncPhrase } from "./syncPhrase.js";
@@ -17,6 +17,79 @@ function getZipListBaseUrl(baseUrl) {
   if (typeof window !== "undefined" && window.location?.origin)
     return window.location.origin;
   return "https://ziplist.app";
+}
+
+/**
+ * Parses a pasted pairing link, /u/<code> URL, or bare 4-word passkey / code.
+ * Rejects bare URLs without pairing parameters (e.g. "https://ziplist.app/")
+ * so a homepage URL can never masquerade as a Passport credential.
+ */
+export function extractPairingInput(text) {
+  const value = (text ?? "").toString().trim();
+  if (!value) return null;
+
+  const hashAt = value.indexOf("#");
+  const queryAt = value.indexOf("?");
+
+  let hashParams = new URLSearchParams();
+  let queryParams = new URLSearchParams();
+
+  if (hashAt !== -1) {
+    hashParams = new URLSearchParams(value.slice(hashAt + 1));
+  }
+  if (queryAt !== -1) {
+    const queryPart =
+      hashAt !== -1 && hashAt > queryAt
+        ? value.slice(queryAt + 1, hashAt)
+        : value.slice(queryAt + 1);
+    queryParams = new URLSearchParams(queryPart);
+  }
+
+  let code =
+    hashParams.get("code") ||
+    hashParams.get("unlock") ||
+    hashParams.get("phrase") ||
+    queryParams.get("code") ||
+    queryParams.get("unlock") ||
+    queryParams.get("phrase") ||
+    "";
+  const privatePhrase = hashParams.get("sync") || queryParams.get("sync") || "";
+
+  if (!code) {
+    const uMatch = value.match(/\/u\/([^/?#\s]+)/i);
+    if (uMatch?.[1]) {
+      try {
+        code = decodeURIComponent(uMatch[1]);
+      } catch {
+        code = uMatch[1];
+      }
+    }
+  }
+
+  if (code || privatePhrase) {
+    return {
+      code: code.trim(),
+      phrase: privatePhrase ? normalizeSyncPhrase(privatePhrase) : "",
+    };
+  }
+
+  // Never treat a bare URL or path without code/unlock params as a Passport key.
+  if (
+    /^https?:\/\//i.test(value) ||
+    value.includes("://") ||
+    value.includes("/")
+  ) {
+    return null;
+  }
+
+  if (/^(ZL|SS)-/i.test(value) || value.length >= 8) {
+    return {
+      code: value.trim(),
+      phrase: "",
+    };
+  }
+
+  return null;
 }
 
 export function buildPassportSyncUrl(codeOrOptions = {}, baseUrlArg = "") {
