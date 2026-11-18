@@ -451,7 +451,11 @@
     <div
       class="zl-modal-scroll-area zl-passport-scroll min-h-0 space-y-3 overflow-y-auto overflow-x-hidden pb-1 pr-1 sm:space-y-3.5"
     >
-      <div class="flex justify-center pt-0.5">
+      <div
+        class="justify-center pt-0.5 {view === 'redeem'
+          ? 'hidden sm:flex'
+          : 'flex'}"
+      >
         <div
           class="animate-zl-pulse-slow zl-pitch-hero h-14 w-14 sm:h-16 sm:w-16"
         >
@@ -540,7 +544,7 @@
                     required
                     placeholder="name@example.com"
                     autocomplete="email"
-                    class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
+                    class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-base font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0 sm:text-sm"
                   />
                   <button
                     type="submit"
@@ -602,7 +606,7 @@
                   spellcheck="false"
                   placeholder="e.g. velvet octopus drifts by"
                   maxlength={MAX_PASSPORT_CODE_LENGTH}
-                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
+                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-base font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0 sm:text-sm"
                 />
                 <button
                   type="submit"
@@ -653,7 +657,7 @@
                     required
                     placeholder="name@example.com"
                     autocomplete="email"
-                    class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-xs font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0"
+                    class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-base font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0 sm:text-sm"
                   />
                   <button
                     type="submit"
@@ -712,19 +716,19 @@
         </div>
       {:else if view === "redeem"}
         <!-- 2. Redeem State -->
-        <div class="space-y-1.5 text-center">
+        <div class="space-y-1 pt-2 text-center sm:pt-0">
           <h3
             id="contributor_modal_title"
-            class="px-10 text-[1.55rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-3xl"
+            class="whitespace-nowrap px-2 text-[clamp(1.25rem,5vw,1.6rem)] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
           >
-            Enter a <span class="zl-marker">Passport Key</span>
+            Enter <span class="zl-marker">Passport Key</span>
           </h3>
           <p
             id="contributor_modal_description"
-            class="text-sm font-bold leading-snug"
+            class="text-xs font-bold leading-snug sm:text-sm"
             style="color: var(--zl-vibe-accent-text, #db2777);"
           >
-            Works with a 4-word passkey or sync link.
+            Paste a 4-word passkey or sync link.
           </p>
         </div>
 
@@ -732,10 +736,7 @@
           class="zl-passport-code-form"
           on:submit|preventDefault={handleUnlock}
         >
-          <label
-            for="contributor-code-input"
-            class="text-sm font-bold text-[#1e1714]"
-          >
+          <label for="contributor-code-input" class="sr-only">
             4-word passkey
           </label>
           <input
@@ -743,9 +744,8 @@
             bind:this={codeInput}
             bind:value={code}
             type="text"
-            placeholder="velvet octopus drifts by"
+            placeholder="e.g. velvet octopus drifts by"
             class="zl-passport-code-input"
-            aria-describedby="passport-code-hint"
             autocomplete="off"
             autocapitalize="none"
             spellcheck="false"
@@ -754,7 +754,7 @@
 
           {#if errorMessage}
             <p
-              class="rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] p-2.5 text-xs font-bold text-[#1e1714]"
+              class="rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] p-2.5 text-xs font-bold text-[#8f3a28]"
               role="alert"
             >
               {errorMessage}
@@ -768,12 +768,6 @@
           >
             {isSubmitting ? "Checking key..." : "Unlock ZipList Passport"}
           </button>
-          <p
-            id="passport-code-hint"
-            class="text-center text-xs leading-relaxed text-[#525252]"
-          >
-            Spaces, hyphens, or a pasted sync link all work.
-          </p>
         </form>
 
         <button
@@ -786,10 +780,10 @@
         </button>
       {:else}
         <!-- 3. Pitch Manifesto State -->
-        <div class="space-y-1 px-10 text-center sm:px-4">
+        <div class="space-y-1 px-8 text-center sm:px-4">
           <h3
             id="contributor_modal_title"
-            class="text-[1.45rem] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
+            class="whitespace-nowrap text-[clamp(1.3rem,5.2vw,1.6rem)] font-black leading-[1.15] tracking-tight text-[#1e1714] sm:text-2xl"
           >
             {CONTRIBUTOR_COPY.headline}
             <span class="zl-marker">{CONTRIBUTOR_COPY.headlineHighlight}</span>
@@ -801,14 +795,8 @@
           >
             {CONTRIBUTOR_COPY.tagline}
           </p>
-          <p class="pt-1 text-sm font-black leading-tight text-[#1e1714]">
-            {CONTRIBUTOR_COPY.priceHeadline}
-            <span class="block pt-0.5 text-[11px] font-bold text-[#525252]">
-              {CONTRIBUTOR_COPY.priceSuffix}
-            </span>
-          </p>
           {#if reasonNote}
-            <p class="pt-2 text-xs font-bold leading-snug text-[#525252]">
+            <p class="pt-1.5 text-xs font-bold leading-snug text-[#525252]">
               {reasonNote}
             </p>
           {/if}
@@ -822,16 +810,25 @@
           </ul>
         </div>
 
+        <div class="flex flex-col items-center gap-1.5 px-2 py-0.5 sm:px-4">
+          <div class="w-full max-w-[310px]">
+            <MembershipCard vaultHash={PREVIEW_VAULT_HASH} isPreview={true} />
+          </div>
+          <p class="text-center text-[11px] font-bold text-[#525252]">
+            Tap card to shuffle holo skins
+          </p>
+        </div>
+
         {#if errorMessage}
           <p
-            class="rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] p-2.5 text-xs font-bold text-[#1e1714]"
+            class="rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] p-2.5 text-xs font-bold text-[#8f3a28]"
             role="alert"
           >
             {errorMessage}
           </p>
         {/if}
 
-        <div class="space-y-2 pt-1">
+        <div class="space-y-1.5 pt-0.5">
           <button
             type="button"
             class="zl-pitch-cta"
@@ -845,11 +842,8 @@
                 : CONTRIBUTOR_COPY.ctaButton}
             </span>
           </button>
-          <p
-            class="text-center text-[11px] font-bold leading-snug text-[#525252]"
-          >
-            Passport arrives by email about a minute after payment. The address
-            stays with it, so a reminder can find it before the year is up.
+          <p class="text-center text-xs font-bold text-[#525252]">
+            {CONTRIBUTOR_COPY.priceLine}
           </p>
         </div>
 
@@ -860,16 +854,6 @@
         >
           {CONTRIBUTOR_COPY.redeemButton}
         </button>
-
-        <!-- The card is the tactile bonus, not a wall between value and cost. -->
-        <div class="flex flex-col items-center gap-1.5 px-2 py-1 sm:px-4">
-          <div class="w-full max-w-[310px]">
-            <MembershipCard vaultHash={PREVIEW_VAULT_HASH} isPreview={true} />
-          </div>
-          <p class="text-center text-[11px] font-bold text-[#525252]">
-            Card shuffles skins · Tilt to shine
-          </p>
-        </div>
       {/if}
     </div>
   </div>

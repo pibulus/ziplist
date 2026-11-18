@@ -54,7 +54,10 @@
         >
           Zip up a list,<br /><span class="zl-marker">lickety-split.</span>
         </h2>
-        <p class="text-sm font-bold tracking-tight text-pink-600 sm:text-base">
+        <p
+          class="text-sm font-bold tracking-tight sm:text-base"
+          style:color="var(--zl-vibe-accent-text, #db2777)"
+        >
           The talkable, shareable list thing.
         </p>
       </div>
@@ -103,14 +106,6 @@
     .intro-line {
       font-size: 1rem;
     }
-  }
-
-  /* Custom pink shadow for intro modal (TalkType canon) */
-  .intro-modal-box {
-    box-shadow:
-      0 10px 25px -5px rgba(249, 168, 212, 0.3),
-      0 8px 10px -6px rgba(249, 168, 212, 0.2),
-      0 0 15px rgba(249, 168, 212, 0.15);
   }
 
   /* Mascot slot sizing inside pitch hero */

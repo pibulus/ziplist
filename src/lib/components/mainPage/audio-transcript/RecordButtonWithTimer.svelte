@@ -720,7 +720,7 @@
 
   /* Clipboard notification state */
   .notification-pulse {
-    background-color: #f5f3ff !important;
+    background-color: #fbf1e4 !important;
     border-color: #1e1714 !important;
     box-shadow: 3px 3px 0px #1e1714;
   }

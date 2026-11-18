@@ -1,18 +1,15 @@
 <!--
   ThemeMascot — a tiny ZipList speech-bubble mascot in a given theme's gradient,
-  for the vibe picker tiles. Inlines the real ziplist-icon-base silhouette (bubble
-  + list rows) plus the icon eyes, recolored with that theme's 3-stop palette.
-  Each instance gets a unique gradient id so tiles don't share a fill.
+  for the vibe picker tiles and modal headers. Matches the --zl-mascot-gradient-*
+  stops in theme-variables.css stop-for-stop.
 -->
 <script>
   export let theme = "highlighter";
   export let size = "38px";
 
-  // Per-theme 3-stop palettes — "The Desk Drawer" roster (re-cut 2026-07-21),
-  // matching the --zl-mascot-gradient-* stops in theme-variables.css exactly.
   const mascotThemes = {
-    highlighter: { start: "#ffcc33", mid: "#ffa36f", end: "#ff6ac2" },
-    "sticky-note": { start: "#fff95c", mid: "#ffe14d", end: "#ffbf1a" },
+    highlighter: { start: "#fbff26", mid: "#ffd84d", end: "#ff6ac2" },
+    "sticky-note": { start: "#fff3a0", mid: "#ffe873", end: "#ffd633" },
     "gel-pen": { start: "#ff7ab8", mid: "#ff4f9e", end: "#f5157f" },
     "legal-pad": { start: "#d8fa6e", mid: "#b4e83a", end: "#85c203" },
   };
@@ -40,7 +37,7 @@
       gradientUnits="userSpaceOnUse"
     >
       <stop offset="0" stop-color={pal.start} />
-      <stop offset="0.5" stop-color={pal.mid} />
+      <stop offset="0.42" stop-color={pal.mid} />
       <stop offset="1" stop-color={pal.end} />
     </linearGradient>
   </defs>

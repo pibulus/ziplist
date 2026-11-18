@@ -8,12 +8,39 @@
   // Props
   export let sharedList;
 
+  let limitReached = false;
+  let saveError = "";
+
   // Save the list and open it at home
   async function saveList() {
-    if (sharedList) {
+    if (!sharedList) return;
+    saveError = "";
+    limitReached = false;
+    try {
       await listsService.addList(sharedList);
       goto("/");
+    } catch (err) {
+      const msg = err?.message || "Could not save shared list.";
+      if (/three|limit|max|12|twelve|passport/i.test(msg)) {
+        limitReached = true;
+      } else {
+        saveError = msg;
+      }
     }
+  }
+
+  function mergeIntoCurrentList() {
+    if (!sharedList?.items?.length) return;
+    const active = listsService.getActiveList();
+    listsService.addItems(
+      sharedList.items.map(({ text, checked, tags }) => ({
+        text,
+        checked,
+        tags,
+      })),
+      active?.id || null,
+    );
+    goto("/");
   }
 </script>
 
@@ -39,9 +66,31 @@
     </ul>
 
     <footer class="share-card-footer">
-      <button type="button" class="save-button" on:click={saveList}>
-        Save to ZipList
-      </button>
+      {#if limitReached}
+        <p class="limit-note" role="alert">
+          Free ZipList holds 3 separate lists. Merge these items into the
+          current list, or unlock 12 lists with Passport.
+        </p>
+        <div class="limit-actions">
+          <button
+            type="button"
+            class="save-button"
+            on:click={mergeIntoCurrentList}
+          >
+            Merge into Current List
+          </button>
+          <a href="/passport" class="passport-link-btn">
+            Unlock 12 Lists (Passport)
+          </a>
+        </div>
+      {:else}
+        {#if saveError}
+          <p class="limit-note" role="alert">{saveError}</p>
+        {/if}
+        <button type="button" class="save-button" on:click={saveList}>
+          Save to ZipList
+        </button>
+      {/if}
     </footer>
   </div>
 
@@ -231,6 +280,39 @@
   .save-button:active {
     transform: translateY(1px);
     box-shadow: 0px 0px 0px #1e1714;
+  }
+
+  .limit-note {
+    margin: 0 0 0.7rem;
+    font-family: "Space Mono", monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #1e1714;
+    text-align: center;
+  }
+
+  .limit-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .passport-link-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 46px;
+    border: 2px solid #1e1714;
+    border-radius: 999px;
+    background: #fffef7;
+    color: #1e1714;
+    font-family: "Space Mono", monospace;
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 1.5px 2px 0px #1e1714;
   }
 
   /* The onward path, quiet under the card */

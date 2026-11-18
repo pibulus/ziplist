@@ -1,9 +1,10 @@
 <!--
   BrandMark — the tiny letterhead for standalone pages (share landing,
-  live rooms): mini mascot + ZipList.app wordmark, linking home. Quiet,
-  classy, and the recipient's breadcrumb back to the app.
+  live rooms) and list-first mode: mini mascot + ZipList.app wordmark,
+  following the active Desk Drawer vibe.
 -->
 <script>
+  import { theme } from "$lib";
   import ThemeMascot from "../mainPage/settings/ThemeMascot.svelte";
 
   export let href = "/";
@@ -11,7 +12,7 @@
 
 <a class="zl-brandmark" {href} aria-label="Open ZipList">
   <span class="zl-brandmark-icon" aria-hidden="true">
-    <ThemeMascot theme="highlighter" size="22px" />
+    <ThemeMascot theme={$theme} size="22px" />
   </span>
   <span>
     ZipList<span class="zl-brandmark-suffix" aria-hidden="true">.app</span>
@@ -26,9 +27,9 @@
     font-family: "Space Mono", monospace;
     font-size: 0.95rem;
     font-weight: 800;
-    color: var(--zl-text-color-primary, #444);
+    color: var(--zl-text-color-primary, #1e1714);
     text-decoration: none;
-    opacity: 0.85;
+    opacity: 0.9;
     transition:
       opacity 0.2s ease,
       transform 0.2s ease;
@@ -47,6 +48,12 @@
   }
 
   .zl-brandmark-suffix {
-    color: var(--zl-cta-color, #ffb000);
+    background: var(
+      --app-suffix-gradient,
+      linear-gradient(to right, #ffcc33, #ff6ac2)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 </style>

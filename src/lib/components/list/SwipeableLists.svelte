@@ -414,6 +414,15 @@
     }
   }
 
+  let dotsEl;
+  $: if (dotsEl && activeListId) {
+    requestAnimationFrame(() => {
+      dotsEl
+        ?.querySelector(".dot.active")
+        ?.scrollIntoView({ inline: "center", block: "nearest" });
+    });
+  }
+
   onDestroy(() => {
     stopFlight();
     unsubscribe();
@@ -458,7 +467,7 @@
         </svg>
       </button>
     {/if}
-    <div class="pagination-dots">
+    <div class="pagination-dots" bind:this={dotsEl}>
       {#if lists.length === 0}
         <span
           class="dot is-boot-dot active"
@@ -744,7 +753,7 @@
   .pagination-dots {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: safe center;
     gap: 2px;
     margin: 0;
     min-width: 0;

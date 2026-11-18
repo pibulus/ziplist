@@ -59,7 +59,6 @@
   }
 
   onMount(() => {
-    dealNextHand();
     if (dialog && typeof MutationObserver !== "undefined") {
       openObserver = new MutationObserver(() => {
         if (dialog?.open && $isContributor) dealNextHand();
@@ -139,7 +138,53 @@
             {/each}
           </ul>
           <button type="button" class="about-deal-again" on:click={dealAgain}>
-            <span aria-hidden="true">🎲</span>
+            <svg
+              class="h-4 w-4 shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="4.5" />
+              <circle
+                cx="8.25"
+                cy="8.25"
+                r="1.35"
+                fill="currentColor"
+                stroke="none"
+              />
+              <circle
+                cx="15.75"
+                cy="8.25"
+                r="1.35"
+                fill="currentColor"
+                stroke="none"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="1.35"
+                fill="currentColor"
+                stroke="none"
+              />
+              <circle
+                cx="8.25"
+                cy="15.75"
+                r="1.35"
+                fill="currentColor"
+                stroke="none"
+              />
+              <circle
+                cx="15.75"
+                cy="15.75"
+                r="1.35"
+                fill="currentColor"
+                stroke="none"
+              />
+            </svg>
             <span>Deal three more</span>
           </button>
         </div>

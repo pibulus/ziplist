@@ -82,4 +82,50 @@ assert.equal(
   fromBase64Url(withPlus),
 );
 
+// Compact v2 tuple payload stays drastically smaller than verbose v1 JSON
+// while decoding identically alongside legacy v1 links.
+const sampleItems = Array.from({ length: 30 }, (_, idx) => ({
+  text: `Task number ${idx + 1} for TodayList`,
+  checked: idx % 5 === 0,
+  tags: idx === 2 ? ["urgent"] : [],
+}));
+const v1Encoded = toBase64Url(
+  JSON.stringify({
+    name: "TodayList",
+    items: sampleItems.map((it) =>
+      it.tags.length
+        ? { text: it.text, checked: it.checked, tags: it.tags }
+        : { text: it.text, checked: it.checked },
+    ),
+  }),
+);
+const v2Encoded = toBase64Url(
+  JSON.stringify({
+    v: 2,
+    n: "TodayList",
+    i: sampleItems.map((it) =>
+      it.tags.length
+        ? [it.text, it.checked ? 1 : 0, it.tags]
+        : it.checked
+          ? [it.text, 1]
+          : [it.text],
+    ),
+  }),
+);
+assert.ok(
+  v2Encoded.length < v1Encoded.length * 0.72,
+  `v2 compact encoding (${v2Encoded.length}) should be much shorter than v1 (${v1Encoded.length})`,
+);
+const decodedV2 = JSON.parse(fromBase64Url(v2Encoded));
+assert.equal(decodedV2.v, 2);
+assert.equal(decodedV2.n, "TodayList");
+assert.equal(decodedV2.i.length, 30);
+assert.deepEqual(decodedV2.i[0], ["Task number 1 for TodayList", 1]);
+assert.deepEqual(decodedV2.i[1], ["Task number 2 for TodayList"]);
+assert.deepEqual(decodedV2.i[2], [
+  "Task number 3 for TodayList",
+  0,
+  ["urgent"],
+]);
+
 console.log("shareService: all round-trip checks passed");

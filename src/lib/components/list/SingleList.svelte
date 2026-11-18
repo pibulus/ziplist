@@ -67,7 +67,9 @@
   }
   import { hapticService } from "$lib/services/infrastructure/hapticService";
   import { soundService } from "$lib/services/infrastructure/soundService";
+  import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
   import * as liveListsService from "$lib/services/realtime/liveListsService";
+  import { generateSyncPhrase } from "$lib/services/realtime/syncPhrase.js";
   import {
     getAvatarColor,
     getAvatarImage,
@@ -116,7 +118,6 @@
   let isCommittingDraft = false;
   let editingListName = false;
   let editedListName = "";
-  let shareStatus = null; // To track share operation status
   let isMagicParsing = false; // AI smart paste in progress
   let activeTagFilter = null; // Filter items in list by tag
   let undoDelete = null;
@@ -158,8 +159,16 @@
   let touchDragAutoScrollDelta = 0;
   let touchDragAutoScrollFrame = null;
   let touchDragListenersAttached = false;
-  let shareStatusTimer = null;
   let fatePickedItemId = null;
+  let editingCollaboratorName = false;
+  let collaboratorNameDraft = "";
+  let collaboratorInputNode = null;
+  let linkCopied = false;
+  let linkCopiedTimer = null;
+  let textCopied = false;
+  let textCopiedTimer = null;
+  let phraseCopied = false;
+  let phraseCopiedTimer = null;
   let fatePickTimer = null;
   let diceRolling = false;
   let diceRollTimer = null;
@@ -300,7 +309,9 @@
       liveListsService.broadcastItemFocus(list.id, null);
     }
     if (undoDeleteTimer) clearTimeout(undoDeleteTimer);
-    if (shareStatusTimer) clearTimeout(shareStatusTimer);
+    if (linkCopiedTimer) clearTimeout(linkCopiedTimer);
+    if (textCopiedTimer) clearTimeout(textCopiedTimer);
+    if (phraseCopiedTimer) clearTimeout(phraseCopiedTimer);
     if (fatePickTimer) clearTimeout(fatePickTimer);
     if (diceRollTimer) clearTimeout(diceRollTimer);
     clearCelebrationTimers();
@@ -363,9 +374,33 @@
     }
   }
 
-  function saveCollaboratorName(event) {
-    localAvatar = setAvatarName(event.currentTarget.value);
-    event.currentTarget.value = localAvatar;
+  async function startEditingCollaboratorName() {
+    collaboratorNameDraft = localAvatar || "";
+    editingCollaboratorName = true;
+    hapticService.selection();
+    soundService.select();
+    await tick();
+    collaboratorInputNode?.focus();
+    collaboratorInputNode?.select?.();
+  }
+
+  function commitCollaboratorName() {
+    if (!editingCollaboratorName) return;
+    localAvatar = setAvatarName(collaboratorNameDraft);
+    collaboratorNameDraft = localAvatar;
+    editingCollaboratorName = false;
+    soundService.select();
+  }
+
+  function handleCollaboratorKeyDown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitCollaboratorName();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      editingCollaboratorName = false;
+      collaboratorNameDraft = localAvatar;
+    }
   }
 
   function subscribeToLiveStores(nextListId) {
@@ -391,13 +426,16 @@
     });
   }
 
-  function showListStatus(message, success = false, duration = 3500) {
-    if (shareStatusTimer) clearTimeout(shareStatusTimer);
-    shareStatus = { success, message };
-    shareStatusTimer = setTimeout(() => {
-      shareStatus = null;
-      shareStatusTimer = null;
-    }, duration);
+  function showListStatus(message, success = false) {
+    if (typeof window === "undefined" || !message) return;
+    window.dispatchEvent(
+      new CustomEvent("ziplist:toast", {
+        detail: {
+          message,
+          type: success ? "success" : "warning",
+        },
+      }),
+    );
   }
 
   function scheduleCelebration(callback, delay) {
@@ -457,33 +495,65 @@
     }, 6500);
   }
 
-  async function copyText(text) {
-    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
-      return false;
+  function resolveActiveLiveUrl() {
+    if (typeof window === "undefined") return "";
+    const direct = liveListsService.getShareUrl(list.id);
+    if (direct) return direct;
+    const phrase = list?.liveSyncPhrase || syncPhrase;
+    return phrase ? `${window.location.origin}/j/${phrase}` : "";
+  }
+
+  async function copyShareUrl() {
+    let targetUrl = "";
+    if (isLive) {
+      targetUrl = resolveActiveLiveUrl();
+      if (!targetUrl) {
+        showListStatus("Live link is still warming up.");
+        soundService.locked();
+        return;
+      }
+    } else {
+      if (!shareableList?.items?.length) {
+        showListStatus("Add an item before sharing.");
+        soundService.locked();
+        return;
+      }
+      targetUrl = generateShareableUrl(shareableList);
     }
 
-    await navigator.clipboard.writeText(text);
-    return true;
+    const copied = await copyTextToClipboard(targetUrl);
+    hapticService.selection();
+    if (copied) {
+      linkCopied = true;
+      if (linkCopiedTimer) clearTimeout(linkCopiedTimer);
+      linkCopiedTimer = setTimeout(() => {
+        linkCopied = false;
+        linkCopiedTimer = null;
+      }, 2200);
+      soundService.copySuccess({ force: true });
+      showListStatus(isLive ? "Live link copied" : "List link copied", true);
+    } else {
+      soundService.locked({ force: true });
+      showListStatus("Copy needs browser permission.");
+    }
   }
 
   async function handleShareLiveList(shareUrl = null) {
-    const liveUrl = shareUrl || liveListsService.getShareUrl(list.id);
+    const liveUrl = shareUrl || resolveActiveLiveUrl();
     if (!liveUrl) {
       showListStatus("Live link is not ready yet");
       soundService.locked();
       return;
     }
 
-    const sharePayload = {
-      title: "Live ZipList",
-      text: list.name ? `${list.name} · Live ZipList` : "Live ZipList",
-      url: liveUrl,
-    };
-
+    // URL-only on navigator.share so iOS Share Sheet "Copy" copies a clean URL
+    // and AirDrop opens Safari directly instead of creating a prose snippet.
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share(sharePayload);
-        showListStatus("Live link shared.", true);
+        await navigator.share({
+          title: list.name ? `${list.name} · ZipList` : "Live ZipList",
+          url: liveUrl,
+        });
         soundService.copySuccess({ force: true });
         return;
       } catch (error) {
@@ -491,37 +561,26 @@
       }
     }
 
-    try {
-      const copied = await copyText(liveUrl);
-      showListStatus(
-        copied
-          ? "Live link copied."
-          : "Live link ready. Copying needs browser permission.",
-        copied,
-      );
-      if (copied) {
-        soundService.copySuccess({ force: true });
-      } else {
-        soundService.locked({ force: true });
-      }
-    } catch (error) {
-      console.error("Failed to copy live link:", error);
-      showListStatus("Live link ready. Copying needs browser permission.");
-      soundService.error({ force: true });
-    }
+    await copyShareUrl();
   }
 
   // Copy a plain checklist, not a static link masquerading as "Copy List".
   async function handleShareList(listToShare = list) {
     if (!listToShare || !listToShare.items || listToShare.items.length === 0) {
-      showListStatus("Add an item before sharing.");
+      showListStatus("Add an item before copying.");
       soundService.locked();
       return;
     }
 
     try {
-      if (await copyText(listToText(listToShare))) {
-        showListStatus("List copied.", true, 3000);
+      if (await copyTextToClipboard(listToText(listToShare))) {
+        textCopied = true;
+        if (textCopiedTimer) clearTimeout(textCopiedTimer);
+        textCopiedTimer = setTimeout(() => {
+          textCopied = false;
+          textCopiedTimer = null;
+        }, 2000);
+        showListStatus("Checklist text copied", true);
         soundService.copySuccess({ force: true });
         if (
           listToShare.items.some(
@@ -544,19 +603,11 @@
   // Make list live (real-time collaboration)
   async function handleMakeLive() {
     if (!liveFeatureAvailable) {
-      showListStatus(
-        "Live collaboration is not configured on this deployment yet",
-        false,
-        4000,
-      );
+      showListStatus("Live collaboration is not configured right now");
       soundService.locked();
       return;
     }
 
-    // Volume gate, not a feature gate: anyone can make a list live. Free
-    // runs one live list at a time; contributor runs several. Only fires
-    // when a DIFFERENT list is already live — re-tapping the live list
-    // itself falls through to the isLive branch below.
     const maxLiveLists = $isContributor
       ? PRODUCT_LIMITS.CONTRIBUTOR_MAX_LIVE_LISTS
       : PRODUCT_LIMITS.FREE_MAX_LIVE_LISTS;
@@ -568,8 +619,6 @@
         $isContributor
           ? `ZipList runs ${maxLiveLists} live lists at once. End one to start another.`
           : `Free ZipList runs one live list at a time. End that one or unlock more room.`,
-        false,
-        4200,
       );
       hapticService.notification("warning");
       soundService.locked({ force: true });
@@ -584,35 +633,51 @@
     }
 
     if (isMakingLive) {
-      showListStatus("Starting live list...", false, 1600);
       soundService.select();
       return;
     }
 
     isMakingLive = true;
 
+    // Pre-mint the 4-word phrase synchronously on the tap tick so iOS Safari's
+    // transient user activation is still fresh when copying the join URL!
+    const pregeneratedPhrase = generateSyncPhrase();
+    const immediateUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/j/${pregeneratedPhrase}`
+        : "";
+    let copiedImmediately = false;
+    if (immediateUrl) {
+      try {
+        copiedImmediately = await copyTextToClipboard(immediateUrl);
+      } catch {
+        copiedImmediately = false;
+      }
+    }
+
     try {
-      // startPhraseSync, not makeLive: it mints four words, derives the room
-      // from them and hands back /j/<words>. "Send it to my other device" and
-      // "share it with someone" were always the same room — now they're the
-      // same link too, and it's one you can say out loud.
       const { shareUrl, phrase } = await liveListsService.startPhraseSync(
         list.id,
+        pregeneratedPhrase,
       );
       syncPhrase = phrase;
       isLive = true;
 
-      let copied = false;
-      try {
-        copied = await copyText(shareUrl);
-      } catch (error) {
-        console.warn("Live link could not be copied:", error);
+      let copied = copiedImmediately;
+      if (!copied && shareUrl) {
+        copied = await copyTextToClipboard(shareUrl).catch(() => false);
+      }
+      if (copied) {
+        linkCopied = true;
+        if (linkCopiedTimer) clearTimeout(linkCopiedTimer);
+        linkCopiedTimer = setTimeout(() => {
+          linkCopied = false;
+          linkCopiedTimer = null;
+        }, 2200);
       }
 
       showListStatus(
-        copied
-          ? "Shared list link copied. The words work too."
-          : "Shared list ready. Link available in Share.",
+        copied ? "Live room open · link copied" : "Live room open",
         true,
       );
       soundService.success({ force: true });
@@ -620,17 +685,12 @@
       subscribeToLiveStores(list.id);
     } catch (error) {
       console.error("Failed to make list live:", error);
-      // Only promise a retry when retrying could actually help. A 503 with
-      // live_misconfigured is a server-side config fault that will fail
-      // identically every time until someone fixes the deployment.
       const isConfigFault =
         error?.code === "live_misconfigured" || error?.status === 503;
       showListStatus(
         isConfigFault
-          ? "Shared lists are unavailable right now. Copy still works."
-          : "Shared link needs one more try.",
-        false,
-        5000,
+          ? "Live rooms unavailable right now. Copy link still works."
+          : "Live room needs one more try.",
       );
       soundService.error({ force: true });
     } finally {
@@ -1759,6 +1819,8 @@
     soundService.select();
   }
 
+  $: effectiveSyncPhrase = list?.liveSyncPhrase || syncPhrase || "";
+
   function toggleShareTray() {
     shareTrayOpen = !shareTrayOpen;
     if (shareTrayOpen) {
@@ -1768,9 +1830,10 @@
     }
     if (!shareTrayOpen) {
       shareInputMode = null;
+      editingCollaboratorName = false;
       if (!isLive) syncPhrase = "";
       shareTagFilter = null;
-    } else if (isLive && !syncPhrase) {
+    } else if (isLive && !effectiveSyncPhrase) {
       const shareUrl = liveListsService.getShareUrl(list.id) || "";
       const phraseMatch = shareUrl.match(/\/j\/([a-z-]+)$/i);
       if (phraseMatch) syncPhrase = phraseMatch[1];
@@ -1782,6 +1845,7 @@
     manageTrayOpen = !manageTrayOpen;
     if (manageTrayOpen) {
       shareTrayOpen = false;
+      editingCollaboratorName = false;
       movingItemId = null;
     } else {
       shareInputMode = null;
@@ -1793,31 +1857,23 @@
     shareInputMode = shareInputMode === "paste" ? null : "paste";
   }
 
-  async function shareAsLink() {
+  async function copyListText() {
     const listToShare = shareableList;
-    shareTrayOpen = false;
     await handleShareList(listToShare);
-  }
-
-  // The live door in the share tray. Keeps the tray open while the room is
-  // minted so the four-word phrase can appear in it — that phrase IS the
-  // link, and closing the tray would hide it the moment it arrived.
-  async function shareAsLiveRoom() {
-    if (isLive) await handleShareLiveList();
-    else await handleMakeLive();
   }
 
   async function handleStopLive() {
     if (!list?.id) return;
     liveListsService.disconnectFromLive(list.id);
     listsStore.upsertList(
-      { id: list.id, isLive: false, liveRoomId: null },
+      { id: list.id, isLive: false, liveRoomId: null, liveSyncPhrase: null },
       list.id,
     );
     isLive = false;
     syncPhrase = "";
+    editingCollaboratorName = false;
     shareTrayOpen = false;
-    showListStatus("Sharing ended.", true, 2400);
+    showListStatus("Live room closed", true);
     hapticService.impact("medium");
     soundService.close({ force: true });
   }
@@ -1830,20 +1886,27 @@
     }
 
     const rawUrl = isLive
-      ? liveListsService.getShareUrl(list.id) ||
-        generateShareableUrl(shareableList)
+      ? resolveActiveLiveUrl() || generateShareableUrl(shareableList)
       : generateShareableUrl(shareableList);
 
     window.dispatchEvent(
       new CustomEvent("ziplist-open-qr", {
         detail: {
           shareUrl: rawUrl,
-          title: isLive ? "Shared list" : `Scan "${list.name || "List"}"`,
+          title: isLive
+            ? `Live · "${list.name || "List"}"`
+            : `Scan "${list.name || "List"}"`,
           subtitle: isLive
             ? "Scan with any phone camera to edit together in real time"
             : "Scan with any phone camera to open and save this list",
-          syncPhrase: isLive ? syncPhrase || "" : "",
+          syncPhrase: isLive ? effectiveSyncPhrase : "",
           isLive: Boolean(isLive),
+          onStartLive: liveFeatureAvailable
+            ? async () => {
+                await handleMakeLive();
+                if (isLive) qrThisList();
+              }
+            : null,
         },
       }),
     );
@@ -2163,21 +2226,24 @@
     }, 6000);
   }
 
-  async function copyPhraseLink() {
-    if (!syncPhrase) return;
-    const url = `${window.location.origin}/j/${syncPhrase}`;
-    const copied = await copyText(url).catch(() => false);
+  async function copyRoomWords() {
+    const words = effectiveSyncPhrase;
+    if (!words) return;
+    const copied = await copyTextToClipboard(words).catch(() => false);
     hapticService.selection();
     if (copied) {
+      phraseCopied = true;
+      if (phraseCopiedTimer) clearTimeout(phraseCopiedTimer);
+      phraseCopiedTimer = setTimeout(() => {
+        phraseCopied = false;
+        phraseCopiedTimer = null;
+      }, 2000);
       soundService.copySuccess({ force: true });
+      showListStatus(`Room words "${words}" copied`, true);
     } else {
       soundService.locked({ force: true });
+      showListStatus("Copy needs browser permission.");
     }
-    showListStatus(
-      copied ? "Link copied" : "Copy unavailable · four words still work",
-      copied,
-      2400,
-    );
   }
 
   function requestMove(itemId) {
@@ -3373,147 +3439,212 @@
           </div>
         {/if}
 
-        {#if liveFeatureAvailable}
-          <button
-            type="button"
-            class="zl-share-option zl-share-live zl-share-hero"
-            class:is-live-active={isLive}
-            disabled={isMakingLive}
-            aria-busy={isMakingLive}
-            title={isLive
-              ? "Copy or send the live room link"
-              : "Start a live list everyone can edit together"}
-            aria-label={isLive ? "Share live link" : "Start live list"}
-            on:click={shareAsLiveRoom}
-          >
-            <span class="zl-share-hero-main">
-              <svg
-                class="zl-pill-icon"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.4"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-                <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
-                <path d="M7.76 16.24a6 6 0 0 1 0-8.49" />
-              </svg>
-              <span>
-                {isMakingLive
-                  ? "Connecting..."
-                  : isLive
-                    ? "Share Live Link"
-                    : "Start Live List"}
-              </span>
-            </span>
-            <span class="zl-share-hero-sub">
-              {isLive
-                ? "Room open · edits sync live"
-                : "Edit together in real time"}
-            </span>
-          </button>
-        {/if}
-
-        {#if syncPhrase}
-          <!-- The words ARE the link. Say them down the phone, or let someone
-               type them in on another device — same room either way. -->
-          <button
-            type="button"
-            class="zl-share-phrase"
-            on:click={copyPhraseLink}
-            title="Tap to copy live room link"
-          >
-            <span class="zl-share-phrase-kicker">Room words · tap to copy</span>
-            <code>{syncPhrase}</code>
-          </button>
-        {/if}
-
-        <div
-          class="zl-share-secondary"
-          role="group"
-          aria-label="Send snapshot or QR code"
-        >
-          <button
-            type="button"
-            class="zl-share-option"
-            title="Show QR code for this list"
-            aria-label="QR this list"
-            on:click={qrThisList}
-          >
-            <svg
-              class="zl-pill-icon"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 18v3" />
-            </svg>
-            <span>QR Code</span>
-          </button>
-          <button
-            type="button"
-            class="zl-share-option"
-            title="Copy a snapshot of this list"
-            on:click={shareAsLink}
-          >
-            <svg
-              class="zl-pill-icon"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path
-                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-              />
-            </svg>
-            <span>Copy Text</span>
-          </button>
-        </div>
-
         {#if isLive}
-          <div class="zl-live-footer-row">
-            <div class="zl-collaborator-badge">
-              <img
-                src={passportFace || getAvatarImage(localAvatar)}
-                alt=""
-                aria-hidden="true"
-              />
-              <label for="zl-collaborator-name-{list.id}">As</label>
-              <input
-                id="zl-collaborator-name-{list.id}"
-                type="text"
-                value={localAvatar}
-                maxlength="48"
-                autocomplete="off"
-                on:change={saveCollaboratorName}
-                aria-label="Collaborator display name"
-              />
+          <!-- Unified Live Ticket: 4-word room code + collaborator chip + 1-tap Copy Link / Share / QR -->
+          <div class="zl-live-ticket">
+            <div class="zl-live-ticket-head">
+              {#if effectiveSyncPhrase}
+                <button
+                  type="button"
+                  class="zl-live-words-btn"
+                  on:click={copyRoomWords}
+                  title="Tap to copy 4-word room code"
+                >
+                  <span class="zl-live-words-dot" aria-hidden="true"></span>
+                  <code>{effectiveSyncPhrase}</code>
+                  {#if phraseCopied}
+                    <span class="zl-live-words-copied" aria-hidden="true"
+                      >✓</span
+                    >
+                  {:else}
+                    <svg
+                      class="zl-live-words-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path
+                        d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                      />
+                    </svg>
+                  {/if}
+                </button>
+              {:else}
+                <span class="zl-live-words-fallback">
+                  <span class="zl-live-words-dot" aria-hidden="true"></span>
+                  <span>Live room open</span>
+                </span>
+              {/if}
+
+              {#if editingCollaboratorName}
+                <input
+                  bind:this={collaboratorInputNode}
+                  bind:value={collaboratorNameDraft}
+                  type="text"
+                  maxlength="36"
+                  autocomplete="off"
+                  class="zl-collab-name-input"
+                  aria-label="Collaborator display name"
+                  on:blur={commitCollaboratorName}
+                  on:keydown={handleCollaboratorKeyDown}
+                />
+              {:else}
+                <button
+                  type="button"
+                  class="zl-collab-chip"
+                  on:click={startEditingCollaboratorName}
+                  title="Tap to rename your live display name"
+                  aria-label={`Sharing as ${localAvatar}. Tap to rename.`}
+                >
+                  <img
+                    src={passportFace || getAvatarImage(localAvatar)}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span class="zl-collab-chip-name">{localAvatar}</span>
+                  <svg
+                    class="zl-collab-chip-edit"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                </button>
+              {/if}
             </div>
+
+            <div
+              class="zl-live-ticket-actions"
+              role="group"
+              aria-label="Share live list"
+            >
+              <button
+                type="button"
+                class="zl-share-option zl-share-live zl-share-copy-main"
+                class:is-copied={linkCopied}
+                on:click={copyShareUrl}
+                title="Copy live join URL"
+              >
+                {#if linkCopied}
+                  <span aria-hidden="true">✓</span>
+                  <span>Link Copied</span>
+                {:else}
+                  <svg
+                    class="zl-pill-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                    />
+                    <path
+                      d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                    />
+                  </svg>
+                  <span>Copy Link</span>
+                {/if}
+              </button>
+
+              <button
+                type="button"
+                class="zl-share-option"
+                on:click={() => handleShareLiveList()}
+                title="Send live link via Share Sheet"
+              >
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" x2="12" y1="2" y2="15" />
+                </svg>
+                <span>Share</span>
+              </button>
+
+              <button
+                type="button"
+                class="zl-share-option zl-share-icon-btn"
+                title="Show QR code for live room"
+                aria-label="Show QR code"
+                on:click={qrThisList}
+              >
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 18v3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="zl-share-meta-row">
+            <button
+              type="button"
+              class="zl-share-option zl-share-meta-btn"
+              class:is-copied={textCopied}
+              title="Copy plain-text checklist"
+              on:click={copyListText}
+            >
+              {#if textCopied}
+                <span aria-hidden="true">✓</span>
+                <span>Copied Text</span>
+              {:else}
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  />
+                </svg>
+                <span>Copy Text</span>
+              {/if}
+            </button>
+
             {#if showListManagement}
               <button
                 type="button"
-                class="zl-share-option zl-share-stop"
+                class="zl-share-option zl-share-stop zl-share-meta-btn"
                 on:click={handleStopLive}
                 title="End live sharing for this list"
                 aria-label="End live sharing for this list"
@@ -3522,11 +3653,138 @@
               </button>
             {/if}
           </div>
+        {:else}
+          <!-- Not Live: compact 2-row Share layout (Start Live + QR, then Copy Link + Copy Text) -->
+          <div class="zl-share-primary-row">
+            {#if liveFeatureAvailable}
+              <button
+                type="button"
+                class="zl-share-option zl-share-live zl-share-start-btn"
+                disabled={isMakingLive}
+                aria-busy={isMakingLive}
+                title="Start a live room everyone can edit together"
+                on:click={handleMakeLive}
+              >
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                  <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
+                  <path d="M7.76 16.24a6 6 0 0 1 0-8.49" />
+                </svg>
+                <span>{isMakingLive ? "Starting..." : "Start Live List"}</span>
+              </button>
+            {/if}
+
+            <button
+              type="button"
+              class="zl-share-option {liveFeatureAvailable
+                ? 'zl-share-icon-btn'
+                : 'zl-share-start-btn'}"
+              title="Show QR code for this list"
+              aria-label="Show QR code for this list"
+              on:click={qrThisList}
+            >
+              <svg
+                class="zl-pill-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 18v3" />
+              </svg>
+              {#if !liveFeatureAvailable}
+                <span>QR Code</span>
+              {/if}
+            </button>
+          </div>
+
+          <div
+            class="zl-share-secondary"
+            role="group"
+            aria-label="Copy link or checklist text"
+          >
+            <button
+              type="button"
+              class="zl-share-option"
+              class:is-copied={linkCopied}
+              title="Copy a snapshot link to this list"
+              on:click={copyShareUrl}
+            >
+              {#if linkCopied}
+                <span aria-hidden="true">✓</span>
+                <span>Link Copied</span>
+              {:else}
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                  />
+                  <path
+                    d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                  />
+                </svg>
+                <span>Copy Link</span>
+              {/if}
+            </button>
+
+            <button
+              type="button"
+              class="zl-share-option"
+              class:is-copied={textCopied}
+              title="Copy plain-text checklist"
+              on:click={copyListText}
+            >
+              {#if textCopied}
+                <span aria-hidden="true">✓</span>
+                <span>Copied Text</span>
+              {:else}
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  />
+                </svg>
+                <span>Copy Text</span>
+              {/if}
+            </button>
+          </div>
         {/if}
       </div>
     {/if}
 
-    <!-- Actions affect this list rather than sending it. -->
+    <!-- Actions affect this list rather than sending it: 3 visually distinct tiers -->
     {#if manageTrayOpen && canManageList}
       <div
         class="zl-manage-tray"
@@ -3535,11 +3793,11 @@
         transition:slide={{ duration: 180, easing: cubicOut }}
       >
         {#if checkableActiveItems.length >= 2}
-          <div class="zl-order-strip" role="group" aria-label="Order items">
+          <div class="zl-order-capsule" role="group" aria-label="Order items">
             {#if activeItems.length >= 3}
               <button
                 type="button"
-                class="zl-share-option zl-order-pill"
+                class="zl-order-seg"
                 on:click={tidyActiveItems}
                 disabled={isTidying}
                 aria-busy={isTidying}
@@ -3568,7 +3826,7 @@
             {/if}
             <button
               type="button"
-              class="zl-share-option zl-order-pill"
+              class="zl-order-seg"
               on:click={shuffleActiveItems}
               title="Shuffle unchecked items"
               aria-label={`Shuffle the items in ${list.name || "this list"}`}
@@ -3593,7 +3851,7 @@
             </button>
             <button
               type="button"
-              class="zl-share-option zl-order-pill"
+              class="zl-order-seg"
               class:is-active={sortNewestFirst}
               on:click={sortItemsByAdded}
               title={sortNewestFirst
@@ -3622,34 +3880,67 @@
             </button>
           </div>
         {/if}
-        <button
-          type="button"
-          class="zl-share-option"
-          class:is-active={shareInputMode === "paste"}
-          on:click={toggleShareInput}
-          aria-expanded={shareInputMode === "paste"}
-        >
-          <svg
-            class="zl-pill-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-            ><path
-              d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-            /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></svg
+
+        <div class="zl-manage-tools-row">
+          <button
+            type="button"
+            class="zl-share-option"
+            class:is-active={shareInputMode === "paste"}
+            on:click={toggleShareInput}
+            aria-expanded={shareInputMode === "paste"}
           >
-          <span>Paste Items</span>
-        </button>
+            <svg
+              class="zl-pill-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+              />
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+            </svg>
+            <span>Paste Items</span>
+          </button>
+
+          {#if showListManagement}
+            <button
+              type="button"
+              class="zl-share-option"
+              title="Clone this list and all its items"
+              aria-label="Duplicate list"
+              on:click={duplicateCurrentList}
+            >
+              <svg
+                class="zl-pill-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="8" y="8" width="13" height="13" rx="2" />
+                <path
+                  d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"
+                />
+              </svg>
+              <span>Duplicate</span>
+            </button>
+          {/if}
+        </div>
+
         {#if shareInputMode === "paste"}
           <div class="zl-share-paste">
             <textarea
               bind:value={pasteText}
               rows="3"
-              placeholder="Paste anything: a recipe, email, WhatsApp message, or checklist..."
+              placeholder="Paste anything: a recipe, email, message, or checklist..."
               aria-label="Paste a list, recipe, or text"
               disabled={isMagicParsing}
             ></textarea>
@@ -3687,109 +3978,92 @@
             </div>
           </div>
         {/if}
-        {#if showListManagement}
-          <button
-            type="button"
-            class="zl-share-option"
-            title="Clone this list and all its items"
-            aria-label="Duplicate list"
-            on:click={duplicateCurrentList}
-          >
-            <svg
-              class="zl-pill-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="8" y="8" width="13" height="13" rx="2" />
-              <path
-                d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"
-              />
-            </svg>
-            <span>Duplicate List</span>
-          </button>
-        {/if}
-        {#if list.items.some((item) => item.checked)}
-          <button
-            type="button"
-            class="zl-share-option"
-            on:click={() => {
-              clearDoneItems();
-              manageTrayOpen = false;
-            }}
-          >
-            <span>Clear Checked</span>
-          </button>
-        {/if}
-        {#if list.items.length > 0}
-          <button
-            type="button"
-            class="zl-share-option zl-share-clear"
-            title="Wipe all items from this list"
-            aria-label="Empty this list"
-            on:click={clearEntireList}
-          >
-            <svg
-              class="zl-pill-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path
-                d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21.6 7.4c.8.8.8 2 0 2.8L11 20"
-              />
-              <path d="m6 11 7 7" />
-            </svg>
-            <span>Empty List</span>
-          </button>
-        {/if}
-        {#if canDeleteList}
-          <button
-            type="button"
-            class="zl-share-option zl-share-delete-list"
-            title="Delete this list"
-            aria-label="Delete this list"
-            on:click={deleteEntireList}
-          >
-            <svg
-              class="zl-pill-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M3 6h18" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-            <span>Delete List</span>
-          </button>
-        {/if}
-      </div>
-    {/if}
 
-    <!-- Share status notification -->
-    {#if shareStatus}
-      <div
-        class="zl-share-notification {shareStatus.success
-          ? 'success'
-          : 'error'}"
-        role={shareStatus.success ? "status" : "alert"}
-        aria-live={shareStatus.success ? "polite" : "assertive"}
-        transition:fade={{ duration: 200 }}
-      >
-        {shareStatus.message}
+        {#if (!$listPreferences.showChecked && list.items.some((item) => item.checked)) || list.items.length > 0 || canDeleteList}
+          <div
+            class="zl-manage-cleanup-row"
+            role="group"
+            aria-label="Clean up list"
+          >
+            {#if !$listPreferences.showChecked && list.items.some((item) => item.checked)}
+              <button
+                type="button"
+                class="zl-share-option zl-cleanup-btn"
+                on:click={() => {
+                  clearDoneItems();
+                  manageTrayOpen = false;
+                }}
+              >
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Clear Checked</span>
+              </button>
+            {/if}
+
+            {#if list.items.length > 0}
+              <button
+                type="button"
+                class="zl-share-option zl-share-clear zl-cleanup-btn"
+                title="Wipe all items from this list"
+                aria-label="Empty this list"
+                on:click={clearEntireList}
+              >
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L13.8 2.4c.8-.8 2-.8 2.8 0L21.6 7.4c.8.8.8 2 0 2.8L11 20"
+                  />
+                  <path d="m6 11 7 7" />
+                </svg>
+                <span>Empty</span>
+              </button>
+            {/if}
+
+            {#if canDeleteList}
+              <button
+                type="button"
+                class="zl-share-option zl-share-delete-list zl-cleanup-btn"
+                title="Delete this list"
+                aria-label="Delete this list"
+                on:click={deleteEntireList}
+              >
+                <svg
+                  class="zl-pill-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                <span>Delete</span>
+              </button>
+            {/if}
+          </div>
+        {/if}
       </div>
     {/if}
 

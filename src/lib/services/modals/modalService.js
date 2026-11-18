@@ -27,6 +27,7 @@ export class ModalService {
     this.isClosing = false;
     this.closeTimer = null;
     this.switchCloseInFlight = false;
+    this.vvHandler = null;
 
     // Safety net: if ANY dialog closes and none remain open, restore page.
     // The per-open close listener can be orphaned (e.g. the dialog node is
@@ -77,6 +78,7 @@ export class ModalService {
     // vertical register. No body position:fixed or scrollY resets needed.
     document.documentElement.style.overflow = "hidden";
     document.body?.classList.add("zl-modal-open");
+    this.bindVisualViewport();
 
     // Show the modal
     if (typeof modal.showModal === "function" && !modal.open) {
@@ -84,6 +86,36 @@ export class ModalService {
     }
 
     return modal;
+  }
+
+  bindVisualViewport() {
+    if (!browser || !window.visualViewport || this.vvHandler) return;
+    const vv = window.visualViewport;
+    const sync = () => {
+      document.documentElement.style.setProperty(
+        "--zl-vvh",
+        `${Math.round(vv.height)}px`,
+      );
+      document.documentElement.style.setProperty(
+        "--zl-vv-top",
+        `${Math.round(vv.offsetTop)}px`,
+      );
+    };
+    sync();
+    this.vvHandler = sync;
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+  }
+
+  unbindVisualViewport() {
+    if (!browser) return;
+    if (this.vvHandler && window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", this.vvHandler);
+      window.visualViewport.removeEventListener("scroll", this.vvHandler);
+    }
+    this.vvHandler = null;
+    document.documentElement.style.removeProperty("--zl-vvh");
+    document.documentElement.style.removeProperty("--zl-vv-top");
   }
 
   closeModal() {
@@ -148,6 +180,7 @@ export class ModalService {
   restorePage() {
     if (!browser) return;
 
+    this.unbindVisualViewport();
     document.documentElement.style.overflow = "";
     document.body?.classList.remove("zl-modal-open");
     this.modalOpen = false;

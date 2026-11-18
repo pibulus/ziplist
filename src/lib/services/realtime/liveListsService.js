@@ -118,12 +118,16 @@ function withRemoteSync(listId, callback) {
 function upsertLiveList(listId, roomId, listData) {
   if (!listData) return;
 
+  const existing = getListSnapshot(listId);
   listsStore.upsertList(
     {
       ...listData,
       id: listId,
       liveRoomId: roomId,
       isLive: true,
+      ...(existing?.liveSyncPhrase
+        ? { liveSyncPhrase: existing.liveSyncPhrase }
+        : {}),
     },
     listId,
   );
@@ -197,8 +201,8 @@ export async function makeLive(listId, password = null, desiredRoomId = null) {
 // Both halves lean entirely on the live-list rig that already works: sync is
 // just a live room whose id came from a phrase instead of a random uuid.
 
-export async function startPhraseSync(listId) {
-  const phrase = generateSyncPhrase();
+export async function startPhraseSync(listId, pregeneratedPhrase = null) {
+  const phrase = pregeneratedPhrase || generateSyncPhrase();
   const roomId = await deriveRoomIdFromPhrase(phrase);
   if (!roomId) throw new Error("Could not build a sync phrase.");
 
@@ -226,6 +230,10 @@ export async function joinByPhrase(phrase) {
   const listId = `live_${roomId}`;
   try {
     await connectToLive(listId, roomId, null);
+    const current = getListSnapshot(listId);
+    if (current) {
+      listsStore.upsertList({ ...current, liveSyncPhrase: phrase }, listId);
+    }
     return { success: true, listId, roomId };
   } catch (error) {
     // A wrong phrase is an unremarkable typo, not a fault worth shouting about.
@@ -663,7 +671,7 @@ export async function resumeLive(listId) {
         listsStore.deleteList(listId);
       } else {
         listsStore.upsertList(
-          { ...list, liveRoomId: null, isLive: false },
+          { ...list, liveRoomId: null, liveSyncPhrase: null, isLive: false },
           listId,
         );
       }
@@ -698,6 +706,12 @@ export function getRoomId(listId) {
 }
 
 export function getShareUrl(listId, password = null) {
+  if (!password) {
+    const list = getListSnapshot(listId);
+    if (list?.liveSyncPhrase) {
+      return generatePhraseShareUrl(list.liveSyncPhrase);
+    }
+  }
   const roomId = getRoomId(listId);
   if (!roomId) return null;
   return generateShareUrl(roomId, password);

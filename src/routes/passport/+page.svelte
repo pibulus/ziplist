@@ -385,7 +385,9 @@
     <!-- Squishy Close Button (returns to /) -->
     <a
       href="/"
-      class="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#ff5ca8] text-sm font-black text-[#1e1714] shadow-[1.5px_1.5px_0px_#1e1714] transition-all hover:bg-[#ff459b] active:scale-95"
+      class="absolute right-3.5 top-3.5 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#1e1714] text-sm font-black shadow-[1.5px_1.5px_0px_#1e1714] transition-all active:scale-95"
+      style:background="var(--zl-modal-close-bg, #ff5ca8)"
+      style:color="var(--zl-modal-close-ink, #1e1714)"
       aria-label="Back to ZipList"
     >
       ✕
@@ -479,7 +481,7 @@
                   required
                   placeholder="name@example.com"
                   autocomplete="email"
-                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-2 text-xs font-bold text-[#1e1714] focus:outline-none"
+                  class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-2 text-base font-bold text-[#1e1714] focus:outline-none sm:text-sm"
                 />
                 <button
                   type="submit"
@@ -541,7 +543,7 @@
                 spellcheck="false"
                 maxlength={MAX_PASSPORT_CODE_LENGTH}
                 placeholder="e.g. velvet octopus drifts by"
-                class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-2 text-xs font-bold text-[#1e1714] focus:outline-none"
+                class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-2 text-base font-bold text-[#1e1714] focus:outline-none sm:text-sm"
               />
               <button
                 type="submit"
@@ -613,7 +615,7 @@
             <input
               id="passport_code_input"
               type="text"
-              class="min-h-11 w-full rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-4 font-mono text-sm font-bold text-[#1e1714] shadow-[1.5px_1.5px_0px_#1e1714] outline-none transition-all placeholder:text-[#78716c] focus:border-[#ff5ca8] focus:ring-2 focus:ring-pink-200"
+              class="min-h-11 w-full rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-4 font-mono text-base font-bold text-[#1e1714] shadow-[1.5px_1.5px_0px_#1e1714] outline-none transition-all placeholder:text-[#78716c] focus:border-[#ff5ca8] focus:ring-2 focus:ring-pink-200 sm:text-sm"
               placeholder="e.g. velvet octopus drifts by"
               bind:value={manualCode}
               autocomplete="off"

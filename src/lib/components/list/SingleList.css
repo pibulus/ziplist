@@ -593,21 +593,20 @@
   font-family: "Space Mono", monospace;
   font-size: 0.72rem;
   font-weight: 800;
-  gap: 0.4rem;
-  height: 44px;
-  min-height: 44px;
+  gap: 0.35rem;
+  height: 34px;
+  min-height: 34px;
   line-height: 1;
-  color: var(--zl-text-color-secondary, #888);
-  padding: 0 0.6rem;
+  color: var(--zl-text-color-secondary, #4a3f38);
+  padding: 0 0.55rem;
   border-radius: 999px;
-  /* The LIST's colour, not the theme's CTA amber. Live now reads as "this
-     list is open" rather than as a generic app-coloured badge — which is the
-     "a tad more obvious" without adding a word of copy. */
-  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 7%, #fbf1e4);
-  border: 2px solid
-    color-mix(in srgb, var(--zl-item-accent, #ffb000) 24%, transparent);
-  /* Anchors the heart blooms — without it they resolve against a far-off
-     ancestor and rise out of the middle of the list. */
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 10%, #fbf1e4);
+  border: 1.5px solid
+    color-mix(
+      in srgb,
+      var(--zl-item-accent, #ffb000) 32%,
+      rgba(30, 23, 20, 0.2)
+    );
   position: relative;
   cursor: pointer;
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1020,8 +1019,10 @@
   transition: var(--zl-transition-standard);
 }
 
-.zl-item:not(.checked):not(.editing) {
-  will-change: transform, opacity;
+.zl-item.dragging,
+.zl-item.settling,
+.zl-item:active {
+  will-change: transform;
 }
 
 .zl-item:hover {
@@ -1447,7 +1448,6 @@
   background-color: var(--zl-checkbox-bg, rgba(255, 255, 255, 0.8));
   /* Planted bottom-center origin sells physical mass during squash & stretch */
   transform-origin: 50% 85%;
-  will-change: transform;
   transition:
     transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
     background-color 0.16s ease,
@@ -2274,39 +2274,16 @@
 }
 
 @media (max-width: 520px) {
-  .zl-list-header.is-sharing:not(.is-guest) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 0.35rem;
-    row-gap: 0.25rem;
-  }
-
-  .zl-list-header.is-sharing:not(.is-guest) .zl-list-header-main,
-  .zl-list-header.is-sharing:not(.is-guest) .zl-list-title-row {
-    display: contents;
-  }
-
-  .zl-list-header.is-sharing:not(.is-guest) .zl-list-title-heading,
-  .zl-list-header.is-sharing:not(.is-guest) .zl-list-title-input {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-
-  .zl-list-header.is-sharing:not(.is-guest) .zl-live-header-pill {
-    grid-column: 1;
-    justify-self: start;
-    min-width: 0;
-  }
-
-  .zl-list-header.is-sharing:not(.is-guest) .zl-list-actions {
-    grid-column: 2;
-    width: auto;
-    justify-content: flex-end;
-  }
-
   .zl-list-actions {
     gap: 0.1rem;
+  }
+
+  .zl-live-presence {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 0.45rem;
+    font-size: 0.68rem;
+    gap: 0.28rem;
   }
 }
 
@@ -2423,15 +2400,6 @@ body.zl-touch-dragging {
 
 /* ── Share & Manage Trays (Neo-Toybrut Action Pills) ────────────────────
    Inline under the header, never a popover — .zl-card is overflow:clip. */
-.zl-share-tray {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem 0.5rem;
-  padding: 0.15rem 0.15rem 0.75rem;
-  margin-bottom: 0.65rem;
-  border-bottom: 2px dashed rgba(30, 23, 20, 0.12);
-}
-
 .zl-share-option {
   display: inline-flex;
   align-items: center;
@@ -2623,28 +2591,115 @@ body.zl-touch-dragging {
   outline: none;
 }
 
-/* Same tray chrome as sharing — different contents, one visual grammar. */
+/* Manage tray: 3 visually distinct tiers (Order capsule, Tools grid, Cleanup strip) */
 .zl-manage-tray {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem 0.5rem;
-  padding: 0.15rem 0.15rem 0.75rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.15rem 0.15rem 0.7rem;
   margin-bottom: 0.65rem;
   border-bottom: 2px dashed rgba(30, 23, 20, 0.12);
 }
 
-.zl-order-strip {
-  flex: 1 1 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
-  gap: 0.45rem;
-  padding-bottom: 0.55rem;
-  margin-bottom: 0.05rem;
-  border-bottom: 1.5px dashed rgba(30, 23, 20, 0.12);
+.zl-order-capsule {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  padding: 3px;
+  border-radius: 13px;
+  border: 2px solid #1e1714;
+  background: #f5ead8;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
 }
 
-.zl-order-pill {
-  padding-inline: 0.45rem;
+.zl-order-seg {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0.3rem 0.4rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #1e1714;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.34rem;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.zl-order-seg + .zl-order-seg {
+  position: relative;
+}
+
+.zl-order-seg + .zl-order-seg::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 22%;
+  bottom: 22%;
+  width: 1.5px;
+  background: rgba(30, 23, 20, 0.16);
+  pointer-events: none;
+}
+
+.zl-order-seg:hover:not(:disabled),
+.zl-order-seg:focus-visible:not(:disabled) {
+  background: #fffdf5;
+  outline: none;
+}
+
+.zl-order-seg:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.zl-order-seg.is-active {
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 28%, #fffdf5);
+  box-shadow: inset 0 0 0 1.5px #1e1714;
+}
+
+.zl-order-seg:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.zl-manage-tools-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.48rem;
+  width: 100%;
+}
+
+.zl-manage-tools-row > .zl-share-option {
+  min-width: 0;
+  padding-inline: 0.5rem;
+  white-space: nowrap;
+}
+
+.zl-manage-cleanup-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding-top: 0.35rem;
+  border-top: 1.5px dashed rgba(30, 23, 20, 0.12);
+}
+
+.zl-manage-cleanup-row > .zl-cleanup-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
@@ -2653,42 +2708,9 @@ body.zl-touch-dragging {
   box-shadow: 1px 1px 0 #1e1714;
 }
 
-.zl-manage-tray > .zl-share-option {
-  flex: 1 1 calc(50% - 0.5rem);
-  min-width: 0;
-  padding-inline: 0.35rem;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.zl-collaborator-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  width: 100%;
-  color: #1e1714;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.zl-collaborator-badge img {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid #1e1714;
-  background: #fbf1e4;
-}
-
-.zl-collaborator-badge input {
-  width: 0;
-  flex: 1;
-  min-height: 40px;
-  border: 2px solid #1e1714;
-  border-radius: 10px;
-  background: #fffef7;
-  color: #1e1714;
-  padding: 0.3rem 0.55rem;
-  font: inherit;
+.zl-share-option.is-copied {
+  background: #86efac !important;
+  color: #064e3b !important;
 }
 
 .zl-manage-button.is-open,
@@ -2706,7 +2728,7 @@ body.zl-touch-dragging {
 }
 
 .zl-share-paste {
-  flex: 1 1 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -2717,7 +2739,7 @@ body.zl-touch-dragging {
   width: 100%;
   min-width: 0;
   font-family: "Space Mono", monospace;
-  font-size: 0.82rem;
+  font-size: 1rem;
   padding: 0.55rem 0.7rem;
   border-radius: 12px;
   border: 2px solid #1e1714;
@@ -2726,6 +2748,12 @@ body.zl-touch-dragging {
   resize: vertical;
   min-height: 4.5rem;
   max-height: 12rem;
+}
+
+@media (min-width: 640px) {
+  .zl-share-paste textarea {
+    font-size: 0.85rem;
+  }
 }
 
 .zl-paste-actions {
@@ -2828,6 +2856,11 @@ body.zl-touch-dragging {
   margin-top: 0.15rem;
   border-top: 1.5px dashed rgba(30, 23, 20, 0.2);
   scroll-margin-bottom: 5.5rem;
+}
+
+html[data-list-first="true"] .zl-item-tray,
+html[data-list-first="true"] .zl-item-move-panel {
+  scroll-margin-bottom: 10rem;
 }
 
 .zl-item-tray-actions {
@@ -3522,38 +3555,36 @@ body.zl-touch-dragging {
   }
 }
 
-/* Share tray: full-width Live List hero + 2-column QR / Copy secondary row */
-.zl-share-hero {
+/* Share tray: Unified Live Ticket when live, compact 2-row controls when local */
+.zl-share-tray {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  gap: 0.48rem;
+  padding: 0.15rem 0.15rem 0.7rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 2px dashed rgba(30, 23, 20, 0.12);
+}
+
+.zl-share-primary-row {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.16rem;
+  gap: 0.48rem;
   width: 100%;
-  min-height: 50px;
-  padding: 0.5rem 0.9rem;
-  border-radius: 14px;
-  box-shadow: 2px 2px 0 #1e1714;
 }
 
-.zl-share-hero.is-live-active {
-  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 42%, #fffdf5);
-}
-
-.zl-share-hero-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  font-size: 0.85rem;
+.zl-share-start-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.84rem;
   font-weight: 900;
-  line-height: 1.15;
 }
 
-.zl-share-hero-sub {
-  font-size: 0.68rem;
-  font-weight: 700;
-  opacity: 0.74;
-  line-height: 1.15;
+.zl-share-icon-btn {
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
 }
 
 .zl-share-secondary {
@@ -3566,86 +3597,208 @@ body.zl-touch-dragging {
 .zl-share-secondary > .zl-share-option {
   min-width: 0;
   padding-inline: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   white-space: nowrap;
 }
 
-.zl-live-footer-row {
+.zl-live-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border-radius: 14px;
+  border: 2px solid #1e1714;
+  background: color-mix(in srgb, var(--zl-item-accent, #ffb000) 10%, #fffef7);
+  box-shadow: 2px 2px 0 #1e1714;
+}
+
+.zl-live-ticket-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.zl-live-words-btn,
+.zl-live-words-fallback {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1.5px dashed rgba(30, 23, 20, 0.28);
+  background: #fffdf5;
+  color: #1e1714;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.zl-live-words-btn {
+  cursor: pointer;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    transform 0.12s ease;
+}
+
+.zl-live-words-btn:hover,
+.zl-live-words-btn:focus-visible {
+  border-style: solid;
+  border-color: #1e1714;
+  background: #fbf1e4;
+  outline: none;
+}
+
+.zl-live-words-btn:active {
+  transform: scale(0.97);
+}
+
+.zl-live-words-btn code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "Space Mono", monospace;
+  font-size: 0.73rem;
+  font-weight: 800;
+  color: #1e1714;
+}
+
+.zl-live-words-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--zl-item-accent, #ffb000);
+  box-shadow: 0 0 0 2.5px
+    color-mix(in srgb, var(--zl-item-accent, #ffb000) 28%, transparent);
+}
+
+.zl-live-words-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.zl-live-words-copied {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #065f46;
+}
+
+.zl-collab-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 44%;
+  min-height: 32px;
+  padding: 0.16rem 0.48rem 0.16rem 0.2rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(30, 23, 20, 0.24);
+  background: #fbf1e4;
+  color: #1e1714;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease;
+}
+
+.zl-collab-chip:hover,
+.zl-collab-chip:focus-visible {
+  border-color: #1e1714;
+  background: #fffdf5;
+  outline: none;
+}
+
+.zl-collab-chip img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #1e1714;
+  background: #fffef7;
+  flex-shrink: 0;
+}
+
+.zl-collab-chip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zl-collab-chip-edit {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  opacity: 0.58;
+}
+
+.zl-collab-name-input {
+  width: 9.5rem;
+  max-width: 48%;
+  min-height: 34px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  border: 2px solid #1e1714;
+  background: #fffef7;
+  color: #1e1714;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+@media (min-width: 640px) {
+  .zl-collab-name-input {
+    font-size: 0.78rem;
+  }
+}
+
+.zl-live-ticket-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  width: 100%;
+}
+
+.zl-live-ticket-actions > .zl-share-copy-main {
+  flex: 1.35 1 0;
+  min-width: 0;
+  padding-inline: 0.55rem;
+  white-space: nowrap;
+}
+
+.zl-live-ticket-actions
+  > .zl-share-option:not(.zl-share-icon-btn):not(.zl-share-copy-main) {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 0.5rem;
+  white-space: nowrap;
+}
+
+.zl-share-meta-row {
   display: flex;
   align-items: center;
   gap: 0.45rem;
   width: 100%;
-  padding-top: 0.15rem;
 }
 
-.zl-live-footer-row .zl-collaborator-badge {
-  flex: 1 1 auto;
+.zl-share-meta-row > .zl-share-meta-btn {
+  flex: 1 1 0;
   min-width: 0;
-  width: auto;
-}
-
-.zl-live-footer-row .zl-share-stop {
-  flex-shrink: 0;
   min-height: 40px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.74rem;
-}
-
-/* The words are the link, so they're a button, not a caption. */
-.zl-share-phrase {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  width: 100%;
-  margin: 0;
-  padding: 0.5rem 0.75rem;
-  border-radius: 14px;
-  border: 2px dashed
-    color-mix(
-      in srgb,
-      var(--zl-item-accent, #a970ea) 52%,
-      rgba(30, 23, 20, 0.25)
-    );
-  background: color-mix(
-    in srgb,
-    var(--zl-item-accent, #a970ea) 10%,
-    var(--zl-item-bg, #fffef7)
-  );
-  cursor: pointer;
-  text-align: center;
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.zl-share-phrase-kicker {
-  font-size: 0.64rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #1e1714;
-  opacity: 0.62;
-}
-
-.zl-share-phrase:hover {
-  transform: scale(1.01);
-}
-
-.zl-share-phrase:active {
-  transform: scale(0.98);
-}
-
-.zl-share-phrase code {
-  font-family: "Space Mono", monospace;
-  font-size: 0.88rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  color: #1e1714;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .zl-share-phrase {
-    transition: none;
-  }
+  padding: 0.3rem 0.55rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 /* ── Pull-down-to-add ──────────────────────────────────────────────────────

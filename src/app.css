@@ -11,18 +11,10 @@
     var(--zl-primary-color-rgb, 255, 176, 0),
     0.62
   );
-  /* The brand duo, amber into pink. The pink half used to come from
-     --zl-accent-color-rgb, which is 30,23,20 in every theme — so the
-     "gradient" faded into near-black. See the body ink note below. */
-  --zl-scrollbar-thumb-bg: linear-gradient(
-    180deg,
-    rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.76),
-    rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.72)
-  );
-  --zl-scrollbar-thumb-hover-bg: linear-gradient(
-    180deg,
-    rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.88),
-    rgba(var(--zl-pass-color-rgb, 255, 106, 194), 0.84)
+  --zl-scrollbar-thumb-bg: rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.68);
+  --zl-scrollbar-thumb-hover-bg: rgba(
+    var(--zl-primary-color-rgb, 255, 176, 0),
+    0.88
   );
 
   /* Modal motion — one source of truth. Opens are snappy and springy with a
@@ -78,6 +70,19 @@
 /* Remove tap highlight on mobile */
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  caret-color: var(--zl-vibe-caret, #f472b6);
+}
+
+/* Prevent iOS Safari from violently auto-zooming inputs < 16px */
+@media (max-width: 639px) {
+  :where(input, textarea, select) {
+    font-size: 16px;
+  }
 }
 
 /* Keep normal page scrolling on touch devices. */
@@ -265,6 +270,8 @@ body::-webkit-scrollbar-corner {
 
 @media (hover: none) and (pointer: coarse) {
   :where(
+    html,
+    body,
     .modal-box,
     .zl-modal-scroll-area,
     .zl-scrollbar,
@@ -277,6 +284,8 @@ body::-webkit-scrollbar-corner {
   }
 
   :where(
+    html,
+    body,
     .modal-box,
     .zl-modal-scroll-area,
     .zl-scrollbar,
@@ -302,19 +311,28 @@ body:has(dialog[open]) {
   overflow: hidden !important;
 }
 
+/* Pause background animations underneath blurred open modals so WebKit does
+   not re-blur backdrop-filter at 60fps while idle. */
+html:has(dialog[open]) .page-shell *,
+html:has(dialog[open]) .page-shell *::before,
+html:has(dialog[open]) .page-shell *::after {
+  animation-play-state: paused !important;
+}
+
 /* Modal container styles across all dialogs */
-.modal,
-dialog.zl-settings-dialog,
-dialog.zl-contributor-dialog {
+.modal {
   padding: 0 !important;
   overflow: hidden !important;
   position: fixed !important;
-  inset: 0 !important;
-  z-index: 9999 !important;
-  /* 100% (not 100vw/100dvh): resolves against viewport inside gutter */
+  top: var(--zl-vv-top, 0px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: auto !important;
+  /* 100% width resolves inside scrollbar gutter; --zl-vvh tracks iOS visualViewport
+     above the software keyboard so the close X never pans off-screen. */
   width: 100% !important;
   max-width: none !important;
-  height: 100% !important;
+  height: var(--zl-vvh, 100%) !important;
   max-height: none !important;
   margin: 0 !important;
   border: 0 !important;
@@ -326,36 +344,28 @@ dialog.zl-contributor-dialog {
 }
 
 dialog.modal[open],
-dialog.modal.modal-open,
-dialog.zl-settings-dialog[open],
-dialog.zl-contributor-dialog[open] {
+dialog.modal.modal-open {
   display: grid !important;
   grid-template-areas: "modal" !important;
   place-items: center !important;
-  padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
+  padding: clamp(0.65rem, 2.5vw, 1.5rem) !important;
   padding-bottom: max(
-    clamp(0.75rem, 2.5vw, 1.5rem),
-    calc(env(safe-area-inset-bottom, 0px) + 1.25rem)
+    clamp(0.65rem, 2.5vw, 1.5rem),
+    calc(env(safe-area-inset-bottom, 0px) + 0.75rem)
   ) !important;
 }
 
-dialog.modal:not([open]),
-dialog.zl-settings-dialog:not([open]),
-dialog.zl-contributor-dialog:not([open]) {
+dialog.modal:not([open]) {
   display: none;
 }
 
-dialog.modal::backdrop,
-dialog.zl-settings-dialog::backdrop,
-dialog.zl-contributor-dialog::backdrop {
+dialog.modal::backdrop {
   background: transparent;
 }
 
 /* Modal backdrop — TalkType canon: warm-dark + 4px blur, tap-to-close */
 .modal > .modal-backdrop,
-.modal .modal-backdrop,
-.zl-modal-backdrop,
-.zl-contributor-backdrop {
+.modal .modal-backdrop {
   grid-area: modal;
   position: fixed;
   inset: 0;
@@ -379,8 +389,8 @@ dialog.zl-contributor-dialog::backdrop {
   flex-direction: column;
   width: var(--zl-modal-panel-width, min(92vw, 32rem));
   max-height: min(
-    84dvh,
-    calc(100dvh - 3.5rem - env(safe-area-inset-bottom, 0px))
+    86dvh,
+    calc(var(--zl-vvh, 100dvh) - 1.75rem - env(safe-area-inset-bottom, 0px))
   );
   overflow-y: auto;
   overflow-x: hidden;
@@ -467,8 +477,8 @@ dialog.zl-contributor-dialog::backdrop {
 .tt-marker {
   background-image: linear-gradient(
     to top,
-    rgba(255, 106, 194, 0.55) 0%,
-    rgba(255, 106, 194, 0.55) 38%,
+    color-mix(in srgb, var(--zl-footer-pass-bg, #ff6ac2) 50%, transparent) 0%,
+    color-mix(in srgb, var(--zl-footer-pass-bg, #ff6ac2) 50%, transparent) 38%,
     transparent 38%
   );
   border-radius: 2px;
@@ -479,14 +489,14 @@ dialog.zl-contributor-dialog::backdrop {
 .tt-pitch-copy {
   text-align: left;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.375;
-  color: #374151;
+  color: #2b231f;
 }
 
 .zl-pitch-copy > * + *,
 .tt-pitch-copy > * + * {
-  margin-top: 0.625rem;
+  margin-top: 0.55rem;
 }
 
 .zl-pitch-list > li,
@@ -498,7 +508,7 @@ dialog.zl-contributor-dialog::backdrop {
 
 .zl-pitch-list > li + li,
 .tt-pitch-list > li + li {
-  margin-top: 0.625rem;
+  margin-top: 0.5rem;
 }
 
 .zl-pitch-list > li::before,
@@ -506,8 +516,9 @@ dialog.zl-contributor-dialog::backdrop {
   content: "✓";
   content: "✓" / "";
   flex-shrink: 0;
-  margin-top: 0.125rem;
-  color: var(--zl-pass-color, #ff6ac2);
+  margin-top: 0.1rem;
+  font-weight: 900;
+  color: var(--zl-vibe-accent-text, #db2777);
 }
 
 @media (min-width: 640px) {
@@ -543,41 +554,46 @@ dialog.zl-contributor-dialog::backdrop {
 .zl-pitch-cta,
 .tt-pitch-cta {
   min-height: 3rem;
-  background-color: var(--zl-pass-color, #ff5ca8);
-  color: #fffef7;
+  background-color: var(--zl-footer-pass-bg, #ff5ca8);
+  color: #1e1714;
   font-size: 1rem;
   letter-spacing: -0.01em;
-  box-shadow: 2px 2px 0 #1e1714;
+  box-shadow: 2.5px 2.5px 0 #1e1714;
 }
 
 .zl-pitch-cta.zl-pitch-cta-pink,
 .tt-pitch-cta.tt-pitch-cta-pink {
-  background-color: #ff5ca8;
-  color: #fffef7;
+  background-color: var(--zl-footer-pass-bg, #ff5ca8);
+  color: #1e1714;
 }
 
 .zl-pitch-cta.zl-pitch-cta-pink:hover:not(:disabled),
 .tt-pitch-cta.tt-pitch-cta-pink:hover:not(:disabled) {
-  background-color: #ff6eb3;
+  background-color: var(--zl-footer-pass-hover-bg, #ff6eb3);
 }
 
 .zl-pitch-cta:hover:not(:disabled),
 .tt-pitch-cta:hover:not(:disabled) {
   background-color: var(--zl-footer-pass-hover-bg, #ff6eb3);
   transform: translateY(-1px);
+  box-shadow: 3.5px 3.5px 0 #1e1714;
 }
 
 .zl-pitch-cta:active:not(:disabled),
 .tt-pitch-cta:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: none;
+  box-shadow: 1px 1px 0 #1e1714;
 }
 
 .zl-pitch-cta:disabled,
 .tt-pitch-cta:disabled {
-  border-color: #d6d3d1;
-  background-color: #e7e5e4;
-  color: #a8a29e;
+  border-color: rgba(30, 23, 20, 0.34);
+  background-color: color-mix(
+    in srgb,
+    var(--zl-footer-pass-bg, #ff6ac2) 22%,
+    #fbf1e4
+  );
+  color: rgba(30, 23, 20, 0.55);
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -637,28 +653,26 @@ dialog.zl-contributor-dialog::backdrop {
 .zl-passport-code-form,
 .tt-passport-code-form {
   display: grid;
-  gap: 0.85rem;
-  padding: 1.25rem;
-  border: 2px solid #1e1714;
-  border-radius: 1.25rem;
-  background: #fffef7;
-  box-shadow: 2px 2px 0 #1e1714;
+  gap: 0.75rem;
+  padding: 0.15rem 0;
 }
 
 .zl-passport-code-input,
 .tt-passport-code-input {
   width: 100%;
   min-width: 0;
-  min-height: 3.25rem;
-  padding: 0.75rem 1rem;
+  min-height: 3.15rem;
+  padding: 0.7rem 1rem;
   border: 2px solid #1e1714;
   border-radius: 0.875rem;
   background: #fffdf5;
   color: #1e1714;
-  font-size: 1.05rem;
+  font-family: "Space Mono", monospace;
+  font-size: 1rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-align: center;
+  letter-spacing: 0.01em;
+  text-align: left;
+  box-shadow: 1.5px 1.5px 0 #1e1714;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
@@ -666,8 +680,8 @@ dialog.zl-contributor-dialog::backdrop {
 
 .zl-passport-code-input::placeholder,
 .tt-passport-code-input::placeholder {
-  color: #a8a29e;
-  font-weight: 500;
+  color: #9a9188;
+  font-weight: 600;
   letter-spacing: normal;
 }
 
@@ -677,7 +691,8 @@ input.zl-passport-code-input:focus,
 input.tt-passport-code-input:focus {
   outline: none;
   border-color: #1e1714;
-  box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.22);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--zl-vibe-caret, #f472b6) 28%, transparent);
 }
 
 .zl-passport-code-link,
@@ -752,7 +767,7 @@ input.tt-passport-code-input:focus {
 /* Mobile modal adjustments */
 @media (max-width: 639px) {
   .modal-box {
-    max-height: calc(100dvh - 4rem);
+    max-height: calc(var(--zl-vvh, 100dvh) - 1.5rem);
     width: var(--zl-modal-panel-width, min(92vw, 32rem));
     --zl-modal-pad: 1rem;
     border-radius: 1.25rem;

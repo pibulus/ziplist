@@ -9,6 +9,7 @@
    */
   import { afterUpdate, onMount } from "svelte";
   import {
+    deriveLegacyPhrase,
     generateMemberIdentity,
     parseFourWordPasskey,
   } from "$lib/softstack-passport/index.js";
@@ -17,7 +18,10 @@
     selectNamedSkin,
     shuffleSkinSeed,
   } from "$lib/softstack-passport/skins.js";
-  import { renderMembershipCard } from "$lib/softstack-passport/card.html.js";
+  import {
+    cardStyleFor,
+    renderMembershipCard,
+  } from "$lib/softstack-passport/card.html.js";
   import {
     buildPassportAvatar,
     clearCustomPassportAvatar,
@@ -80,23 +84,29 @@
     Math.min(max, Math.max(min, value));
 
   $: effectivePassportCode = passportCode || storedPassportCode;
+  $: previewSamplePhrase = isPreview ? deriveLegacyPhrase(vaultHash) : "";
   $: effectivePhrase =
-    passportPhrase || parseFourWordPasskey(effectivePassportCode)?.phrase || "";
+    previewSamplePhrase ||
+    passportPhrase ||
+    parseFourWordPasskey(effectivePassportCode)?.phrase ||
+    "";
   $: identity = generateMemberIdentity(vaultHash, effectivePassportCode, {
     phrase: effectivePhrase,
   });
   $: hasVaultHash = !identity.isFallback;
 
-  // One coordinate in the modular axis space, deterministic from the hash.
-  $: skin =
-    shuffleSeed > 0
-      ? shuffleSkinSeed(shuffleSeed)
-      : skinName
-        ? selectNamedSkin(skinName, vaultHash)
-        : selectSkin(vaultHash);
-  $: avatarUri =
+  // Base coordinate for initial SSR/HTML render; shuffled skins apply in-place
+  // on cardEl so tapping the card never destroys and recreates {@html markup}.
+  $: baseSkin = skinName
+    ? selectNamedSkin(skinName, vaultHash)
+    : selectSkin(vaultHash);
+  $: activeSkin = shuffleSeed > 0 ? shuffleSkinSeed(shuffleSeed) : baseSkin;
+  $: baseAvatarUri =
     (!isPreview && customAvatarUri) ||
-    buildPassportAvatar(vaultHash || "ziplist", skin.avatarStyle);
+    buildPassportAvatar(vaultHash || "ziplist", baseSkin.avatarStyle);
+  $: activeAvatarUri =
+    (!isPreview && customAvatarUri) ||
+    buildPassportAvatar(vaultHash || "ziplist", activeSkin.avatarStyle);
 
   // The 4-word passkey is the root credential; preview/fallback cards encode the public app URL.
   $: resolvedPhrase = privatePhrase || $deviceSyncStore.privatePhrase || "";
@@ -120,17 +130,38 @@
 
   $: markup = renderMembershipCard({
     identity,
-    skin,
+    skin: baseSkin,
     appName: "ZipList",
     isPreview,
-    avatarUri,
+    avatarUri: baseAvatarUri,
     customAvatar: Boolean(customAvatarUri),
     qrUrl: passportSyncUrl,
     qrImageUrl: passportQrImageUrl,
     reducedMotion,
-    revealed,
+    revealed: isPreview ? true : revealed,
     showQr,
   });
+
+  function applyActiveSkin(targetCard, nextSkin, nextAvatarUri) {
+    if (!targetCard || !nextSkin) return;
+    targetCard.setAttribute("style", cardStyleFor(nextSkin));
+    writePointerVars(mouseX, mouseY);
+    targetCard.style.setProperty("--hovered", isHovered ? "1" : "0");
+    targetCard.dataset.palette = nextSkin.palette.name;
+    targetCard.dataset.holo = nextSkin.choices.holo;
+    targetCard.dataset.frame = nextSkin.choices.frame;
+    targetCard.dataset.texture = nextSkin.choices.texture;
+    targetCard.dataset.type = nextSkin.choices.type;
+    targetCard.dataset.avatar = nextSkin.avatarStyle;
+    const avatarImg = targetCard.querySelector(".avatar-img");
+    if (
+      avatarImg &&
+      nextAvatarUri &&
+      avatarImg.getAttribute("src") !== nextAvatarUri
+    ) {
+      avatarImg.setAttribute("src", nextAvatarUri);
+    }
+  }
 
   function writePointerVars(x, y) {
     if (!cardEl) return;
@@ -200,6 +231,7 @@
     }
     avatarInputEl = hostEl?.querySelector(".avatar-input") || null;
     if (cardEl) {
+      applyActiveSkin(cardEl, activeSkin, activeAvatarUri);
       cardEl.classList.toggle("is-squishing", isSquishing);
       cardEl.classList.toggle("is-copied", idCopied);
       cardEl.style.setProperty("--hovered", isHovered ? "1" : "0");
@@ -208,9 +240,9 @@
 
   afterUpdate(syncCard);
 
-  // These two live outside the markup so copying/squishing never re-renders
-  // the card. Svelte only schedules updates for template variables, hence the
-  // explicit reactive statements.
+  // These live outside the markup so copying, squishing, and skin-shuffling
+  // never re-render {@html markup}.
+  $: if (cardEl) applyActiveSkin(cardEl, activeSkin, activeAvatarUri);
   $: if (cardEl) cardEl.classList.toggle("is-copied", idCopied);
   $: if (cardEl) cardEl.classList.toggle("is-squishing", isSquishing);
 

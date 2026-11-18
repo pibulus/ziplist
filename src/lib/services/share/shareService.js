@@ -4,26 +4,29 @@
  */
 import { PRODUCT_LIMITS } from "$lib/constants";
 import { normalizeTags } from "$lib/services/lists/itemTags";
+import { copyTextToClipboard } from "$lib/services/infrastructure/clipboard.js";
 
 /**
- * Encode a list into a format suitable for sharing
+ * Encode a list into a compact v2 tuple format suitable for sharing & QR codes.
+ * Format: `{ v: 2, n: list.name, i: [[text, checked?1:0, tags?], ...] }`
+ * Cuts ~70% of per-item JSON boilerplate compared to `{ text, checked: false }`
+ * so 30–80 item lists fit cleanly inside a single scannable QR code.
  * @param {Object} list - The list to encode
- * @return {string} Base64 encoded list data
+ * @return {string} Base64url encoded list data
  */
 export function encodeListForSharing(list) {
-  // Strip unnecessary metadata and keep only essential data
-  const essentialData = {
-    name: list.name,
-    items: list.items.map((item) => {
-      const entry = { text: item.text, checked: item.checked };
-      // Tags ride along only when present — old receivers ignore the extra
-      // field, old links simply have none, and tagless payloads stay small.
-      if (item.tags?.length) entry.tags = item.tags;
-      return entry;
+  const compactPayload = {
+    v: 2,
+    n: list.name || "",
+    i: (list.items || []).map((item) => {
+      if (item.tags?.length) {
+        return [item.text, item.checked ? 1 : 0, item.tags];
+      }
+      return item.checked ? [item.text, 1] : [item.text];
     }),
   };
 
-  return toBase64Url(JSON.stringify(essentialData));
+  return toBase64Url(JSON.stringify(compactPayload));
 }
 
 /* Share links are base64url over UTF-8 bytes. Two real bugs lived in the
@@ -77,17 +80,38 @@ export function decodeSharedList(encodedData) {
   try {
     const listData = JSON.parse(fromBase64Url(encodedData));
 
-    // Validate structure
+    // Validate structure (supports both v2 compact tuples `{ v: 2, n, i }`
+    // and legacy `{ name, items }` payloads so older links always open).
     if (!listData || typeof listData !== "object") return null;
-    if (!Array.isArray(listData.items)) return null;
 
+    const rawName =
+      typeof listData.n === "string"
+        ? listData.n
+        : typeof listData.name === "string"
+          ? listData.name
+          : "Imported List";
     const name =
-      typeof listData.name === "string"
-        ? listData.name.slice(0, PRODUCT_LIMITS.MAX_IMPORT_NAME_LENGTH)
-        : "Imported List";
+      rawName.slice(0, PRODUCT_LIMITS.MAX_IMPORT_NAME_LENGTH) ||
+      "Imported List";
+
+    const rawItems = Array.isArray(listData.i)
+      ? listData.i.map((entry) =>
+          Array.isArray(entry)
+            ? {
+                text: entry[0],
+                checked: Boolean(entry[1]),
+                tags: entry[2],
+              }
+            : entry,
+        )
+      : Array.isArray(listData.items)
+        ? listData.items
+        : null;
+
+    if (!rawItems) return null;
 
     // Cap item count and validate each item
-    const validItems = listData.items
+    const validItems = rawItems
       .slice(0, PRODUCT_LIMITS.MAX_IMPORT_ITEMS)
       .filter(
         (item) =>
@@ -161,7 +185,7 @@ export async function shareList(list, baseUrl = window.location.origin) {
   // Check URL length (warn if > 1500 characters, most browsers support 2000+)
   const urlTooLong = shareUrl.length > PRODUCT_LIMITS.SHARE_URL_WARNING_LENGTH;
 
-  // Try Web Share API first (better mobile UX)
+  // Try Web Share API first (URL-only so iOS "Copy" copies a clean URL)
   if (
     navigator.share &&
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
@@ -169,26 +193,17 @@ export async function shareList(list, baseUrl = window.location.origin) {
     try {
       await navigator.share({
         title: `${list.name} - ZipList`,
-        text: `Check out my list: ${list.name}`,
         url: shareUrl,
       });
       return { success: true, urlTooLong };
     } catch (e) {
-      // User cancelled share dialog or API not available
-      // Fall back to clipboard
       if (e.name === "AbortError") {
-        // User cancelled, don't show error
         return { success: false, urlTooLong: false };
       }
     }
   }
 
-  // Fallback: Copy to clipboard
-  try {
-    await navigator.clipboard.writeText(shareUrl);
-    return { success: true, urlTooLong };
-  } catch (e) {
-    console.error("Failed to copy to clipboard", e);
-    return { success: false, urlTooLong: false };
-  }
+  // Fallback: Copy to clipboard (with execCommand fallback)
+  const copied = await copyTextToClipboard(shareUrl);
+  return { success: copied, urlTooLong: copied ? urlTooLong : false };
 }

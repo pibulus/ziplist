@@ -62,6 +62,7 @@
     subtitle: "Scan with any phone camera to join",
     syncPhrase: "",
     isLive: false,
+    onStartLive: null,
   };
 
   let speechModelPreloaded = false;
@@ -227,6 +228,8 @@
       subtitle: detail.subtitle || "Scan with any phone camera to join",
       syncPhrase: detail.syncPhrase || "",
       isLive: Boolean(detail.isLive),
+      onStartLive:
+        typeof detail.onStartLive === "function" ? detail.onStartLive : null,
     };
 
     if (modalService.isModalOpen()) {
@@ -993,13 +996,13 @@
     </div>
   {:else if $uiState.errorMessage}
     <div
-      class="mx-auto mb-3 flex w-[min(100%,30rem)] items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white/85 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur"
+      class="mx-auto mb-3 flex w-[min(100%,30rem)] items-center justify-between gap-3 rounded-2xl border-2 border-[#1e1714] bg-[#fbf1e4] px-4 py-3 text-sm font-bold text-[#1e1714] shadow-[2px_2px_0px_#1e1714]"
       role="alert"
       transition:fade={{ duration: 180 }}
     >
       <span>{$uiState.errorMessage}</span>
       <button
-        class="shrink-0 rounded-lg bg-amber-50 px-3 py-2 text-xs font-black uppercase tracking-normal text-slate-700"
+        class="shrink-0 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 text-xs font-black uppercase tracking-normal text-[#1e1714] shadow-[1px_1px_0px_#1e1714] active:translate-y-0.5 active:shadow-none"
         type="button"
         on:click={uiActions.clearErrorMessage}
       >

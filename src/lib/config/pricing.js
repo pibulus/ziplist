@@ -18,10 +18,9 @@ export const PRICING = {
 };
 
 export const CONTRIBUTOR_BENEFITS = [
-  "Twelve live lists at once, not one",
-  "Every list on every device you own",
-  "Room for twelve lists instead of three",
-  "Shared links that stay open for a year",
+  "12 colour lists instead of 3",
+  "Private 4-word sync across every screen",
+  "12 live shared lists open for a year",
 ];
 
 // What someone just bumped into, said back to them. The pitch is the same
@@ -34,15 +33,15 @@ export const CONTRIBUTOR_REASONS = {
 export const CONTRIBUTOR_COPY = {
   headline: "ZipList",
   headlineHighlight: "Passport",
-  tagline: "Your lists, everywhere they need to be.",
-  ctaButton: "Get your Passport",
+  tagline: "Lists everywhere they need to be.",
+  ctaButton: "Get ZipList Passport",
   redeemButton: "Already have a Passport key?",
   get priceHeadline() {
-    return `${PRICING.displayPrice} for a year.`;
+    return `${PRICING.displayPrice} for a year`;
   },
-  priceSuffix: "Renew only if it earns it.",
+  priceSuffix: "Renew only if it earns it",
   get priceLine() {
-    return `${this.priceHeadline} ${this.priceSuffix}`;
+    return `${this.priceHeadline} · ${this.priceSuffix}`;
   },
   get finePrint() {
     return this.priceLine;

@@ -113,9 +113,7 @@
     >
       <!-- Header (small mascot circle + Options title) -->
       <div class="flex items-center gap-2">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1e1714]/15 bg-gradient-to-br from-[#fffef7] to-pink-50"
-        >
+        <div class="options-mascot-badge">
           <ThemeMascot theme={selectedVibe} size="22px" />
         </div>
         <h3
@@ -175,7 +173,9 @@
           class="zl-control-border divide-y divide-[#1e1714]/10 rounded-2xl border-2 bg-[#fffdf5] px-3 py-1 shadow-sm"
         >
           <!-- Row 1: List-first mode -->
-          <div class="flex items-center justify-between gap-3 py-2">
+          <div
+            class="flex min-h-[48px] items-center justify-between gap-3 py-1.5"
+          >
             <div
               class="min-w-0 flex-1 cursor-pointer select-none"
               role="button"
@@ -196,7 +196,7 @@
             </div>
             <button
               type="button"
-              class="flex min-h-9 items-center justify-end focus:outline-none"
+              class="flex min-h-11 min-w-11 items-center justify-end focus:outline-none"
               aria-pressed={listFirstModeValue}
               aria-label={`${listFirstModeValue ? "Disable" : "Enable"} straight to the list`}
               on:click={toggleListFirstMode}
@@ -212,7 +212,9 @@
           </div>
 
           <!-- Row 2: Spoken & pasted item placement -->
-          <div class="flex items-center justify-between gap-3 py-2">
+          <div
+            class="flex min-h-[48px] items-center justify-between gap-3 py-1.5"
+          >
             <div class="min-w-0 flex-1">
               <span
                 class="block text-[13px] font-black leading-tight text-[#1e1714]"
@@ -248,7 +250,9 @@
           </div>
 
           <!-- Row 3: Checked items visibility -->
-          <div class="flex items-center justify-between gap-3 py-2">
+          <div
+            class="flex min-h-[48px] items-center justify-between gap-3 py-1.5"
+          >
             <div class="min-w-0 flex-1">
               <span
                 class="block text-[13px] font-black leading-tight text-[#1e1714]"
@@ -288,15 +292,13 @@
       <!-- Bottom Passport CTA -->
       <button
         type="button"
-        class="zl-pitch-cta zl-pitch-cta-pink flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] bg-[#ff5ca8] px-4 py-2.5 text-sm font-black text-[#1e1714] shadow-[2px_2px_0px_#1e1714] transition-all hover:bg-[#ff459b] hover:shadow-[3px_3px_0px_#1e1714] active:translate-y-0.5 active:bg-[#e62e84] active:shadow-[1px_1px_0px_#1e1714]"
+        class="zl-pitch-cta"
         title="12 colour lists, device sync, shared lists, and holo Passport card"
         on:click={openContributorModal}
       >
         <span class="text-sm" aria-hidden="true">✦</span>
-        <span class="text-sm font-black tracking-tight text-[#1e1714]">
-          {$isContributor
-            ? "Open ZipList Passport"
-            : "+ Grab the ZipList Passport!"}
+        <span class="text-sm font-black tracking-tight">
+          {$isContributor ? "Open ZipList Passport" : "Grab ZipList Passport"}
         </span>
       </button>
     </div>
@@ -313,9 +315,25 @@
 </dialog>
 
 <style>
-  /* Compact inline segmented pill for 2-state choices */
+  .options-mascot-badge {
+    display: flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 2px solid rgba(30, 23, 20, 0.2);
+    background: color-mix(
+      in srgb,
+      var(--zl-primary-color, #ffb000) 14%,
+      #fffef7
+    );
+  }
+
+  /* Uniform width across stacked rows so left & right edges align cleanly */
   .settings-seg {
     display: inline-grid;
+    width: 8.75rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 2px;
     gap: 2px;
@@ -327,14 +345,14 @@
   }
 
   .settings-seg button {
-    min-height: 30px;
-    min-width: 54px;
-    padding: 0 0.55rem;
+    min-height: 34px;
+    min-width: 0;
+    padding: 0 0.45rem;
     border-radius: 7px;
     border: 1.5px solid transparent;
     background: transparent;
     color: #525252;
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     font-weight: 800;
     line-height: 1;
     transition:
@@ -348,7 +366,7 @@
   }
 
   .settings-seg button.chosen {
-    background: var(--zl-cta-color, #ffcc33);
+    background: var(--zl-vibe-control-bg, #ffb000);
     border-color: #1e1714;
     color: #1e1714;
   }
@@ -388,17 +406,17 @@
     transform: scale(0.88) rotate(-2deg);
   }
 
-  /* Tactile Neo-Toybrut pill toggle switch */
+  /* Tactile Neo-Toybrut pill toggle switch following active Vibe */
   .auto-start-glyph {
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
     flex-shrink: 0;
-    width: 2.55rem;
-    height: 1.45rem;
+    width: 2.65rem;
+    height: 1.5rem;
     border-radius: 9999px;
     background: #fbf1e4;
-    padding: 0.14rem;
+    padding: 0.15rem;
     border: 2px solid #1e1714;
     box-shadow: 1.5px 1.5px 0 #1e1714;
     transition:
@@ -408,8 +426,8 @@
 
   .auto-start-glyph span {
     display: block;
-    width: 0.92rem;
-    height: 0.92rem;
+    width: 0.94rem;
+    height: 0.94rem;
     border-radius: 9999px;
     background: #fffef7;
     border: 1.5px solid #1e1714;
@@ -417,11 +435,11 @@
   }
 
   .auto-start-glyph.is-on {
-    background: var(--zl-cta-color, #ffcc33);
+    background: var(--zl-vibe-control-bg, #ffb000);
   }
 
   .auto-start-glyph.is-on span {
-    transform: translateX(1.06rem);
+    transform: translateX(1.12rem);
   }
 
   /* Row subtitles: a quiet neutral grey, never a muddy brown. */
