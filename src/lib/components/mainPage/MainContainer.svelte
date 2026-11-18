@@ -1059,7 +1059,7 @@
 
   <!-- RecordButtonWithTimer above the List with TalkType canon button-section spacing -->
   <div
-    class="button-section relative flex w-full flex-col items-center justify-center pb-3 pt-1"
+    class="button-section relative flex w-full flex-col items-center justify-center pb-4 pt-2"
     class:list-first-record-button={$listFirstMode === "true"}
   >
     <div
@@ -1270,6 +1270,12 @@
     width: auto;
     display: block;
     filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.18));
+  }
+
+  :global(html[data-has-items="true"])
+    .button-section:not(.list-first-record-button) {
+    padding-top: 0.25rem;
+    padding-bottom: 0.75rem;
   }
 
   /* The picker dots stay centred in the flow now — with the button out of

@@ -127,9 +127,9 @@
   </h1>
 </div>
 
-<!-- Updated subheadline with improved typography and reduced bottom margin -->
+<!-- Subheadline: TalkType canon when empty, tucked when items exist -->
 <p
-  class="slide-in-subtitle mx-auto mb-2 mt-1.5 max-w-prose cursor-default select-none text-center text-sm font-medium leading-relaxed tracking-normal text-[#1e1714]/85 sm:mb-4 sm:mt-3.5 sm:text-lg sm:font-normal sm:text-[#1e1714]/90 md:text-xl lg:text-2xl"
+  class="slide-in-subtitle mx-auto mb-6 mt-3 max-w-prose cursor-default select-none text-center text-sm font-medium leading-relaxed tracking-normal text-[#1e1714]/85 sm:mb-7 sm:mt-6 sm:text-lg sm:font-normal sm:text-[#1e1714]/90 md:text-xl lg:text-2xl"
 >
   {#each subtitle.split("\n") as line, i}
     {#if i > 0}<br />{/if}{line}
@@ -184,7 +184,20 @@
     font-kerning: normal;
     max-inline-size: 52ch;
     text-wrap: balance;
+    white-space: pre-line;
     line-height: 1.4;
+  }
+
+  :global(html[data-has-items="true"]) .slide-in-subtitle {
+    margin-top: 0.375rem;
+    margin-bottom: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    :global(html[data-has-items="true"]) .slide-in-subtitle {
+      margin-top: 0.875rem;
+      margin-bottom: 1rem;
+    }
   }
 
   @keyframes slideIn {
@@ -235,34 +248,47 @@
     font-variation-settings: inherit;
   }
 
-  /* Media queries for mobile optimization */
-  /* Compact desktop viewports (≤840px tall): scale mascot + wordmark together
-     so the active list card sits comfortably above the fold on 13"/14" laptops. */
-  @media (min-width: 768px) and (max-height: 840px) {
+  /* Short desktop viewports (empty state matches TalkType mascot guards;
+     active-list viewports also tuck mascot + wordmark so the card surfaces). */
+  @media (min-width: 768px) and (max-height: 820px) {
     .title-container :global(.mascot) {
+      --mascot-size-md: 192px;
+      --mascot-size-lg: 192px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-height: 650px) {
+    .title-container :global(.mascot) {
+      --mascot-size-md: 144px;
+      --mascot-size-lg: 144px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-height: 840px) {
+    :global(html[data-has-items="true"]) .title-container :global(.mascot) {
       --mascot-size-md: 164px;
       --mascot-size-lg: 172px;
     }
-    h1.staggered-text {
+    :global(html[data-has-items="true"]) h1.staggered-text {
       font-size: 3.85rem;
       line-height: 1.05;
     }
-    .slide-in-subtitle {
+    :global(html[data-has-items="true"]) .slide-in-subtitle {
       margin-top: 0.45rem;
       margin-bottom: 0.35rem;
     }
   }
 
-  /* Squat laptops: smaller still. */
+  /* Squat laptops with active lists: smaller still. */
   @media (min-width: 768px) and (max-height: 740px) {
-    .title-container :global(.mascot) {
+    :global(html[data-has-items="true"]) .title-container :global(.mascot) {
       --mascot-size-md: 144px;
       --mascot-size-lg: 148px;
     }
-    h1.staggered-text {
+    :global(html[data-has-items="true"]) h1.staggered-text {
       font-size: 3.25rem;
     }
-    .slide-in-subtitle {
+    :global(html[data-has-items="true"]) .slide-in-subtitle {
       margin-top: 0.35rem;
       margin-bottom: 0.25rem;
     }
@@ -279,13 +305,17 @@
       transform: scale(0.98);
     }
 
-    /* No need for major mobile overrides anymore */
-
     .slide-in-subtitle {
+      max-inline-size: 28ch;
+      font-size: 1rem;
+      line-height: 1.6;
+      text-wrap: balance;
+    }
+
+    :global(html[data-has-items="true"]) .slide-in-subtitle {
       max-inline-size: 32ch !important;
       font-size: 0.88rem;
       line-height: 1.38;
-      text-wrap: balance;
     }
   }
 

@@ -105,7 +105,7 @@
 <a class="skip-link" href="#main-content">Skip to lists</a>
 
 <div
-  class="bg-gradient-mesh main center page-shell hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-16 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10 lg:pb-16"
+  class="bg-gradient-mesh main center page-shell hero grid min-h-[100dvh] gap-8 px-4 py-6 pb-16 pt-[clamp(4rem,12vh,8rem)] font-sans text-[#1e1714] antialiased sm:px-6 md:px-10 md:pt-[clamp(3rem,10vh,9rem)] lg:pb-16"
   class:list-first-shell={listFirst}
 >
   {#if listFirst}
@@ -139,13 +139,17 @@
           {appName}
         </span>
         <span class="footer-dot mx-2">•</span>
-        <!-- "Made with ❤️" alone is a sentence fragment — it asks for an ending
-             that isn't there, which is why the truncated mobile version read as
-             abrupt. Mobile drops the lead-in and the "in" instead, landing on
-             "❤️ Melbourne": short, complete, still warm. -->
-        <span class="footer-meta text-sm font-medium">
+        <!-- Mobile steps words aside cleanly via clip-path so screen readers
+             keep the attribution and only the charm remains visible. -->
+        <span class="footer-meta flex min-w-0 items-center text-sm font-light">
           <span class="footer-lead"
-            >Made<span class="footer-with">&nbsp;with</span></span
+            ><a
+              class="footer-name shrink-0 font-bold lowercase tracking-tight text-[#1e1714] no-underline transition-colors hover:text-[#ff5ca8]"
+              href="https://madebypablo.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              >made by pablo<span class="font-black text-[#ff5ca8]">.</span></a
+            ></span
           >
           <FooterCharm charms={["❤️"]} rare={["🍒", "⚡"]} />
           <span class="footer-place"
@@ -270,6 +274,19 @@
       box-shadow 0.3s ease;
   }
 
+  @media (min-width: 640px) and (max-width: 899px) {
+    .copyright .footer-copy {
+      display: none;
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 767px) {
+    .copyright .footer-dot {
+      margin-left: 0.375rem;
+      margin-right: 0.375rem;
+    }
+  }
+
   @media (max-width: 639px) {
     /* Mobile footer parity with TalkType: the words step aside cleanly
        via clip-path so screen readers keep the attribution, while the
@@ -340,13 +357,13 @@
     padding-bottom: calc(8.5rem + env(safe-area-inset-bottom)) !important;
   }
 
-  /* Media queries for mobile optimization */
+  /* Media queries for mobile optimization — TalkType canon when empty,
+     progressive tuck once user items exist or list-first mode is active. */
   @media (max-width: 640px) {
     .page-shell {
-      gap: 0.75rem;
       padding-top: max(
         env(safe-area-inset-top),
-        clamp(1.5rem, 4.5svh, 2.75rem)
+        clamp(4rem, 10svh, 5.5rem)
       ) !important;
       padding-bottom: max(
         6rem,
@@ -356,6 +373,14 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
+    }
+
+    :global(html[data-has-items="true"]) .page-shell {
+      gap: 0.75rem;
+      padding-top: max(
+        env(safe-area-inset-top),
+        clamp(1.5rem, 4.5svh, 2.75rem)
+      ) !important;
     }
 
     .page-shell.list-first-shell {
@@ -376,27 +401,33 @@
     }
   }
 
-  /* Short viewports (SE-class phones, landscape): compress the hero
-     stack so the record button never needs a scroll to reach. */
+  /* Short viewports (SE-class phones, landscape) with active items: compress
+     the hero stack so list content + record button stay reachable. */
   @media (max-height: 700px) {
-    .page-shell {
+    :global(html[data-has-items="true"]) .page-shell,
+    .page-shell.list-first-shell {
       gap: 0.75rem;
       padding-top: max(env(safe-area-inset-top), 1.25rem) !important;
     }
   }
 
-  /* Desktop layout - start from top with room for the active list card above the fold */
+  /* Desktop layout — TalkType canon when empty; tucked when active items exist */
   @media (min-width: 1024px) {
     .page-shell {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      gap: 0.9rem;
-      padding-top: clamp(1.25rem, 3.5vh, 3.25rem) !important;
+      padding-top: clamp(3rem, 10vh, 9rem) !important;
       padding-bottom: 10vh !important;
     }
 
+    :global(html[data-has-items="true"]) .page-shell:not(.list-first-shell) {
+      gap: 0.9rem;
+      padding-top: clamp(1.25rem, 3.5vh, 3.25rem) !important;
+    }
+
     .page-shell.list-first-shell {
+      gap: 0.9rem;
       padding-top: clamp(1.5rem, 4vh, 3rem) !important;
     }
   }

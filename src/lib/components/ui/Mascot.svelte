@@ -574,6 +574,20 @@
     }
   }
 
+  @media (min-width: 768px) and (max-height: 820px) {
+    .mascot {
+      --mascot-size-md: 12rem;
+      --mascot-size-lg: 12rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-height: 650px) {
+    .mascot {
+      --mascot-size-md: 9rem;
+      --mascot-size-lg: 9rem;
+    }
+  }
+
   /* Respect reduced-motion: kill float / blink / aura / squish. */
   @media (prefers-reduced-motion: reduce) {
     .mascot-art.is-floating,

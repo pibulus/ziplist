@@ -369,7 +369,7 @@
       type="button"
       class="record-button touch-manipulation select-none {compact
         ? 'record-button-compact'
-        : 'mx-auto flex h-[60px] w-[88%] min-w-[260px] max-w-[400px] items-center justify-center sm:h-[64px] sm:w-[85%]'} {recording &&
+        : 'mx-auto flex h-[64px] w-[90%] min-w-[280px] max-w-[420px] items-center justify-center sm:w-[85%]'} {recording &&
       !compact
         ? 'px-2.5'
         : !compact
@@ -553,10 +553,16 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    min-height: 68px;
+    min-height: 64px;
     position: relative;
-    margin: 0.45rem 0 0.65rem;
+    margin: 0;
     z-index: 5;
+  }
+
+  :global(html[data-has-items="true"])
+    .fixed-button-container:not(.compact-container) {
+    min-height: 68px;
+    margin: 0.45rem 0 0.65rem;
   }
 
   .fixed-button-container.compact-container {
@@ -574,10 +580,10 @@
     overflow: hidden;
     isolation: isolate;
     border-radius: 9999px;
-    border: 2.5px solid #1e1714;
+    border: 2px solid #1e1714;
     background-color: var(--zl-cta-color, #ffb000);
     color: #1e1714;
-    font-weight: 800;
+    font-weight: 700;
     box-shadow: 3px 3px 0px #1e1714;
     transform-origin: center center;
     --meter-0: 0.24;
@@ -588,20 +594,6 @@
       box-shadow 0.16s cubic-bezier(0.25, 0.1, 0.25, 1),
       background-color 0.16s cubic-bezier(0.25, 0.1, 0.25, 1),
       border-color 0.2s ease;
-  }
-
-  /* Chunky Neo-Toybrut idle styling — explicitly :not(.recording-active) so
-     the live timer track and fill are NEVER overridden by chunky mode! */
-  :global(html.mode-neo-brutalist)
-    .record-button:not(.recording-active):not(.record-button-compact) {
-    border-radius: 18px;
-    border: 2.5px solid #1e1714;
-    box-shadow: 4px 4px 0px #1e1714;
-  }
-
-  :global(html.mode-neo-brutalist)
-    .record-button.recording-active:not(.record-button-compact) {
-    border-radius: 18px;
   }
 
   .record-button-compact {
@@ -638,9 +630,9 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    font-size: clamp(1.05rem, 0.4vw + 0.98rem, 1.22rem);
-    font-weight: 800;
-    letter-spacing: 0.01em;
+    font-size: clamp(1rem, 0.5vw + 0.9rem, 1.25rem);
+    font-weight: 700;
+    letter-spacing: 0;
     line-height: 1;
     color: #1e1714;
   }
@@ -664,13 +656,13 @@
 
   /* Idle hover & active tactile states */
   .record-button:not(.recording-active):hover:not(:disabled) {
-    transform: translate(-1px, -2px);
-    background-color: #ffc226;
-    box-shadow: 5px 5px 0px #1e1714;
+    transform: translateY(-2px);
+    background-color: #fcd34d;
+    box-shadow: 4px 4px 0px #1e1714;
   }
 
   .record-button:not(.recording-active):active:not(:disabled) {
-    transform: translate(2px, 2px);
+    transform: translateY(2px);
     background-color: #f59e0b;
     box-shadow: 1px 1px 0px #1e1714;
   }
@@ -1145,13 +1137,18 @@
   }
 
   @media (max-width: 640px) {
-    .fixed-button-container:not(.compact-container) {
+    :global(html[data-has-items="true"])
+      .fixed-button-container:not(.compact-container) {
       min-height: 60px;
       margin: 0.2rem 0 0.4rem;
     }
 
-    .fixed-button-container:not(.compact-container) .record-button,
-    .fixed-button-container:not(.compact-container) .transcribing-pill {
+    :global(html[data-has-items="true"])
+      .fixed-button-container:not(.compact-container)
+      .record-button,
+    :global(html[data-has-items="true"])
+      .fixed-button-container:not(.compact-container)
+      .transcribing-pill {
       width: 84%;
       max-width: 340px;
       min-width: 248px;
