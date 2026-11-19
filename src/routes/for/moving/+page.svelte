@@ -15,15 +15,15 @@
   const faqs = [
     {
       q: "Can I keep a few lists going at once?",
-      a: "Yes. Make as many as you need and flick sideways between them. They are colour-coded, so the kitchen one is not the admin one.",
+      a: "Yes. Three lists are free, or up to twelve with Passport, and flicking sideways switches between them. Each list has its own colour, so the kitchen one is never mixed up with the admin one.",
     },
     {
       q: "Can I paste in a checklist I found somewhere?",
-      a: "Yes — open the share tray and use “Paste things in”. A block of text arrives as separate rows rather than one long item.",
+      a: "Yes. Open the ••• menu on any list and choose Paste Items. A block of text arrives as separate rows rather than one long item.",
     },
     {
       q: "Will it nag me about dates?",
-      a: "No. There are no due dates, no reminders and no streaks anywhere in it. It is a list of things, not a system keeping score of you.",
+      a: "No. There are no due dates, no reminders and no streaks anywhere in it. It is a list of things, not a system keeping score.",
     },
   ];
 

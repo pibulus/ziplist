@@ -376,7 +376,14 @@ export function stampItemChanges(prevList, nextItems, now = Date.now()) {
   const items = nextItems.map((item) => {
     const prev = prevById.get(item.id);
     prevById.delete(item.id);
-    let next = item;
+    let next = prev
+      ? {
+          ...prev,
+          ...item,
+          tags: item.tags,
+          completedAt: item.completedAt,
+        }
+      : item;
     if (deleted[item.id]) {
       delete deleted[item.id];
       next = { ...next, updatedAt: now };

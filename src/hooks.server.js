@@ -103,6 +103,7 @@ export async function handle({ event, resolve }) {
     event.url.pathname.startsWith("/contributor/success")
   ) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    response.headers.set("Referrer-Policy", "no-referrer");
   }
 
   return response;

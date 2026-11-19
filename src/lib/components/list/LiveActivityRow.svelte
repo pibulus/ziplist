@@ -5,7 +5,7 @@
   export let type = "draft";
   export let staggerDelay = 0;
 
-  $: color = activity?.color || "#00d4ff";
+  $: color = activity?.color || "#62c9e8";
   $: text = activity?.text || "";
   $: isVoice = type === "voice";
   $: rowLabel = isVoice

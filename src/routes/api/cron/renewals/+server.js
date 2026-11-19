@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import {
@@ -10,19 +11,21 @@ import {
 } from "$lib/server/payments/paymentStore.js";
 import { sendRenewalEmail } from "$lib/server/email/renewalEmail.js";
 
-// Called by the daily Netlify scheduled function, not by people. The secret is
-// the only thing standing between this and anyone mailing every customer.
+function timingSafeSecretEqual(given, expected) {
+  const digestA = crypto.createHash("sha256").update(String(given)).digest();
+  const digestB = crypto.createHash("sha256").update(String(expected)).digest();
+  return crypto.timingSafeEqual(digestA, digestB);
+}
+
 function authorised(event) {
   const secret = env.CRON_SECRET?.trim();
   if (!secret) return false;
-  const given =
-    event.request.headers.get("x-cron-secret") ||
-    event.url.searchParams.get("key") ||
-    "";
-  return given === secret;
+  const given = event.request.headers.get("x-cron-secret")?.trim() || "";
+  if (!given) return false;
+  return timingSafeSecretEqual(given, secret);
 }
 
-async function run(event) {
+export async function POST(event) {
   if (!authorised(event)) {
     return json({ error: "Not authorised." }, { status: 401 });
   }
@@ -54,12 +57,4 @@ async function run(event) {
   }
 
   return json({ due: due.length, sent, failed });
-}
-
-export async function GET(event) {
-  return run(event);
-}
-
-export async function POST(event) {
-  return run(event);
 }

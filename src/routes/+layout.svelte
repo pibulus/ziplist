@@ -2,12 +2,20 @@
   import "../app.css";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
+  import { page } from "$app/stores";
   import Toast from "$lib/components/Toast.svelte";
   import PwaInstallCard from "$lib/components/PwaInstallCard.svelte";
   import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
   import { firstVisitService } from "$lib/services/first-visit/firstVisitService.js";
 
   let { children } = $props();
+
+  $effect(() => {
+    if (!browser) return;
+    const pathname = $page.url?.pathname || "/";
+    document.documentElement.lang =
+      pathname === "/es" || pathname.startsWith("/es/") ? "es" : "en";
+  });
 
   if (browser) {
     onMount(async () => {

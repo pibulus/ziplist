@@ -4,6 +4,15 @@ import path from "path";
 import os from "os";
 import { FileSystemAdapter } from "./FileSystemAdapter.js";
 
+function isNetlifyServerless() {
+  return Boolean(
+    env.NETLIFY === "true" ||
+    process.env.NETLIFY === "true" ||
+    process.env.NETLIFY_BLOBS_CONTEXT ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME,
+  );
+}
+
 export class NetlifyBlobsAdapter {
   constructor() {
     this.storeName = "ziplist-data";
@@ -45,8 +54,9 @@ export class NetlifyBlobsAdapter {
       });
       return { data: entry?.data || null, version: entry?.etag || null };
     } catch (error) {
+      if (isNetlifyServerless()) throw error;
       console.warn(
-        `[NetlifyBlobsAdapter] snapshot fallback for ${key}:`,
+        `[NetlifyBlobsAdapter] snapshot local fallback for ${key}:`,
         error?.message,
       );
       return this.getFallback().snapshot(key);
@@ -60,10 +70,11 @@ export class NetlifyBlobsAdapter {
         value,
         version ? { onlyIfMatch: version } : { onlyIfNew: true },
       );
-      return result.modified;
+      return Boolean(result?.modified);
     } catch (error) {
+      if (isNetlifyServerless()) throw error;
       console.warn(
-        `[NetlifyBlobsAdapter] compareAndSet fallback for ${key}:`,
+        `[NetlifyBlobsAdapter] compareAndSet local fallback for ${key}:`,
         error?.message,
       );
       return this.getFallback().compareAndSet(key, version, value);
@@ -73,11 +84,15 @@ export class NetlifyBlobsAdapter {
   async get(key) {
     try {
       const store = this.getStoreInstance();
-      const data = await store.get(key, { type: "json" });
+      const data = await store.get(key, {
+        type: "json",
+        consistency: "strong",
+      });
       return data || null;
     } catch (error) {
+      if (isNetlifyServerless()) throw error;
       console.warn(
-        `[NetlifyBlobsAdapter] get fallback for ${key}:`,
+        `[NetlifyBlobsAdapter] get local fallback for ${key}:`,
         error?.message,
       );
       return this.getFallback().get(key);
@@ -90,8 +105,9 @@ export class NetlifyBlobsAdapter {
       await store.setJSON(key, value);
       return true;
     } catch (error) {
+      if (isNetlifyServerless()) throw error;
       console.warn(
-        `[NetlifyBlobsAdapter] set fallback for ${key}:`,
+        `[NetlifyBlobsAdapter] set local fallback for ${key}:`,
         error?.message,
       );
       return this.getFallback().set(key, value);

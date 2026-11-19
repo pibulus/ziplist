@@ -279,7 +279,7 @@ export async function renderPassportCardPng({
 
   let avatarDataUri = "";
   try {
-    avatarDataUri = buildPassportAvatar(seed || "talktype", skin.avatarStyle);
+    avatarDataUri = buildPassportAvatar(seed || "ziplist", skin.avatarStyle);
   } catch {
     avatarDataUri = "";
   }

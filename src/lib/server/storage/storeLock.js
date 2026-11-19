@@ -1,20 +1,13 @@
 // ===================================================================
-// Store mutation lock
+// Store mutation lock + cross-isolate Compare-And-Set (CAS)
 // ===================================================================
-// The JSON stores do full-file read → mutate → write. Node serves requests
-// concurrently, so two webhook deliveries (or a webhook racing the success
-// page poll) can interleave those cycles and clobber each other's writes —
-// dropping a paid checkout or a freshly issued license. Queueing mutations
-// per store key makes each cycle run to completion before the next starts.
+// In-process queueing serializes concurrent async mutations inside one Node
+// process, while snapshot() + compareAndSet() (ETag onlyIfMatch on Netlify
+// Blobs) prevents concurrent serverless Lambda isolates from silently
+// clobbering each other's paid checkouts or newly issued licenses.
 
 const tails = new Map();
 
-/**
- * Run fn after all previously queued operations for the same key finish.
- * @param {string} key - Store key to serialize on
- * @param {() => Promise<any>} fn - Mutation to run exclusively
- * @returns {Promise<any>} Resolves/rejects with fn's result
- */
 export function withStoreLock(key, fn) {
   const previous = tails.get(key) ?? Promise.resolve();
   const run = previous.then(() => fn());
@@ -23,4 +16,32 @@ export function withStoreLock(key, fn) {
     run.catch(() => {}),
   );
   return run;
+}
+
+/**
+ * Atomically snapshot -> mutate -> compareAndSet with bounded retries.
+ * `mutator(currentData)` returns `{ nextData, result, skipWrite }`.
+ */
+export function mutateWithCas(storage, key, mutator, maxAttempts = 6) {
+  return withStoreLock(key, async () => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const { data, version } = await storage.snapshot(key);
+      const outcome = await mutator(data);
+      if (outcome?.skipWrite) {
+        return outcome.result;
+      }
+      const committed = await storage.compareAndSet(
+        key,
+        version,
+        outcome.nextData,
+      );
+      if (committed) {
+        return outcome.result;
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, 15 * (attempt + 1) + Math.random() * 20),
+      );
+    }
+    throw new Error(`Concurrent store conflict on ${key} after retries`);
+  });
 }

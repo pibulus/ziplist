@@ -37,6 +37,18 @@ class AudioRecorderService {
     this.retryAudioBlob = null;
     this.holdReleasedWhilePending = false;
     this.holdPendingExpiry = null;
+    this.discardingCurrentTake = false;
+    this.isHolding = false;
+
+    audioState.subscribe((state) => {
+      if (
+        state?.timeLimit &&
+        this.mediaRecorder &&
+        this.mediaRecorder.state === "recording"
+      ) {
+        this.stopActiveRecording();
+      }
+    });
   }
 
   isStartableAudioState(state) {
@@ -157,11 +169,13 @@ class AudioRecorderService {
   }
 
   handleHoldStart() {
+    this.isHolding = true;
     hapticService.impact("medium");
     if (!get(isRecording)) this.toggleRecording();
   }
 
   handleHoldEnd() {
+    this.isHolding = false;
     if (get(isRecording)) {
       this.stopActiveRecording();
       return;
@@ -173,6 +187,40 @@ class AudioRecorderService {
         this.holdReleasedWhilePending = false;
       }, 1200);
     }
+  }
+
+  discardActiveRecording() {
+    if (
+      !this.mediaRecorder &&
+      !this.activeStream &&
+      !this.isStartingRecording
+    ) {
+      return;
+    }
+    if (this.isStoppingRecording) return;
+    this.discardingCurrentTake = true;
+    this.isStoppingRecording = true;
+    this.isHolding = false;
+    this.holdReleasedWhilePending = false;
+    soundService.close({ force: true });
+    hapticService.impact("light");
+
+    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+      audioActions.updateState(AudioStates.STOPPING);
+      try {
+        this.mediaRecorder.stop();
+      } catch {
+        this.discardingCurrentTake = false;
+        this.resetRecordingSession();
+        audioActions.updateState(AudioStates.IDLE);
+      }
+      wakeLockService.release();
+      return;
+    }
+
+    this.discardingCurrentTake = false;
+    this.resetRecordingSession();
+    audioActions.updateState(AudioStates.IDLE);
   }
 
   stopActiveRecording() {
@@ -264,6 +312,15 @@ class AudioRecorderService {
         };
 
         recorder.onstop = async () => {
+          if (this.discardingCurrentTake) {
+            this.discardingCurrentTake = false;
+            this.audioChunks = [];
+            this.resetRecordingSession();
+            audioActions.updateState(AudioStates.IDLE);
+            uiActions.setScreenReaderMessage("Recording discarded.");
+            return;
+          }
+
           audioActions.updateState(AudioStates.PROCESSING);
           this.broadcastLiveVoiceActivity({
             active: true,
@@ -287,7 +344,7 @@ class AudioRecorderService {
               audioActions.updateState(AudioStates.IDLE);
               soundService.locked({ force: true });
               uiActions.setErrorMessage(
-                "That take came through empty — check the mic and give it another go.",
+                "That take came through empty. Check the mic and give it another go.",
               );
               return;
             }

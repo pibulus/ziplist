@@ -266,9 +266,16 @@ export class ListRoom {
 
     if (isSync) {
       if (normalized.type === LIVE_MESSAGE_TYPES.SYNC_ENVELOPE) {
-        await this.ctx.storage.put("sync_envelope", normalized);
-        // Retain for 30 days
-        await this.ctx.storage.setAlarm(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        try {
+          await this.ctx.storage.put("sync_envelope", normalized);
+          // Retain for 30 days
+          await this.ctx.storage.setAlarm(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          );
+        } catch (err) {
+          console.error("[Worker] Failed to persist sync_envelope:", err);
+          return;
+        }
       }
       const sender = this.getPresenceUser(ws);
       this.broadcast(
@@ -381,6 +388,24 @@ export class ListRoom {
     ) as ListData | null;
     if (!data) {
       return json({ error: "Invalid list data." }, 400);
+    }
+
+    // Never let live-list creation clobber a private E2EE Device Sync room,
+    // and never overwrite an active password-protected live room without its password.
+    const existingEnvelope = await this.ctx.storage.get("sync_envelope");
+    if (existingEnvelope) {
+      return json({ error: "Room ID already in use." }, 409);
+    }
+    const existingRoom = await this.getRoomState();
+    if (existingRoom.listData && !existingRoom.expired) {
+      if (!(await this.isPasswordAllowed(url))) {
+        return json({ error: "Room already active." }, 409);
+      }
+      // Preserve existing active list/supporter tier if another client hits create on an open room
+      const currentMeta = existingRoom.metadata;
+      if (currentMeta?.tier === "supporter") {
+        createPayload.metadata = currentMeta;
+      }
     }
 
     await this.saveListData(data);

@@ -12,15 +12,17 @@ const MAX_BUCKETS = Number(env.API_RATE_MAX_BUCKETS ?? "10000");
 const buckets = new Map();
 
 function getClientKey(event) {
-  // Production sits behind a Cloudflare tunnel, so the socket peer that
-  // getClientAddress() reports is the tunnel itself — every visitor would
-  // collapse into ONE shared bucket and a single heavy user could 429 the
-  // whole site. Cloudflare stamps cf-connecting-ip on every proxied request
-  // (a client-sent value is overwritten at the edge), so prefer it. Direct
-  // origin hits could spoof it, but the tunnel is the only public path and
-  // MAX_BUCKETS bounds the damage of spoofed-key floods.
-  const cfIp = event.request.headers.get("cf-connecting-ip");
-  if (cfIp) return cfIp;
+  // On Netlify Edge (`ziplist.app`), `x-nf-client-connection-ip` is stamped by
+  // Netlify and cannot be spoofed by clients, whereas `cf-connecting-ip` is NOT
+  // stripped when Cloudflare does not sit in front. Only trust `cf-connecting-ip`
+  // when explicitly running behind a Cloudflare Tunnel (`TRUST_CF_CONNECTING_IP=true`).
+  const nfIp = event.request.headers.get("x-nf-client-connection-ip")?.trim();
+  if (nfIp) return nfIp;
+
+  if (env.TRUST_CF_CONNECTING_IP === "true") {
+    const cfIp = event.request.headers.get("cf-connecting-ip")?.trim();
+    if (cfIp) return cfIp;
+  }
 
   if (event.getClientAddress) {
     try {

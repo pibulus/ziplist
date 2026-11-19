@@ -56,7 +56,16 @@ export async function transcribeWithOpenRouter({ prompt, file, mimeType }) {
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const data = Buffer.from(await file.arrayBuffer()).toString("base64");
+    const content = [
+      { type: "text", text: String(prompt || "").slice(0, 12000) },
+    ];
+    if (file && typeof file.arrayBuffer === "function") {
+      const data = Buffer.from(await file.arrayBuffer()).toString("base64");
+      content.push({
+        type: "input_audio",
+        input_audio: { data, format: audioFormat(mimeType) },
+      });
+    }
     const response = await fetch(OPENROUTER_URL, {
       method: "POST",
       signal: controller.signal,
@@ -72,16 +81,11 @@ export async function transcribeWithOpenRouter({ prompt, file, mimeType }) {
         messages: [
           {
             role: "user",
-            content: [
-              { type: "text", text: prompt },
-              {
-                type: "input_audio",
-                input_audio: { data, format: audioFormat(mimeType) },
-              },
-            ],
+            content,
           },
         ],
         temperature: 0.2,
+        max_tokens: 1536,
       }),
     });
 

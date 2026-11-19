@@ -1,18 +1,15 @@
 # robots.txt for ziplist.app
-# Welcome friendly search engine crawlers!
 
 User-agent: *
 Allow: /
 
-# Private/share utility routes
+# Private/share & utility routes
 Disallow: /import
 Disallow: /live/
+Disallow: /j/
+Disallow: /u/
+Disallow: /clear-cache
+Disallow: /contributor/
 
 # Sitemap
 Sitemap: https://ziplist.app/sitemap.xml
-
-# No crawling of debug/test pages
-Disallow: /debug/
-Disallow: /list-test
-Disallow: /ghost-test
-Disallow: /ui-components

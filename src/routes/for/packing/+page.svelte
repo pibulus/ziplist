@@ -18,7 +18,7 @@
     },
     {
       q: "Can two of us pack off the same list?",
-      a: "Share it live — tap “QR this list” and let the other phone scan the code. Then both of you are ticking the same boxes.",
+      a: "Yes. Tap Share on the list, choose Start Live List, and let the other phone scan the QR code. Both phones tick the same boxes.",
     },
     {
       q: "Does it work on a plane, or anywhere with no signal?",

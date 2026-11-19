@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { env } from "$env/dynamic/private";
 import { storage } from "../storage/index.js";
-import { withStoreLock } from "../storage/storeLock.js";
+import { mutateWithCas } from "../storage/storeLock.js";
 import { parseFourWordPasskey } from "$lib/softstack-passport/identity.js";
 import { PRICING } from "$lib/config/pricing.js";
 import {
@@ -46,42 +46,42 @@ export async function isPasskeyLockedOut(rawPhrase) {
 export async function recordPasskeyFailure(rawPhrase) {
   const key = passkeyLockoutKey(rawPhrase);
   if (!key) return null;
-  return withStoreLock(key, async () => {
+  return mutateWithCas(storage, key, async (data) => {
     const now = Date.now();
-    const data = await storage.get(key);
     const expired =
       !data || now - (data.windowStart || 0) > PASSKEY_LOCKOUT_WINDOW_MS;
     const next = expired
       ? { count: 1, windowStart: now }
       : { count: (data.count || 0) + 1, windowStart: data.windowStart };
-    await storage.set(key, next);
-    return next;
+    return { nextData: next, result: next };
   });
 }
 
 export async function clearPasskeyFailures(rawPhrase) {
   const key = passkeyLockoutKey(rawPhrase);
   if (!key) return;
-  await withStoreLock(key, async () => {
-    const data = await storage.get(key);
-    if (!data || data.count === 0) return;
-    await storage.set(key, { count: 0, windowStart: Date.now() });
+  await mutateWithCas(storage, key, async (data) => {
+    if (!data || data.count === 0) {
+      return { skipWrite: true, result: null };
+    }
+    const next = { count: 0, windowStart: Date.now() };
+    return { nextData: next, result: next };
   });
 }
 
-async function readStore() {
-  const data = (await storage.get(STORE_KEY)) || {};
+function normalizeLicenseStore(data) {
   return {
-    licenses: Array.isArray(data.licenses) ? data.licenses : [],
+    licenses: Array.isArray(data?.licenses) ? [...data.licenses] : [],
     passkeys:
-      data.passkeys && typeof data.passkeys === "object"
+      data?.passkeys && typeof data.passkeys === "object"
         ? { ...data.passkeys }
         : {},
   };
 }
 
-async function writeStore(data) {
-  await storage.set(STORE_KEY, data);
+async function readStore() {
+  const data = (await storage.get(STORE_KEY)) || {};
+  return normalizeLicenseStore(data);
 }
 
 function publicLicense(license) {
@@ -156,6 +156,13 @@ async function lookupStoredLicenseByHash(candidateHash, store) {
   return null;
 }
 
+export async function findLicenseById(id) {
+  if (!id || typeof id !== "string") return null;
+  const store = await readStore();
+  const matched = store.licenses.find((candidate) => candidate.id === id);
+  return matched ? publicLicense(matched) : null;
+}
+
 export async function findLicenseByCode(code) {
   if (!code) return null;
   const store = await readStore();
@@ -189,78 +196,82 @@ export async function createLicenseForCheckout(checkout) {
     throw new Error("Checkout is missing license data");
   }
 
-  return withStoreLock(STORE_KEY, () => createLicenseLocked(checkout));
-}
+  let indexTarget = null;
+  const result = await mutateWithCas(storage, STORE_KEY, async (raw) => {
+    const store = normalizeLicenseStore(raw);
+    const existingIdx = store.licenses.findIndex(
+      (license) =>
+        license.codeHash === checkout.codeHash ||
+        license.checkoutId === checkout.id ||
+        (checkout.providerPaymentId &&
+          license.providerPaymentId === checkout.providerPaymentId),
+    );
 
-async function createLicenseLocked(checkout) {
-  const store = await readStore();
-  const existing = store.licenses.find(
-    (license) =>
-      license.codeHash === checkout.codeHash ||
-      license.checkoutId === checkout.id ||
-      (checkout.providerPaymentId &&
-        license.providerPaymentId === checkout.providerPaymentId),
-  );
+    if (existingIdx >= 0) {
+      const existing = { ...store.licenses[existingIdx] };
+      const canonicalSeed = existing.checkoutId || checkout.id;
+      const phrase = generatePasskeyPhrase(canonicalSeed);
+      const code = generateLicenseCode(phrase);
+      const phraseHash = hashPasskeyPhrase(phrase);
+      indexTarget = { phraseHash, codeHash: existing.codeHash };
 
-  if (existing) {
-    const canonicalSeed = existing.checkoutId || checkout.id;
-    const phrase = generatePasskeyPhrase(canonicalSeed);
+      if (
+        existing.phraseHash !== phraseHash ||
+        store.passkeys[passkeyKey(phraseHash)] !== existing.codeHash
+      ) {
+        existing.phraseHash = phraseHash;
+        store.licenses[existingIdx] = existing;
+        store.passkeys[passkeyKey(phraseHash)] = existing.codeHash;
+        return {
+          nextData: store,
+          result: { license: publicLicense(existing), code, phrase },
+        };
+      }
+
+      return {
+        skipWrite: true,
+        result: { license: publicLicense(existing), code, phrase },
+      };
+    }
+
+    const phrase = generatePasskeyPhrase(checkout.id);
     const code = generateLicenseCode(phrase);
     const phraseHash = hashPasskeyPhrase(phrase);
+    const now = new Date().toISOString();
+    const license = {
+      id: licenseIdForCheckout(checkout.id),
+      codeHash: checkout.codeHash,
+      phraseHash,
+      tier: "contributor",
+      status: "active",
+      source: checkout.provider || "unknown",
+      checkoutId: checkout.id,
+      providerPaymentId: checkout.providerPaymentId || null,
+      providerOrderId: checkout.providerOrderId || null,
+      amount: checkout.amount || null,
+      currency: checkout.currency || null,
+      createdAt: now,
+      expiresAt: new Date(
+        Date.parse(now) + PRICING.termDays * 24 * 60 * 60 * 1000,
+      ).toISOString(),
+      redeemedAt: null,
+      lastSeenAt: null,
+    };
 
-    if (
-      existing.phraseHash !== phraseHash ||
-      store.passkeys[passkeyKey(phraseHash)] !== existing.codeHash
-    ) {
-      existing.phraseHash = phraseHash;
-      store.passkeys[passkeyKey(phraseHash)] = existing.codeHash;
-      await writeStore(store);
-    }
-    await indexPasskey(phraseHash, existing.codeHash);
+    store.licenses.push(license);
+    store.passkeys[passkeyKey(phraseHash)] = checkout.codeHash;
+    indexTarget = { phraseHash, codeHash: checkout.codeHash };
 
     return {
-      license: publicLicense(existing),
-      code,
-      phrase,
+      nextData: store,
+      result: { license: publicLicense(license), code, phrase },
     };
+  });
+
+  if (indexTarget) {
+    await indexPasskey(indexTarget.phraseHash, indexTarget.codeHash);
   }
-
-  const phrase = generatePasskeyPhrase(checkout.id);
-  const code = generateLicenseCode(phrase);
-  const phraseHash = hashPasskeyPhrase(phrase);
-  const now = new Date().toISOString();
-  const license = {
-    id: licenseIdForCheckout(checkout.id),
-    codeHash: checkout.codeHash,
-    phraseHash,
-    tier: "contributor",
-    status: "active",
-    source: checkout.provider || "unknown",
-    checkoutId: checkout.id,
-    providerPaymentId: checkout.providerPaymentId || null,
-    providerOrderId: checkout.providerOrderId || null,
-    amount: checkout.amount || null,
-    currency: checkout.currency || null,
-    createdAt: now,
-    // A real passport has an expiry date. One payment buys a year; renewal is
-    // a deliberate choice, never an automatic charge.
-    expiresAt: new Date(
-      Date.parse(now) + PRICING.termDays * 24 * 60 * 60 * 1000,
-    ).toISOString(),
-    redeemedAt: null,
-    lastSeenAt: null,
-  };
-
-  store.licenses.push(license);
-  store.passkeys[passkeyKey(phraseHash)] = checkout.codeHash;
-  await writeStore(store);
-  await indexPasskey(phraseHash, checkout.codeHash);
-
-  return {
-    license: publicLicense(license),
-    code,
-    phrase,
-  };
+  return result;
 }
 
 export function licenseExpiresAt(license) {
@@ -275,8 +286,9 @@ export function isLicenseExpired(license, now = Date.now()) {
 export async function redeemStoredLicense(code) {
   if (!code) return null;
 
-  return withStoreLock(STORE_KEY, async () => {
-    const store = await readStore();
+  let indexTarget = null;
+  const redeemed = await mutateWithCas(storage, STORE_KEY, async (raw) => {
+    const store = normalizeLicenseStore(raw);
     let matchedLicense = null;
 
     const parsed = parseFourWordPasskey(code);
@@ -320,24 +332,33 @@ export async function redeemStoredLicense(code) {
     }
 
     if (!matchedLicense) {
-      return null;
+      return { skipWrite: true, result: null };
     }
 
+    const idx = store.licenses.findIndex(
+      (item) => item.id === matchedLicense.id,
+    );
+    const updated = { ...matchedLicense };
     const now = new Date().toISOString();
-    matchedLicense.redeemedAt = matchedLicense.redeemedAt || now;
-    matchedLicense.lastSeenAt = now;
+    updated.redeemedAt = updated.redeemedAt || now;
+    updated.lastSeenAt = now;
 
-    if (matchedLicense.checkoutId) {
-      const phrase = generatePasskeyPhrase(matchedLicense.checkoutId);
+    if (updated.checkoutId) {
+      const phrase = generatePasskeyPhrase(updated.checkoutId);
       const phraseHash = hashPasskeyPhrase(phrase);
-      matchedLicense.phraseHash = phraseHash;
-      store.passkeys[passkeyKey(phraseHash)] = matchedLicense.codeHash;
-      await indexPasskey(phraseHash, matchedLicense.codeHash);
+      updated.phraseHash = phraseHash;
+      store.passkeys[passkeyKey(phraseHash)] = updated.codeHash;
+      indexTarget = { phraseHash, codeHash: updated.codeHash };
     }
 
-    await writeStore(store);
-    return publicLicense(matchedLicense);
+    if (idx >= 0) store.licenses[idx] = updated;
+    return { nextData: store, result: publicLicense(updated) };
   });
+
+  if (redeemed && indexTarget) {
+    await indexPasskey(indexTarget.phraseHash, indexTarget.codeHash);
+  }
+  return redeemed;
 }
 
 export async function redeemLicenseByPasskey(rawPhrase) {
@@ -363,12 +384,12 @@ export function issueTokenForLicense(license) {
 async function claimVoucherSlot() {
   const raw = Number(env.CONTRIBUTOR_VOUCHER_LIMIT);
   const max = Number.isFinite(raw) && raw >= 0 ? raw : 25;
-  return withStoreLock(VOUCHER_MINTS_KEY, async () => {
-    const data = (await storage.get(VOUCHER_MINTS_KEY)) || { count: 0 };
+  return mutateWithCas(storage, VOUCHER_MINTS_KEY, async (data) => {
     const count = data?.count || 0;
-    if (count >= max) return false;
-    await storage.set(VOUCHER_MINTS_KEY, { count: count + 1 });
-    return true;
+    if (count >= max) {
+      return { skipWrite: true, result: false };
+    }
+    return { nextData: { count: count + 1 }, result: true };
   });
 }
 

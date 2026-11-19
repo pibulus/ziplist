@@ -4,7 +4,7 @@
 
   export let closeModal = () => {};
   export let markIntroAsSeen = () => {};
-  export let triggerGhostClick = () => {};
+  export let triggerMascotRecord = () => {};
 
   // Route through the shared closeModal so the modal animates OUT (skeleton
   // close-out) instead of vanishing via a direct dialog.close(). Mark the
@@ -14,7 +14,7 @@
     closeModal();
 
     setTimeout(() => {
-      triggerGhostClick();
+      triggerMascotRecord();
     }, 300);
   }
 </script>

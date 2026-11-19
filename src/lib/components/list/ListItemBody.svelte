@@ -196,6 +196,7 @@
       data-1p-ignore
       data-lpignore="true"
       data-form-type="other"
+      maxlength="240"
       placeholder="Enter item text..."
       bind:value={editedItemText}
       on:blur={onSaveEdit}

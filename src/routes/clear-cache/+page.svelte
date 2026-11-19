@@ -5,22 +5,13 @@
   let cleared = false;
   let reloadTimeout;
 
-  const commonDatabaseNames = [
-    "transformers-cache",
-    "transformers-models",
-    "transformersjs",
-    "model-cache",
-    "onnx-models",
-  ];
-
   async function clearIndexedDb() {
     if (typeof indexedDB === "undefined") return;
 
     const databases = (await indexedDB.databases?.()) || [];
-    const discoveredNames = databases
-      .map((database) => database.name)
-      .filter(Boolean);
-    const names = new Set([...discoveredNames, ...commonDatabaseNames]);
+    const names = new Set(
+      databases.map((database) => database.name).filter(Boolean),
+    );
 
     await Promise.all(
       [...names].map(
@@ -92,8 +83,7 @@
       <p>Device Cache</p>
       <h1>Refresh Local Cache</h1>
       <span>
-        Clears cached offline voice data, service worker caches, and browser
-        storage on this device.
+        Clears service worker caches and local browser storage on this device.
       </span>
     </div>
 
@@ -115,14 +105,8 @@
 <style>
   .zl-cache-page {
     align-items: center;
-    background:
-      radial-gradient(
-        circle at 50% 18%,
-        rgba(255, 204, 77, 0.24),
-        transparent 34rem
-      ),
-      #fff6e6;
-    color: #111827;
+    background: #fffef7;
+    color: #1e1714;
     display: flex;
     font-family: "Space Mono", monospace;
     justify-content: center;
@@ -132,10 +116,10 @@
 
   .zl-cache-card {
     align-items: center;
-    background: linear-gradient(145deg, #fffaf0, #ffefd5);
-    border: 4px solid #000000;
+    background: #fbf1e4;
+    border: 2px solid #1e1714;
     border-radius: 28px;
-    box-shadow: 10px 10px 0 #000000;
+    box-shadow: 6px 6px 0 #1e1714;
     display: flex;
     flex-direction: column;
     gap: 1.15rem;
@@ -148,9 +132,9 @@
   .zl-cache-mark {
     align-items: center;
     background: var(--zl-cta-color, #ffb000);
-    border: 3px solid #000000;
+    border: 2px solid #1e1714;
     border-radius: 18px;
-    box-shadow: 4px 4px 0 #000000;
+    box-shadow: 3px 3px 0 #1e1714;
     display: inline-flex;
     font-weight: 900;
     min-height: 56px;
@@ -176,7 +160,7 @@
 
   .zl-cache-copy span,
   .zl-cache-status {
-    color: #4b5563;
+    color: #4a3f3a;
     display: block;
     font-size: 0.9rem;
     line-height: 1.5;
@@ -185,10 +169,10 @@
 
   .zl-cache-button,
   .zl-cache-return {
-    border: 3px solid #000000;
+    border: 2px solid #1e1714;
     border-radius: 16px;
-    box-shadow: 4px 4px 0 #000000;
-    color: #111827;
+    box-shadow: 3px 3px 0 #1e1714;
+    color: #1e1714;
     font-weight: 900;
     min-height: 44px;
     padding: 0.75rem 1rem;

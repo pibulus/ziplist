@@ -11,23 +11,23 @@
 
   const canonicalUrl = "https://ziplist.app/es/mandado";
   const title =
-    "Lista del Mandado y Súper por Voz — Sin Registrar Cuentas | ZipList";
+    "Lista del Mandado y Súper por Voz · Sin Registrar Cuentas | ZipList";
   const description =
-    "Crea tu lista del mandado dictando por voz. Agrega jitomate, aguacate y tortillas sin escribir. Salas QR compartidas en vivo para ir al súper en pareja sin registrarse.";
+    "Crea la lista del mandado dictando por voz. Agrega jitomate, aguacate y tortillas sin escribir. Salas QR compartidas en vivo para ir al súper en pareja sin registrarse.";
   const heading = "Lista del Mandado y Súper por Voz";
 
   const faqs = [
     {
       q: "¿Cómo funciona la lista del mandado por voz en ZipList?",
-      a: 'Dices todos tus ingredientes de corrido (ej. "jitomates, cebolla, cilantro, aguacate, tortillas, leche"). ZipList los organiza automáticamente en filas limpias con etiquetas de despensa.',
+      a: 'Dices los ingredientes de corrido (por ejemplo: "jitomates, cebolla, cilantro, aguacate, tortillas, leche") y cada uno aparece en su propia fila listo para tachar.',
     },
     {
-      q: "¿Podemos usar la misma lista mi pareja y yo en el súper?",
-      a: "¡Sí! Presionas el botón de código QR y tu pareja escanea el código con su cámara. Ambos teléfonos se sincronizan al instante en vivo sin tener que crear cuentas ni contraseñas.",
+      q: "¿Podemos usar la misma lista dos personas en el súper?",
+      a: "Sí. Toca Compartir en la lista, elige iniciar lista en vivo y la otra persona escanea el código QR o escribe las cuatro palabras de la sala. Ambos teléfonos ven cada cambio al momento, sin cuentas ni contraseñas.",
     },
     {
-      q: "¿Tengo que descargar una app de la App Store?",
-      a: "No necesitas descargar nada ni crear cuenta. Funciona directamente en Safari o Chrome y puedes guardarlo como app en tu pantalla de inicio en 1 toque.",
+      q: "¿Hace falta descargar una app de la tienda?",
+      a: "No hace falta descargar nada ni crear cuenta. Abre directo en Safari o Chrome y también se puede guardar en la pantalla de inicio.",
     },
   ];
 
@@ -76,6 +76,7 @@
   {title}
   {description}
   {heading}
+  lede={"Dila saliendo de casa y táchala en el pasillo con una sola mano."}
   {faqs}
   canonical={canonicalUrl}
   faqHeading={"Preguntas frecuentes"}
@@ -86,4 +87,30 @@
   ogLocale={"es_LA"}
   hreflangEn={"https://ziplist.app/for/groceries"}
   hreflangEs={canonicalUrl}
-/>
+>
+  <section class="zl-prose-section">
+    <h2>Todo el mandado en una sola frase</h2>
+    <p>
+      Jitomate, cebolla, aguacate, tortillas, café y bolsas para la basura. Se
+      dicta de corrido como sale de la cabeza y aterriza separado renglón por
+      renglón, sin frenar a teclear.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Dos carritos, una misma lista</h2>
+    <p>
+      Al abrir una sala en vivo, el otro teléfono ve cada palomita al momento.
+      Quien pasa primero por la verdura la tacha y nadie regresa a casa con dos
+      paquetes de lo mismo.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Funciona aunque adentro no haya señal</h2>
+    <p>
+      Las listas guardadas viven en el teléfono, así que abren y se tachan aún
+      en el fondo del supermercado donde los datos desaparecen.
+    </p>
+  </section>
+</VerticalPage>

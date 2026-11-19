@@ -41,7 +41,10 @@
 
     const url =
       typeof window !== "undefined"
-        ? window.location.href
+        ? new URL(
+            window.location.pathname.startsWith("/es") ? "/es" : "/",
+            window.location.origin,
+          ).toString()
         : "https://ziplist.app";
 
     try {
@@ -52,7 +55,7 @@
         soundService.copySuccess({ force: true });
         window.dispatchEvent(
           new CustomEvent("ziplist:toast", {
-            detail: { message: "Shared ZipList! ⚡", type: "success" },
+            detail: { message: "Shared ZipList", type: "success" },
           }),
         );
       } else if (navigator.clipboard?.writeText) {
@@ -62,7 +65,7 @@
         window.dispatchEvent(
           new CustomEvent("ziplist:toast", {
             detail: {
-              message: "Link copied! Share ZipList with a friend ✨",
+              message: "ZipList link copied",
               type: "success",
             },
           }),

@@ -6,11 +6,11 @@
   // A quiet corner suggestion after two useful moments; three asks max,
   // four days apart, and never before an actual install path exists.
 
-  export let appName = "this app";
+  export let appName = "ZipList";
   export let tagline = "";
-  export let iconSrc = "/icon-192.png";
-  /** localStorage key prefix, e.g. "drshrink" */
-  export let storagePrefix = "app";
+  export let iconSrc = "/icons/icon-192x192.png";
+  /** localStorage key prefix, e.g. "ziplist" */
+  export let storagePrefix = "ziplist";
 
   const K = {
     MOMENTS: `${storagePrefix}-pwa-moments`,
@@ -148,7 +148,7 @@
   <aside
     class="pwa-card"
     class:closing
-    aria-label="Add {appName} to your home screen"
+    aria-label="Add {appName} to home screen"
   >
     <button
       type="button"
@@ -156,7 +156,7 @@
       on:click={dismiss}
       aria-label="Dismiss"
     >
-      ×
+      ✕
     </button>
 
     <div class="pwa-head">
@@ -179,7 +179,7 @@
       </button>
     {:else}
       <p class="pwa-line">
-        Opens instantly from your home screen, works offline.
+        Opens straight from the home screen and works offline.
       </p>
       <button type="button" class="pwa-cta" on:click={handleInstall}>
         Add to home screen
@@ -189,7 +189,7 @@
 {/if}
 
 <style>
-  /* The card — family surface, floats clear of the fixed footer. */
+  /* Soft Neo Toybrut surface, floats clear of the fixed footer. */
   .pwa-card {
     position: fixed;
     right: 1rem;
@@ -197,13 +197,11 @@
     z-index: 900; /* under modals (9999), over page content */
     width: min(20rem, calc(100vw - 2rem));
     padding: 1rem 1rem 0.9rem;
-    border: 1px solid rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.28);
+    border: 2px solid #1e1714;
     border-radius: 18px;
-    background: var(--ds-bg, #fffaef);
-    color: var(--ds-ink, #2a2233);
-    box-shadow:
-      0 16px 44px rgba(0, 0, 0, 0.16),
-      0 4px 12px rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.12);
+    background: var(--zl-card-bg, #fffdf5);
+    color: var(--zl-text-color-primary, #1e1714);
+    box-shadow: 4px 4px 0 #1e1714;
     /* Modal DNA physics: rise with one small overshoot, no rotation. */
     animation: pwa-pop-in 280ms cubic-bezier(0.16, 0.84, 0.24, 1.06) both;
   }
@@ -214,32 +212,31 @@
 
   .pwa-dismiss {
     position: absolute;
-    top: 0.3rem;
-    right: 0.3rem;
-    width: 26px;
-    height: 26px;
+    top: 0.45rem;
+    right: 0.45rem;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.05);
-    font-size: 0.85rem;
+    border: 1.5px solid #1e1714;
+    background: #fbf1e4;
+    font-size: 0.72rem;
+    font-weight: 900;
     line-height: 1;
-    color: var(--ds-ink, #2a2233);
-    opacity: 0.5;
+    color: #1e1714;
     cursor: pointer;
     transition:
       background 0.15s ease,
-      opacity 0.15s ease,
       transform 0.22s linear(0, 0.5 15%, 1.15 40%, 0.97 65%, 1);
   }
   .pwa-dismiss:hover {
-    opacity: 1;
-    background: rgba(0, 0, 0, 0.12);
-    transform: scale(1.12);
+    background: #f3e4cf;
+    transform: scale(1.08);
   }
   .pwa-dismiss:active {
-    transform: scale(0.85);
+    transform: scale(0.9);
   }
   @media (pointer: coarse) {
     .pwa-dismiss {
@@ -259,23 +256,23 @@
     width: 44px;
     height: 44px;
     border-radius: 11px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border: 1.5px solid #1e1714;
   }
   .pwa-title {
     font-size: 0.95rem;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: -0.01em;
   }
   .pwa-tagline {
     font-size: 0.75rem;
-    opacity: 0.65;
+    opacity: 0.72;
     margin-top: 0.1rem;
   }
 
   .pwa-line {
     font-size: 0.8rem;
     line-height: 1.45;
-    opacity: 0.8;
+    opacity: 0.82;
     margin-bottom: 0.7rem;
   }
 
@@ -288,7 +285,8 @@
     list-style: none;
     font-size: 0.8rem;
     border-radius: 12px;
-    background: rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.07);
+    border: 1.5px solid rgba(30, 23, 20, 0.16);
+    background: #fbf1e4;
   }
   .pwa-steps li {
     display: flex;
@@ -303,26 +301,23 @@
     justify-content: center;
     flex-shrink: 0;
     border-radius: 999px;
-    background: var(--ds-bg, #fff);
+    border: 1.5px solid #1e1714;
+    background: #fffef7;
     font-size: 0.7rem;
-    font-weight: 800;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    font-weight: 900;
   }
 
   .pwa-cta {
     width: 100%;
-    min-height: 42px;
+    min-height: 44px;
     padding: 0.55rem 0.9rem;
     border-radius: 12px;
+    border: 2px solid #1e1714;
     font-size: 0.85rem;
-    font-weight: 800;
-    color: #fff;
-    background: linear-gradient(
-      to right,
-      var(--ds-primary-color, #ec4899),
-      var(--ds-accent-color, #f59e0b)
-    );
-    box-shadow: 0 3px 10px rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.3);
+    font-weight: 900;
+    color: #1e1714;
+    background: var(--zl-cta-color, #ffb000);
+    box-shadow: 2.5px 2.5px 0 #1e1714;
     cursor: pointer;
     transition:
       transform 0.15s ease,
@@ -330,15 +325,16 @@
   }
   .pwa-cta:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(var(--ds-primary-color-rgb, 236, 72, 153), 0.4);
+    box-shadow: 3.5px 3.5px 0 #1e1714;
   }
   .pwa-cta:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(1px);
+    box-shadow: 1px 1px 0 #1e1714;
   }
   .pwa-cta.ghost {
-    color: var(--ds-ink, #2a2233);
-    background: rgba(0, 0, 0, 0.06);
-    box-shadow: none;
+    color: #1e1714;
+    background: #fbf1e4;
+    box-shadow: 2px 2px 0 #1e1714;
   }
 
   /* Phones: full-width strip above the footer, safe-area aware. */

@@ -16,7 +16,7 @@
     listToText,
   } from "$lib/services/lists/listTextFormat.js";
   import { generateShareableUrl } from "$lib/services/share";
-  import { tagColour } from "$lib/services/lists/itemTags";
+  import { normalizeTags, tagColour } from "$lib/services/lists/itemTags";
   import { notePwaMoment } from "$lib/services/pwa/installMoments.js";
   import { fade, slide } from "svelte/transition";
   import { cubicOut, backOut, quintOut } from "svelte/easing";
@@ -239,6 +239,31 @@
     }
   }
 
+  let subscribedLiveRoomKey = "";
+  $: if (hasMounted && list?.id) {
+    const nextLive = Boolean(list.isLive && list.liveRoomId);
+    if (nextLive) {
+      isLive = true;
+      const key = `${list.id}:${list.liveRoomId}`;
+      if (subscribedLiveRoomKey !== key) {
+        subscribedLiveRoomKey = key;
+        subscribeToLiveStores(list.id);
+        liveListsService.resumeLive(list.id).then((rejoined) => {
+          if (!rejoined) {
+            isLive = liveListsService.isLive(list.id);
+            if (!isLive) subscribedLiveRoomKey = "";
+          }
+        });
+      }
+    } else if (
+      subscribedLiveRoomKey.startsWith(`${list.id}:`) &&
+      !liveListsService.isLive(list.id)
+    ) {
+      subscribedLiveRoomKey = "";
+      isLive = false;
+    }
+  }
+
   $: isDefaultName = DEFAULT_LIST_NAMES.has(list.name);
   $: accessibleListName = list.name || "Active list";
 
@@ -357,7 +382,11 @@
 
   async function refreshPassportIdentity() {
     const code = readStoredSupporterCode();
-    if (!code) return;
+    if (!code) {
+      defaultPassportFace = "";
+      passportFace = "";
+      return;
+    }
     try {
       const hash = await getVaultHash(code);
       if (readStoredSupporterCode() !== code) return;
@@ -1663,12 +1692,14 @@
       if (!order) throw new Error("no order");
 
       const rank = new Map(order.map((id, index) => [id, index]));
-      const sorted = [...pool].sort(
+      const freshActive = list.items.filter((i) => !i.checked);
+      const freshDone = list.items.filter((i) => i.checked);
+      const sorted = [...freshActive].sort(
         (a, b) =>
           (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
           (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER),
       );
-      listsService.reorderItems([...sorted, ...completedItems], list.id);
+      listsService.reorderItems([...sorted, ...freshDone], list.id);
       showListStatus("Tidied", true, 2400);
       hapticService.impact("light");
       soundService.add({ force: true });
@@ -1914,24 +1945,35 @@
   }
 
   function pasteItemsIn() {
-    const { items } = splitPastedList(pasteText);
-    if (!items.length) {
+    const { name, items: parsedItems } = splitPastedList(pasteText);
+    const canAdoptName = Boolean(
+      name && (!list.name || DEFAULT_LIST_NAMES.has(list.name)),
+    );
+    const items =
+      name && !canAdoptName ? [name, ...parsedItems] : [...parsedItems];
+
+    if (!items.length && !canAdoptName) {
       showListStatus("Nothing in there to add.", false, 2200);
       return;
     }
-    const result = listsService.addItems(items, list.id);
+    if (canAdoptName) {
+      listsStore.renameList(name, list.id);
+    }
+    const result = items.length ? listsService.addItems(items, list.id) : null;
     const added = result?.addedCount ?? 0;
     pasteText = "";
     shareInputMode = null;
     manageTrayOpen = false;
     showListStatus(
-      added === 0
-        ? "Those were all here already."
-        : `Added ${added} ${added === 1 ? "thing" : "things"}.`,
-      added > 0,
+      added === 0 && canAdoptName
+        ? `Renamed to "${name}".`
+        : added === 0
+          ? "Those were all here already."
+          : `Added ${added} ${added === 1 ? "thing" : "things"}${canAdoptName ? ` to "${name}"` : ""}.`,
+      added > 0 || canAdoptName,
       2400,
     );
-    if (added) soundService.copySuccess({ force: true });
+    if (added || canAdoptName) soundService.copySuccess({ force: true });
   }
 
   async function magicAiPaste() {
@@ -1941,7 +1983,7 @@
     }
 
     isMagicParsing = true;
-    showListStatus("Magic import in progress...", true, 4000);
+    showListStatus("Splitting into items...", true, 4000);
     hapticService.impact("light");
 
     try {
@@ -1955,7 +1997,7 @@
 
       if (result?.items && result.items.length > 0) {
         if (result.title && (!list.name || DEFAULT_LIST_NAMES.has(list.name))) {
-          listsService.renameList(list.id, result.title);
+          listsStore.renameList(result.title, list.id);
         }
 
         const addResult = listsService.addItems(result.items, list.id);
@@ -1966,9 +2008,9 @@
         manageTrayOpen = false;
 
         showListStatus(
-          `Magic added ${added} ${added === 1 ? "item" : "items"}${
+          `Added ${added} ${added === 1 ? "item" : "items"}${
             result.title ? ` to "${result.title}"` : ""
-          }!`,
+          }.`,
           true,
           3000,
         );
@@ -1978,8 +2020,12 @@
         pasteItemsIn();
       }
     } catch (err) {
-      console.warn("Magic paste fallback:", err);
-      showListStatus("Magic import offline. Added as raw lines.", false, 2500);
+      console.warn("Smart split fallback:", err);
+      showListStatus(
+        "Smart split unavailable. Added line by line.",
+        false,
+        2500,
+      );
       pasteItemsIn();
     } finally {
       isMagicParsing = false;
@@ -2128,6 +2174,10 @@
     renamingTagValue = "";
   }
 
+  function escapeRegexLiteral(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
   function commitRenameActiveTag() {
     if (!renamingTagActive || !activeTagFilter) {
       cancelRenamingActiveTag();
@@ -2139,24 +2189,28 @@
     renamingTagValue = "";
     if (!input || !input.trim()) return;
 
-    const newTag = input
-      .trim()
-      .toLowerCase()
-      .replace(/^#/, "")
-      .replace(/[^\p{L}\p{N}_-]/gu, "");
+    const [newTag] = normalizeTags([input], listTags);
     if (!newTag || newTag === oldTag) return;
+
+    const oldPattern = new RegExp(
+      `(^|\\s)#${escapeRegexLiteral(oldTag)}(?=\\s|$)`,
+      "gi",
+    );
 
     // Replace oldTag with newTag across all items in list
     const updatedItems = list.items.map((item) => {
       if (!item.tags?.includes(oldTag)) return item;
-      const newTags = item.tags.map((t) => (t === oldTag ? newTag : t));
+      const newTags = normalizeTags(
+        item.tags.map((t) => (t === oldTag ? newTag : t)),
+        listTags,
+      );
       const newText = item.text.replace(
-        new RegExp(`(^|\\s)#${oldTag}(?=\\s|$)`, "gi"),
-        `$1#${newTag}`,
+        oldPattern,
+        (_, lead) => `${lead}#${newTag}`,
       );
       return {
         ...item,
-        tags: Array.from(new Set(newTags)),
+        tags: newTags,
         text: newText,
       };
     });
@@ -2186,13 +2240,18 @@
       items: [...list.items],
     };
 
+    const targetPattern = new RegExp(
+      `(^|\\s)#${escapeRegexLiteral(targetTag)}(?=\\s|$)`,
+      "gi",
+    );
+
     const updatedItems = list.items.map((item) => {
       if (!item.tags?.includes(targetTag)) return item;
       return {
         ...item,
         tags: item.tags.filter((t) => t !== targetTag),
         text: item.text
-          .replace(new RegExp(`(^|\\s)#${targetTag}(?=\\s|$)`, "gi"), "$1")
+          .replace(targetPattern, (_, lead) => lead)
           .replace(/\s+/g, " ")
           .trim(),
       };
@@ -2768,7 +2827,7 @@
   }
 
   function duplicateCurrentList() {
-    if (!showListManagement) return;
+    if (!showListManagement || !manageTrayOpen) return;
     const baseName = list.name || "List";
     const duplicateName = `${baseName} copy`;
     const createResult = listsStore.addList(duplicateName);
@@ -3814,12 +3873,9 @@
                   stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path
-                    d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"
-                  ></path>
-                  <path
-                    d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"
-                  ></path>
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="4" y1="12" x2="15" y2="12" />
+                  <line x1="4" y1="18" x2="10" y2="18" />
                 </svg>
                 <span>{isTidying ? "Tidying..." : "Tidy"}</span>
               </button>
@@ -3961,11 +4017,17 @@
                   stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path
-                    d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"
-                  />
+                  <line x1="8" y1="6" x2="20" y2="6" />
+                  <line x1="8" y1="12" x2="20" y2="12" />
+                  <line x1="8" y1="18" x2="14" y2="18" />
+                  <circle cx="4" cy="6" r="1" />
+                  <circle cx="4" cy="12" r="1" />
+                  <path d="M18 15v6" />
+                  <path d="M15 18h6" />
                 </svg>
-                <span>{isMagicParsing ? "Parsing..." : "Magic Import"}</span>
+                <span
+                  >{isMagicParsing ? "Splitting..." : "Split Into Items"}</span
+                >
               </button>
               <button
                 type="button"
@@ -4204,6 +4266,7 @@
             <input
               type="text"
               class="zl-tag-rename-input"
+              maxlength="20"
               data-swipe-ignore="true"
               bind:this={renameTagInputNode}
               bind:value={renamingTagValue}

@@ -84,7 +84,6 @@
 
   onMount(() => {
     window.addEventListener("ziplist:toast", handleToast);
-    window.addEventListener("talktype:toast", handleToast);
     if (toastContainer && typeof toastContainer.showPopover === "function") {
       try {
         toastContainer.showPopover();
@@ -97,7 +96,6 @@
   onDestroy(() => {
     if (typeof window !== "undefined") {
       window.removeEventListener("ziplist:toast", handleToast);
-      window.removeEventListener("talktype:toast", handleToast);
     }
     for (const timer of timers.values()) {
       clearTimeout(timer);

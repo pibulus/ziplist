@@ -27,7 +27,7 @@
     },
     {
       q: "Does it stay shared forever?",
-      a: "Only while you want it to. Live sharing can be stopped from the list header, and the list goes back to being yours alone.",
+      a: "Only while needed. Open Share and tap End Live whenever the room is done, and the list goes back to staying on this phone alone.",
     },
   ];
 
@@ -86,9 +86,9 @@
   <section class="zl-prose-section">
     <h2>Scanning a code is the whole setup</h2>
     <p>
-      Open the list, tap “QR this list”, they point a camera at it. No invite
-      email, no “create an account to continue”, no standing there holding a
-      phone while someone else finishes signing up.
+      Tap Share on the list, choose Start Live List, and point the other camera
+      at the QR code. No invite email, no “create an account to continue”, no
+      standing there holding a phone while someone else finishes signing up.
     </p>
   </section>
 

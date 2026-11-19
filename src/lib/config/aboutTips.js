@@ -5,11 +5,11 @@
 export const ABOUT_TIPS = [
   {
     id: "breath-categories",
-    text: "Speak a whole shopping run in one breath — items split onto clean rows automatically.",
+    text: "Speak a whole shopping run in one breath; items split onto clean rows automatically.",
   },
   {
     id: "inline-tags",
-    text: "Type #produce or #gear inline to group items on the fly.",
+    text: "Type #produce or #gear inline to filter by tag on the fly.",
   },
   {
     id: "pull-to-add",
@@ -17,7 +17,7 @@ export const ABOUT_TIPS = [
   },
   {
     id: "live-wave",
-    text: "The heart on a shared list sends a little pulse to everyone there.",
+    text: "Tap the heart on the Live pill to send a little pulse to everyone in the room.",
   },
   {
     id: "peer-bloom",
@@ -32,8 +32,8 @@ export const ABOUT_TIPS = [
     text: "Swipe left or right across the list card to hop between up to 12 colour lists.",
   },
   {
-    id: "walkie-talkie",
-    text: "Tap the mic to start and stop, or hold it down like a walkie-talkie.",
+    id: "manage-tray",
+    text: "Open ••• on any list to Tidy the order, Paste Items from a recipe, or Duplicate.",
   },
   {
     id: "holo-skins",

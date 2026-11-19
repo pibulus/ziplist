@@ -1,5 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
+import { dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
+import { env as publicEnv } from "$env/dynamic/public";
 import { json } from "@sveltejs/kit";
 import { enforceRateLimit } from "$lib/server/rateLimiter";
 import { transcribeWithOpenRouter } from "$lib/server/openrouterFallback";
@@ -9,36 +11,42 @@ let genAI = null;
 let genAIKey = "";
 
 const MAX_UPLOAD_BYTES = Number(env.MAX_UPLOAD_BYTES ?? "15728640");
+const MAX_PROMPT_CHARS = 12000;
 const DEFAULT_AUDIO_MIME_TYPE = "audio/webm";
 const GENERATION_CONFIG = {
   temperature: 0.2,
   topP: 0.8,
   topK: 40,
   candidateCount: 1,
-  maxOutputTokens: 8192,
-  // Roll the model, pin the behaviour. gemini-flash-lite-latest is a rolling
-  // alias (so it can never be retired out from under us) AND it is
-  // thinking-capable. It barely thinks today, but a future roll could make it
-  // think by default and silently multiply cost and latency - that is exactly
-  // how Stargram burned through a prepay balance in two weeks (2026-08-23).
-  // Measured 2026-08-24: pinning this changes nothing today (8/8 on the append
-  // benchmark, 1.9s, 63 output tokens) and costs nothing to keep.
+  maxOutputTokens: 2048,
   thinkingConfig: { thinkingLevel: "minimal" },
 };
 
-function getAllowedOrigins() {
-  return (env.ALLOWED_ORIGINS ?? "")
+function getAllowedOrigins(eventOrigin) {
+  const configured = (env.ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
+  if (configured.length > 0) return configured;
+  if (dev) return [];
+  const defaults = new Set(["https://ziplist.app"]);
+  if (publicEnv.PUBLIC_APP_URL?.trim()) {
+    defaults.add(publicEnv.PUBLIC_APP_URL.trim().replace(/\/+$/, ""));
+  }
+  if (eventOrigin) defaults.add(eventOrigin);
+  return [...defaults];
 }
 
-function isOriginAllowed(request) {
-  const allowedOrigins = getAllowedOrigins();
+function isOriginAllowed(request, eventOrigin) {
+  const allowedOrigins = getAllowedOrigins(eventOrigin);
   if (!allowedOrigins.length) return true;
 
   const origin = request.headers.get("origin");
-  if (!origin) return false;
+  // Same-origin fetches without Origin header are guarded by Sec-Fetch-Site when present
+  if (!origin) {
+    const fetchSite = request.headers.get("sec-fetch-site");
+    return !fetchSite || fetchSite === "same-origin" || fetchSite === "none";
+  }
 
   return allowedOrigins.includes(origin);
 }
@@ -163,16 +171,17 @@ async function createFileFromBase64(audioData, mimeType) {
   });
 }
 
-async function readJsonPayload(request) {
-  const { prompt, audioData, mimeType } = await request.json();
+async function parseJsonBodyPayload(body) {
+  const { prompt, audioData, mimeType } = body || {};
 
   if (typeof prompt !== "string" || !prompt.trim()) {
     throw transcriptionPayloadError("Invalid transcription prompt");
   }
+  const boundedPrompt = prompt.slice(0, MAX_PROMPT_CHARS);
 
   if (!audioData || typeof audioData !== "string" || !audioData.trim()) {
     return {
-      prompt,
+      prompt: boundedPrompt,
       file: null,
       mimeType: null,
       source: "json-text",
@@ -183,7 +192,7 @@ async function readJsonPayload(request) {
   const file = await createFileFromBase64(audioData, normalizedMimeType);
 
   return {
-    prompt,
+    prompt: boundedPrompt,
     file,
     mimeType: normalizedMimeType,
     source: "json-base64",
@@ -192,7 +201,10 @@ async function readJsonPayload(request) {
 
 async function readMultipartPayload(request) {
   const formData = await request.formData();
-  const prompt = formData.get("prompt")?.toString() || "";
+  const prompt = (formData.get("prompt")?.toString() || "").slice(
+    0,
+    MAX_PROMPT_CHARS,
+  );
   const file = formData.get("audio_file");
 
   if (!prompt.trim()) {
@@ -231,10 +243,6 @@ async function readTranscriptionPayload(request) {
 
   if (contentType.includes("multipart/form-data")) {
     return readMultipartPayload(request);
-  }
-
-  if (contentType.includes("application/json")) {
-    return readJsonPayload(request);
   }
 
   throw transcriptionPayloadError("Unsupported transcription payload", 415);
@@ -377,20 +385,25 @@ ${items.map((item) => `id=${item.id} :: ${item.text}`).join("\n")}`;
 
 export async function POST(event) {
   try {
-    const rateLimitResponse = enforceRateLimit(event);
+    const rateLimitResponse = await enforceRateLimit(event);
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
 
     if (!env.GEMINI_API_KEY) {
-      return json({ error: "GEMINI_API_KEY is not set" }, { status: 500 });
+      return json(
+        { error: "Transcription needs server setup before it can run here." },
+        { status: 500 },
+      );
     }
 
-    if (!isOriginAllowed(event.request)) {
+    if (!isOriginAllowed(event.request, event.url?.origin)) {
       return json({ error: "Request origin is not allowed" }, { status: 403 });
     }
 
     const contentType = event.request.headers.get("content-type") || "";
+    let payload = null;
+
     if (contentType.includes("application/json")) {
       const body = await event.request.json().catch(() => null);
       if (body?.task === "order") {
@@ -401,7 +414,11 @@ export async function POST(event) {
               typeof item.id === "string" &&
               typeof item.text === "string",
           )
-          .slice(0, 120);
+          .slice(0, 120)
+          .map((item) => ({
+            id: item.id.slice(0, 128),
+            text: item.text.slice(0, 240),
+          }));
         if (items.length < 2) {
           return json({ order: items.map((item) => item.id) });
         }
@@ -412,43 +429,43 @@ export async function POST(event) {
           items.map((item) => item.id),
         );
         if (!order) {
-          // A model that reshaped the list gets ignored, not trusted.
           return json({ order: items.map((item) => item.id), ignored: true });
         }
         return json({ order });
       }
-      return json({ error: "Unknown task" }, { status: 400 });
-    }
 
-    const payload = await readTranscriptionPayload(event.request);
+      if (typeof body?.prompt === "string") {
+        payload = await parseJsonBodyPayload(body);
+      } else {
+        return json({ error: "Unknown task" }, { status: 400 });
+      }
+    } else {
+      payload = await readTranscriptionPayload(event.request);
+    }
 
     let text;
     try {
       text = await transcribeWithGemini(payload);
     } catch (error) {
-      // A depleted prepay balance is the ONE Gemini failure a second provider
-      // can actually rescue, and it takes every app in the fleet down at once
-      // (2026-08-23), so it is worth one extra round trip. Every other failure
-      // falls straight through to the handler below, unchanged.
       if (getGeminiErrorKind(error) !== "quota") throw error;
       const rescued = await transcribeWithOpenRouter(payload);
       if (!rescued) throw error;
       console.warn(
-        "[API /gemini] Gemini out of credits - served via OpenRouter",
+        "[API /gemini] Primary quota depleted - served via fallback",
       );
       text = rescued;
     }
 
     return json({ text });
   } catch (error) {
-    console.error("Error in Gemini API route:", error);
+    console.error("Error in transcription API route:", error);
     const geminiErrorKind = getGeminiErrorKind(error);
 
     if (error?.transcriptionPayloadError) {
       const message =
         error?.status === 413
           ? "Audio file is too large. Try a shorter recording."
-          : "Hmm, the audio needs one more pass. Try recording again.";
+          : "That take needs one more pass. Try recording again.";
 
       return json({ error: message }, { status: error?.status || 400 });
     }
@@ -462,20 +479,20 @@ export async function POST(event) {
 
     if (geminiErrorKind === "quota") {
       return json(
-        { error: "Transcription is out of server credits right now." },
+        { error: "Voice list is resting right now. Try again shortly." },
         { status: 503 },
       );
     }
 
     if (geminiErrorKind === "rate-limit") {
       return json(
-        { error: "Gemini is busy right now. Try again in a moment." },
+        { error: "Voice list is busy right now. Give it a moment." },
         { status: 429 },
       );
     }
 
     return json(
-      { error: "Transcription failed. Please try again." },
+      { error: "That pass didn't come through. Give it one more try." },
       { status: error?.status === 400 ? 502 : error?.status || 500 },
     );
   }

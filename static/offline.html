@@ -3,218 +3,168 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ziplist - You're Offline</title>
+    <title>Offline · ZipList</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
+      :root {
+        --bg: #fffef7;
+        --card: #fbf1e4;
+        --ink: #1e1714;
+        --ink-soft: #4a3f3a;
+        --cta: #ffb000;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
-        background-color: #fff6e6;
-        color: #333;
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background-color: var(--bg);
+        color: var(--ink);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 100vh;
+        min-height: 100dvh;
         margin: 0;
         padding: 20px;
         text-align: center;
       }
 
       .container {
-        max-width: 500px;
-        background-color: #fffaef;
+        width: 100%;
+        max-width: 420px;
+        background-color: var(--card);
+        border: 2px solid var(--ink);
         border-radius: 24px;
-        padding: 30px;
-        box-shadow:
-          0 10px 25px -5px rgba(249, 168, 212, 0.3),
-          0 8px 10px -6px rgba(249, 168, 212, 0.2);
-        border: 1px solid rgba(249, 168, 212, 0.2);
+        padding: 32px 26px;
+        box-shadow: 4px 4px 0 var(--ink);
       }
 
       .icon {
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 20px;
-        position: relative;
+        width: 84px;
+        height: 84px;
+        margin: 0 auto 16px;
+      }
+
+      .icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
       }
 
       h1 {
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 10px;
-        color: #333;
-      }
-
-      .haiku {
-        font-style: italic;
-        margin: 30px 0;
-        font-size: 1.25rem;
-        line-height: 1.8;
-        color: #444;
-        background-color: rgba(249, 168, 212, 0.1);
-        padding: 20px;
-        border-radius: 16px;
+        font-size: 1.65rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        margin: 0 0 10px;
+        color: var(--ink);
       }
 
       p {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        color: #555;
-        margin-bottom: 25px;
+        font-size: 0.98rem;
+        font-weight: 600;
+        line-height: 1.55;
+        color: var(--ink-soft);
+        margin: 0 0 22px;
       }
 
       .button {
-        background: linear-gradient(to right, #f472b6, #e879f9);
-        color: white;
-        font-weight: 600;
-        padding: 12px 24px;
-        border-radius: 50px;
-        text-decoration: none;
-        display: inline-block;
-        border: none;
+        width: 100%;
+        min-height: 48px;
+        background: var(--cta);
+        color: var(--ink);
+        font-size: 0.95rem;
+        font-weight: 900;
+        padding: 12px 20px;
+        border-radius: 14px;
+        border: 2px solid var(--ink);
+        box-shadow: 3px 3px 0 var(--ink);
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(249, 168, 212, 0.4);
+        transition:
+          transform 0.14s ease,
+          box-shadow 0.14s ease;
       }
 
       .button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(249, 168, 212, 0.5);
+        transform: translateY(-1px);
+        box-shadow: 4px 4px 0 var(--ink);
       }
 
-      .offline-message {
-        margin-top: 30px;
-        font-size: 0.9rem;
-        color: #777;
-      }
-
-      @keyframes float {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-10px);
-        }
-      }
-
-      .icon {
-        animation: float 3s ease-in-out infinite;
-      }
-
-      /* Ghost eye blinking animation */
-      @keyframes blink {
-        0%,
-        95%,
-        100% {
-          transform: scaleY(1);
-        }
-        97.5% {
-          transform: scaleY(0);
-        }
-      }
-
-      .ghost-eyes {
-        animation: blink 6s infinite;
-        transform-origin: center center;
-      }
-
-      /* Gradient definitions for ghost */
-      .ghost-gradient-peach {
-        stop-color: #ff60e0;
-      }
-
-      .ghost-gradient-peach-end {
-        stop-color: #ffcf40;
+      .button:active {
+        transform: translateY(1px);
+        box-shadow: 1px 1px 0 var(--ink);
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="icon">
-        <!-- Inline SVG ghost with simplified structure -->
-        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+    <main class="container">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="96 56 832 872" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient
-              id="peachGradient"
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="100%"
+              id="ziplistOfflineGrad"
+              x1="150"
+              y1="130"
+              x2="860"
+              y2="820"
+              gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" class="ghost-gradient-peach" />
-              <stop offset="100%" class="ghost-gradient-peach-end" />
+              <stop offset="0" stop-color="#ffe86b" />
+              <stop offset="0.42" stop-color="#ff9a8c" />
+              <stop offset="1" stop-color="#76ead7" />
             </linearGradient>
           </defs>
-
-          <!-- Ghost body shape -->
           <path
-            d="M832 544c0-212-172-384-384-384s-384 172-384 384c0 149.8 85.8 279.6 211.2 343.4 7.9 4 16.9-2.4 16.8-11.4L291.8 800h48.4l-0.2 76c0 9 9 15.4 16.9 11.4 50.4-25.2 91.2-66.1 116.5-116.5 4-8 15.4-8 19.4 0C517.9 821.4 578 864 648 864h120c8.8 0 16-7.2 16-16v-48c0-8.8 7.2-16 16-16h16c8.8 0 16-7.2 16-16V544z"
-            fill="url(#peachGradient)"
+            d="M308 118H716C815 118 878 181 878 280V574C878 673 815 736 716 736H600L542 846C529 870 495 870 482 846L424 736H308C209 736 146 673 146 574V280C146 181 209 118 308 118Z"
+            fill="url(#ziplistOfflineGrad)"
+            stroke="#1e1714"
+            stroke-width="54"
+            stroke-linejoin="round"
           />
-
-          <!-- Ghost outline -->
-          <path
-            d="M832 544c0-212-172-384-384-384s-384 172-384 384c0 149.8 85.8 279.6 211.2 343.4 7.9 4 16.9-2.4 16.8-11.4L291.8 800h48.4l-0.2 76c0 9 9 15.4 16.9 11.4 50.4-25.2 91.2-66.1 116.5-116.5 4-8 15.4-8 19.4 0C517.9 821.4 578 864 648 864h120c8.8 0 16-7.2 16-16v-48c0-8.8 7.2-16 16-16h16c8.8 0 16-7.2 16-16V544z"
+          <ellipse cx="424" cy="326" rx="39" ry="60" fill="#1e1714" />
+          <ellipse cx="600" cy="326" rx="39" ry="60" fill="#1e1714" />
+          <g
             fill="none"
-            stroke="white"
-            stroke-width="24"
-          />
-
-          <!-- Ghost eyes -->
-          <g class="ghost-eyes">
-            <circle cx="400" cy="512" r="48" fill="white" />
-            <circle cx="624" cy="512" r="48" fill="white" />
-            <circle cx="400" cy="512" r="16" fill="#333" />
-            <circle cx="624" cy="512" r="16" fill="#333" />
+            stroke="#1e1714"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect
+              x="334"
+              y="520"
+              width="44"
+              height="44"
+              rx="6"
+              stroke-width="18"
+            />
+            <path d="M430 542H690" stroke-width="21" />
+            <rect
+              x="334"
+              y="598"
+              width="44"
+              height="44"
+              rx="6"
+              stroke-width="18"
+            />
+            <path d="M430 620H690" stroke-width="21" />
           </g>
         </svg>
       </div>
 
-      <h1>You're Offline</h1>
-
-      <div class="haiku" id="haiku-container">
-        Connection is lost<br />
-        Words float in digital void<br />
-        Try again, speak soon
-      </div>
-
-      <script>
-        // Random haikus to display when offline
-        const OFFLINE_HAIKUS = [
-          `Connection is lost<br>Words float in digital void<br>Try again, speak soon`,
-          `Microphone silent<br>No network to hear your words<br>Waiting for signals`,
-          `The list waits quietly<br>Cannot hear your voice today<br>Internet missing`,
-          `Voice lost in the waves<br>Digital silence prevails<br>Connect and try again`,
-          `Whispers unheard now<br>The ghost waits patiently<br>Until we're online`,
-        ];
-
-        // Get a random haiku
-        function getRandomHaiku() {
-          return OFFLINE_HAIKUS[
-            Math.floor(Math.random() * OFFLINE_HAIKUS.length)
-          ];
-        }
-
-        // Update the haiku container
-        document.getElementById("haiku-container").innerHTML = getRandomHaiku();
-      </script>
+      <h1>No signal right now.</h1>
 
       <p>
-        ZipList can keep your saved lists close, but talking new items in may
-        need a connection.
+        Saved lists still open and tick off on this device. Voice adds return
+        once a connection is back.
       </p>
 
-      <button class="button" onclick="location.reload()">Try Again</button>
-
-      <div class="offline-message">
-        Once you're back online, your ghost will be ready to listen!
-      </div>
-    </div>
+      <button class="button" type="button" onclick="location.reload()">
+        Open saved lists
+      </button>
+    </main>
   </body>
 </html>

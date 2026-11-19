@@ -59,6 +59,12 @@ export class ModalService {
     if (!modal) return;
 
     if (this.modalOpen && this.activeModal === modal && modal.open) {
+      if (this.closeTimer) {
+        clearTimeout(this.closeTimer);
+        this.closeTimer = null;
+      }
+      this.isClosing = false;
+      modal.classList.remove("zl-modal-closing");
       return modal;
     }
 

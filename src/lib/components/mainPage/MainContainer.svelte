@@ -142,7 +142,10 @@
 
   async function openSettingsModal() {
     // First, ensure any open dialogs are closed
-    if (modalService.isModalOpen()) {
+    if (
+      modalService.isModalOpen() &&
+      modalService.activeModal?.id !== "settings_modal"
+    ) {
       modalService.closeModal();
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
@@ -185,7 +188,10 @@
 
   async function openContributorModal(event) {
     contributorReason = event?.detail?.reason || "";
-    if (modalService.isModalOpen()) {
+    if (
+      modalService.isModalOpen() &&
+      modalService.activeModal?.id !== "contributor_modal"
+    ) {
       modalService.closeModal();
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
@@ -232,7 +238,10 @@
         typeof detail.onStartLive === "function" ? detail.onStartLive : null,
     };
 
-    if (modalService.isModalOpen()) {
+    if (
+      modalService.isModalOpen() &&
+      modalService.activeModal?.id !== "qr_modal"
+    ) {
       modalService.closeModal();
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
@@ -746,7 +755,7 @@
               audioActions.updateState(AudioStates.IDLE);
               soundService.locked({ force: true });
               uiActions.setErrorMessage(
-                "That take came through empty — check the mic and give it another go.",
+                "That take came through empty. Check the mic and give it another go.",
               );
               return;
             }
@@ -1063,7 +1072,7 @@
 <IntroModal
   {closeModal}
   markIntroAsSeen={() => firstVisitService.markIntroAsSeen()}
-  triggerGhostClick={handleToggleRecording}
+  triggerMascotRecord={handleToggleRecording}
 />
 
 <!-- Settings Modal - lazy loaded -->

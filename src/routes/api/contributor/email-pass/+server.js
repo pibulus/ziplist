@@ -1,6 +1,10 @@
 import { env } from "$env/dynamic/private";
 import { env as publicEnv } from "$env/dynamic/public";
 import { json } from "@sveltejs/kit";
+import {
+  normalizeCode,
+  parseFourWordPasskey,
+} from "$lib/softstack-passport/index.js";
 import { enforceRateLimit } from "$lib/server/rateLimiter.js";
 import {
   generateLicenseCode,
@@ -8,7 +12,11 @@ import {
   verifyContributorToken,
 } from "$lib/server/contributor/licenseCrypto.js";
 import {
-  findLicenseByCode,
+  clearPasskeyFailures,
+  findLicenseById,
+  isLicenseExpired,
+  isPasskeyLockedOut,
+  recordPasskeyFailure,
   redeemLicenseByPasskey,
 } from "$lib/server/contributor/licenseStore.js";
 import {
@@ -79,38 +87,61 @@ export async function POST(event) {
       }
     }
 
-    const rawCode = normalizeContributorCode(body?.code);
-    const explicitPhrase =
-      typeof body?.phrase === "string" ? body.phrase.trim() : "";
+    const rawInput = (body?.phrase ?? body?.code ?? "").toString().trim();
+    const normalizedCode = normalizeContributorCode(rawInput);
     let canonicalCode = "";
     let canonicalPhrase = "";
     let licenseExpiry = "";
 
-    if (tokenClaims?.tier === "contributor") {
-      const matchedLicense = rawCode ? await findLicenseByCode(rawCode) : null;
-      if (matchedLicense?.checkoutId) {
-        licenseExpiry = matchedLicense.expiresAt || "";
-        canonicalCode = generateLicenseCode(matchedLicense.checkoutId);
-        canonicalPhrase = generatePasskeyPhrase(matchedLicense.checkoutId);
-      } else if (rawCode) {
-        const activeLicense = await redeemLicenseByPasskey(rawCode).catch(
-          () => null,
-        );
-        if (activeLicense?.checkoutId) {
-          licenseExpiry = activeLicense.expiresAt || "";
-          canonicalCode = generateLicenseCode(activeLicense.checkoutId);
-          canonicalPhrase = generatePasskeyPhrase(activeLicense.checkoutId);
-        } else {
-          canonicalCode = rawCode;
-          canonicalPhrase = explicitPhrase;
+    // 1. Authenticated Passport holder: resolve STRICTLY from tokenClaims.sub
+    //    so one holder can never query or exfiltrate another holder's SS- ID.
+    if (tokenClaims?.tier === "contributor" && tokenClaims?.sub) {
+      const ownedLicense = await findLicenseById(tokenClaims.sub);
+      if (
+        ownedLicense?.checkoutId &&
+        ownedLicense.status === "active" &&
+        !isLicenseExpired(ownedLicense)
+      ) {
+        const expectedPhrase = generatePasskeyPhrase(ownedLicense.checkoutId);
+        const expectedCode = generateLicenseCode(expectedPhrase);
+        const suppliedPhrase = parseFourWordPasskey(rawInput)?.phrase || "";
+
+        // If the client also sent a code/phrase, ensure it matches their own license
+        const matchesOwner =
+          !rawInput ||
+          normalizedCode === expectedCode ||
+          suppliedPhrase === expectedPhrase;
+
+        if (matchesOwner) {
+          licenseExpiry = ownedLicense.expiresAt || "";
+          canonicalCode = expectedCode;
+          canonicalPhrase = expectedPhrase;
         }
       }
-    } else if (rawCode) {
-      const activeLicense = await redeemLicenseByPasskey(rawCode);
+    }
+
+    // 2. Fallback: caller proves ownership with the secret 4-word passkey
+    //    (bare SS-/ZL- display IDs are public handles and NEVER unlock email-pass).
+    if (!canonicalCode && rawInput && !normalizeCode(rawInput)) {
+      if (await isPasskeyLockedOut(rawInput)) {
+        return json(
+          {
+            sent: false,
+            error:
+              "Too many attempts for this passkey. Try again in 15 minutes.",
+          },
+          { status: 429, headers: NO_STORE_HEADERS },
+        );
+      }
+
+      const activeLicense = await redeemLicenseByPasskey(rawInput);
       if (activeLicense?.checkoutId) {
+        await clearPasskeyFailures(rawInput);
         licenseExpiry = activeLicense.expiresAt || "";
-        canonicalCode = generateLicenseCode(activeLicense.checkoutId);
         canonicalPhrase = generatePasskeyPhrase(activeLicense.checkoutId);
+        canonicalCode = generateLicenseCode(canonicalPhrase);
+      } else {
+        await recordPasskeyFailure(rawInput);
       }
     }
 
@@ -121,8 +152,6 @@ export async function POST(event) {
       );
     }
 
-    // Zero-storage dispatch: the email address is used once in memory to send
-    // the Resend payload and is never persisted to disk, KV, or logs.
     const result = await sendContributorPassportEmail({
       to: email,
       code: canonicalCode,

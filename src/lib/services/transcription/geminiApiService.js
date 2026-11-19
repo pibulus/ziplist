@@ -36,7 +36,7 @@ function blobToGenerativePart(blob) {
   // with no real speech — bail kindly before burning the Gemini round-trip.
   if (blob.size < 1000) {
     return Promise.reject(
-      new Error("That tap was a blink — speak a touch longer."),
+      new Error("Quick tap. Hold a beat longer so the words land."),
     );
   }
 
@@ -107,11 +107,11 @@ async function generateContent(promptData) {
   } catch (error) {
     if (error.name === "AbortError") {
       throw new Error(
-        "Transcription timed out. Check your connection and try again.",
+        "Connection timed out before the items landed. Try once more.",
       );
     }
-    console.error("❌ Error generating content:", error);
-    throw new Error(error.message || "Failed to generate content with Gemini");
+    console.error("Error generating content:", error);
+    throw new Error(error.message || "Voice list couldn't finish that pass.");
   } finally {
     clearTimeout(timeoutId);
   }
@@ -131,13 +131,13 @@ async function generateTextContent(prompt) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt: prompt.slice(0, 12000) }),
       signal: controller.signal,
     });
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to process with Gemini");
+      throw new Error(err.error || "Text split couldn't finish that pass.");
     }
 
     const data = await response.json();
@@ -147,11 +147,11 @@ async function generateTextContent(prompt) {
   } catch (error) {
     if (error.name === "AbortError") {
       throw new Error(
-        "AI request timed out. Check your connection and try again.",
+        "Connection timed out before the items landed. Try once more.",
       );
     }
-    console.error("❌ Error generating text content:", error);
-    throw new Error(error.message || "Failed to process text with Gemini");
+    console.error("Error generating text content:", error);
+    throw new Error(error.message || "Text split couldn't finish that pass.");
   } finally {
     clearTimeout(timeoutId);
   }

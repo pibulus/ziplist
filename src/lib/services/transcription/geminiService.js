@@ -104,10 +104,8 @@ export const geminiService = {
         };
       }
     } catch (error) {
-      console.error("❌ Error transcribing audio:", error);
-      throw new Error(
-        error.message || "Failed to transcribe audio with Gemini",
-      );
+      console.error("Error transcribing audio:", error);
+      throw new Error(error.message || "Voice list couldn't finish that pass.");
     }
   },
 
@@ -175,8 +173,8 @@ ${rawText}
         structured: false,
       };
     } catch (error) {
-      console.error("❌ Error parsing unstructured text with Gemini:", error);
-      throw new Error(error.message || "Failed to parse text with Gemini");
+      console.error("Error parsing unstructured text:", error);
+      throw new Error(error.message || "Text split couldn't finish that pass.");
     }
   },
 };

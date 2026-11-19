@@ -61,6 +61,9 @@ export function clearStoredSupporterCode(storage) {
   if (!targetStorage) return;
   try {
     targetStorage.removeItem(STORAGE_KEYS.SUPPORTER_PASSPORT_CODE);
+    if (browser && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("ziplist-passport-changed"));
+    }
   } catch (error) {
     console.warn("Failed to clear supporter passport code:", error);
   }

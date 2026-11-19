@@ -61,9 +61,12 @@
 
     try {
       const response = await fetch(
-        `/api/contributor/checkout/${encodeURIComponent(checkoutId)}?claim_token=${encodeURIComponent(
-          claimToken,
-        )}`,
+        `/api/contributor/checkout/${encodeURIComponent(checkoutId)}`,
+        {
+          headers: {
+            "x-claim-token": claimToken,
+          },
+        },
       );
       const payload = await response.json().catch(() => ({}));
 

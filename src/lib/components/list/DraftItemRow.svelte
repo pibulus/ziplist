@@ -95,7 +95,8 @@
       data-1p-ignore
       data-lpignore="true"
       data-form-type="other"
-      placeholder="New item… (#tag to group)"
+      maxlength="240"
+      placeholder="New item… (#tag to filter)"
       aria-label="New item text"
       bind:value={draftItemText}
       bind:this={inputNode}

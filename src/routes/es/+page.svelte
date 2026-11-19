@@ -4,9 +4,9 @@
 
   const canonicalUrl = "https://ziplist.app/es";
   const title =
-    "ZipList en Español | Listas de Mandado y Tareas por Voz — Cero Rollos";
+    "ZipList en Español · Listas de Mandado y Tareas por Voz | ZipList";
   const description =
-    "Dicta tus listas de compras, mandado y pendientes al instante. Listas táctiles con físicas elásticas, dictado por voz y salas compartidas por código QR.";
+    "Dicta listas de compras, mandado y pendientes al instante. Listas rápidas por voz y salas compartidas en vivo por código QR, sin crear cuentas.";
 
   // Assembled here rather than inline in <svelte:head>: a literal
   // `<script>` in markup makes svelte-eslint-parser treat the rest of

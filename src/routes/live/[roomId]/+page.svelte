@@ -146,6 +146,7 @@
   });
 
   onDestroy(() => {
+    audioRecorderService.discardActiveRecording();
     if (typeof window !== "undefined") {
       window.removeEventListener("ziplist-open-qr", handleOpenQr);
     }
@@ -245,6 +246,7 @@
           recordingDuration={$recordingDuration}
           progress={$transcriptionProgress}
           on:click={() => audioRecorderService.toggleRecording()}
+          on:discard={() => audioRecorderService.discardActiveRecording()}
           on:holdstart={() => audioRecorderService.handleHoldStart()}
           on:holdend={() => audioRecorderService.handleHoldEnd()}
         />

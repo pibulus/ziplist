@@ -79,10 +79,10 @@
     max-width: 480px;
     margin: auto;
     padding: 2.5rem 2rem;
-    background: rgba(255, 255, 255, 0.86);
-    border: 2px solid rgba(255, 176, 0, 0.32);
+    background: #fbf1e4;
+    border: 2px solid #1e1714;
     border-radius: 28px;
-    box-shadow: 0 10px 24px rgba(255, 176, 0, 0.14);
+    box-shadow: 4px 4px 0 #1e1714;
   }
 
   .zl-error-mascot {
@@ -95,33 +95,34 @@
     font-family: "Space Mono", monospace;
     font-size: 1.5rem;
     margin: 0 0 0.5rem;
-    color: #111827;
+    color: #1e1714;
   }
 
   .zl-error-card p {
     font-family: "Space Mono", monospace;
-    color: #4b5563;
+    color: #4a3f3a;
     margin-bottom: 1.75rem;
     line-height: 1.5;
   }
 
   .zl-error-btn {
     background: var(--zl-cta-color, #ffb000);
-    color: #111111;
-    border: none;
+    color: #1e1714;
+    border: 2px solid #1e1714;
     border-radius: 999px;
     padding: 0.75rem 1.75rem;
     font-family: "Space Mono", monospace;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 3px 8px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.24);
+    transition:
+      transform 0.16s ease,
+      box-shadow 0.16s ease;
+    box-shadow: 3px 3px 0 #1e1714;
   }
 
   .zl-error-btn:hover {
-    transform: translateY(-2px);
-    filter: saturate(1.08) brightness(1.04);
-    box-shadow: 0 5px 15px rgba(var(--zl-primary-color-rgb, 255, 176, 0), 0.32);
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 #1e1714;
   }
 
   @media (max-width: 480px) {

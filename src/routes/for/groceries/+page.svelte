@@ -19,7 +19,7 @@
     },
     {
       q: "Can two of us shop the same list at once?",
-      a: "Yes. Open the list, tap “QR this list”, and the other phone scans it. From then on both phones show the same list and every tick appears on the other one.",
+      a: "Yes. Tap Share on the list, choose Start Live List, and let the other phone scan the QR code or enter the four room words. Both phones show the same list and every tick appears on the other.",
     },
     {
       q: "Do I have to install something?",

@@ -22,7 +22,7 @@
     },
     {
       q: "How does sharing work?",
-      a: "Copy List puts the checklist in plain text. QR Code opens a copy or a live link. Share Live Link lets two phones add, edit, and tick the same list together; four words open that same shared list.",
+      a: "Copy Text puts the checklist in plain text. QR Code opens a copy or a live link. Start Live List lets two phones add, edit, and tick the same list together; four words open that same shared list.",
     },
     {
       q: "Does it work without signal?",

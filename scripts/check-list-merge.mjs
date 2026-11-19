@@ -5,6 +5,7 @@ import {
   mergeTombstones,
   stampItemChanges,
 } from "../src/lib/services/lists/listMergeService.js";
+import { sanitizeLiveListData } from "../src/lib/services/realtime/liveListProtocol.js";
 
 console.log("▶ Testing listMergeService LWW-Element-Set merge engine...");
 
@@ -364,6 +365,86 @@ console.log("▶ Testing listMergeService LWW-Element-Set merge engine...");
     "Oat milk #dairy",
   );
   console.log("  ✓ upsertList bookkeeping: clear, undo, uncheck, retag sync");
+}
+
+// Test: Live-room protocol round-trip + stampItemChanges preserves item timestamps
+// so an older offline device snapshot never resurrects a zombie checkmark.
+{
+  const prevLocal = {
+    id: "live-l1",
+    name: "Market",
+    updatedAt: 5000,
+    items: [
+      {
+        id: "milk",
+        text: "Oat milk",
+        checked: false,
+        addedAt: 1000,
+        checkedAt: 5000,
+        updatedAt: 5000,
+      },
+    ],
+    deletedItemIds: {},
+  };
+
+  // Peer sends a live-room snapshot where another item arrived at t=6000.
+  const sanitizedWire = sanitizeLiveListData({
+    ...prevLocal,
+    updatedAt: 6000,
+    items: [
+      ...prevLocal.items,
+      {
+        id: "eggs",
+        text: "Free-range eggs",
+        checked: false,
+        addedAt: 6000,
+        updatedAt: 6000,
+      },
+    ],
+  });
+
+  assert.equal(sanitizedWire.items[0].checkedAt, 5000);
+  assert.equal(sanitizedWire.items[0].updatedAt, 5000);
+  assert.equal(sanitizedWire.items[0].addedAt, 1000);
+
+  const stamped = stampItemChanges(prevLocal, sanitizedWire.items, 6000);
+  assert.equal(stamped.items[0].checkedAt, 5000);
+  assert.equal(stamped.items[0].updatedAt, 5000);
+  assert.equal(stamped.items[0].addedAt, 1000);
+
+  // Now merge with an offline phone that still had Oat milk checked at t=3000:
+  const offlinePhone = {
+    id: "live-l1",
+    name: "Market",
+    updatedAt: 3000,
+    items: [
+      {
+        id: "milk",
+        text: "Oat milk",
+        checked: true,
+        completedAt: new Date(3000).toISOString(),
+        checkedAt: 3000,
+        updatedAt: 3000,
+      },
+    ],
+    deletedItemIds: {},
+  };
+
+  const merged = mergeCollections({
+    localLists: [{ ...prevLocal, ...stamped, updatedAt: 6000 }],
+    incomingLists: [offlinePhone],
+    now: 7000,
+  }).lists[0];
+
+  const mergedMilk = merged.items.find((i) => i.id === "milk");
+  assert.equal(
+    mergedMilk.checked,
+    false,
+    "Live-room round-trip must preserve checkedAt so stale offline ticks never resurrect",
+  );
+  console.log(
+    "  ✓ Live-room sanitizeLiveListData + stampItemChanges preserves timestamps (no zombie ticks)",
+  );
 }
 
 console.log("✅ All listMergeService tests passed successfully!");

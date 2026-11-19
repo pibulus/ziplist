@@ -25,7 +25,7 @@ function getAppOrigin(event) {
 }
 
 export async function POST(event) {
-  const rateResponse = enforceRateLimit(event);
+  const rateResponse = await enforceRateLimit(event);
   if (rateResponse) return rateResponse;
 
   if (!isSquareCheckoutConfigured()) {

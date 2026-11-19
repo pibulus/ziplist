@@ -22,6 +22,7 @@ import {
   redeemLicenseByPasskey,
 } from "$lib/server/contributor/licenseStore.js";
 
+const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
 const REDEEM_RATE_WINDOW_MS = 15 * 60_000;
 const REDEEM_RATE_LIMIT = 10;
 
@@ -93,13 +94,16 @@ export async function POST(event) {
         ? generateLicenseCode(license.checkoutId)
         : generateLicenseCode(canonicalPhrase);
 
-      return json({
-        valid: true,
-        token: issueTokenForLicense(license),
-        license,
-        code: canonicalCode,
-        phrase: canonicalPhrase,
-      });
+      return json(
+        {
+          valid: true,
+          token: issueTokenForLicense(license),
+          license,
+          code: canonicalCode,
+          phrase: canonicalPhrase,
+        },
+        { headers: NO_STORE_HEADERS },
+      );
     }
 
     // A lapsed Passport is not a wrong code: say what happened and when.
@@ -154,13 +158,16 @@ export async function POST(event) {
     // Shared unlock words mint a personal license per redemption so devices
     // don't land in one shared sync room.
     const voucher = await createVoucherLicense();
-    return json({
-      valid: true,
-      token: issueTokenForLicense(voucher.license),
-      license: voucher.license,
-      code: voucher.code,
-      phrase: voucher.phrase,
-    });
+    return json(
+      {
+        valid: true,
+        token: issueTokenForLicense(voucher.license),
+        license: voucher.license,
+        code: voucher.code,
+        phrase: voucher.phrase,
+      },
+      { headers: NO_STORE_HEADERS },
+    );
   } catch (error) {
     if (error?.code === "VOUCHER_LIMIT") {
       return json(

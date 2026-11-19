@@ -115,6 +115,18 @@ function sanitizeLiveItem(item, index) {
     sanitized.completedAt = completedAt;
   }
 
+  // Preserve numeric LWW merge & added-order timestamps across live-room snapshots
+  // so Passport Device Sync never mistakes live items for timestamp-0 zombies.
+  if (typeof item.addedAt === "number" && Number.isFinite(item.addedAt)) {
+    sanitized.addedAt = item.addedAt;
+  }
+  if (typeof item.updatedAt === "number" && Number.isFinite(item.updatedAt)) {
+    sanitized.updatedAt = item.updatedAt;
+  }
+  if (typeof item.checkedAt === "number" && Number.isFinite(item.checkedAt)) {
+    sanitized.checkedAt = item.checkedAt;
+  }
+
   // This sanitiser is a WHITELIST — anything not copied here is erased on every
   // remote frame. Tags added to the store without this line would vanish the
   // moment a shared list synced, which is the same shape as the bug that used
@@ -303,7 +315,8 @@ export function sanitizeSyncEnvelope(input) {
   if (!isRecord(input)) return null;
   if (typeof input.iv !== "string" || !input.iv || input.iv.length > 64)
     return null;
-  if (typeof input.ct !== "string" || !input.ct || input.ct.length > 5_000_000)
+  // Stay safely beneath Cloudflare SQLite DO's 128 KiB per-value KV ceiling.
+  if (typeof input.ct !== "string" || !input.ct || input.ct.length > 120_000)
     return null;
   const updatedAt =
     typeof input.updatedAt === "number" ? input.updatedAt : Date.now();

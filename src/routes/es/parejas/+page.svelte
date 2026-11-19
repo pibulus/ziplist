@@ -11,23 +11,23 @@
 
   const canonicalUrl = "https://ziplist.app/es/parejas";
   const title =
-    "Listas Compartidas para Parejas en Vivo — Cero Cuentas ni Contraseñas | ZipList";
+    "Listas Compartidas para Parejas en Vivo · Cero Cuentas | ZipList";
   const description =
-    "La lista de compras y tareas compartida en tiempo real para parejas. Divide los pasillos del súper, planea viajes y haz el súper juntos con sincronización QR instantánea.";
+    "La lista de compras y pendientes compartida en vivo para dos teléfonos. Divide los pasillos del súper, planea viajes y tacha juntos por código QR sin cuentas.";
   const heading = "Listas Compartidas para Parejas en Vivo";
 
   const faqs = [
     {
       q: "¿Cómo compartimos una lista en pareja sin crear cuentas?",
-      a: "Tocas el botón de código QR para crear una sala en vivo. Tu pareja escanea el código con su cámara y se conectan al instante en tiempo real. Cero correos, cero registros, cero contraseñas.",
+      a: "Toca Compartir en la lista, elige iniciar lista en vivo y muestra el código QR para escanearlo con la cámara del otro teléfono. Cero correos, cero registros y cero contraseñas.",
     },
     {
-      q: "¿Podemos tachar pendientes al mismo tiempo en extremos opuestos del supermercado?",
-      a: "¡Sí! La sincronización toma menos de 10 milisegundos mediante WebSockets. Cuando tu pareja tacha la leche en el pasillo 1, se actualiza en tu pantalla en el pasillo 8 al instante.",
+      q: "¿Podemos tachar pendientes al mismo tiempo en distintos pasillos?",
+      a: "Sí. Ambos teléfonos comparten la misma lista abierta: cuando alguien tacha la leche en un pasillo, desaparece de los pendientes en la otra pantalla enseguida.",
     },
     {
-      q: "¿Podemos dictar por voz los dos?",
-      a: "Cualquiera de los dos puede pulsar el micrófono y dictar las compras del súper, la maleta del viaje o las tareas de la casa. ZipList convierte el audio en elementos individuales al vuelo.",
+      q: "¿Podemos dictar por voz desde cualquiera de los dos teléfonos?",
+      a: "Sí. Cualquiera de los dos puede tocar el micrófono y dictar compras, pendientes de la casa o cosas para el viaje, y aparecen como filas separadas para ambos.",
     },
   ];
 
@@ -76,6 +76,7 @@
   {title}
   {description}
   {heading}
+  lede={"Una sola lista en dos teléfonos, sin cuentas compartidas ni aplicaciones que instalar primero."}
   {faqs}
   canonical={canonicalUrl}
   faqHeading={"Preguntas frecuentes"}
@@ -86,4 +87,29 @@
   ogLocale={"es_LA"}
   hreflangEn={"https://ziplist.app/for/couples"}
   hreflangEs={canonicalUrl}
-/>
+>
+  <section class="zl-prose-section">
+    <h2>Escanear el código es toda la configuración</h2>
+    <p>
+      Abre la lista, inicia la sala en vivo y apunta la otra cámara al código QR
+      o dicta las cuatro palabras de acceso. Sin invitaciones por correo ni
+      pantallas de registro a mitad del pasillo.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Los dos al mismo tiempo</h2>
+    <p>
+      Uno agrega lo que falta desde el camión y el otro lo ve antes de llegar a
+      la caja. Cada elemento tachado se refleja en ambos teléfonos sin recargar.
+    </p>
+  </section>
+
+  <section class="zl-prose-section">
+    <h2>Cuando termina, vuelve a ser local</h2>
+    <p>
+      Al cerrar la sala en vivo desde Compartir, la lista deja de compartirse y
+      se queda guardada tranquilamente en el teléfono.
+    </p>
+  </section>
+</VerticalPage>

@@ -125,7 +125,12 @@ export class ListsService {
       if (!needle) continue;
 
       const uncheckedItems = activeList.items.filter(
-        (item) => !item.checked && !completedItemIds.has(item.id),
+        (item) =>
+          !item.checked &&
+          !completedItemIds.has(item.id) &&
+          typeof item.text === "string" &&
+          !/^(?:##\s*|(?:\u2192|->)\s+)/.test(item.text.trim()) &&
+          item.text.trim() !== "---",
       );
       const exactMatch = uncheckedItems.find(
         (item) => normalize(item.text) === needle,

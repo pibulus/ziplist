@@ -479,7 +479,7 @@
                   bind:value={emailInput}
                   type="email"
                   required
-                  placeholder="name@example.com"
+                  placeholder="hello@domain.com"
                   autocomplete="email"
                   class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-2 text-base font-bold text-[#1e1714] focus:outline-none sm:text-sm"
                 />
@@ -630,16 +630,14 @@
             class="min-h-12 w-full rounded-xl border-2 border-[#1e1714] bg-[#ff5ca8] px-4 py-3 text-sm font-black text-[#1e1714] shadow-[3px_3px_0px_#1e1714] transition-all hover:-translate-y-0.5 hover:bg-[#ff459b] hover:shadow-[4px_4px_0px_#1e1714] active:translate-y-0.5 active:bg-[#e62e84] active:shadow-[1px_1px_0px_#1e1714] disabled:opacity-60"
             disabled={status === "importing" || !manualCode.trim()}
           >
-            {status === "importing"
-              ? "Linking device..."
-              : "Link This Device ✦"}
+            {status === "importing" ? "Linking device..." : "Link This Device"}
           </button>
         </form>
 
         <div class="mt-4 border-t border-[#1e1714]/10 pt-3 text-center">
           <p class="text-xs font-bold leading-relaxed text-[#525252]">
-            Open <strong>Options → Passport</strong> on the other device to read the
-            4-word passkey or scan its QR stamp.
+            Open <strong>Passport</strong> in the footer on the other device to read
+            the 4-word passkey or scan its QR stamp.
           </p>
         </div>
       </div>

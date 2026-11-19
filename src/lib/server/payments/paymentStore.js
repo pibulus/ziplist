@@ -1,25 +1,34 @@
 import { storage } from "../storage/index.js";
 import { expiryForPaidAt } from "./renewalWindow.js";
-import { withStoreLock } from "../storage/storeLock.js";
+import { mutateWithCas } from "../storage/storeLock.js";
 
 const STORE_KEY = "contributor-checkouts";
+const UNPAID_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
-async function readStore() {
-  const data = (await storage.get(STORE_KEY)) || {};
+function normalizeStore(data) {
   return {
-    checkouts: Array.isArray(data.checkouts) ? data.checkouts : [],
+    checkouts: Array.isArray(data?.checkouts) ? [...data.checkouts] : [],
   };
 }
 
-async function writeStore(data) {
-  const saved = await storage.set(STORE_KEY, data);
-  if (saved === false)
-    throw new Error("Contributor checkout store write failed");
+function pruneStalePending(checkouts, now = Date.now()) {
+  return checkouts.filter((checkout) => {
+    if (checkout?.status === "paid") return true;
+    const stamp = Date.parse(checkout?.updatedAt || checkout?.createdAt || "");
+    if (!Number.isFinite(stamp)) return true;
+    return now - stamp < UNPAID_TTL_MS;
+  });
+}
+
+async function readStore() {
+  const data = (await storage.get(STORE_KEY)) || {};
+  return normalizeStore(data);
 }
 
 export async function saveCheckout(checkout) {
-  return withStoreLock(STORE_KEY, async () => {
-    const store = await readStore();
+  return mutateWithCas(storage, STORE_KEY, async (raw) => {
+    const store = normalizeStore(raw);
+    store.checkouts = pruneStalePending(store.checkouts);
     const existingIndex = store.checkouts.findIndex(
       (candidate) => candidate.id === checkout.id,
     );
@@ -38,8 +47,7 @@ export async function saveCheckout(checkout) {
       });
     }
 
-    await writeStore(store);
-    return checkout;
+    return { nextData: store, result: checkout };
   });
 }
 
@@ -49,14 +57,19 @@ export async function listCheckouts() {
 }
 
 export async function markRenewalReminderSent(id) {
-  return withStoreLock(STORE_KEY, async () => {
-    const store = await readStore();
-    const checkout = store.checkouts.find((candidate) => candidate.id === id);
-    if (!checkout || checkout.renewalReminderSentAt) return false;
-    checkout.renewalReminderSentAt = new Date().toISOString();
-    checkout.updatedAt = checkout.renewalReminderSentAt;
-    await writeStore(store);
-    return true;
+  return mutateWithCas(storage, STORE_KEY, async (raw) => {
+    const store = normalizeStore(raw);
+    const idx = store.checkouts.findIndex((candidate) => candidate.id === id);
+    if (idx === -1 || store.checkouts[idx].renewalReminderSentAt) {
+      return { skipWrite: true, result: false };
+    }
+    const stamp = new Date().toISOString();
+    store.checkouts[idx] = {
+      ...store.checkouts[idx],
+      renewalReminderSentAt: stamp,
+      updatedAt: stamp,
+    };
+    return { nextData: store, result: true };
   });
 }
 
@@ -65,17 +78,20 @@ export async function getCheckoutById(id) {
   return store.checkouts.find((checkout) => checkout.id === id) || null;
 }
 
-// Stamp only after Resend accepts the message. Its idempotency key covers
-// concurrent webhook retries; this durable stamp covers deliveries after 24h.
 export async function markCheckoutEmailSent(id) {
-  return withStoreLock(STORE_KEY, async () => {
-    const store = await readStore();
-    const checkout = store.checkouts.find((candidate) => candidate.id === id);
-    if (!checkout || checkout.codeEmailSentAt) return false;
-    checkout.codeEmailSentAt = new Date().toISOString();
-    checkout.updatedAt = checkout.codeEmailSentAt;
-    await writeStore(store);
-    return true;
+  return mutateWithCas(storage, STORE_KEY, async (raw) => {
+    const store = normalizeStore(raw);
+    const idx = store.checkouts.findIndex((candidate) => candidate.id === id);
+    if (idx === -1 || store.checkouts[idx].codeEmailSentAt) {
+      return { skipWrite: true, result: false };
+    }
+    const stamp = new Date().toISOString();
+    store.checkouts[idx] = {
+      ...store.checkouts[idx],
+      codeEmailSentAt: stamp,
+      updatedAt: stamp,
+    };
+    return { nextData: store, result: true };
   });
 }
 
@@ -89,37 +105,34 @@ export async function getCheckoutByProviderOrderId(providerOrderId) {
 }
 
 async function markPaid(matcher, payment) {
-  return withStoreLock(STORE_KEY, async () => {
-    const store = await readStore();
-    const checkout = store.checkouts.find(matcher);
+  return mutateWithCas(storage, STORE_KEY, async (raw) => {
+    const store = normalizeStore(raw);
+    const idx = store.checkouts.findIndex(matcher);
+    if (idx === -1) {
+      return { skipWrite: true, result: null };
+    }
 
-    if (!checkout) return null;
-
-    checkout.status = "paid";
-    // Kept on the checkout (never on the lists) so a renewal reminder has an
-    // address to reach. Cleared with the record; not used for anything else.
-    checkout.buyerEmail =
-      payment?.buyer_email_address || checkout.buyerEmail || null;
-    checkout.expiresAt =
-      checkout.expiresAt || expiryForPaidAt(new Date().toISOString());
-    checkout.providerPaymentId =
-      payment?.id || checkout.providerPaymentId || null;
-    // Backfill the order id when Square didn't return it at create time, so
-    // webhook retries can match this checkout by order id next time.
-    checkout.providerOrderId =
-      checkout.providerOrderId || payment?.order_id || null;
-    checkout.paidAt = checkout.paidAt || new Date().toISOString();
-    checkout.payment = {
-      id: payment?.id || null,
-      status: payment?.status || null,
-      orderId: payment?.order_id || checkout.providerOrderId,
-      amountMoney: payment?.amount_money || null,
-      receiptUrl: payment?.receipt_url || null,
+    const existing = store.checkouts[idx];
+    const nowIso = new Date().toISOString();
+    const updated = {
+      ...existing,
+      status: "paid",
+      buyerEmail: payment?.buyer_email_address || existing.buyerEmail || null,
+      expiresAt: existing.expiresAt || expiryForPaidAt(nowIso),
+      providerPaymentId: payment?.id || existing.providerPaymentId || null,
+      providerOrderId: existing.providerOrderId || payment?.order_id || null,
+      paidAt: existing.paidAt || nowIso,
+      payment: {
+        id: payment?.id || null,
+        status: payment?.status || null,
+        orderId: payment?.order_id || existing.providerOrderId,
+        amountMoney: payment?.amount_money || null,
+        receiptUrl: payment?.receipt_url || null,
+      },
+      updatedAt: nowIso,
     };
-    checkout.updatedAt = new Date().toISOString();
-
-    await writeStore(store);
-    return checkout;
+    store.checkouts[idx] = updated;
+    return { nextData: store, result: updated };
   });
 }
 

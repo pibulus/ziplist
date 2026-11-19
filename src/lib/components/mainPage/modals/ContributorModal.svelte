@@ -283,7 +283,7 @@
       window.dispatchEvent(
         new CustomEvent("ziplist:toast", {
           detail: {
-            message: "Devices linked! ✨",
+            message: "Devices linked",
             type: "success",
           },
         }),
@@ -352,7 +352,7 @@
         new CustomEvent("ziplist:toast", {
           detail: {
             type: "success",
-            message: "Passport dispatched to inbox ✉️",
+            message: "Passport dispatched to inbox",
           },
         }),
       );
@@ -542,7 +542,7 @@
                     bind:value={emailInput}
                     type="email"
                     required
-                    placeholder="name@example.com"
+                    placeholder="hello@domain.com"
                     autocomplete="email"
                     class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-base font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0 sm:text-sm"
                   />
@@ -655,7 +655,7 @@
                     bind:value={emailInput}
                     type="email"
                     required
-                    placeholder="name@example.com"
+                    placeholder="hello@domain.com"
                     autocomplete="email"
                     class="min-h-11 min-w-0 flex-1 rounded-xl border-2 border-[#1e1714] bg-[#fffdf5] px-3 py-2 text-base font-bold text-[#1e1714] focus:border-[#1e1714] focus:outline-none focus:ring-0 sm:text-sm"
                   />

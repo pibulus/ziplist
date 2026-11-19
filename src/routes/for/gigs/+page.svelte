@@ -14,7 +14,7 @@
   const faqs = [
     {
       q: "Can the whole band see one list?",
-      a: "Yes. Make it live, then let each phone scan the code with “QR this list”. Everyone is on the same list and every tick shows on the other phones.",
+      a: "Yes. Tap Share, choose Start Live List, and let each phone scan the QR code or enter the four room words. Up to six people can tick the same list at once.",
     },
     {
       q: "Do the others need accounts or the app installed?",

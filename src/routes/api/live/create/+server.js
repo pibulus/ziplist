@@ -57,7 +57,7 @@ function getPartyKitCreateSecret() {
 }
 
 export async function POST(event) {
-  const rateResponse = enforceRateLimit(event);
+  const rateResponse = await enforceRateLimit(event);
   if (rateResponse) return rateResponse;
 
   // Live sharing is free for everyone (2026-07-21). Contributor gates

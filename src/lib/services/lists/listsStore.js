@@ -256,7 +256,9 @@ export function getItemDedupeKey(text) {
     : norm.startsWith("→ ")
       ? "->:"
       : "";
-  const alnum = norm.replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  const alnum = norm
+    .replace(/[^\p{L}\p{N}\p{Extended_Pictographic}]+/gu, " ")
+    .trim();
   return prefix + (alnum || norm);
 }
 
@@ -368,6 +370,14 @@ function normalizeListRecord(rawList, index = 0) {
   const migratedItems = isPristineStarterList({ ...list, items })
     ? items.filter((item) => item.id !== "starter-portal")
     : items;
+  const normalizedItems = migratedItems.map((item) =>
+    item && typeof item === "object"
+      ? {
+          ...item,
+          tags: Array.isArray(item.tags) ? normalizeTags(item.tags) : [],
+        }
+      : item,
+  );
   const timestamp = new Date().toISOString();
   const palette = getListPaletteForRecord(list, index);
   const name =
@@ -385,7 +395,7 @@ function normalizeListRecord(rawList, index = 0) {
     // Every list entering the store — from storage, an import, a live
     // snapshot — arrives already obeying the order invariant, so lists saved
     // by older builds heal on first load.
-    items: withCompletedLast(migratedItems),
+    items: withCompletedLast(normalizedItems),
     deletedItemIds: pruneStaleTombstones(list?.deletedItemIds || {}),
     createdAt: list?.createdAt || timestamp,
     updatedAt: list?.updatedAt || list?.createdAt || timestamp,
@@ -1415,9 +1425,13 @@ function createListsStore() {
 
   // Reorder items in a list
   function reorderItems(reorderedItems, listId = null) {
-    const orderedIds = reorderedItems.map((item) =>
-      typeof item === "object" ? item.id : item,
-    );
+    const orderedIds = [
+      ...new Set(
+        reorderedItems
+          .map((item) => (typeof item === "object" ? item?.id : item))
+          .filter(Boolean),
+      ),
+    ];
     const orderedIdSet = new Set(orderedIds);
 
     update((state) => {

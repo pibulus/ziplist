@@ -157,7 +157,7 @@ function createJoinError(event) {
   } else if (event?.code === LIVE_CLOSE_CODES.ROOM_FULL) {
     error.code = "room_full";
     error.message =
-      "That list is full — six people is the limit. Try again when someone leaves.";
+      "That list is full (up to six people). Try again when someone leaves.";
   }
 
   return error;

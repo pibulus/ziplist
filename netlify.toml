@@ -41,21 +41,25 @@
   for = "/import*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
 
 [[headers]]
   for = "/live/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
 
 [[headers]]
   for = "/j/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
 
 [[headers]]
   for = "/u/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
 
 [[headers]]
   for = "/clear-cache*"
@@ -66,6 +70,7 @@
   for = "/contributor/success*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
 
 [[redirects]]
   from = "/couples"

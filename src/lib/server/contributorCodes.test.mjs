@@ -538,6 +538,88 @@ assert.equal(
   "email-pass should reject unverified code/token with 401",
 );
 
+// Cross-account passkey exfiltration regression guard ([CRITICAL-01]):
+// Holder A's valid JWT + Holder B's public SS- code MUST return 401 and send 0 emails.
+{
+  const codeA = generateLicenseCode(
+    generatePasskeyPhrase("cross-acct-holder-a"),
+  );
+  const codeB = generateLicenseCode(
+    generatePasskeyPhrase("cross-acct-holder-b"),
+  );
+  const holderA = await createLicenseForCheckout({
+    id: "cross-acct-holder-a",
+    codeHash: hashContributorCode(codeA),
+    provider: "square",
+  });
+  const holderB = await createLicenseForCheckout({
+    id: "cross-acct-holder-b",
+    codeHash: hashContributorCode(codeB),
+    provider: "square",
+  });
+  const holderAToken = issueContributorToken({
+    sub: holderA.id,
+    tier: "contributor",
+  });
+
+  const prevFetch = globalThis.fetch;
+  let crossAccountEmailsSent = 0;
+  globalThis.fetch = async () => {
+    crossAccountEmailsSent += 1;
+    return new Response(JSON.stringify({ id: "should_never_send" }), {
+      status: 200,
+    });
+  };
+  try {
+    const crossRes = await emailPassPost({
+      request: new Request("https://ziplist.app/api/contributor/email-pass", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-ziplist-contributor-token": holderAToken,
+        },
+        body: JSON.stringify({
+          email: "attacker@example.com",
+          code: holderB.code,
+        }),
+      }),
+      url: new URL("https://ziplist.app/api/contributor/email-pass"),
+      getClientAddress: () => "127.0.0.1",
+    });
+    assert.equal(
+      crossRes.status,
+      401,
+      "Holder A JWT must never unlock Holder B's passkey via email-pass",
+    );
+    assert.equal(
+      crossAccountEmailsSent,
+      0,
+      "Zero emails may be sent on cross-account email-pass attempt",
+    );
+
+    const bareCodeRes = await emailPassPost({
+      request: new Request("https://ziplist.app/api/contributor/email-pass", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: "attacker@example.com",
+          code: holderB.code,
+        }),
+      }),
+      url: new URL("https://ziplist.app/api/contributor/email-pass"),
+      getClientAddress: () => "127.0.0.1",
+    });
+    assert.equal(
+      bareCodeRes.status,
+      401,
+      "Bare SS- code without owner JWT must be rejected on email-pass",
+    );
+    assert.equal(crossAccountEmailsSent, 0);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+}
+
 // 5. Personal Passport code detection & About tips dealer
 assert.equal(isPersonalPassportCode(sampleCode), true);
 assert.equal(isPersonalPassportCode("SHARED-VOUCHER"), false);

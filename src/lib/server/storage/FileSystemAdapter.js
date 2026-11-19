@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 export class FileSystemAdapter {
   constructor(baseDir) {
@@ -9,15 +10,16 @@ export class FileSystemAdapter {
     }
   }
 
+  _hashRaw(raw) {
+    return crypto.createHash("sha256").update(raw).digest("hex");
+  }
+
   async get(key) {
     const filePath = path.join(this.baseDir, `${key}.json`);
     try {
       const data = fs.readFileSync(filePath, "utf-8");
       return JSON.parse(data);
     } catch (error) {
-      // A missing file is normal (empty store); anything else — permissions,
-      // disk, corrupt JSON — must be loud, or an outage looks like an empty
-      // store and licenses "vanish" silently.
       if (error?.code !== "ENOENT") {
         console.error(`[FileSystemAdapter] Error reading ${key}:`, error);
       }
@@ -27,10 +29,8 @@ export class FileSystemAdapter {
 
   async set(key, value) {
     const filePath = path.join(this.baseDir, `${key}.json`);
-    const tmpPath = `${filePath}.tmp`;
+    const tmpPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
     try {
-      // Write-then-rename so a crash mid-write can never truncate the live
-      // file (rename is atomic on the same filesystem).
       fs.writeFileSync(tmpPath, JSON.stringify(value, null, 2));
       fs.renameSync(tmpPath, filePath);
       return true;
@@ -39,5 +39,29 @@ export class FileSystemAdapter {
       fs.rmSync(tmpPath, { force: true });
       return false;
     }
+  }
+
+  async snapshot(key) {
+    const filePath = path.join(this.baseDir, `${key}.json`);
+    try {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      return {
+        data: JSON.parse(raw),
+        version: this._hashRaw(raw),
+      };
+    } catch (error) {
+      if (error?.code !== "ENOENT") {
+        console.error(`[FileSystemAdapter] Error snapshotting ${key}:`, error);
+      }
+      return { data: null, version: null };
+    }
+  }
+
+  async compareAndSet(key, version, value) {
+    const current = await this.snapshot(key);
+    if (current.version !== version) {
+      return false;
+    }
+    return this.set(key, value);
   }
 }

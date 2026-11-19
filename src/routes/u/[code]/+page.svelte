@@ -3,16 +3,18 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
+  import { deviceSyncStore } from "$lib/services/realtime/deviceSyncStore.js";
+  import { firstVisitService } from "$lib/services/first-visit/firstVisitService.js";
 
-  onMount(() => {
-    if (browser) {
-      const code = $page.params.code;
-      if (code) {
-        goto(`/#unlock=${encodeURIComponent(code)}`, { replaceState: true });
-      } else {
-        goto("/", { replaceState: true });
-      }
+  onMount(async () => {
+    if (!browser) return;
+    const code = $page.params.code;
+    if (code) {
+      firstVisitService.cancelPendingIntroModal();
+      firstVisitService.markIntroAsSeen();
+      await deviceSyncStore.pairWithLink(code);
     }
+    await goto("/", { replaceState: true });
   });
 </script>
 
@@ -21,6 +23,8 @@
   <meta name="robots" content="noindex, nofollow, noarchive" />
 </svelte:head>
 
-<div class="flex min-h-screen items-center justify-center bg-[#fffdf5]">
-  <p class="animate-pulse text-sm font-bold text-pink-500">Waking ZipList...</p>
+<div class="flex min-h-screen items-center justify-center bg-[#fffef7]">
+  <p class="animate-pulse text-sm font-bold text-[#1e1714]">
+    Linking Passport...
+  </p>
 </div>
