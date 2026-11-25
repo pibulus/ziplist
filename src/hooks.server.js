@@ -46,12 +46,12 @@ import { dev } from "$app/environment";
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://fleetcount.pibulus.deno.net",
+  "script-src 'self' 'unsafe-inline' https://hits.madebypablo.app",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self' blob:",
-  `connect-src 'self' https://fleetcount.pibulus.deno.net https://ziplist-rooms.pibulus.workers.dev wss://ziplist-rooms.pibulus.workers.dev${dev ? " ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*" : ""}`,
+  `connect-src 'self' https://hits.madebypablo.app https://ziplist-rooms.pibulus.workers.dev wss://ziplist-rooms.pibulus.workers.dev${dev ? " ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*" : ""}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "base-uri 'self'",
